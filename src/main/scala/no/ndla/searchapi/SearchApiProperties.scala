@@ -23,6 +23,8 @@ object SearchApiProperties extends LazyLogging {
   val ContactEmail = "christergundersen@ndla.no"
   val Environment = propOrElse("NDLA_ENVIRONMENT", "local")
 
+  val DefaultLanguage = "nb"
+
   val CorrelationIdKey = "correlationID"
   val CorrelationIdHeader = "X-Correlation-ID"
 
