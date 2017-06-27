@@ -1,3 +1,11 @@
+/*
+ * Part of NDLA search_api.
+ * Copyright (C) 2017 NDLA
+ *
+ * See LICENSE
+ *
+ */
+
 package no.ndla.searchapi.controller
 
 import no.ndla.searchapi.model.api.ValidationError
