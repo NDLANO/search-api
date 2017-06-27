@@ -35,7 +35,6 @@ lazy val search_api = (project in file(".")).
     scalacOptions := Seq("-target:jvm-1.8"),
     libraryDependencies ++= Seq(
       "ndla" %% "network" % "0.19",
-      "ndla" %% "mapping" % "0.4",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
       "org.apache.logging.log4j" % "log4j-api" % Log4JVersion,
       "org.apache.logging.log4j" % "log4j-core" % Log4JVersion,
@@ -49,19 +48,9 @@ lazy val search_api = (project in file(".")).
       "org.eclipse.jetty" % "jetty-webapp" % Jettyversion % "container;compile",
       "org.eclipse.jetty" % "jetty-plus" % Jettyversion % "container",
       "org.json4s"   %% "json4s-native" % "3.5.0",
-      "org.scalikejdbc" %% "scalikejdbc" % "2.5.0",
-      "org.postgresql" % "postgresql" % "9.4-1201-jdbc4",
-      "org.flywaydb" % "flyway-core" % "4.0",
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
-      "org.mockito" % "mockito-all" % MockitoVersion % "test",
-      "io.searchbox" % "jest" % "2.0.4",
-      "org.elasticsearch" % "elasticsearch" % ElasticsearchVersion,
-      "com.sksamuel.elastic4s" %% "elastic4s-core" % Elastic4sVersion,
-      "com.sksamuel.elastic4s" %% "elastic4s-http" % Elastic4sVersion,
-      "org.elasticsearch" % "elasticsearch" % ElasticsearchVersion % "test",
-      "vc.inreach.aws" % "aws-signing-request-interceptor" % "0.0.16",
-      "org.jsoup" % "jsoup" % JsoupVersion
+      "org.mockito" % "mockito-all" % MockitoVersion % "test"
     )
   ).enablePlugins(DockerPlugin).enablePlugins(GitVersioning).enablePlugins(JettyPlugin)
 
