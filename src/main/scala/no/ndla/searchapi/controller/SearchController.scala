@@ -32,12 +32,12 @@ trait SearchController {
 
     val searchAPIs =
       (apiOperation[String]("searchAPIs")
-        summary "search across APIsj"
-        notes "search across APIsj"
+        summary "search across APIs"
+        notes "search across APIs"
         parameters(
         headerParam[Option[String]]("X-Correlation-ID").description("User supplied correlation-id. May be omitted."),
         headerParam[Option[String]]("app-key").description("Your app-key. May be omitted to access api anonymously, but rate limiting applies on anonymous access."),
-        queryParam[Option[String]]("query").description("Return only articles with content matching the specified query."),
+        queryParam[Option[String]]("query").description("Return only resources with content matching the specified query."),
         queryParam[Option[String]]("language").description("The ISO 639-1 language code describing language used in query-params."),
       )
         authorizations "oauth2"
@@ -46,7 +46,7 @@ trait SearchController {
     get("/", operation(searchAPIs)) {
       val query = paramAsListOfString("query")
       val language = paramOrDefault("language", DefaultLanguage)
-      val sort = Sort.valueOf(paramOrDefault("sort", "")).getOrElse(Sort.ByIdAsc)
+      val sort = Sort.ByRelevanceDesc
 
       Ok("Hello search-api")
     }
