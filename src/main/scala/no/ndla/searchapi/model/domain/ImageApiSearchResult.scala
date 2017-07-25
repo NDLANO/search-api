@@ -7,10 +7,6 @@
 
 package no.ndla.searchapi.model.domain
 
-case class ImageApiSearchResults(totalCount: Long,
-                                 page: Int,
-                                 pageSize: Int,
-                                 results: Seq[ImageApiSearchResult])
 
 case class ImageApiSearchResult(id: Long,
                                 previewUrl: String,

@@ -9,13 +9,14 @@
 package no.ndla.searchapi.controller
 
 import no.ndla.searchapi.model.api.ValidationError
-import no.ndla.searchapi.model.domain.Sort
+import no.ndla.searchapi.model.domain.{SearchParams, Sort}
 import no.ndla.searchapi.SearchApiProperties.DefaultLanguage
+import no.ndla.searchapi.service.SearchService
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.Ok
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport}
 
 trait SearchController {
+  this: SearchService =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -44,11 +45,13 @@ trait SearchController {
         responseMessages(response500))
 
     get("/", operation(searchAPIs)) {
-      val query = paramAsListOfString("query")
+      val query = paramOrDefault("query", "")
       val language = paramOrDefault("language", DefaultLanguage)
       val sort = Sort.ByRelevanceDesc
+      val page = intOrDefault("page", 1)
+      val pageSize = intOrDefault("page-size", 1)
 
-      Ok("Hello search-api")
+      searchService.search(SearchParams(query, language, sort, page, pageSize))
     }
 
   }

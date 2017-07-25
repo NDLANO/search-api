@@ -8,11 +8,18 @@
 package no.ndla.searchapi.integration
 
 import no.ndla.network.NdlaClient
-import no.ndla.searchapi.model.domain.AudioApiSearchResults
+import no.ndla.searchapi.model.domain.{AudioApiSearchResults, SearchParams}
+
+import scala.concurrent.Future
 
 trait AudioApiClient {
-  this: NdlaClient with ApiClient =>
+  this: NdlaClient with SearchApiClient =>
   val audioApiClient: AudioApiClient
 
-  class AudioApiClient(val baseUrl: String) extends SearchApiClient[AudioApiSearchResults]("audio-api/v1/audio")
+  class AudioApiClient(val baseUrl: String) extends SearchApiClient {
+    override val searchPath = "audio-api/v1/audio"
+
+    def search(searchParams: SearchParams): Future[AudioApiSearchResults] =
+      search[AudioApiSearchResults](searchParams)
+  }
 }

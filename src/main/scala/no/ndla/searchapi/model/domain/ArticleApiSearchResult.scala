@@ -7,11 +7,6 @@
 
 package no.ndla.searchapi.model.domain
 
-case class ArticleApiSearchResults(totalCount: Long,
-                            page: Int,
-                            pageSize: Int,
-                            language: String,
-                            results: Seq[ArticleApiSearchResult]) extends ApiSearchResults
 
 case class ArticleApiSearchResult(id: Long,
                                   title: String,
