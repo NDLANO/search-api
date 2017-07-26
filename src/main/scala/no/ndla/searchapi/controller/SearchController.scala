@@ -8,7 +8,7 @@
 
 package no.ndla.searchapi.controller
 
-import no.ndla.searchapi.model.api.ValidationError
+import no.ndla.searchapi.model.api.{SearchResults, ValidationError, Error}
 import no.ndla.searchapi.model.domain.{SearchParams, Sort}
 import no.ndla.searchapi.service.SearchService
 import org.json4s.{DefaultFormats, Formats}
@@ -20,18 +20,15 @@ trait SearchController {
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
     protected implicit override val jsonFormats: Formats = DefaultFormats
-    val response400 = ResponseMessage(400, "Validation error", Some("ValidationError"))
 
     registerModel[Error]
     registerModel[ValidationError]
-    val response403 = ResponseMessage(403, "Access Denied", Some("Error"))
-    val response404 = ResponseMessage(404, "Not found", Some("Error"))
     val response500 = ResponseMessage(500, "Unknown error", Some("Error"))
 
     protected val applicationDescription = "API for searching across NDLA APIs"
 
     val searchAPIs =
-      (apiOperation[String]("searchAPIs")
+      (apiOperation[Seq[SearchResults]]("searchAPIs")
         summary "search across APIs"
         notes "search across APIs"
         parameters(
