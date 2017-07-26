@@ -10,7 +10,6 @@ package no.ndla.searchapi.controller
 
 import no.ndla.searchapi.model.api.ValidationError
 import no.ndla.searchapi.model.domain.{SearchParams, Sort}
-import no.ndla.searchapi.SearchApiProperties.DefaultLanguage
 import no.ndla.searchapi.service.SearchService
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport}
