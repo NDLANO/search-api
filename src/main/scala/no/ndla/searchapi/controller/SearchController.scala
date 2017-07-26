@@ -45,11 +45,11 @@ trait SearchController {
         responseMessages(response500))
 
     get("/", operation(searchAPIs)) {
-      val query = paramOrDefault("query", "")
-      val language = paramOrDefault("language", DefaultLanguage)
+      val query = paramOrNone("query")
+      val language = paramOrNone("language")
       val sort = Sort.ByRelevanceDesc
       val page = intOrDefault("page", 1)
-      val pageSize = intOrDefault("page-size", 1)
+      val pageSize = intOrDefault("page-size", 5)
 
       searchService.search(SearchParams(query, language, sort, page, pageSize))
     }

@@ -8,7 +8,7 @@
 package no.ndla.searchapi.model.domain
 
 
-case class ImageApiSearchResult(id: Long,
+case class ImageApiSearchResult(id: String,
                                 previewUrl: String,
                                 metaUrl: String,
                                 license: String)
