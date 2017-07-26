@@ -9,11 +9,12 @@ package no.ndla.searchapi.integration
 
 import no.ndla.network.NdlaClient
 import com.netaporter.uri.dsl._
+import no.ndla.searchapi.model.api.ApiSearchException
 import no.ndla.searchapi.model.domain.{ApiSearchResults, SearchParams}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scalaj.http.Http
 
 trait SearchApiClient {
@@ -37,7 +38,9 @@ trait SearchApiClient {
           "page" -> searchParams.page,
           "page-size" -> searchParams.pageSize
         )
+      }.map {
+        case Success(a) => Success(a)
+        case Failure(ex) => Failure(new ApiSearchException(name, ex.getMessage))
       }
-
   }
 }

@@ -9,50 +9,63 @@ package no.ndla.searchapi.service
 
 import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.api
+import no.ndla.searchapi.SearchApiProperties.Domain
+import no.ndla.network.ApplicationUrl
+import com.netaporter.uri.dsl._
 
 trait ConverterService {
   val converterService: ConverterService
 
   class ConverterService {
-    def searchResultToApiModel(searchResults: ApiSearchResults, apiName: String): api.SearchResults = {
+    def searchResultToApiModel(searchResults: ApiSearchResults): api.SearchResults = {
       searchResults match {
-        case a: ArticleApiSearchResults => articleSearchResultsToApi(a, apiName)
-        case l: LearningpathApiSearchResults => learningpathSearchResultsToApi(l, apiName)
-        case i: ImageApiSearchResults => imageSearchResultsToApi(i, apiName)
-        case a: AudioApiSearchResults => audioSearchResultsToApi(a, apiName)
+        case a: ArticleApiSearchResults => articleSearchResultsToApi(a)
+        case l: LearningpathApiSearchResults => learningpathSearchResultsToApi(l)
+        case i: ImageApiSearchResults => imageSearchResultsToApi(i)
+        case a: AudioApiSearchResults => audioSearchResultsToApi(a)
       }
     }
 
-    private def articleSearchResultsToApi(articles: ArticleApiSearchResults, apiName: String): api.ArticleResults = {
-      api.ArticleResults(apiName, articles.language, articles.results.map(articleSearchResultToApi))
+    private def articleSearchResultsToApi(articles: ArticleApiSearchResults): api.ArticleResults = {
+      api.ArticleResults("articles", articles.language, articles.results.map(articleSearchResultToApi))
     }
 
     private def articleSearchResultToApi(article: ArticleApiSearchResult): api.ArticleResult = {
       api.ArticleResult(article.id, article.title, article.introduction)
     }
 
-    private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults, apiName: String): api.LearningpathResults = {
-      api.LearningpathResults(apiName, learningpaths.language, learningpaths.results.map(learningpathSearchResultToApi))
+    private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults): api.LearningpathResults = {
+      api.LearningpathResults("learningpaths", learningpaths.language, learningpaths.results.map(learningpathSearchResultToApi))
     }
 
     private def learningpathSearchResultToApi(learningpath: LearningpathApiSearchResult): api.LearningpathResult = {
       api.LearningpathResult(learningpath.id, learningpath.title, learningpath.introduction)
     }
 
-    private def imageSearchResultsToApi(images: ImageApiSearchResults, apiName: String): api.ImageResults = {
-      api.ImageResults(apiName, images.results.map(imageSearchResultToApi))
+    private def imageSearchResultsToApi(images: ImageApiSearchResults): api.ImageResults = {
+      api.ImageResults("images", images.results.map(imageSearchResultToApi))
     }
 
     private def imageSearchResultToApi(image: ImageApiSearchResult): api.ImageResult = {
-      api.ImageResult(image.id.toLong, image.previewUrl, image.metaUrl)
+      val scheme = ApplicationUrl.get.scheme.getOrElse("https://")
+      val host = ApplicationUrl.get.host.getOrElse(Domain)
+
+      val previewUrl = image.previewUrl.withHost(host).withScheme(scheme)
+      val metaUrl = image.metaUrl.withHost(host).withScheme(scheme)
+
+      api.ImageResult(image.id.toLong, previewUrl, metaUrl)
     }
 
-    private def audioSearchResultsToApi(audios: AudioApiSearchResults, apiName: String): api.AudioResults = {
-      api.AudioResults(apiName, audios.language, audios.results.map(audioSearchResultToApi))
+    private def audioSearchResultsToApi(audios: AudioApiSearchResults): api.AudioResults = {
+      api.AudioResults("audios", audios.language, audios.results.map(audioSearchResultToApi))
     }
 
     private def audioSearchResultToApi(audio: AudioApiSearchResult): api.AudioResult = {
-      api.AudioResult(audio.id, audio.title, audio.url)
+      val scheme = ApplicationUrl.get.scheme.getOrElse("https://")
+      val host = ApplicationUrl.get.host.getOrElse(Domain)
+
+      val url = audio.url.withHost(host).withScheme(scheme)
+      api.AudioResult(audio.id, audio.title, url)
     }
 
   }

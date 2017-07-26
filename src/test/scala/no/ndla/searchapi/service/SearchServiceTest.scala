@@ -7,6 +7,7 @@
 
 package no.ndla.searchapi.service
 
+import no.ndla.network.ApplicationUrl
 import no.ndla.network.model.HttpRequestException
 import no.ndla.searchapi.model.domain.{SearchParams, Sort}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
@@ -19,6 +20,7 @@ import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SearchServiceTest extends UnitSuite with TestEnvironment {
+  ApplicationUrl.applicationUrl.set("https://unit-test")
   override val searchService = new SearchService
   override val converterService = new ConverterService
 
