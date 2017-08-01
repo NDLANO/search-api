@@ -41,3 +41,4 @@ object Error {
 }
 
 class ValidationException(message: String = "Validation Error", val errors: Seq[ValidationMessage]) extends RuntimeException(message)
+class ApiSearchException(val apiName: String, message: String) extends RuntimeException(message)

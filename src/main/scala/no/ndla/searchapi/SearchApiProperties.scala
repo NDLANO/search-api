@@ -6,7 +6,6 @@
  *
  */
 
-
 package no.ndla.searchapi
 
 import com.typesafe.scalalogging.LazyLogging
@@ -27,6 +26,12 @@ object SearchApiProperties extends LazyLogging {
   val CorrelationIdHeader = "X-Correlation-ID"
 
   lazy val Domain = Domains.get(Environment)
+
+  val ArticleApiUrl = "http://article-api.ndla-local"
+  val LearningpathApiUrl = "http://learningpath-api.ndla-local"
+  val ImageApiUrl = "http://image-api.ndla-local"
+  val AudioApiUrl = "http://audio-api.ndla-local"
+
 
   def booleanProp(key: String) = prop(key).toBoolean
 

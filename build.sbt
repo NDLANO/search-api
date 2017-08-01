@@ -32,7 +32,7 @@ lazy val search_api = (project in file(".")).
   settings(
     name := "search-api",
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
-    scalacOptions := Seq("-target:jvm-1.8"),
+    scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature"),
     libraryDependencies ++= Seq(
       "ndla" %% "network" % "0.19",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
@@ -54,8 +54,6 @@ lazy val search_api = (project in file(".")).
     )
   ).enablePlugins(DockerPlugin).enablePlugins(GitVersioning).enablePlugins(JettyPlugin)
 
-unmanagedResourceDirectories in Compile <+= (baseDirectory) {_ / "src/main/webapp"}
-
 assemblyJarName in assembly := "search-api.jar"
 mainClass in assembly := Some("no.ndla.searchapi.JettyLauncher")
 assemblyMergeStrategy in assembly := {
@@ -76,7 +74,7 @@ assemblyMergeStrategy in assembly := {
 testOptions in Test += Tests.Argument("-l", "no.ndla.tag.IntegrationTest")
 
 // Make the docker task depend on the assembly task, which generates a fat JAR file
-docker <<= (docker dependsOn assembly)
+docker := (docker dependsOn assembly).value
 
 dockerfile in docker := {
   val artifact = (assemblyOutputPath in assembly).value
