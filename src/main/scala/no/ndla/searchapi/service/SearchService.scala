@@ -11,7 +11,7 @@ import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.{ApiSearchException, SearchResults}
 import no.ndla.searchapi.model.domain.SearchParams
-
+import scala.language.postfixOps
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
