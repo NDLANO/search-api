@@ -8,14 +8,15 @@
 
 package no.ndla.searchapi.controller
 
-import no.ndla.searchapi.model.api.{SearchResults, ValidationError, Error}
+import no.ndla.searchapi.integration.SearchApiClient
+import no.ndla.searchapi.model.api.{Error, SearchResults, ValidationError}
 import no.ndla.searchapi.model.domain.{SearchParams, Sort}
-import no.ndla.searchapi.service.SearchService
+import no.ndla.searchapi.service.{SearchClients, SearchService}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport}
 
 trait SearchController {
-  this: SearchService =>
+  this: SearchService with SearchClients with SearchApiClient =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -45,8 +46,10 @@ trait SearchController {
       val sort = Sort.ByRelevanceDesc
       val page = intOrDefault("page", 1)
       val pageSize = intOrDefault("page-size", 5)
+      val apisToSearch: Set[SearchApiClient] = paramAsListOfString("types").flatMap(SearchClients.get).toSet
+      val allApis: Set[SearchApiClient] = SearchClients.values.toSet
 
-      searchService.search(SearchParams(query, language, sort, page, pageSize))
+      searchService.search(SearchParams(query, language, sort, page, pageSize), if (apisToSearch.isEmpty) allApis else apisToSearch)
     }
 
   }
