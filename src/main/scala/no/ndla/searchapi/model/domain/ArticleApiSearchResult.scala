@@ -8,10 +8,13 @@
 package no.ndla.searchapi.model.domain
 
 
+case class ArticleApiTitle(title: String, language: String)
+case class ArticleApiVisualElment(content: String, language: String)
+case class ArticleApiIntro(introduction: String, language: String)
 case class ArticleApiSearchResult(id: Long,
-                                  title: String,
-                                  visualElement: String,
-                                  introduction: String,
+                                  title: ArticleApiTitle,
+                                  visualElement: Option[ArticleApiVisualElment],
+                                  introduction: Option[ArticleApiIntro],
                                   url: String,
                                   license: String,
                                   articleType: String,

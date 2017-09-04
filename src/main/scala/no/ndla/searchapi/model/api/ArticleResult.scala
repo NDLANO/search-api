@@ -16,5 +16,5 @@ import scala.annotation.meta.field
 @ApiModel(description = "Search result for article api")
 case class ArticleResult(@(ApiModelProperty@field)(description = "The unique id of this article") id: Long,
                          @(ApiModelProperty@field)(description = "The title of the article") title: String,
-                         @(ApiModelProperty@field)(description = "The introduction of the article") introduction: String
+                         @(ApiModelProperty@field)(description = "The introduction of the article") introduction: Option[String]
                         )

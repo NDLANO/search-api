@@ -41,15 +41,17 @@ trait SearchController {
         responseMessages(response500))
 
     get("/", operation(searchAPIs)) {
-      val query = paramOrNone("query")
-      val language = paramOrNone("language")
+      val language = paramOrDefault("language", "nb")
       val sort = Sort.ByRelevanceDesc
       val page = intOrDefault("page", 1)
       val pageSize = intOrDefault("page-size", 5)
       val apisToSearch: Set[SearchApiClient] = paramAsListOfString("types").flatMap(SearchClients.get).toSet
       val allApis: Set[SearchApiClient] = SearchClients.values.toSet
 
-      searchService.search(SearchParams(query, language, sort, page, pageSize), if (apisToSearch.isEmpty) allApis else apisToSearch)
+      val usedKeys = Set("language", "page", "page-size", "types")
+      val remainingParams = params(request).filterKeys(key => !usedKeys.contains(key))
+
+      searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), if (apisToSearch.isEmpty) allApis else apisToSearch)
     }
 
   }
