@@ -27,17 +27,13 @@ class SearchServiceTest extends UnitSuite with TestEnvironment {
   test("search should return a list of search results from other apis") {
     when(articleApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleArticleSearch)))
     when(learningpathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
-    when(imageApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleImageSearch)))
-    when(audioApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleAudio)))
 
     val searchParams = SearchParams(None, None, Sort.ByRelevanceDesc, 1, 10)
-    val res = searchService.search(searchParams)
+    val res = searchService.search(searchParams, Set(articleApiClient, learningpathApiClient))
 
-    res.length should be (4)
+    res.length should be (2)
     res.exists(ent => ent.isInstanceOf[api.ArticleResults]) should be (true)
     res.exists(ent => ent.isInstanceOf[api.LearningpathResults]) should be (true)
-    res.exists(ent => ent.isInstanceOf[api.ImageResults]) should be (true)
-    res.exists(ent => ent.isInstanceOf[api.AudioResults]) should be (true)
     res.exists(ent => ent.isInstanceOf[api.SearchError]) should be (false)
   }
 
@@ -48,7 +44,7 @@ class SearchServiceTest extends UnitSuite with TestEnvironment {
     when(audioApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleAudio)))
 
     val searchParams = SearchParams(None, None, Sort.ByRelevanceDesc, 1, 10)
-    val res = searchService.search(searchParams)
+    val res = searchService.search(searchParams, SearchClients.values.toSet)
 
     res.length should be (4)
     res.exists(ent => ent.isInstanceOf[api.SearchError]) should be (true)

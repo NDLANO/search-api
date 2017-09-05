@@ -11,13 +11,14 @@ package no.ndla.searchapi
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.controller.{HealthController, SearchController}
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.service.{ConverterService, SearchService}
+import no.ndla.searchapi.service.{ConverterService, SearchClients, SearchService}
 import org.scalatest.mockito.MockitoSugar._
 
 trait TestEnvironment
   extends HealthController
     with SearchController
     with SearchService
+    with SearchClients
     with ConverterService
     with SearchApiClient
     with ArticleApiClient
@@ -38,4 +39,10 @@ trait TestEnvironment
   val learningpathApiClient = mock[LearningpathApiClient]
   val imageApiClient = mock[ImageApiClient]
   val audioApiClient = mock[AudioApiClient]
+  lazy val SearchClients = Map[String, SearchApiClient](
+    "articles" -> articleApiClient,
+    "learningpaths" -> learningpathApiClient,
+    "images" -> imageApiClient,
+    "audios" -> audioApiClient
+  )
 }
