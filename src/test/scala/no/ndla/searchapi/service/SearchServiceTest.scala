@@ -28,7 +28,7 @@ class SearchServiceTest extends UnitSuite with TestEnvironment {
     when(articleApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleArticleSearch)))
     when(learningpathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
 
-    val searchParams = SearchParams(None, None, Sort.ByRelevanceDesc, 1, 10)
+    val searchParams = SearchParams("nb", Sort.ByRelevanceDesc, 1, 10, Map.empty)
     val res = searchService.search(searchParams, Set(articleApiClient, learningpathApiClient))
 
     res.length should be (2)
@@ -43,7 +43,7 @@ class SearchServiceTest extends UnitSuite with TestEnvironment {
     when(imageApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleImageSearch)))
     when(audioApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleAudio)))
 
-    val searchParams = SearchParams(None, None, Sort.ByRelevanceDesc, 1, 10)
+    val searchParams = SearchParams("nb", Sort.ByRelevanceDesc, 1, 10, Map.empty)
     val res = searchService.search(searchParams, SearchClients.values.toSet)
 
     res.length should be (4)

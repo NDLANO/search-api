@@ -26,21 +26,21 @@ trait SearchApiClient {
     val searchPath: String
     def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
 
-    def get[T](path: String, params: (String, Any)*)(implicit mf: Manifest[T]): Try[T] =
-      ndlaClient.fetch[T](Http((baseUrl / path).addParams(params)))
+    def get[T](path: String, params: Map[String, Any])(implicit mf: Manifest[T]): Try[T] =
+      ndlaClient.fetch[T](Http((baseUrl / path).addParams(params.toList)))
 
-    protected def search[T <: ApiSearchResults](searchParams: SearchParams)(implicit mf: Manifest[T]): Future[Try[T]] =
-      Future {
-        get(searchPath,
-          "query" -> searchParams.query.getOrElse(""),
-          "language" -> searchParams.language.getOrElse(""),
-          "sort" -> searchParams.sort,
-          "page" -> searchParams.page,
-          "page-size" -> searchParams.pageSize
-        )
-      }.map {
+    protected def search[T <: ApiSearchResults](searchParams: SearchParams)(implicit mf: Manifest[T]): Future[Try[T]] = {
+      val queryParams = searchParams.remaindingParams ++ Map(
+        "language" -> searchParams.language,
+        "sort" -> searchParams.sort,
+        "page" -> searchParams.page,
+        "page-size" -> searchParams.pageSize)
+
+      Future { get(searchPath, queryParams) }.map {
         case Success(a) => Success(a)
         case Failure(ex) => Failure(new ApiSearchException(name, ex.getMessage))
       }
+    }
+
   }
 }

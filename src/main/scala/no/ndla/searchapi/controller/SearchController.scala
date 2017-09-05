@@ -36,20 +36,25 @@ trait SearchController {
         headerParam[Option[String]]("X-Correlation-ID").description("User supplied correlation-id. May be omitted."),
         queryParam[Option[String]]("query").description("Return only resources with content matching the specified query."),
         queryParam[Option[String]]("language").description("The ISO 639-1 language code describing language used in query-params."),
+        queryParam[Option[String]]("page").description("The page of each result set"),
+        queryParam[Option[String]]("page-size").description("The page size of each result set"),
+        queryParam[Option[String]]("types").description("A comma separated list of types to search in. f.ex articles,images"),
       )
         authorizations "oauth2"
         responseMessages(response500))
 
     get("/", operation(searchAPIs)) {
-      val query = paramOrNone("query")
-      val language = paramOrNone("language")
+      val language = paramOrDefault("language", "nb")
       val sort = Sort.ByRelevanceDesc
       val page = intOrDefault("page", 1)
       val pageSize = intOrDefault("page-size", 5)
       val apisToSearch: Set[SearchApiClient] = paramAsListOfString("types").flatMap(SearchClients.get).toSet
       val allApis: Set[SearchApiClient] = SearchClients.values.toSet
 
-      searchService.search(SearchParams(query, language, sort, page, pageSize), if (apisToSearch.isEmpty) allApis else apisToSearch)
+      val usedKeys = Set("language", "page", "page-size", "types")
+      val remainingParams = params(request).filterKeys(key => !usedKeys.contains(key))
+
+      searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), if (apisToSearch.isEmpty) allApis else apisToSearch)
     }
 
   }

@@ -7,16 +7,20 @@
 
 package no.ndla.searchapi.model.domain
 
+case class LearningpathApiTitle(title: String, language: String)
+case class LearningpathApiDescription(description: String, language: String)
+case class LearningpathApiIntro(introduction: String, language: String)
+case class LearningPathApiTags(tags: Seq[String], language: String)
 case class LearningpathApiSearchResult(id: Long,
-                                       title: String,
-                                       description: String,
-                                       introduction: String,
+                                       title: LearningpathApiTitle,
+                                       description: LearningpathApiDescription,
+                                       introduction: LearningpathApiIntro,
                                        metaUrl: String,
                                        coverPhotoUrl: Option[String],
                                        duration: Option[Int],
                                        status: String,
                                        lastUpdated: String,
-                                       tags: Seq[String],
+                                       tags: LearningPathApiTags,
                                        supportedLanguages: Seq[String],
                                        isBasedOn: Option[Long])
 
