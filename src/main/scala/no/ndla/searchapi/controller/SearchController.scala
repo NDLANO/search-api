@@ -36,6 +36,9 @@ trait SearchController {
         headerParam[Option[String]]("X-Correlation-ID").description("User supplied correlation-id. May be omitted."),
         queryParam[Option[String]]("query").description("Return only resources with content matching the specified query."),
         queryParam[Option[String]]("language").description("The ISO 639-1 language code describing language used in query-params."),
+        queryParam[Option[String]]("page").description("The page of each result set"),
+        queryParam[Option[String]]("page-size").description("The page size of each result set"),
+        queryParam[Option[String]]("types").description("A comma separated list of types to search in. f.ex articles,images"),
       )
         authorizations "oauth2"
         responseMessages(response500))
