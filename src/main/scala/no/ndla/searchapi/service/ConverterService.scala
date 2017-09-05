@@ -27,7 +27,12 @@ trait ConverterService {
     }
 
     private def articleSearchResultsToApi(articles: ArticleApiSearchResults): api.ArticleResults = {
-      api.ArticleResults("articles", articles.language, articles.results.map(articleSearchResultToApi))
+      api.ArticleResults("articles",
+        articles.language,
+        articles.totalCount,
+        articles.page,
+        articles.pageSize,
+        articles.results.map(articleSearchResultToApi))
     }
 
     private def articleSearchResultToApi(article: ArticleApiSearchResult): api.ArticleResult = {
@@ -35,7 +40,12 @@ trait ConverterService {
     }
 
     private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults): api.LearningpathResults = {
-      api.LearningpathResults("learningpaths", learningpaths.language, learningpaths.results.map(learningpathSearchResultToApi))
+      api.LearningpathResults("learningpaths",
+        learningpaths.language,
+        learningpaths.totalCount,
+        learningpaths.page,
+        learningpaths.pageSize,
+        learningpaths.results.map(learningpathSearchResultToApi))
     }
 
     private def learningpathSearchResultToApi(learningpath: LearningpathApiSearchResult): api.LearningpathResult = {
@@ -43,7 +53,11 @@ trait ConverterService {
     }
 
     private def imageSearchResultsToApi(images: ImageApiSearchResults): api.ImageResults = {
-      api.ImageResults("images", images.results.map(imageSearchResultToApi))
+      api.ImageResults("images",
+        images.totalCount,
+        images.page,
+        images.pageSize,
+        images.results.map(imageSearchResultToApi))
     }
 
     private def imageSearchResultToApi(image: ImageApiSearchResult): api.ImageResult = {
@@ -57,7 +71,12 @@ trait ConverterService {
     }
 
     private def audioSearchResultsToApi(audios: AudioApiSearchResults): api.AudioResults = {
-      api.AudioResults("audios", audios.language, audios.results.map(audioSearchResultToApi))
+      api.AudioResults("audios",
+        audios.language,
+        audios.totalCount,
+        audios.page,
+        audios.pageSize,
+        audios.results.map(audioSearchResultToApi))
     }
 
     private def audioSearchResultToApi(audio: AudioApiSearchResult): api.AudioResult = {
