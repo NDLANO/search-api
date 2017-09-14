@@ -67,7 +67,7 @@ trait ConverterService {
       val previewUrl = image.previewUrl.withHost(host).withScheme(scheme)
       val metaUrl = image.metaUrl.withHost(host).withScheme(scheme)
 
-      api.ImageResult(image.id.toLong, previewUrl, metaUrl)
+      api.ImageResult(image.id.toLong, image.title.title, image.altText.alttext, previewUrl, metaUrl)
     }
 
     private def audioSearchResultsToApi(audios: AudioApiSearchResults): api.AudioResults = {
