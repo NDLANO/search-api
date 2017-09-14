@@ -36,7 +36,7 @@ trait ConverterService {
     }
 
     private def articleSearchResultToApi(article: ArticleApiSearchResult): api.ArticleResult = {
-      api.ArticleResult(article.id, article.title.title, article.introduction.map(_.introduction))
+      api.ArticleResult(article.id, article.title.title, article.introduction.map(_.introduction), article.articleType)
     }
 
     private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults): api.LearningpathResults = {
