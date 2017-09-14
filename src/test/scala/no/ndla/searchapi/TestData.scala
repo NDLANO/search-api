@@ -51,8 +51,8 @@ object TestData {
     pageSize = 10,
     language = "nb",
     results = Seq(
-      AudioApiSearchResult(1, "en title", "http://audio/1", "by", Seq("nb")),
-      AudioApiSearchResult(2, "ny tlttle", "http://audio/2", "by", Seq("nb"))
+      AudioApiSearchResult(1, AudioApiTitle("en title", "nb"), "http://audio/1", "by", Seq("nb")),
+      AudioApiSearchResult(2, AudioApiTitle("ny tlttle", "nb"), "http://audio/2", "by", Seq("nb"))
     )
   )
 }

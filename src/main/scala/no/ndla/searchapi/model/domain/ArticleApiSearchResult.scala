@@ -9,7 +9,7 @@ package no.ndla.searchapi.model.domain
 
 
 case class ArticleApiTitle(title: String, language: String)
-case class ArticleApiVisualElment(content: String, language: String)
+case class ArticleApiVisualElment(visualElement: String, language: String)
 case class ArticleApiIntro(introduction: String, language: String)
 case class ArticleApiSearchResult(id: Long,
                                   title: ArticleApiTitle,

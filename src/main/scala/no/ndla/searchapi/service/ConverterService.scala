@@ -84,7 +84,7 @@ trait ConverterService {
       val host = ApplicationUrl.get.host.getOrElse(Domain)
 
       val url = audio.url.withHost(host).withScheme(scheme)
-      api.AudioResult(audio.id, audio.title, url)
+      api.AudioResult(audio.id, audio.title.title, url)
     }
 
   }
