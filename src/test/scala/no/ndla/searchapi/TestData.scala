@@ -29,8 +29,8 @@ object TestData {
     page = 1,
     pageSize = 10,
     results = Seq(
-      ImageApiSearchResult("1", "http://images/1.jpg", "http://images/1", "by"),
-      ImageApiSearchResult("1", "http://images/1.jpg", "http://images/1", "by")
+      ImageApiSearchResult("1", ImageTitle("title", "en"), ImageAltText("alt text", "en"), "http://images/1.jpg", "http://images/1", "by"),
+      ImageApiSearchResult("1", ImageTitle("title", "en"), ImageAltText("alt text", "en"),  "http://images/1.jpg", "http://images/1", "by")
     )
   )
 
