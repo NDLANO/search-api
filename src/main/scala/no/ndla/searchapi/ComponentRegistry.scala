@@ -11,7 +11,7 @@ package no.ndla.searchapi
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.controller.{HealthController, SearchController}
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.SearchApiProperties.{ArticleApiUrl, AudioApiUrl, ImageApiUrl, LearningpathApiUrl}
+import no.ndla.searchapi.SearchApiProperties.{DraftApiUrl, AudioApiUrl, ImageApiUrl, LearningpathApiUrl}
 import no.ndla.searchapi.service.{ConverterService, SearchClients, SearchService}
 
 object ComponentRegistry
@@ -19,7 +19,7 @@ object ComponentRegistry
     with HealthController
     with NdlaClient
     with SearchApiClient
-    with ArticleApiClient
+    with DraftApiClient
     with LearningpathApiClient
     with ImageApiClient
     with AudioApiClient
@@ -34,12 +34,12 @@ object ComponentRegistry
   lazy val resourcesApp = new ResourcesApp
 
   lazy val ndlaClient = new NdlaClient
-  lazy val articleApiClient = new ArticleApiClient(ArticleApiUrl)
+  lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
   lazy val learningpathApiClient = new LearningpathApiClient(LearningpathApiUrl)
   lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
   lazy val audioApiClient = new AudioApiClient(AudioApiUrl)
   lazy val SearchClients = Map[String, SearchApiClient](
-    articleApiClient.name -> articleApiClient,
+    draftApiClient.name -> draftApiClient,
     learningpathApiClient.name -> learningpathApiClient,
     imageApiClient.name -> imageApiClient,
     audioApiClient.name -> audioApiClient

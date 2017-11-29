@@ -21,7 +21,7 @@ trait TestEnvironment
     with SearchClients
     with ConverterService
     with SearchApiClient
-    with ArticleApiClient
+    with DraftApiClient
     with LearningpathApiClient
     with ImageApiClient
     with AudioApiClient
@@ -35,12 +35,12 @@ trait TestEnvironment
   val converterService = mock[ConverterService]
 
   val ndlaClient = mock[NdlaClient]
-  val articleApiClient = mock[ArticleApiClient]
+  val draftApiClient = mock[DraftApiClient]
   val learningpathApiClient = mock[LearningpathApiClient]
   val imageApiClient = mock[ImageApiClient]
   val audioApiClient = mock[AudioApiClient]
   lazy val SearchClients = Map[String, SearchApiClient](
-    "articles" -> articleApiClient,
+    "articles" -> draftApiClient,
     "learningpaths" -> learningpathApiClient,
     "images" -> imageApiClient,
     "audios" -> audioApiClient

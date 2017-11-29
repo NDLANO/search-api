@@ -9,15 +9,15 @@ package no.ndla.searchapi.service
 
 import no.ndla.network.ApplicationUrl
 import no.ndla.network.model.HttpRequestException
+import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.domain.{SearchParams, Sort}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
-import no.ndla.searchapi.model.api
-import org.mockito.Mockito._
 import org.mockito.Matchers._
+import org.mockito.Mockito._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class SearchServiceTest extends UnitSuite with TestEnvironment {
   ApplicationUrl.applicationUrl.set("https://unit-test")
@@ -25,11 +25,11 @@ class SearchServiceTest extends UnitSuite with TestEnvironment {
   override val converterService = new ConverterService
 
   test("search should return a list of search results from other apis") {
-    when(articleApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleArticleSearch)))
+    when(draftApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleArticleSearch)))
     when(learningpathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
 
     val searchParams = SearchParams("nb", Sort.ByRelevanceDesc, 1, 10, Map.empty)
-    val res = searchService.search(searchParams, Set(articleApiClient, learningpathApiClient))
+    val res = searchService.search(searchParams, Set(draftApiClient, learningpathApiClient))
 
     res.length should be (2)
     res.exists(ent => ent.isInstanceOf[api.ArticleResults]) should be (true)
@@ -38,7 +38,7 @@ class SearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("search should contain an error entry if a search failed") {
-    when(articleApiClient.search(any[SearchParams])).thenReturn(Future(Failure(new HttpRequestException("Connection refused"))))
+    when(draftApiClient.search(any[SearchParams])).thenReturn(Future(Failure(new HttpRequestException("Connection refused"))))
     when(learningpathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
     when(imageApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleImageSearch)))
     when(audioApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleAudio)))
