@@ -27,7 +27,7 @@ object SearchApiProperties extends LazyLogging {
 
   lazy val Domain = Domains.get(Environment)
 
-  val ArticleApiUrl = "http://article-api.ndla-local"
+  val DraftApiUrl = "http://draft-api.ndla-local"
   val LearningpathApiUrl = "http://learningpath-api.ndla-local"
   val ImageApiUrl = "http://image-api.ndla-local"
   val AudioApiUrl = "http://audio-api.ndla-local"
