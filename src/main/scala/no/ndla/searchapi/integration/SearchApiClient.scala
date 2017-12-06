@@ -27,7 +27,7 @@ trait SearchApiClient {
     def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
 
     def get[T](path: String, params: Map[String, Any])(implicit mf: Manifest[T]): Try[T] =
-      ndlaClient.fetch[T](Http((baseUrl / path).addParams(params.toList)))
+      ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)))
 
     protected def search[T <: ApiSearchResults](searchParams: SearchParams)(implicit mf: Manifest[T]): Future[Try[T]] = {
       val queryParams = searchParams.remaindingParams ++ Map(
