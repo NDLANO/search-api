@@ -17,7 +17,12 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 trait SearchService {
-  this: ConverterService with SearchApiClient with ArticleApiClient with LearningpathApiClient with ImageApiClient with AudioApiClient =>
+  this: ConverterService
+    with SearchApiClient
+    with DraftApiClient
+    with LearningpathApiClient
+    with ImageApiClient
+    with AudioApiClient =>
   val searchService: SearchService
 
   class SearchService {

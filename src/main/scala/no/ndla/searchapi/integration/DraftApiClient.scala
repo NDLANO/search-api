@@ -13,12 +13,12 @@ import no.ndla.searchapi.model.domain.{ArticleApiSearchResults, SearchParams}
 import scala.concurrent.Future
 import scala.util.Try
 
-trait ArticleApiClient {
+trait DraftApiClient {
   this: NdlaClient with SearchApiClient =>
-  val articleApiClient: ArticleApiClient
+  val draftApiClient: DraftApiClient
 
-  class ArticleApiClient(val baseUrl: String) extends SearchApiClient {
-    override val searchPath = "article-api/v2/articles"
+  class DraftApiClient(val baseUrl: String) extends SearchApiClient {
+    override val searchPath = "draft-api/v1/drafts"
     override val name = "articles"
 
     def search(searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =
