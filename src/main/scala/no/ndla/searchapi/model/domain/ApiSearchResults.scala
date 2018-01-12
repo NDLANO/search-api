@@ -25,6 +25,7 @@ case class ArticleApiSearchResults(totalCount: Long,
 case class ImageApiSearchResults(totalCount: Long,
                                  page: Int,
                                  pageSize: Int,
+                                 language: String,
                                  results: Seq[ImageApiSearchResult]) extends ApiSearchResults
 
 case class LearningpathApiSearchResults(totalCount: Long,
