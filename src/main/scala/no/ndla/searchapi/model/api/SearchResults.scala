@@ -34,6 +34,7 @@ case class LearningpathResults(@(ApiModelProperty@field)(description = "The type
 
 @ApiModel(description = "Search result for image api")
 case class ImageResults(@(ApiModelProperty@field)(description = "The type of search results (images)") `type`: String,
+                        @(ApiModelProperty@field)(description = "The language of the search results") language: String,
                         @(ApiModelProperty@field)(description = "The total number of images matching this query") totalCount: Long,
                         @(ApiModelProperty@field)(description = "The page from which results are shown from") page: Int,
                         @(ApiModelProperty@field)(description = "The number of results per page") pageSize: Int,

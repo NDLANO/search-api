@@ -54,6 +54,7 @@ trait ConverterService {
 
     private def imageSearchResultsToApi(images: ImageApiSearchResults): api.ImageResults = {
       api.ImageResults("images",
+        images.language,
         images.totalCount,
         images.page,
         images.pageSize,
