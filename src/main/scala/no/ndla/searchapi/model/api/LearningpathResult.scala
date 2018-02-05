@@ -16,5 +16,6 @@ import scala.annotation.meta.field
 @ApiModel(description = "Search result for learningpath api")
 case class LearningpathResult(@(ApiModelProperty@field)(description = "The unique id of this learningpath") id: Long,
                               @(ApiModelProperty@field)(description = "The title of the learningpath") title: String,
-                              @(ApiModelProperty@field)(description = "The introduction of the learningpath") introduction: String
+                              @(ApiModelProperty@field)(description = "The introduction of the learningpath") introduction: String,
+                              @(ApiModelProperty@field)(description = "List of supported languages") supportedLanguages: Seq[String]
                              )

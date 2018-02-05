@@ -36,7 +36,7 @@ trait ConverterService {
     }
 
     private def articleSearchResultToApi(article: ArticleApiSearchResult): api.ArticleResult = {
-      api.ArticleResult(article.id, article.title.title, article.introduction.map(_.introduction), article.articleType)
+      api.ArticleResult(article.id, article.title.title, article.introduction.map(_.introduction), article.articleType, article.supportedLanguages)
     }
 
     private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults): api.LearningpathResults = {
@@ -49,7 +49,7 @@ trait ConverterService {
     }
 
     private def learningpathSearchResultToApi(learningpath: LearningpathApiSearchResult): api.LearningpathResult = {
-      api.LearningpathResult(learningpath.id, learningpath.title.title, learningpath.introduction.introduction)
+      api.LearningpathResult(learningpath.id, learningpath.title.title, learningpath.introduction.introduction, learningpath.supportedLanguages)
     }
 
     private def imageSearchResultsToApi(images: ImageApiSearchResults): api.ImageResults = {
@@ -68,7 +68,7 @@ trait ConverterService {
       val previewUrl = image.previewUrl.withHost(host).withScheme(scheme)
       val metaUrl = image.metaUrl.withHost(host).withScheme(scheme)
 
-      api.ImageResult(image.id.toLong, image.title.title, image.altText.alttext, previewUrl, metaUrl)
+      api.ImageResult(image.id.toLong, image.title.title, image.altText.alttext, previewUrl, metaUrl, image.supportedLanguages)
     }
 
     private def audioSearchResultsToApi(audios: AudioApiSearchResults): api.AudioResults = {
@@ -85,7 +85,7 @@ trait ConverterService {
       val host = ApplicationUrl.get.host.getOrElse(Domain)
 
       val url = audio.url.withHost(host).withScheme(scheme)
-      api.AudioResult(audio.id, audio.title.title, url)
+      api.AudioResult(audio.id, audio.title.title, url, audio.supportedLanguages)
     }
 
   }

@@ -30,8 +30,8 @@ object TestData {
     pageSize = 10,
     language = "nb",
     results = Seq(
-      ImageApiSearchResult("1", ImageTitle("title", "en"), ImageAltText("alt text", "en"), "http://images/1.jpg", "http://images/1", "by"),
-      ImageApiSearchResult("1", ImageTitle("title", "en"), ImageAltText("alt text", "en"),  "http://images/1.jpg", "http://images/1", "by")
+      ImageApiSearchResult("1", ImageTitle("title", "en"), ImageAltText("alt text", "en"), "http://images/1.jpg", "http://images/1", "by", Seq("en")),
+      ImageApiSearchResult("1", ImageTitle("title", "en"), ImageAltText("alt text", "en"),  "http://images/1.jpg", "http://images/1", "by", Seq("en"))
     )
   )
 

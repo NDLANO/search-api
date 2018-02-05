@@ -18,5 +18,6 @@ case class ImageResult(@(ApiModelProperty@field)(description = "The unique id of
                        @(ApiModelProperty@field)(description = "The title of this image") title: String,
                        @(ApiModelProperty@field)(description = "The alt text of this image") altText: String,
                        @(ApiModelProperty@field)(description = "A direct link to the image") previewUrl: String,
-                       @(ApiModelProperty@field)(description = "A link to get meta data related to the image") metaUrl: String
+                       @(ApiModelProperty@field)(description = "A link to get meta data related to the image") metaUrl: String,
+                       @(ApiModelProperty@field)(description = "List of supported languages") supportedLanguages: Seq[String]
                       )
