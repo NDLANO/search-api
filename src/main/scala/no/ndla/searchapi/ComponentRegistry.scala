@@ -35,6 +35,8 @@ object ComponentRegistry
 
   lazy val ndlaClient = new NdlaClient
   lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
+
+  draftApiClient.searchPath
   lazy val learningpathApiClient = new LearningpathApiClient(LearningpathApiUrl)
   lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
   lazy val audioApiClient = new AudioApiClient(AudioApiUrl)

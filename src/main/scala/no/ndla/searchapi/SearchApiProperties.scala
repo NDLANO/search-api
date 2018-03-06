@@ -30,9 +30,29 @@ object SearchApiProperties extends LazyLogging {
   lazy val Domain = Domains.get(Environment)
 
   val DraftApiUrl = "http://draft-api.ndla-local"
+  val ArticleApiUrl = "http://article-api.ndla-local"
   val LearningpathApiUrl = "http://learningpath-api.ndla-local"
   val ImageApiUrl = "http://image-api.ndla-local"
   val AudioApiUrl = "http://audio-api.ndla-local"
+
+  val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-multi.ndla-local")
+  val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
+  val RunWithSignedSearchRequests: Boolean = propOrElse("RUN_WITH_SIGNED_SEARCH_REQUESTS", "true").toBoolean
+  val SearchIndexes: Map[String, String] = Map(
+    "articles" -> propOrElse("ARTICLE_SEARCH_INDEX_NAME", "articles"),
+    "concepts" -> propOrElse("CONCEPT_SEARCH_INDEX_NAME", "concepts"),
+    "learningpaths" -> propOrElse("LEARNINGPATH_SEARCH_INDEX_NAME", "learningpaths")
+  )
+
+  val SearchDocuments: Map[String, String] = Map(
+    "articles" -> "article",
+    "concepts" -> "concept",
+    "learningpaths" -> "learningpath"
+  )
+  val DefaultPageSize = 10
+  val MaxPageSize = 100
+  val IndexBulkSize = 200
+  val ElasticSearchIndexMaxResultWindow = 10000
 
 
   def booleanProp(key: String) = prop(key).toBoolean

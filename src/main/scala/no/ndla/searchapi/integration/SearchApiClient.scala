@@ -24,6 +24,9 @@ trait SearchApiClient {
     val name: String
     val baseUrl: String
     val searchPath: String
+
+    def getChunks[T]: Stream[Seq[T]]
+
     def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
 
     def get[T](path: String, params: Map[String, Any])(implicit mf: Manifest[T]): Try[T] =
