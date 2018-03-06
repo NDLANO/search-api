@@ -9,23 +9,56 @@ package no.ndla.searchapi.integration
 
 import no.ndla.network.NdlaClient
 import com.netaporter.uri.dsl._
+import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.model.api.ApiSearchException
-import no.ndla.searchapi.model.domain.{ApiSearchResults, SearchParams}
+import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResult, SearchParams}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import scalaj.http.Http
+import scala.math.ceil
 
 trait SearchApiClient {
-  this: NdlaClient =>
+  this: NdlaClient with LazyLogging =>
 
   trait SearchApiClient {
     val name: String
     val baseUrl: String
     val searchPath: String
+    val internPath: String = "intern"
 
-    def getChunks[T]: Stream[Seq[T]]
+    def getChunks[T]: Stream[Try[Seq[T]]] = {
+      getChunk(0, 0) match {
+        case Success(initSearch) =>
+          val dbCount = initSearch.totalCount
+          val pageSize = 50
+          val numPages = ceil(dbCount / pageSize).toInt
+          val pages = Seq.range(1, numPages + 1)
+
+          pages.toStream.map(p => {
+            getChunk(p, pageSize).map(x => x.results)
+            // TODO: Consider attempt to flatMap (or something), so return type is Stream[Try[T]]
+          })
+        case Failure(_) =>
+          logger.error(s"Could not fetch initial chunk from $baseUrl/$internPath")
+          Stream.empty
+      }
+    }
+
+    private def getChunk[T](page: Int, pageSize: Int): Try[DomainDumpResult[T]] = {
+      val params = Map(
+        "page" -> page,
+        "page-size" -> pageSize
+      )
+
+      get(internPath, params) match {
+        case Success(result) => Success(result)
+        case Failure(ex) =>
+          logger.error(s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$internPath'")
+          Failure(ex)
+      }
+    }
 
     def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
 

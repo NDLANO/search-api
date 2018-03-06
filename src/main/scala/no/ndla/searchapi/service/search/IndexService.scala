@@ -67,9 +67,10 @@ trait IndexService {
     }
 
     def sendToElastic(indexName: String): Try[Int] = {
-      apiClient.getChunks[D].map(chunk =>
-        indexDocuments(chunk, indexName)
-      ).sum
+      apiClient.getChunks[D].map {
+        case Success(c) => indexDocuments(c, indexName)
+        case Failure(ex) => return Failure(ex)
+      }.sum
     }
 
     def indexDocuments(contents: Seq[D], indexName: String): Try[Int] = {
