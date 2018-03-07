@@ -67,10 +67,13 @@ trait IndexService {
     }
 
     def sendToElastic(indexName: String): Try[Int] = {
-      apiClient.getChunks[D].map {
-        case Success(c) => indexDocuments(c, indexName)
+      val stream = apiClient.getChunks[D]
+      var count = 0 // TODO: more functional? Is it even possible with streams?
+      stream.foreach({
+        case Success(c) => indexDocuments(c, indexName).map(c => count += c)
         case Failure(ex) => return Failure(ex)
-      }.sum
+      })
+      Success(count)
     }
 
     def indexDocuments(contents: Seq[D], indexName: String): Try[Int] = {

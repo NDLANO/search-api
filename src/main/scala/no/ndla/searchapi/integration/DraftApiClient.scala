@@ -7,11 +7,16 @@
 
 package no.ndla.searchapi.integration
 
+import java.util.Date
+
 import no.ndla.network.NdlaClient
+import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.domain.{ArticleApiSearchResults, SearchParams}
+import no.ndla.searchapi.model.domain.article
 
 import scala.concurrent.Future
 import scala.util.Try
+import scalaj.http.{Http, HttpRequest}
 
 trait DraftApiClient {
   this: NdlaClient with SearchApiClient =>
@@ -23,5 +28,55 @@ trait DraftApiClient {
 
     def search(searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =
       search[ArticleApiSearchResults](searchParams)
+
+    private val draftApiGetAgreementEndpoint = s"http://${SearchApiProperties.DraftApiUrl}/draft-api/v1/agreements/:agreement_id"
+
+    def agreementExists(agreementId: Long): Boolean = getAgreementCopyright(agreementId).nonEmpty
+
+    def getAgreementCopyright(agreementId: Long): Option[article.Copyright] = {
+      implicit val formats = org.json4s.DefaultFormats
+      val request: HttpRequest = Http(s"$draftApiGetAgreementEndpoint".replace(":agreement_id", agreementId.toString))
+      ndlaClient.fetchWithForwardedAuth[Agreement](request).toOption match {
+        case Some(a) => Some(a.copyright.toDomainCopyright)
+        case _ => None
+      }
+    }
+  }
+
+}
+
+// TODO: Consider moving these to separate files
+case class ApiCopyright(license: License,
+                     origin: String,
+                     creators: Seq[article.Author],
+                     processors: Seq[article.Author],
+                     rightsholders: Seq[article.Author],
+                     agreementId: Option[Long],
+                     validFrom: Option[Date],
+                     validTo: Option[Date]) {
+
+  def toDomainCopyright: article.Copyright = {
+    article.Copyright(
+      license.license,
+      origin,
+      creators,
+      processors,
+      rightsholders,
+      agreementId,
+      validFrom,
+      validTo)
   }
 }
+
+case class License(license: String,
+                   description: Option[String],
+                   url: Option[String])
+
+case class Agreement(id: Long,
+                     title: String,
+                     content: String,
+                     copyright: ApiCopyright,
+                     created: Date,
+                     updated: Date,
+                     updatedBy: String
+                    )

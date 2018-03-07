@@ -36,10 +36,11 @@ trait SearchApiClient {
           val numPages = ceil(dbCount / pageSize).toInt
           val pages = Seq.range(1, numPages + 1)
 
-          pages.toStream.map(p => {
-            getChunk(p, pageSize).map(x => x.results)
-            // TODO: Consider attempt to flatMap (or something), so return type is Stream[Try[T]]
+          val stream: Stream[Try[Seq[T]]] = pages.toStream.map(p => {
+            getChunk[T](p, pageSize).map(_.results)
           })
+
+          stream
         case Failure(_) =>
           logger.error(s"Could not fetch initial chunk from $baseUrl/$internPath")
           Stream.empty

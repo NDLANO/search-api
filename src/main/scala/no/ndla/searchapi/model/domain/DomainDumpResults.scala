@@ -23,4 +23,4 @@ sealed trait DomainDumpResult[T] {
 case class ArticleDumpResult(totalCount: Long,
                              page: Int,
                              pageSize: Int,
-                             results: Seq[Article]) extends DomainDumpResult
+                             results: Seq[Article]) extends DomainDumpResult[Article]

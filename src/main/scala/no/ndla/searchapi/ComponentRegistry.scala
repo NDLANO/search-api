@@ -8,38 +8,49 @@
 
 package no.ndla.searchapi
 
+import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
-import no.ndla.searchapi.controller.{HealthController, SearchController}
+import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.SearchApiProperties.{DraftApiUrl, AudioApiUrl, ImageApiUrl, LearningpathApiUrl}
+import no.ndla.searchapi.SearchApiProperties._
+import no.ndla.searchapi.service.search.{ArticleIndexService, IndexService, SearchConverterService}
 import no.ndla.searchapi.service.{ConverterService, SearchClients, SearchService}
 
 object ComponentRegistry
-  extends SearchController
-    with HealthController
-    with NdlaClient
-    with SearchApiClient
-    with DraftApiClient
-    with LearningpathApiClient
-    with ImageApiClient
+    extends ArticleApiClient
+    with ArticleIndexService
     with AudioApiClient
     with ConverterService
-    with SearchService
+    with DraftApiClient
+    with Elastic4sClient
+    with HealthController
+    with ImageApiClient
+    with IndexService
+    with LazyLogging
+    with LearningpathApiClient
+    with NdlaClient
     with SearchClients
+    with SearchConverterService
+    with SearchService
+    with SearchController
+    with InternController
+    with SearchApiClient
 {
   implicit val swagger = new SearchSwagger
 
   lazy val searchController = new SearchController
   lazy val healthController = new HealthController
+  lazy val internController = new InternController
   lazy val resourcesApp = new ResourcesApp
 
   lazy val ndlaClient = new NdlaClient
-  lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
+  lazy val e4sClient: NdlaE4sClient = Elastic4sClientFactory.getClient()
 
-  draftApiClient.searchPath
+  lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
   lazy val learningpathApiClient = new LearningpathApiClient(LearningpathApiUrl)
   lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
   lazy val audioApiClient = new AudioApiClient(AudioApiUrl)
+  lazy val articleApiClient = new ArticleApiClient(ArticleApiUrl)
   lazy val SearchClients = Map[String, SearchApiClient](
     draftApiClient.name -> draftApiClient,
     learningpathApiClient.name -> learningpathApiClient,
@@ -48,5 +59,7 @@ object ComponentRegistry
   )
 
   lazy val converterService = new ConverterService
+  lazy val searchConverterService = new SearchConverterService
   lazy val searchService = new SearchService
+  lazy val articleIndexService = new ArticleIndexService
 }
