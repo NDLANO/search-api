@@ -13,12 +13,13 @@ import no.ndla.network.NdlaClient
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.SearchApiProperties._
-import no.ndla.searchapi.service.search.{ArticleIndexService, IndexService, SearchConverterService}
-import no.ndla.searchapi.service.{ConverterService, SearchClients, SearchService}
+import no.ndla.searchapi.service.search._
+import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients}
 
 object ComponentRegistry
     extends ArticleApiClient
     with ArticleIndexService
+    with ArticleSearchService
     with AudioApiClient
     with ConverterService
     with DraftApiClient
@@ -32,6 +33,7 @@ object ComponentRegistry
     with SearchClients
     with SearchConverterService
     with SearchService
+    with ApiSearchService
     with SearchController
     with InternController
     with SearchApiClient
@@ -58,8 +60,9 @@ object ComponentRegistry
     audioApiClient.name -> audioApiClient
   )
 
+  lazy val searchService = new ApiSearchService
   lazy val converterService = new ConverterService
   lazy val searchConverterService = new SearchConverterService
-  lazy val searchService = new SearchService
+  lazy val articleSearchService = new ArticleSearchService
   lazy val articleIndexService = new ArticleIndexService
 }

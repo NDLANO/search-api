@@ -33,12 +33,16 @@ case class ValidationMessage(@(ApiModelProperty@field)(description = "The field 
 object Error {
   val GENERIC = "GENERIC"
   val VALIDATION = "VALIDATION"
+  val WINDOW_TOO_LARGE = "RESULT_WINDOW_TOO_LARGE"
 
   val GENERIC_DESCRIPTION = s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
   val VALIDATION_DESCRIPTION = "Validation Error"
+  val WINDOW_TOO_LARGE_DESCRIPTION = s"The result window is too large. Fetching pages above ${SearchApiProperties.ElasticSearchIndexMaxResultWindow} results are unsupported."
 
   val GenericError = Error(GENERIC, GENERIC_DESCRIPTION)
 }
 
 class ValidationException(message: String = "Validation Error", val errors: Seq[ValidationMessage]) extends RuntimeException(message)
 class ApiSearchException(val apiName: String, message: String) extends RuntimeException(message)
+case class ResultWindowTooLargeException(message: String = Error.WINDOW_TOO_LARGE_DESCRIPTION) extends RuntimeException(message)
+case class ElasticIndexingException(message: String) extends RuntimeException(message)

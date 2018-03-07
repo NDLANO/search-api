@@ -11,7 +11,7 @@ import no.ndla.searchapi.model.domain._
 
 object TestData {
   val sampleArticleTitle = ArticleApiTitle("tittell", "nb")
-  val sampleArticleVisualElement = ArticleApiVisualElment("""<embed data-resource="image">""", "nb")
+  val sampleArticleVisualElement = ArticleApiVisualElement("""<embed data-resource="image">""", "nb")
   val sampleArticleIntro = ArticleApiIntro("intro", "nb")
   val sampleArticleSearch = ArticleApiSearchResults(
     totalCount = 2,

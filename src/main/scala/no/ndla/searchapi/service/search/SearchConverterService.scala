@@ -7,16 +7,25 @@
 
 package no.ndla.searchapi.service.search
 
+import com.sksamuel.elastic4s.http.search.SearchHit
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.mapping.ISO639
 import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.api.article.ArticleSummary
+import no.ndla.searchapi.model.api.article
 import no.ndla.network.ApplicationUrl
+import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.search._
+import no.ndla.searchapi.service.ConverterService
+import org.json4s.Formats
+import org.json4s.native.Serialization.read
 import org.jsoup.Jsoup
 
 trait SearchConverterService {
-  this: DraftApiClient =>
+  this: DraftApiClient
+  with ConverterService =>
   val searchConverterService: SearchConverterService
 
   class SearchConverterService extends LazyLogging {
@@ -59,16 +68,6 @@ trait SearchConverterService {
       )
     }
 
-    def asArticleSummary(searchableArticle: SearchableArticle): ArticleSummary = {
-      ArticleSummary(
-        id = searchableArticle.id,
-        title = searchableArticle.title.languageValues.map(lv => ArticleTitle(lv.value, lv.lang)),
-        visualElement = searchableArticle.visualElement.languageValues.map(lv => VisualElement(lv.value, lv.lang)),
-        introduction = searchableArticle.introduction.languageValues.map(lv => ArticleIntroduction(lv.value, lv.lang)),
-        url = createUrlToArticle(searchableArticle.id),
-        license = searchableArticle.license)
-    }
-
     def createUrlToArticle(id: Long): String = {
       s"${ApplicationUrl.get}$id"
     }
@@ -88,5 +87,70 @@ trait SearchConverterService {
       )
     }
 
+    /**
+      * Attempts to extract language that hit from highlights in elasticsearch response.
+      * @param result Elasticsearch hit.
+      * @return Language if found.
+      */
+    def getLanguageFromHit(result: SearchHit): Option[String] = {
+      def keyToLanguage(keys: Iterable[String]): Option[String] = {
+        val keyLanguages = keys.toList.flatMap(key => key.split('.').toList match {
+          case _ :: language :: _ => Some(language)
+          case _ => None
+        })
+
+        keyLanguages.sortBy(lang => {
+          ISO639.languagePriority.reverse.indexOf(lang)
+        }).lastOption
+      }
+
+      val highlightKeys: Option[Map[String, _]] = Option(result.highlight)
+      val matchLanguage = keyToLanguage(highlightKeys.getOrElse(Map()).keys)
+
+      matchLanguage match {
+        case Some(lang) =>
+          Some(lang)
+        case _ =>
+          keyToLanguage(result.sourceAsMap.keys)
+      }
+    }
+
+    /**
+      * Returns article summary from json string returned by elasticsearch.
+      * Will always return summary, even if language does not exist in hitString.
+      * Language will be prioritized according to [[findByLanguageOrBestEffort]].
+      * @param hitString Json string returned from elasticsearch for one article.
+      * @param language Language to extract from the hitString.
+      * @return Article summary extracted from hitString in specified language.
+      */
+    def hitAsArticleSummary(hitString: String, language: String): ArticleSummary = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+
+      val searchableArticle = read[SearchableArticle](hitString)
+
+      val titles = searchableArticle.title.languageValues.map(lv => article.ArticleTitle(lv.value, lv.lang))
+      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => article.ArticleMetaDescription(lv.value, lv.lang))
+      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
+
+      val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(article.ArticleTitle("", Language.UnknownLanguage))
+      val visualElement = findByLanguageOrBestEffort(visualElements, language)
+      val introduction = findByLanguageOrBestEffort(introductions, language)
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language)
+
+      ArticleSummary(
+        searchableArticle.id,
+        title,
+        visualElement,
+        introduction,
+        metaDescription,
+        ApplicationUrl.get + searchableArticle.id.toString,
+        searchableArticle.license,
+        searchableArticle.articleType,
+        supportedLanguages
+      )
+    }
   }
 }
