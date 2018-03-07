@@ -20,6 +20,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.{Elastic4sClient, SearchApiClient}
 import no.ndla.searchapi.model.domain.ReindexResult
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
+import no.ndla.searchapi.model.domain.article.Content
 
 import scala.util.{Failure, Success, Try}
 
@@ -47,7 +48,7 @@ trait IndexService {
       } yield imported
     }
 
-    def indexDocuments: Try[ReindexResult] = synchronized {
+    def indexDocuments(implicit mf: Manifest[D]): Try[ReindexResult] = synchronized {
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
         val operations = for {
@@ -66,11 +67,12 @@ trait IndexService {
       })
     }
 
-    def sendToElastic(indexName: String): Try[Int] = {
+    def sendToElastic(indexName: String)(implicit mf: Manifest[D]): Try[Int] = {
       val stream = apiClient.getChunks[D]
       var count = 0 // TODO: more functional? Is it even possible with streams?
       stream.foreach({
-        case Success(c) => indexDocuments(c, indexName).map(c => count += c)
+        case Success(c) =>
+          indexDocuments(c, indexName).map(c => count += c)
         case Failure(ex) => return Failure(ex)
       })
       Success(count)
