@@ -58,21 +58,6 @@ trait SearchConverterService {
       s"${ApplicationUrl.get}$id"
     }
 
-    def asSearchableConcept(c: Concept): SearchableConcept = {
-
-      val defaultTitle = c.title.sortBy(title => {
-        val languagePriority = Language.languageAnalyzers.map(la => la.lang).reverse
-        languagePriority.indexOf(title.language)
-      }).lastOption
-
-      SearchableConcept(
-        c.id.get,
-        SearchableLanguageValues(c.title.map(title => LanguageValue(title.language, title.title))),
-        SearchableLanguageValues(c.content.map(content => LanguageValue(content.language, content.content))),
-        defaultTitle.map(t => t.title)
-      )
-    }
-
     /**
       * Attempts to extract language that hit from highlights in elasticsearch response.
       * @param result Elasticsearch hit.
