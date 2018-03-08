@@ -13,7 +13,7 @@ import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings._
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.ArticleApiClient
+import no.ndla.searchapi.integration.{ArticleApiClient, TaxonomyBundle}
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import org.json4s.native.Serialization.write
@@ -30,7 +30,8 @@ trait ArticleIndexService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
     override val apiClient: ArticleApiClient = articleApiClient
 
-    override def createIndexRequest(domainModel: Article, indexName: String): IndexDefinition = {
+    override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: TaxonomyBundle): IndexDefinition = {
+      // TODO: handle taxonomy here somehow. Fail if not existing. Maybe convert this function to return Try
       val source = write(searchConverterService.asSearchableArticle(domainModel))
       indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)
     }
@@ -38,14 +39,18 @@ trait ArticleIndexService {
     def getMapping: MappingDefinition = {
       mapping(documentType).fields(
         List(
-          intField("id"),
+          longField("id"),
           keywordField("defaultTitle"),
           dateField("lastUpdated"),
           keywordField("license"),
           textField("authors").fielddata(true),
-          textField("articleType").analyzer("keyword")
-
-        ) ++
+          textField("articleType").analyzer("keyword"),
+          longField("metaImageId"),
+          keywordField("resourceTypeIds"),
+          keywordField("contentTypeIds"),
+          keywordField("subjectIds")
+        )
+          ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++

@@ -9,9 +9,6 @@ package no.ndla.searchapi.integration
 
 import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
 import no.ndla.network.NdlaClient
-import no.ndla.network.model.HttpRequestException
-import org.json4s.native.Serialization.write
-
 import scala.util.{Failure, Success, Try}
 import scalaj.http.Http
 
@@ -33,29 +30,69 @@ trait TaxonomyApiClient {
       }
     }
 
-    def updateResource(resource: TaxonomyResource): Try[TaxonomyResource] = {
-      put[String, TaxonomyResource](s"$TaxonomyApiEndpoint/resources/${resource.id}", resource) match {
-        case Success(_) => Success(resource)
-        case Failure(ex: HttpRequestException) if ex.httpResponse.exists(_.is2xx) => Success(resource)
-        case Failure(ex) => Failure(ex)
-      }
+    def getAllResources: Try[Seq[TaxonomyResource]] =
+      get[Seq[TaxonomyResource]](s"$TaxonomyApiEndpoint/resources/")
+
+    def getAllSubjects: Try[Seq[TaxonomyResource]] =
+      get[Seq[TaxonomyResource]](s"$TaxonomyApiEndpoint/subjects/")
+
+    def getAllTopics: Try[Seq[TaxonomyResource]] =
+      get[Seq[TaxonomyResource]](s"$TaxonomyApiEndpoint/topics/")
+
+    def getAllTopicResourceConnections: Try[Seq[TaxonomyTopicResourceConnection]] =
+      get[Seq[TaxonomyTopicResourceConnection]](s"$TaxonomyApiEndpoint/topic-resources/")
+
+    def getAllTopicSubtopicConnections: Try[Seq[TaxonomyTopicSubtopicConnection]] =
+      get[Seq[TaxonomyTopicSubtopicConnection]](s"$TaxonomyApiEndpoint/topic-subtopics/")
+
+    def getTaxonomyBundle: Try[TaxonomyBundle] = {
+      for {
+        subjects <- getAllSubjects
+        topics <- getAllTopics
+        resources <- getAllResources
+        topicResourceConnections <- getAllTopicResourceConnections
+        topicSubtopicConnections <- getAllTopicSubtopicConnections
+
+        bundle <- TaxonomyBundle(
+          subjects,
+          topics,
+          resources,
+          topicResourceConnections,
+          topicSubtopicConnections
+        )
+      } yield bundle
     }
 
-    private def get[A](url: String, params: (String, String)*)(implicit mf: Manifest[A]): Try[A] = {
+    //TODO: Probably need this when converting Hit to MultiSummary
+    def queryResource(articleId: Long) =
+      get(s"$TaxonomyApiEndpoint/queries/resources?contentURI=urn:article:$articleId")
+
+    private def get[A](url: String, params: (String, String)*)(
+        implicit mf: Manifest[A]): Try[A] = {
       ndlaClient.fetchWithForwardedAuth[A](Http(url).params(params))
     }
-
-    private def put[A, B <: AnyRef](url: String, data: B, params: (String, String)*)(implicit mf: Manifest[A], format: org.json4s.Formats): Try[A] = {
-      ndlaClient.fetchWithForwardedAuth[A](
-        Http(url)
-          .postData(write(data))
-          .method("put")
-          .header("content-type", "application/json")
-          .params(params.toMap)
-      )
-    }
-
   }
 }
 
-case class TaxonomyResource(id: String, name: String, contentUri: Option[String], path: String)
+case class TaxonomyBundle(subjects: Seq[TaxonomyResource],
+                          topics: Seq[TaxonomyResource],
+                          resources: Seq[TaxonomyResource],
+                          topicResourceConnections: Seq[TaxonomyTopicResourceConnection],
+                          topicSubtopicConnections: Seq[TaxonomyTopicSubtopicConnection])
+
+case class TaxonomyTopicResourceConnection(topicid: String,
+                                           resourceId: String,
+                                           id: String,
+                                           primary: Boolean,
+                                           rank: Int)
+
+case class TaxonomyTopicSubtopicConnection(topicid: String,
+                                           subtopicid: String,
+                                           id: String,
+                                           primary: Boolean,
+                                           rank: Int)
+
+case class TaxonomyResource(id: String,
+                            name: String,
+                            contentUri: Option[String],
+                            path: String)

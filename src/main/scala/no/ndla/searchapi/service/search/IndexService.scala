@@ -17,7 +17,7 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition}
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.{Elastic4sClient, SearchApiClient}
+import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.domain.ReindexResult
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
 import no.ndla.searchapi.model.domain.article.Content
@@ -26,7 +26,8 @@ import scala.util.{Failure, Success, Try}
 
 trait IndexService {
   this: Elastic4sClient
-    with SearchApiClient =>
+    with SearchApiClient
+    with TaxonomyApiClient  =>
 
   trait IndexService[D <: AnyRef, T <: AnyRef] extends LazyLogging {
     val apiClient: SearchApiClient
@@ -35,8 +36,9 @@ trait IndexService {
 
     def getMapping: MappingDefinition
 
-    def createIndexRequest(domainModel: D, indexName: String): IndexDefinition
+    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: TaxonomyBundle): IndexDefinition
 
+    // TODO: Get taxonomy for single document
     def indexDocument(imported: D): Try[D] = {
       for {
         _ <- getAliasTarget.map {
@@ -68,25 +70,31 @@ trait IndexService {
       })
     }
 
+
+    // TODO: get taxonomy for all documents
     def sendToElastic(indexName: String)(implicit mf: Manifest[D]): Try[Int] = {
-      val stream = apiClient.getChunks[D]
-      var count = 0 // TODO: more functional? Is it even possible with streams?
-      stream.foreach({
-        case Success(c) =>
-          indexDocuments(c, indexName).map(c => count += c)
-        case Failure(ex) => return Failure(ex)
-      })
-      Success(count)
+      taxononyApiClient.getTaxonomyBundle match {
+        case Success(bundle) =>
+          val stream = apiClient.getChunks[D]
+          var count = 0 // TODO: more functional? Is it even possible with streams?
+          stream.foreach({
+            case Success(c) =>
+              indexDocuments(c, indexName, bundle).map(c => count += c)
+            case Failure(ex) => return Failure(ex)
+          })
+          Success(count)
+        case Failure(ex) => Failure(ex)
+      }
     }
 
-    def indexDocuments(contents: Seq[D], indexName: String): Try[Int] = {
+    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: TaxonomyBundle): Try[Int] = {
       if (contents.isEmpty) {
         Success(0)
       }
       else {
         val response = e4sClient.execute {
           bulk(contents.map(content => {
-            createIndexRequest(content, indexName)
+            createIndexRequest(content, indexName, taxonomyBundle)
           }))
         }
 

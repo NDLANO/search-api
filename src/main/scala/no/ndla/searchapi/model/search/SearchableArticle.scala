@@ -13,7 +13,9 @@ import no.ndla.searchapi.model.search.LanguageValue.{LanguageValue => LV}
 import org.json4s.JsonAST.{JArray, JField, JObject, JString}
 
 object LanguageValue {
+
   case class LanguageValue[T](lang: String, value: T)
+
   def apply[T](lang: String, value: T): LanguageValue[T] =
     LanguageValue(lang, value)
 }
@@ -34,7 +36,8 @@ object SearchableLanguageValues {
   /**
     * Apply method to create SearchableLanguageValues object from jsonObject for fields with name.
     * Fields are should be named "name.language" in the jsonObject
-    * @param name Name of the field without language.
+    *
+    * @param name       Name of the field without language.
     * @param jsonObject Parent object containing all fields.
     * @return SearchableLanguageValues object containing every Language with name name.
     */
@@ -58,7 +61,8 @@ object SearchableLanguageList {
   /**
     * Apply method to create SearchableLanguageList object from jsonObject for fields with name.
     * Fields are should be named "name.language" in the jsonObject
-    * @param name Name of the field without language.
+    *
+    * @param name       Name of the field without language.
     * @param jsonObject Parent object containing all fields.
     * @return SearchableLanguageList object containing every Language with name name.
     */
@@ -95,6 +99,9 @@ case class SearchableArticle(
     license: String,
     authors: Seq[String],
     articleType: String,
+    metaImageId: Option[Long],
+    resourceTypes: Seq[String],
+    contentTypes: Seq[String],
+    subjectIds: Seq[String],
     defaultTitle: Option[String]
 )
-
