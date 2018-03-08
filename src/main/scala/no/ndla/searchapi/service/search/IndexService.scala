@@ -25,12 +25,13 @@ import no.ndla.searchapi.model.domain.article.Content
 import scala.util.{Failure, Success, Try}
 
 trait IndexService {
-  this: Elastic4sClient with SearchApiClient =>
+  this: Elastic4sClient
+    with SearchApiClient =>
 
   trait IndexService[D <: AnyRef, T <: AnyRef] extends LazyLogging {
+    val apiClient: SearchApiClient
     val documentType: String
     val searchIndex: String
-    val apiClient: SearchApiClient
 
     def getMapping: MappingDefinition
 

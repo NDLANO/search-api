@@ -13,10 +13,13 @@ import no.ndla.searchapi.model.api
 import no.ndla.searchapi.SearchApiProperties.Domain
 import no.ndla.network.ApplicationUrl
 import com.netaporter.uri.dsl._
+import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model
 import no.ndla.searchapi.model.api.article.ArticleMetaDescription
+import no.ndla.searchapi.model.domain.article.Article
 
 trait ConverterService {
+  this: DraftApiClient =>
   val converterService: ConverterService
 
   class ConverterService {
@@ -97,6 +100,21 @@ trait ConverterService {
         domainModel.language
       )
     }
+
+    def withAgreementCopyright(article: Article): Article = {
+      val agreementCopyright = article.copyright.agreementId.flatMap(aid =>
+        draftApiClient.getAgreementCopyright(aid)
+      ).getOrElse(article.copyright)
+
+      article.copy(copyright = article.copyright.copy(
+        license = agreementCopyright.license,
+        creators = agreementCopyright.creators,
+        rightsholders = agreementCopyright.rightsholders,
+        validFrom = agreementCopyright.validFrom,
+        validTo = agreementCopyright.validTo
+      ))
+    }
+
 
   }
 }

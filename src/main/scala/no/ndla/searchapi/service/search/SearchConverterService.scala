@@ -30,22 +30,8 @@ trait SearchConverterService {
 
   class SearchConverterService extends LazyLogging {
 
-    def withAgreementCopyright(article: Article): Article = {
-      val agreementCopyright = article.copyright.agreementId.flatMap(aid =>
-        draftApiClient.getAgreementCopyright(aid)
-      ).getOrElse(article.copyright)
-
-      article.copy(copyright = article.copyright.copy(
-        license = agreementCopyright.license,
-        creators = agreementCopyright.creators,
-        rightsholders = agreementCopyright.rightsholders,
-        validFrom = agreementCopyright.validFrom,
-        validTo = agreementCopyright.validTo
-      ))
-    }
-
     def asSearchableArticle(ai: Article): SearchableArticle = {
-      val articleWithAgreement = withAgreementCopyright(ai)
+      val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
       val defaultTitle = articleWithAgreement.title.sortBy(title => {
         val languagePriority = Language.languageAnalyzers.map(la => la.lang).reverse

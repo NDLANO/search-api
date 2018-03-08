@@ -8,8 +8,15 @@
 package no.ndla.searchapi
 
 import no.ndla.searchapi.model.domain._
+import no.ndla.searchapi.model.domain.article._
+import org.joda.time.DateTime
 
 object TestData {
+  private val publicDomainCopyright= Copyright("publicdomain", "", List(), List(), List(), None, None, None)
+  private val byNcSaCopyright = Copyright("by-nc-sa", "Gotham City", List(Author("Writer", "DC Comics")), List(), List(), None, None, None)
+  private val copyrighted = Copyright("copyrighted", "New York", List(Author("Writer", "Clark Kent")), List(), List(), None, None, None)
+  private val today = new DateTime().toDate
+
   val sampleArticleTitle = ArticleApiTitle("tittell", "nb")
   val sampleArticleVisualElement = ArticleApiVisualElement("""<embed data-resource="image">""", "nb")
   val sampleArticleIntro = ArticleApiIntro("intro", "nb")
@@ -56,4 +63,60 @@ object TestData {
       AudioApiSearchResult(2, AudioApiTitle("ny tlttle", "nb"), "http://audio/2", "by", Seq("nb"))
     )
   )
+
+  val (articleId, externalId) = (1, "751234")
+  val sampleArticleWithPublicDomain = Article(
+    Option(1),
+    Option(1),
+    Seq(ArticleTitle("test", "en")),
+    Seq(ArticleContent("<section><div>test</div></section>", "en")),
+    publicDomainCopyright,
+    Seq(),
+    Seq(),
+    Seq(VisualElement("image", "en")),
+    Seq(ArticleIntroduction("This is an introduction", "en")),
+    Seq(ArticleMetaDescription("meta", "en")),
+    None,
+    DateTime.now().minusDays(4).toDate,
+    DateTime.now().minusDays(2).toDate,
+    "ndalId54321",
+    ArticleType.Standard.toString)
+
+  val sampleDomainArticle = Article(
+    Option(articleId),
+    Option(2),
+    Seq(ArticleTitle("title", "nb")),
+    Seq(ArticleContent("content", "nb")),
+    Copyright("by", "", Seq(), Seq(), Seq(), None, None, None),
+    Seq(ArticleTag(Seq("tag"), "nb")),
+    Seq(),
+    Seq(),
+    Seq(),
+    Seq(ArticleMetaDescription("meta description", "nb")),
+    Some("11"),
+    today,
+    today,
+    "ndalId54321",
+    ArticleType.Standard.toString
+  )
+
+  val sampleDomainArticle2 = Article(
+    None,
+    None,
+    Seq(ArticleTitle("test", "en")),
+    Seq(ArticleContent("<article><div>test</div></article>", "en")),
+    Copyright("publicdomain", "", Seq(), Seq(), Seq(), None, None, None),
+    Seq(),
+    Seq(),
+    Seq(),
+    Seq(),
+    Seq(),
+    None,
+    today,
+    today,
+    "ndalId54321",
+    ArticleType.Standard.toString
+  )
+  val sampleArticleWithByNcSa: Article = sampleArticleWithPublicDomain.copy(copyright=byNcSaCopyright)
+  val sampleArticleWithCopyrighted: Article = sampleArticleWithPublicDomain.copy(copyright=copyrighted )
 }

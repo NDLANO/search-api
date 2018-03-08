@@ -50,7 +50,6 @@ trait ArticleSearchService {
       executeSearch(withIdIn, language, license, sort, page, pageSize, boolQuery(), articleTypes, fallback)
     }
 
-    // TODO: write tests for ArticleSearchService, SearchServce?, IndexService, ArticleIndexService?
     def matchingQuery(query: String,
                       withIdIn: List[Long],
                       searchLanguage: String,

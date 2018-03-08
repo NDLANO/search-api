@@ -37,20 +37,20 @@ trait TestEnvironment
     with SearchController
     with InternController
     with SearchApiClient {
-  lazy val searchController = mock[SearchController]
-  lazy val healthController = mock[HealthController]
-  lazy val internController = mock[InternController]
-  lazy val resourcesApp = mock[ResourcesApp]
+  val searchController = mock[SearchController]
+  val healthController = mock[HealthController]
+  val internController = mock[InternController]
+  val resourcesApp = mock[ResourcesApp]
 
-  lazy val ndlaClient = mock[NdlaClient]
-  lazy val e4sClient: NdlaE4sClient = mock[NdlaE4sClient]
+  val ndlaClient = mock[NdlaClient]
+  val e4sClient: NdlaE4sClient = mock[NdlaE4sClient]
 
-  lazy val draftApiClient = mock[DraftApiClient]
-  lazy val learningpathApiClient = mock[LearningpathApiClient]
-  lazy val imageApiClient = mock[ImageApiClient]
-  lazy val audioApiClient = mock[AudioApiClient]
-  lazy val articleApiClient = mock[ArticleApiClient]
-  lazy val SearchClients = Map[String, SearchApiClient](
+  val draftApiClient = mock[DraftApiClient]
+  val learningpathApiClient = mock[LearningpathApiClient]
+  val imageApiClient = mock[ImageApiClient]
+  val audioApiClient = mock[AudioApiClient]
+  val articleApiClient = mock[ArticleApiClient]
+  val SearchClients = Map[String, SearchApiClient](
     "articles" -> draftApiClient,
     "learningpaths" -> learningpathApiClient,
     "images" -> imageApiClient,
@@ -59,7 +59,7 @@ trait TestEnvironment
 
   val searchService = mock[ApiSearchService]
   val converterService = mock[ConverterService]
-  lazy val searchConverterService = mock[SearchConverterService]
-  lazy val articleSearchService = mock[ArticleSearchService]
-  lazy val articleIndexService = mock[ArticleIndexService]
+  val searchConverterService = mock[SearchConverterService]
+  val articleSearchService = mock[ArticleSearchService]
+  val articleIndexService = mock[ArticleIndexService]
 }
