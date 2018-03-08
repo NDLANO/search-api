@@ -10,13 +10,14 @@ package no.ndla.searchapi.controller
 
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.SearchApiClient
-import no.ndla.searchapi.model.api.{Error, SearchResults, ValidationError}
+import no.ndla.searchapi.model.api.article.ArticleSummary
+import no.ndla.searchapi.model.api.{Error, SearchResult, SearchResults, ValidationError}
 import no.ndla.searchapi.model.domain.article.ArticleType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.service.search.ArticleSearchService
-import no.ndla.searchapi.service.{SearchClients, ApiSearchService}
+import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport}
+import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport, SwaggerSupportSyntax}
 import org.scalatra.util.NotNothing
 
 import scala.util.{Failure, Success}
@@ -134,7 +135,24 @@ trait SearchController {
       }
     }
 
-    get("/article") { //TODO: Documentation
+    val articleSearchDoc =
+      (apiOperation[SearchResult[ArticleSummary]]("getAllArticles")
+        summary "Find articles"
+        notes "Shows all articles. You can search it too."
+        parameters(
+        asHeaderParam[Option[String]](correlationId),
+        asQueryParam[Option[String]](articleTypes),
+        asQueryParam[Option[String]](query),
+        asQueryParam[Option[String]](articleIds),
+        asQueryParam[Option[String]](language),
+        asQueryParam[Option[String]](license),
+        asQueryParam[Option[Int]](pageNo),
+        asQueryParam[Option[Int]](pageSize),
+        asQueryParam[Option[String]](sort)
+      )
+        authorizations "oauth2"
+        responseMessages response500)
+    get("/article", operation(articleSearchDoc)) {
       val query = paramOrNone(this.query.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
       val language = paramOrDefault(this.language.paramName, Language.AllLanguages)

@@ -30,7 +30,6 @@ trait InternController {
       implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
       val indexResults = for {
         articleIndex <- Future { articleIndexService.indexDocuments }
-        //TODO: conceptIndex <- Future { conceptIndexService.indexDocuments }
         //TODO: learningpathIndex <- Future { learningpathIndexService.indexDocuments }
       } yield articleIndex //TODO: Yield the others
 
@@ -44,10 +43,6 @@ trait InternController {
         case (Failure(articleFail)) =>
           logger.warn(articleFail.getMessage, articleFail)
           InternalServerError(articleFail.getMessage)
-        /*case (_, Failure(conceptFail)) =>
-          logger.warn(conceptFail.getMessage, conceptFail)
-          InternalServerError(conceptFail.getMessage)
-          */
       }
     }
   }

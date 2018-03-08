@@ -12,7 +12,6 @@ import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.api.ApiSearchException
-import no.ndla.searchapi.model.domain.article.Content
 import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, SearchParams}
 
 import scala.concurrent.ExecutionContext.Implicits.global
