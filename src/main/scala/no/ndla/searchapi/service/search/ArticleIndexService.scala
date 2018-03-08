@@ -44,6 +44,7 @@ trait ArticleIndexService {
           keywordField("license"),
           textField("authors").fielddata(true),
           textField("articleType").analyzer("keyword")
+
         ) ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("content") ++

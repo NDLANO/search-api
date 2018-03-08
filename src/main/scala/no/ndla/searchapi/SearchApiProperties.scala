@@ -34,6 +34,7 @@ object SearchApiProperties extends LazyLogging {
   val LearningpathApiUrl = "http://learningpath-api.ndla-local"
   val ImageApiUrl = "http://image-api.ndla-local"
   val AudioApiUrl = "http://audio-api.ndla-local"
+  val ApiGatewayUrl = "api-gateway.ndla-local"
 
   val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-multi.ndla-local")
   val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
