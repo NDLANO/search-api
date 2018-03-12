@@ -32,17 +32,19 @@ trait SearchConverterService {
 
   class SearchConverterService extends LazyLogging {
 
-    def getId(contentUri: String): String = {
-      contentUri.split(':').lastOption match {
-        case Some(cid) => cid
-        case None => ""
+    private def compareId(contentUri: String, id: Long, `type`: String): Boolean = {
+      val split = contentUri.split(':')
+      split match {
+        case Array(_, cType: String, cId: String) => id.toString == cId && cType == `type`
+        case _ => false
       }
     }
+
 
     // TODO: Rename getTaxonomyStuff
     // TODO: include type in this? learningpath:123 and article:123 is not the same
     // TODO: Get taxonomy for single article/learningpath
-    def getTaxonomyStuff(id: Long): Try[Seq[TaxonomyContext]] = ???
+    def getTaxonomyStuff(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = ???
 
 
     // TODO: Rename getTaxonomyStuff
@@ -53,19 +55,8 @@ trait SearchConverterService {
       * @param bundle bundle of all taxonomy
       * @return Taxonomy that is to be indexed.
       */
-    def getTaxonomyStuff(id: Long, bundle: TaxonomyBundle): Try[Seq[TaxonomyContext]] = {
-      // Get resources connected to content id
-      val resources = bundle.resources.filter(resource => resource.contentUri match {
-        case Some(contentUri) => getId(contentUri) == id.toString // TODO: include type in this? learningpath:123 and article:123 is not the same
-        case None => false
-      })
-
-      val topics = bundle.topics.filter(topic => topic.contentUri match {
-        case Some(contentUri) => getId(contentUri) == id.toString // TODO: include type in this? learningpath:123 and article:123 is not the same
-        case None => false
-      })
-
-      (resources, topics) match {
+    def getTaxonomyStuff(id: Long, bundle: TaxonomyBundle, taxonomyType: String): Try[Seq[TaxonomyContext]] = {
+      getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$id could not be found in taxonomy."
           logger.error(msg)
@@ -113,10 +104,24 @@ trait SearchConverterService {
       }
     }
 
+    private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: TaxonomyBundle, taxonomyType: String) = {
+      val resources = bundle.resources.filter(resource => resource.contentUri match {
+        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
+        case None => false
+      }).distinct
+
+      val topics = bundle.topics.filter(topic => topic.contentUri match {
+        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
+        case None => false
+      }).distinct
+
+      (resources, topics)
+    }
+
     def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): Try[SearchableArticle] = {
       val taxonomyForArticle = taxonomyBundle match {
-        case Some(bundle) => getTaxonomyStuff(ai.id.get, bundle)
-        case None => getTaxonomyStuff(ai.id.get)
+        case Some(bundle) => getTaxonomyStuff(ai.id.get, bundle, "article")
+        case None => getTaxonomyStuff(ai.id.get, "article")
       }
       taxonomyForArticle match {
         case Success(contexts) =>
