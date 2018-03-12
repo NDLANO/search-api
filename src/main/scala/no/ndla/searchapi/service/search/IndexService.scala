@@ -18,6 +18,7 @@ import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition}
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
+import no.ndla.searchapi.model.api.ElasticIndexingException
 import no.ndla.searchapi.model.domain.ReindexResult
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
 import no.ndla.searchapi.model.domain.article.Content
@@ -36,17 +37,17 @@ trait IndexService {
 
     def getMapping: MappingDefinition
 
-    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: TaxonomyBundle): IndexDefinition
+    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[IndexDefinition]
 
-    // TODO: Get taxonomy for single document
-    def indexDocument(imported: D): Try[D] = {
+    def indexDocument(imported: D, taxonomyBundle: Option[TaxonomyBundle] = None): Try[D] = {
       for {
         _ <- getAliasTarget.map {
           case Some(index) => Success(index)
           case None => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
         }
+        request <- createIndexRequest(imported, searchIndex, taxonomyBundle)
         _ <- e4sClient.execute {
-          createIndexRequest(imported, searchIndex)
+          request
         }
       } yield imported
     }
@@ -79,30 +80,38 @@ trait IndexService {
           var count = 0 // TODO: more functional? Is it even possible with streams?
           stream.foreach({
             case Success(c) =>
-              indexDocuments(c, indexName, bundle).map(c => count += c)
+              indexDocuments(c, indexName, Some(bundle)).map(c => count += c)
             case Failure(ex) => return Failure(ex)
           })
           Success(count)
-        case Failure(ex) => Failure(ex)
+        case Failure(ex) =>
+          logger.error("Could not fetch taxonomy for indexing...")
+          Failure(ex)
       }
     }
 
-    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: TaxonomyBundle): Try[Int] = {
+    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[Int] = {
       if (contents.isEmpty) {
         Success(0)
       }
       else {
-        val response = e4sClient.execute {
-          bulk(contents.map(content => {
-            createIndexRequest(content, indexName, taxonomyBundle)
-          }))
-        }
+        val req = contents.map(content => createIndexRequest(content, indexName, taxonomyBundle))
+        val indexRequests = req.collect{ case Success(indexRequest) => indexRequest }
 
-        response match {
-          case Success(r) =>
-            logger.info(s"Indexed ${contents.size} documents. No of failed items: ${r.result.failures.size}")
-            Success(contents.size)
-          case Failure(ex) => Failure(ex)
+        if(indexRequests.nonEmpty) {
+            val response = e4sClient.execute {
+              bulk(indexRequests)
+            }
+
+            response match {
+              case Success(r) =>
+                logger.info(s"Indexed ${contents.size} documents. No of failed items: ${r.result.failures.size}")
+                Success(contents.size)
+              case Failure(ex) => Failure(ex)
+            }
+        } else {
+          logger.error(s"All ${contents.size} requests failed to be created.")
+          Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
         }
       }
     }

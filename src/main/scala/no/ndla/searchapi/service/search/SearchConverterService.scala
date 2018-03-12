@@ -15,13 +15,15 @@ import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.article
 import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
-import no.ndla.searchapi.integration.DraftApiClient
+import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyBundle}
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
 import org.json4s.native.Serialization.read
 import org.jsoup.Jsoup
+
+import scala.util.Success
 
 trait SearchConverterService {
   this: DraftApiClient
@@ -30,13 +32,62 @@ trait SearchConverterService {
 
   class SearchConverterService extends LazyLogging {
 
-    def asSearchableArticle(ai: Article): SearchableArticle = {
+    def getId(contentUri: String): String = {
+      contentUri.split('.').lastOption match {
+        case Some(cid) => cid
+        case None => ""
+      }
+    }
+
+    // TODO: Rename getTaxonomyStuff
+    def getTaxonomyStuff(id: Long, bundle: TaxonomyBundle): (Seq[String], Seq[String], Seq[String], Seq[String]) = {
+      // Get resources connected to content id
+      val resources = bundle.resources.filter(resource => resource.contentUri match {
+        case Some(contentUri) => getId(contentUri) == id.toString // TODO: include type in this? learningpath:123 and article:123 is not the same
+        case None => false
+      })
+
+      // Get topics that contains any of the connected resources
+      val resourceTopicConnections = bundle.topicResourceConnections.filter(connection => resources.map(_.id).contains(connection.resourceId))
+
+      // Get topics connected to content id
+      val topics = bundle.topics.filter(topic => topic.contentUri match {
+        case Some(contentUri) => getId(contentUri) == id.toString
+        case None => false
+      })
+
+      val topicIds = topics.map(_.id) ++ resourceTopicConnections.map(_.topicid)
+
+      // Get subjects connected to the connected topics
+      val subjects = bundle.subjectTopicConnections.filter(c => topicIds.contains(c.topicId)).map(_.subjectId)
+
+
+      // Get relevances connected
+      val relevances = bundle.relevances
+
+
+      // filters, relevances, resourceTypes, subjects)
+      (Seq.empty, Seq.empty, Seq.empty, subjects)
+    }
+
+
+
+    def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): SearchableArticle = {
+      val (filters, relevances, resourceTypes, subjects) = getTaxonomyStuff(ai.id.get, taxonomyBundle.get)/*taxonomyBundle match {
+        case Some(bundle) =>
+          getTaxonomyStuff(ai.id.get, bundle)
+        case None => // TODO: fetch taxonomy for single resource/topic here.
+      }*/
+
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
       val defaultTitle = articleWithAgreement.title.sortBy(title => {
         val languagePriority = Language.languageAnalyzers.map(la => la.lang).reverse
         languagePriority.indexOf(title.language)
       }).lastOption
+
+      val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
+
 
       SearchableArticle(
         id = articleWithAgreement.id.get,
@@ -50,7 +101,13 @@ trait SearchConverterService {
         license = articleWithAgreement.copyright.license,
         authors = articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name),
         articleType = articleWithAgreement.articleType,
-        defaultTitle = defaultTitle.map(t => t.title)
+        metaImageId = None,
+        filters = filters,
+        relevances = relevances,
+        resourceTypes = resourceTypes,
+        subjectIds = subjects,
+        defaultTitle = defaultTitle.map(t => t.title),
+        supportedLanguages = supportedLanguages
       )
     }
 

@@ -100,8 +100,10 @@ case class SearchableArticle(
     authors: Seq[String],
     articleType: String,
     metaImageId: Option[Long],
+    filters: Seq[String],
+    relevances: Seq[String],
     resourceTypes: Seq[String],
-    contentTypes: Seq[String],
     subjectIds: Seq[String],
-    defaultTitle: Option[String]
+    defaultTitle: Option[String],
+    supportedLanguages: Seq[String]
 )

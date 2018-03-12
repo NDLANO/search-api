@@ -39,11 +39,43 @@ trait TaxonomyApiClient {
     def getAllTopics: Try[Seq[TaxonomyResource]] =
       get[Seq[TaxonomyResource]](s"$TaxonomyApiEndpoint/topics/")
 
-    def getAllTopicResourceConnections: Try[Seq[TaxonomyTopicResourceConnection]] =
-      get[Seq[TaxonomyTopicResourceConnection]](s"$TaxonomyApiEndpoint/topic-resources/")
+    def getAllResourceTypes: Try[Seq[TaxonomyResourceType]] =
+      get[Seq[TaxonomyResourceType]](s"$TaxonomyApiEndpoint/resource-types/")
 
-    def getAllTopicSubtopicConnections: Try[Seq[TaxonomyTopicSubtopicConnection]] =
-      get[Seq[TaxonomyTopicSubtopicConnection]](s"$TaxonomyApiEndpoint/topic-subtopics/")
+    def getAllTopicResourceConnections
+      : Try[Seq[TaxonomyTopicResourceConnection]] =
+      get[Seq[TaxonomyTopicResourceConnection]](
+        s"$TaxonomyApiEndpoint/topic-resources/")
+
+    def getAllTopicSubtopicConnections
+      : Try[Seq[TaxonomyTopicSubtopicConnection]] =
+      get[Seq[TaxonomyTopicSubtopicConnection]](
+        s"$TaxonomyApiEndpoint/topic-subtopics/")
+
+    def getAllResourceResourceTypeConnections
+      : Try[Seq[TaxonomyResourceResourceTypeConnection]] =
+      get[Seq[TaxonomyResourceResourceTypeConnection]](
+        s"$TaxonomyApiEndpoint/resource-resourcetypes/")
+
+    def getAllSubjectTopicConnections
+      : Try[Seq[TaxonomySubjectTopicConnection]] =
+      get[Seq[TaxonomySubjectTopicConnection]](
+        s"$TaxonomyApiEndpoint/subject-topics/")
+
+    def getAllRelevances: Try[Seq[TaxonomyRelevance]] =
+      get[Seq[TaxonomyRelevance]](s"$TaxonomyApiEndpoint/relevances/")
+
+    def getAllFilters: Try[Seq[TaxonomyFilter]] =
+      get[Seq[TaxonomyFilter]](s"$TaxonomyApiEndpoint/filters/")
+
+    def getAllResourceFilterConnections
+      : Try[Seq[TaxonomyResourceFilterConnection]] =
+      get[Seq[TaxonomyResourceFilterConnection]](
+        s"$TaxonomyApiEndpoint/resource-filters/")
+
+    def getAllTopicFilterConnections: Try[Seq[TaxonomyTopicFilterConnection]] =
+      get[Seq[TaxonomyTopicFilterConnection]](
+        s"$TaxonomyApiEndpoint/topic-filters/")
 
     def getTaxonomyBundle: Try[TaxonomyBundle] = {
       for {
@@ -52,20 +84,30 @@ trait TaxonomyApiClient {
         resources <- getAllResources
         topicResourceConnections <- getAllTopicResourceConnections
         topicSubtopicConnections <- getAllTopicSubtopicConnections
+        resourceTypes <- getAllResourceTypes
+        resourceResourceTypeConnections <- getAllResourceResourceTypeConnections
+        subjectTopicConnections <- getAllSubjectTopicConnections
+        filters <- getAllFilters
+        resourceFilterConnections <- getAllResourceFilterConnections
+        topicFilterConnections <- getAllTopicFilterConnections
+        relevances <- getAllRelevances
 
         bundle <- TaxonomyBundle(
-          subjects,
-          topics,
+          filters,
+          relevances,
+          resourceFilterConnections,
+          resourceResourceTypeConnections,
+          resourceTypes,
           resources,
+          subjectTopicConnections,
+          subjects,
+          topicFilterConnections,
           topicResourceConnections,
-          topicSubtopicConnections
+          topicSubtopicConnections,
+          topics
         )
       } yield bundle
     }
-
-    //TODO: Probably need this when converting Hit to MultiSummary
-    def queryResource(articleId: Long) =
-      get(s"$TaxonomyApiEndpoint/queries/resources?contentURI=urn:article:$articleId")
 
     private def get[A](url: String, params: (String, String)*)(
         implicit mf: Manifest[A]): Try[A] = {
@@ -74,11 +116,34 @@ trait TaxonomyApiClient {
   }
 }
 
-case class TaxonomyBundle(subjects: Seq[TaxonomyResource],
-                          topics: Seq[TaxonomyResource],
-                          resources: Seq[TaxonomyResource],
-                          topicResourceConnections: Seq[TaxonomyTopicResourceConnection],
-                          topicSubtopicConnections: Seq[TaxonomyTopicSubtopicConnection])
+case class TaxonomyBundle(
+    filters: Seq[TaxonomyFilter],
+    relevances: Seq[TaxonomyRelevance],
+    resourceFilterConnections: Seq[TaxonomyResourceFilterConnection],
+    resourceResourceTypeConnections: Seq[TaxonomyResourceResourceTypeConnection],
+    resourceTypes: Seq[TaxonomyResourceType],
+    resources: Seq[TaxonomyResource],
+    subjectTopicConnections: Seq[TaxonomySubjectTopicConnection],
+    subjects: Seq[TaxonomyResource],
+    topicFilterConnections: Seq[TaxonomyTopicFilterConnection],
+    topicResourceConnections: Seq[TaxonomyTopicResourceConnection],
+    topicSubtopicConnections: Seq[TaxonomyTopicSubtopicConnection],
+    topics: Seq[TaxonomyResource]
+)
+
+case class TaxonomyResourceFilterConnection(resourceId: String,
+                                            filterId: String,
+                                            id: String,
+                                            relevanceId: String)
+
+case class TaxonomyTopicFilterConnection(topicId: String,
+                                         filterId: String,
+                                         id: String,
+                                         relevanceId: String)
+
+case class TaxonomyRelevance(id: String, name: String)
+
+case class TaxonomyFilter(id: String, name: String, subjectId: String)
 
 case class TaxonomyTopicResourceConnection(topicid: String,
                                            resourceId: String,
@@ -91,6 +156,20 @@ case class TaxonomyTopicSubtopicConnection(topicid: String,
                                            id: String,
                                            primary: Boolean,
                                            rank: Int)
+
+case class TaxonomyResourceResourceTypeConnection(resourceId: String,
+                                                  resourceTypeId: String,
+                                                  id: String)
+
+case class TaxonomySubjectTopicConnection(subjectId: String,
+                                          topicId: String,
+                                          id: String,
+                                          primary: Boolean,
+                                          rank: Int)
+
+case class TaxonomyResourceType(id: String,
+                                name: String,
+                                subtypes: Option[Seq[TaxonomyResourceType]])
 
 case class TaxonomyResource(id: String,
                             name: String,

@@ -18,6 +18,8 @@ import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import org.json4s.native.Serialization.write
 
+import scala.util.Try
+
 trait ArticleIndexService {
   this: SearchConverterService
     with IndexService
@@ -30,9 +32,8 @@ trait ArticleIndexService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
     override val apiClient: ArticleApiClient = articleApiClient
 
-    override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: TaxonomyBundle): IndexDefinition = {
-      // TODO: handle taxonomy here somehow. Fail if not existing. Maybe convert this function to return Try
-      val source = write(searchConverterService.asSearchableArticle(domainModel))
+    override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[IndexDefinition] = {
+      val source = write(searchConverterService.asSearchableArticle(domainModel, taxonomyBundle))
       indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)
     }
 
