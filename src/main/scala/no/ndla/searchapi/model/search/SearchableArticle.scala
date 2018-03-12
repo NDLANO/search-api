@@ -9,6 +9,7 @@ package no.ndla.searchapi.model.search
 
 import java.util.Date
 
+import no.ndla.searchapi.model.domain.TaxonomyContext
 import no.ndla.searchapi.model.search.LanguageValue.{LanguageValue => LV}
 import org.json4s.JsonAST.{JArray, JField, JObject, JString}
 
@@ -100,12 +101,9 @@ case class SearchableArticle(
     authors: Seq[String],
     articleType: String,
     metaImageId: Option[Long],
-    filters: Seq[String],
-    relevances: Seq[String],
-    resourceTypes: Seq[String],
-    subjectIds: Seq[String],
     defaultTitle: Option[String],
-    supportedLanguages: Seq[String]
+    supportedLanguages: Seq[String],
+    contexts: Seq[TaxonomyContext]
 )
 
 object LanguagelessSearchableArticle {
@@ -116,12 +114,9 @@ object LanguagelessSearchableArticle {
       authors: Seq[String],
       articleType: String,
       metaImageId: Option[Long],
-      filters: Seq[String],
-      relevances: Seq[String],
-      resourceTypes: Seq[String],
-      subjectIds: Seq[String],
       defaultTitle: Option[String],
-      supportedLanguages: Seq[String]
+      supportedLanguages: Seq[String],
+      contexts: Seq[TaxonomyContext]
   )
 
   def apply(
@@ -133,12 +128,9 @@ object LanguagelessSearchableArticle {
       searchableArticle.authors,
       searchableArticle.articleType,
       searchableArticle.metaImageId,
-      searchableArticle.filters,
-      searchableArticle.relevances,
-      searchableArticle.resourceTypes,
-      searchableArticle.subjectIds,
       searchableArticle.defaultTitle,
-      searchableArticle.supportedLanguages
+      searchableArticle.supportedLanguages,
+      searchableArticle.contexts
     )
   }
 }

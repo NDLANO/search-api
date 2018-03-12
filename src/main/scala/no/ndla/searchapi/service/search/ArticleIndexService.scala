@@ -18,7 +18,7 @@ import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import org.json4s.native.Serialization.write
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 trait ArticleIndexService {
   this: SearchConverterService
@@ -33,8 +33,12 @@ trait ArticleIndexService {
     override val apiClient: ArticleApiClient = articleApiClient
 
     override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[IndexDefinition] = {
-      val source = write(searchConverterService.asSearchableArticle(domainModel, taxonomyBundle))
-      Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)) // TODO: make this failure if taxnomyBundle is nonexistant OR make asSearchableArticle return a Try
+      searchConverterService.asSearchableArticle(domainModel, taxonomyBundle) match {
+        case Success(searchableArticle) =>
+          val source = write(searchableArticle)
+          Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)) // TODO: make this failure if taxnomyBundle is nonexistant OR make asSearchableArticle return a Try
+        case Failure(ex) => Failure(ex)
+      }
     }
 
     def getMapping: MappingDefinition = {
@@ -47,9 +51,11 @@ trait ArticleIndexService {
           textField("authors").fielddata(true),
           textField("articleType").analyzer("keyword"),
           longField("metaImageId"),
-          keywordField("resourceTypeIds"),
-          keywordField("contentTypeIds"),
-          keywordField("subjectIds")
+          nestedField("contexts").fields(
+            keywordField("resourceTypeIds"),
+            keywordField("contentTypeIds"),
+            keywordField("subjectIds")
+          )
         )
           ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++

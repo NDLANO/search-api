@@ -12,18 +12,18 @@ import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.api.article
+import no.ndla.searchapi.model.api.{ElasticIndexingException, article}
 import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
-import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyBundle}
-import no.ndla.searchapi.model.domain.Language
+import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyBundle, TaxonomyResource}
+import no.ndla.searchapi.model.domain.{Language, TaxonomyContext}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
 import org.json4s.native.Serialization.read
 import org.jsoup.Jsoup
 
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 
 trait SearchConverterService {
   this: DraftApiClient
@@ -40,91 +40,115 @@ trait SearchConverterService {
     }
 
     // TODO: Rename getTaxonomyStuff
-    def getTaxonomyStuff(id: Long, bundle: TaxonomyBundle): (Seq[String], Seq[String], Seq[String], Seq[String]) = {
+    // TODO: include type in this? learningpath:123 and article:123 is not the same
+    // TODO: Get taxonomy for single article/learningpath
+    def getTaxonomyStuff(id: Long): Try[Seq[TaxonomyContext]] = ???
+
+
+    // TODO: Rename getTaxonomyStuff
+    /**
+      * Parses [[TaxonomyBundle]] to get taxonomy for a single resource/topic.
+      *
+      * @param id of article
+      * @param bundle bundle of all taxonomy
+      * @return Taxonomy that is to be indexed.
+      */
+    def getTaxonomyStuff(id: Long, bundle: TaxonomyBundle): Try[Seq[TaxonomyContext]] = {
       // Get resources connected to content id
       val resources = bundle.resources.filter(resource => resource.contentUri match {
         case Some(contentUri) => getId(contentUri) == id.toString // TODO: include type in this? learningpath:123 and article:123 is not the same
         case None => false
       })
 
-      // Get topics that contains any of the connected resources
-      val resourceTopicConnections = bundle.topicResourceConnections
-        .filter(connection => resources.map(_.id).contains(connection.resourceId))
-
-      // Get topics connected to content id
       val topics = bundle.topics.filter(topic => topic.contentUri match {
-        case Some(contentUri) =>
-          getId(contentUri) == id.toString
+        case Some(contentUri) => getId(contentUri) == id.toString // TODO: include type in this? learningpath:123 and article:123 is not the same
         case None => false
       })
 
-      val topicIds = topics.map(_.id) ++ resourceTopicConnections.map(_.topicid)
+      (resources, topics) match {
+        case (Nil, Nil) =>
+          val msg = s"$id could not be found in taxonomy."
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
+        case (Seq(resource), Nil) =>
+          val filterConnections = bundle.resourceFilterConnections.filter(_.resourceId == resource.id)
+          val filters = bundle.filters
+            .filter(f => filterConnections.map(_.filterId).contains(f.id))
 
-      val subtopics = bundle.topicSubtopicConnections.filter(tc => topicIds.contains(tc.topicid)).map(_.subtopicid)
-      val parenttopics = bundle.topicSubtopicConnections.filter(tc => topicIds.contains(tc.subtopicid)).map(_.topicid)
+          val contexts = filters.map(filter => {
+            val relevanceIds = filterConnections.filter(_.filterId == filter.id).map(_.relevanceId)
+            val resourceTypes = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id).map(_.resourceTypeId)
 
-      val allRelatedTopics = topicIds ++ subtopics ++ parenttopics
+            TaxonomyContext(
+              filterId = filter.id,
+              relevanceIds = relevanceIds,
+              resourceTypes = resourceTypes,
+              subjectId = filter.subjectId
+            )
+          })
+          Success(contexts)
+        case (Nil, Seq(topic)) =>
 
-      // Get subjects connected to the connected topics
-      val subjectConnections = bundle.subjectTopicConnections.filter(c => allRelatedTopics.contains(c.topicid))
-      val subjectIds = subjectConnections.map(_.subjectid)
+          val filterConnections = bundle.topicFilterConnections.filter(_.topicId == topic.id)
+          val filters = bundle.filters
+            .filter(f => filterConnections.map(_.filterId).contains(f.id))
 
-      // Get relevances connected
-      val connectedResourceFilters = bundle.resourceFilterConnections.filter(fc => resources.map(_.id).contains(fc.resourceId))
-      val connectedTopicFilters = bundle.topicFilterConnections.filter(fc => allRelatedTopics.contains(fc.topicId))
-      val filterIds = connectedResourceFilters.map(_.filterId) ++ connectedTopicFilters.map(_.filterId)
+          val contexts = filters.map(filter => {
+            val relevanceIds = filterConnections.filter(_.filterId == filter.id).map(_.relevanceId)
 
-      val relevanceIds = connectedResourceFilters.map(_.relevanceId) ++ connectedTopicFilters.map(_.relevanceId)
+            TaxonomyContext(
+              filterId = filter.id,
+              relevanceIds = relevanceIds,
+              resourceTypes = Seq.empty, // Topics do not have resourceTypes
+              subjectId = filter.subjectId
+            )
+          })
 
-      // Get connected resourceTypes
-      val resourceTypes = bundle.resourceResourceTypeConnections.filter(rtc => resources.map(_.id).contains(rtc.id))
-        .map(_.resourceTypeId)
-
-
-      // TODO: consider converting this into a object of sorts
-      (filterIds, relevanceIds, resourceTypes, subjectIds)
+          Success(contexts)
+        case (r, t) =>
+          val taxonomyEntries = r ++ t
+          val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
+      }
     }
 
+    def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): Try[SearchableArticle] = {
+      val taxonomyForArticle = taxonomyBundle match {
+        case Some(bundle) => getTaxonomyStuff(ai.id.get, bundle)
+        case None => getTaxonomyStuff(ai.id.get)
+      }
+      taxonomyForArticle match {
+        case Success(contexts) =>
+          val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
+          val defaultTitle = articleWithAgreement.title.sortBy(title => {
+            val languagePriority = Language.languageAnalyzers.map(la => la.lang).reverse
+            languagePriority.indexOf(title.language)
+          }).lastOption
 
-    def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): SearchableArticle = {
-      val (filters, relevances, resourceTypes, subjects) = getTaxonomyStuff(ai.id.get, taxonomyBundle.get)
+          val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
 
-      /*val pack = taxonomyBundle match {
-        case Some(bundle) =>
-          getTaxonomyStuff(ai.id.get, bundle)
-        case None => // TODO: fetch taxonomy for single resource/topic here.
-      }*/
+          Success(SearchableArticle(
+            id = articleWithAgreement.id.get,
+            title = SearchableLanguageValues(articleWithAgreement.title.map(title => LanguageValue(title.language, title.title))),
+            visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual => LanguageValue(visual.language, visual.resource))),
+            introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro => LanguageValue(intro.language, intro.introduction))),
+            metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta => LanguageValue(meta.language, meta.content))),
+            content = SearchableLanguageValues(articleWithAgreement.content.map(article => LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+            tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+            lastUpdated = articleWithAgreement.updated,
+            license = articleWithAgreement.copyright.license,
+            authors = articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name),
+            articleType = articleWithAgreement.articleType,
+            metaImageId = None, //TODO: get metaImageId
+            defaultTitle = defaultTitle.map(t => t.title),
+            supportedLanguages = supportedLanguages,
+            contexts = contexts
+          ))
+        case Failure(ex) => Failure(ex)
+      }
 
-      val articleWithAgreement = converterService.withAgreementCopyright(ai)
-
-      val defaultTitle = articleWithAgreement.title.sortBy(title => {
-        val languagePriority = Language.languageAnalyzers.map(la => la.lang).reverse
-        languagePriority.indexOf(title.language)
-      }).lastOption
-
-      val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
-
-      SearchableArticle(
-        id = articleWithAgreement.id.get,
-        title = SearchableLanguageValues(articleWithAgreement.title.map(title => LanguageValue(title.language, title.title))),
-        visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual => LanguageValue(visual.language, visual.resource))),
-        introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro => LanguageValue(intro.language, intro.introduction))),
-        metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta => LanguageValue(meta.language, meta.content))),
-        content = SearchableLanguageValues(articleWithAgreement.content.map(article => LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
-        tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-        lastUpdated = articleWithAgreement.updated,
-        license = articleWithAgreement.copyright.license,
-        authors = articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name),
-        articleType = articleWithAgreement.articleType,
-        metaImageId = None, //TODO: get metaImageId
-        filters = filters,
-        relevances = relevances,
-        resourceTypes = resourceTypes,
-        subjectIds = subjects,
-        defaultTitle = defaultTitle.map(t => t.title),
-        supportedLanguages = supportedLanguages
-      )
     }
 
     def createUrlToArticle(id: Long): String = {

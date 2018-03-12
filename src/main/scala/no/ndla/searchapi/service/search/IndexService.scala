@@ -96,6 +96,7 @@ trait IndexService {
       else {
         val req = contents.map(content => createIndexRequest(content, indexName, taxonomyBundle))
         val indexRequests = req.collect{ case Success(indexRequest) => indexRequest }
+        val failedToCreateRequests = req.collect{ case Failure(ex) => Failure(ex) }
 
         if(indexRequests.nonEmpty) {
             val response = e4sClient.execute {
@@ -104,7 +105,7 @@ trait IndexService {
 
             response match {
               case Success(r) =>
-                logger.info(s"Indexed ${contents.size} documents. No of failed items: ${r.result.failures.size}")
+                logger.info(s"Indexed ${contents.size} documents. No of failed items: ${r.result.failures.size + failedToCreateRequests.size}")
                 Success(contents.size)
               case Failure(ex) => Failure(ex)
             }
