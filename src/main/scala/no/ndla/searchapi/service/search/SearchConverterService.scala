@@ -33,7 +33,7 @@ trait SearchConverterService {
   class SearchConverterService extends LazyLogging {
 
     def getId(contentUri: String): String = {
-      contentUri.split('.').lastOption match {
+      contentUri.split(':').lastOption match {
         case Some(cid) => cid
         case None => ""
       }
@@ -48,32 +48,49 @@ trait SearchConverterService {
       })
 
       // Get topics that contains any of the connected resources
-      val resourceTopicConnections = bundle.topicResourceConnections.filter(connection => resources.map(_.id).contains(connection.resourceId))
+      val resourceTopicConnections = bundle.topicResourceConnections
+        .filter(connection => resources.map(_.id).contains(connection.resourceId))
 
       // Get topics connected to content id
       val topics = bundle.topics.filter(topic => topic.contentUri match {
-        case Some(contentUri) => getId(contentUri) == id.toString
+        case Some(contentUri) =>
+          getId(contentUri) == id.toString
         case None => false
       })
 
       val topicIds = topics.map(_.id) ++ resourceTopicConnections.map(_.topicid)
 
-      // Get subjects connected to the connected topics
-      val subjects = bundle.subjectTopicConnections.filter(c => topicIds.contains(c.topicId)).map(_.subjectId)
+      val subtopics = bundle.topicSubtopicConnections.filter(tc => topicIds.contains(tc.topicid)).map(_.subtopicid)
+      val parenttopics = bundle.topicSubtopicConnections.filter(tc => topicIds.contains(tc.subtopicid)).map(_.topicid)
 
+      val allRelatedTopics = topicIds ++ subtopics ++ parenttopics
+
+      // Get subjects connected to the connected topics
+      val subjectConnections = bundle.subjectTopicConnections.filter(c => allRelatedTopics.contains(c.topicid))
+      val subjectIds = subjectConnections.map(_.subjectid)
 
       // Get relevances connected
-      val relevances = bundle.relevances
+      val connectedResourceFilters = bundle.resourceFilterConnections.filter(fc => resources.map(_.id).contains(fc.resourceId))
+      val connectedTopicFilters = bundle.topicFilterConnections.filter(fc => allRelatedTopics.contains(fc.topicId))
+      val filterIds = connectedResourceFilters.map(_.filterId) ++ connectedTopicFilters.map(_.filterId)
+
+      val relevanceIds = connectedResourceFilters.map(_.relevanceId) ++ connectedTopicFilters.map(_.relevanceId)
+
+      // Get connected resourceTypes
+      val resourceTypes = bundle.resourceResourceTypeConnections.filter(rtc => resources.map(_.id).contains(rtc.id))
+        .map(_.resourceTypeId)
 
 
-      // filters, relevances, resourceTypes, subjects)
-      (Seq.empty, Seq.empty, Seq.empty, subjects)
+      // TODO: consider converting this into a object of sorts
+      (filterIds, relevanceIds, resourceTypes, subjectIds)
     }
 
 
 
     def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): SearchableArticle = {
-      val (filters, relevances, resourceTypes, subjects) = getTaxonomyStuff(ai.id.get, taxonomyBundle.get)/*taxonomyBundle match {
+      val (filters, relevances, resourceTypes, subjects) = getTaxonomyStuff(ai.id.get, taxonomyBundle.get)
+
+      /*val pack = taxonomyBundle match {
         case Some(bundle) =>
           getTaxonomyStuff(ai.id.get, bundle)
         case None => // TODO: fetch taxonomy for single resource/topic here.
@@ -88,7 +105,6 @@ trait SearchConverterService {
 
       val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
 
-
       SearchableArticle(
         id = articleWithAgreement.id.get,
         title = SearchableLanguageValues(articleWithAgreement.title.map(title => LanguageValue(title.language, title.title))),
@@ -101,7 +117,7 @@ trait SearchConverterService {
         license = articleWithAgreement.copyright.license,
         authors = articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name),
         articleType = articleWithAgreement.articleType,
-        metaImageId = None,
+        metaImageId = None, //TODO: get metaImageId
         filters = filters,
         relevances = relevances,
         resourceTypes = resourceTypes,

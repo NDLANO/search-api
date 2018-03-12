@@ -12,30 +12,6 @@ import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.{CustomSerializer, Extraction}
 import org.json4s._
 
-object LanguagelessSearchableArticle {
-
-  case class LanguagelessSearchableArticle(
-      id: Long,
-      lastUpdated: Date,
-      license: String,
-      authors: Seq[String],
-      articleType: String,
-      defaultTitle: Option[String]
-  )
-
-  def apply(
-      searchableArticle: SearchableArticle): LanguagelessSearchableArticle = {
-    LanguagelessSearchableArticle(
-      searchableArticle.id,
-      searchableArticle.lastUpdated,
-      searchableArticle.license,
-      searchableArticle.authors,
-      searchableArticle.articleType,
-      searchableArticle.defaultTitle
-    )
-  }
-}
-
 class SearchableArticleSerializer
     extends CustomSerializer[SearchableArticle](_ =>
       ({
@@ -53,7 +29,13 @@ class SearchableArticleSerializer
             license = (obj \ "license").extract[String],
             authors = (obj \ "authors").extract[Seq[String]],
             articleType = (obj \ "articleType").extract[String],
-            defaultTitle = (obj \ "defaultTitle").extract[Option[String]]
+            defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
+            metaImageId = (obj \ "metaImageId").extract[Option[Long]],
+            filters = (obj \ "filters").extract[Seq[String]],
+            relevances = (obj \ "relevances").extract[Seq[String]],
+            resourceTypes = (obj \ "resourceTypes").extract[Seq[String]],
+            subjectIds = (obj \ "subjectIds").extract[Seq[String]],
+            supportedLanguages = (obj \ "supportedLanguages").extract[Seq[String]]
           )
       }, {
         case article: SearchableArticle =>

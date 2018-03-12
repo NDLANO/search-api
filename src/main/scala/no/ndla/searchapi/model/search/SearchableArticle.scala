@@ -107,3 +107,38 @@ case class SearchableArticle(
     defaultTitle: Option[String],
     supportedLanguages: Seq[String]
 )
+
+object LanguagelessSearchableArticle {
+  case class LanguagelessSearchableArticle(
+      id: Long,
+      lastUpdated: Date,
+      license: String,
+      authors: Seq[String],
+      articleType: String,
+      metaImageId: Option[Long],
+      filters: Seq[String],
+      relevances: Seq[String],
+      resourceTypes: Seq[String],
+      subjectIds: Seq[String],
+      defaultTitle: Option[String],
+      supportedLanguages: Seq[String]
+  )
+
+  def apply(
+      searchableArticle: SearchableArticle): LanguagelessSearchableArticle = {
+    LanguagelessSearchableArticle(
+      searchableArticle.id,
+      searchableArticle.lastUpdated,
+      searchableArticle.license,
+      searchableArticle.authors,
+      searchableArticle.articleType,
+      searchableArticle.metaImageId,
+      searchableArticle.filters,
+      searchableArticle.relevances,
+      searchableArticle.resourceTypes,
+      searchableArticle.subjectIds,
+      searchableArticle.defaultTitle,
+      searchableArticle.supportedLanguages
+    )
+  }
+}

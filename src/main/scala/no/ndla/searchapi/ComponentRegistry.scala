@@ -25,6 +25,7 @@ object ComponentRegistry
     with DraftApiClient
     with Elastic4sClient
     with HealthController
+    with TaxonomyApiClient
     with ImageApiClient
     with IndexService
     with LazyLogging
@@ -47,6 +48,8 @@ object ComponentRegistry
 
   lazy val ndlaClient = new NdlaClient
   lazy val e4sClient: NdlaE4sClient = Elastic4sClientFactory.getClient()
+
+  lazy val taxonomyApiClient = new TaxonomyApiClient
 
   lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
   lazy val learningpathApiClient = new LearningpathApiClient(LearningpathApiUrl)

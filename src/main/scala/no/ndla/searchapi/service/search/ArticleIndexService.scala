@@ -18,7 +18,7 @@ import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import org.json4s.native.Serialization.write
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 trait ArticleIndexService {
   this: SearchConverterService
@@ -34,7 +34,7 @@ trait ArticleIndexService {
 
     override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[IndexDefinition] = {
       val source = write(searchConverterService.asSearchableArticle(domainModel, taxonomyBundle))
-      indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)
+      Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)) // TODO: make this failure if taxnomyBundle is nonexistant OR make asSearchableArticle return a Try
     }
 
     def getMapping: MappingDefinition = {

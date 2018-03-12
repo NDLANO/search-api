@@ -7,16 +7,18 @@
 
 package no.ndla.searchapi.integration
 
+import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
 import no.ndla.network.NdlaClient
+
 import scala.util.{Failure, Success, Try}
 import scalaj.http.Http
 
 trait TaxonomyApiClient {
   this: NdlaClient =>
-  val taxononyApiClient: TaxonomyApiClient
+  val taxonomyApiClient: TaxonomyApiClient
 
-  class TaxonomyApiClient {
+  class TaxonomyApiClient extends LazyLogging {
     implicit val formats = org.json4s.DefaultFormats
     private val TaxonomyApiEndpoint = s"http://$ApiGatewayUrl/taxonomy/v1"
 
@@ -78,21 +80,22 @@ trait TaxonomyApiClient {
         s"$TaxonomyApiEndpoint/topic-filters/")
 
     def getTaxonomyBundle: Try[TaxonomyBundle] = {
+      logger.info("Fetching taxonomy in bulk...")
       for {
-        subjects <- getAllSubjects
-        topics <- getAllTopics
+        filters <- getAllFilters
+        relevances <- getAllRelevances
+        resourceFilterConnections <- getAllResourceFilterConnections
+        resourceResourceTypeConnections <- getAllResourceResourceTypeConnections
+        resourceTypes <- getAllResourceTypes
         resources <- getAllResources
+        subjectTopicConnections <- getAllSubjectTopicConnections
+        subjects <- getAllSubjects
+        topicFilterConnections <- getAllTopicFilterConnections
         topicResourceConnections <- getAllTopicResourceConnections
         topicSubtopicConnections <- getAllTopicSubtopicConnections
-        resourceTypes <- getAllResourceTypes
-        resourceResourceTypeConnections <- getAllResourceResourceTypeConnections
-        subjectTopicConnections <- getAllSubjectTopicConnections
-        filters <- getAllFilters
-        resourceFilterConnections <- getAllResourceFilterConnections
-        topicFilterConnections <- getAllTopicFilterConnections
-        relevances <- getAllRelevances
+        topics <- getAllTopics
 
-        bundle <- TaxonomyBundle(
+        bundle <- Try(TaxonomyBundle(
           filters,
           relevances,
           resourceFilterConnections,
@@ -105,7 +108,8 @@ trait TaxonomyApiClient {
           topicResourceConnections,
           topicSubtopicConnections,
           topics
-        )
+        ))
+
       } yield bundle
     }
 
@@ -161,8 +165,8 @@ case class TaxonomyResourceResourceTypeConnection(resourceId: String,
                                                   resourceTypeId: String,
                                                   id: String)
 
-case class TaxonomySubjectTopicConnection(subjectId: String,
-                                          topicId: String,
+case class TaxonomySubjectTopicConnection(subjectid: String,
+                                          topicid: String,
                                           id: String,
                                           primary: Boolean,
                                           rank: Int)

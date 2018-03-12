@@ -56,7 +56,9 @@ trait SearchApiClient {
       )
 
       get[DomainDumpResults[T]](dumpDomainPath, params) match {
-        case Success(result) => Success(result)
+        case Success(result) =>
+          logger.info(s"Fetched chunk of ${result.results.size}...")
+          Success(result)
         case Failure(ex) =>
           logger.error(s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$dumpDomainPath'")
           Failure(ex)

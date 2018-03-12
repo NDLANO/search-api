@@ -10,6 +10,7 @@ package no.ndla.searchapi.controller
 
 import java.util.concurrent.{Executors, TimeUnit}
 
+import no.ndla.network.{ApplicationUrl, AuthUser}
 import no.ndla.searchapi.service.search.{ArticleIndexService, IndexService}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.{BadRequest, InternalServerError, NotFound, Ok}
@@ -29,7 +30,10 @@ trait InternController {
     post("/index") {
       implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
       val indexResults = for {
-        articleIndex <- Future { articleIndexService.indexDocuments }
+        articleIndex <- Future {
+          AuthUser.set(request)
+          articleIndexService.indexDocuments
+        }
         //TODO: learningpathIndex <- Future { learningpathIndexService.indexDocuments }
       } yield articleIndex //TODO: Yield the others
 

@@ -26,6 +26,7 @@ trait TestEnvironment
     with Elastic4sClient
     with HealthController
     with ImageApiClient
+    with TaxonomyApiClient
     with IndexService
     with LazyLogging
     with LearningpathApiClient
@@ -44,6 +45,8 @@ trait TestEnvironment
 
   val ndlaClient = mock[NdlaClient]
   val e4sClient: NdlaE4sClient = mock[NdlaE4sClient]
+
+  val taxonomyApiClient = mock[TaxonomyApiClient]
 
   val draftApiClient = mock[DraftApiClient]
   val learningpathApiClient = mock[LearningpathApiClient]

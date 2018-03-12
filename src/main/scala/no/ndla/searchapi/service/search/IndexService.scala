@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 trait IndexService {
   this: Elastic4sClient
     with SearchApiClient
-    with TaxonomyApiClient  =>
+    with TaxonomyApiClient =>
 
   trait IndexService[D <: AnyRef, T <: AnyRef] extends LazyLogging {
     val apiClient: SearchApiClient
@@ -71,11 +71,10 @@ trait IndexService {
       })
     }
 
-
-    // TODO: get taxonomy for all documents
     def sendToElastic(indexName: String)(implicit mf: Manifest[D]): Try[Int] = {
-      taxononyApiClient.getTaxonomyBundle match {
+      taxonomyApiClient.getTaxonomyBundle match {
         case Success(bundle) =>
+          logger.info("Successfully fetched taxonomy...")
           val stream = apiClient.getChunks[D]
           var count = 0 // TODO: more functional? Is it even possible with streams?
           stream.foreach({
