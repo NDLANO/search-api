@@ -79,6 +79,28 @@ trait TaxonomyApiClient {
       get[Seq[TaxonomyTopicFilterConnection]](
         s"$TaxonomyApiEndpoint/topic-filters/")
 
+    def getFilterConnectionsForResource(
+        resourceId: String): Try[Seq[TaxonomyFilterConnection]] =
+      get[Seq[TaxonomyFilterConnection]](
+        s"$TaxonomyApiEndpoint/resources/$resourceId/filters")
+
+    def getFilterConnectionsForTopic(topicId: String): Try[Seq[TaxonomyFilterConnection]] =
+      get[Seq[TaxonomyFilterConnection]](
+        s"$TaxonomyApiEndpoint/topics/$topicId/filters"
+      )
+
+    def queryResources(
+        contentUri: String): Try[Seq[TaxonomyQueryResourceResult]] =
+      get[Seq[TaxonomyQueryResourceResult]](
+        s"$TaxonomyApiEndpoint/queries/resources/?contentURI=$contentUri")
+
+    def queryTopics(contentUri: String): Try[Seq[TaxonomyResource]] =
+      get[Seq[TaxonomyResource]](
+        s"$TaxonomyApiEndpoint/queries/topics/?contentURI=$contentUri")
+
+    def getFilter(filterId: String): Try[TaxonomyFilter] =
+      get[TaxonomyFilter](s"$TaxonomyApiEndpoint/filters/$filterId")
+
     def getTaxonomyBundle: Try[TaxonomyBundle] = {
       logger.info("Fetching taxonomy in bulk...")
       for {
@@ -95,20 +117,21 @@ trait TaxonomyApiClient {
         topicSubtopicConnections <- getAllTopicSubtopicConnections
         topics <- getAllTopics
 
-        bundle <- Try(TaxonomyBundle(
-          filters,
-          relevances,
-          resourceFilterConnections,
-          resourceResourceTypeConnections,
-          resourceTypes,
-          resources,
-          subjectTopicConnections,
-          subjects,
-          topicFilterConnections,
-          topicResourceConnections,
-          topicSubtopicConnections,
-          topics
-        ))
+        bundle <- Try(
+          TaxonomyBundle(
+            filters,
+            relevances,
+            resourceFilterConnections,
+            resourceResourceTypeConnections,
+            resourceTypes,
+            resources,
+            subjectTopicConnections,
+            subjects,
+            topicFilterConnections,
+            topicResourceConnections,
+            topicSubtopicConnections,
+            topics
+          ))
 
       } yield bundle
     }
@@ -124,7 +147,8 @@ case class TaxonomyBundle(
     filters: Seq[TaxonomyFilter],
     relevances: Seq[TaxonomyRelevance],
     resourceFilterConnections: Seq[TaxonomyResourceFilterConnection],
-    resourceResourceTypeConnections: Seq[TaxonomyResourceResourceTypeConnection],
+    resourceResourceTypeConnections: Seq[
+      TaxonomyResourceResourceTypeConnection],
     resourceTypes: Seq[TaxonomyResourceType],
     resources: Seq[TaxonomyResource],
     subjectTopicConnections: Seq[TaxonomySubjectTopicConnection],
@@ -133,6 +157,14 @@ case class TaxonomyBundle(
     topicResourceConnections: Seq[TaxonomyTopicResourceConnection],
     topicSubtopicConnections: Seq[TaxonomyTopicSubtopicConnection],
     topics: Seq[TaxonomyResource]
+)
+
+case class TaxonomyQueryResourceResult(
+    contentUri: String,
+    id: String,
+    name: String,
+    path: String,
+    resourceTypes: Seq[TaxonomyResourceType]
 )
 
 case class TaxonomyResourceFilterConnection(resourceId: String,
@@ -144,6 +176,8 @@ case class TaxonomyTopicFilterConnection(topicId: String,
                                          filterId: String,
                                          id: String,
                                          relevanceId: String)
+
+case class TaxonomyFilterConnection(connectionId: String, id: String, name: String, relevanceId: String)
 
 case class TaxonomyRelevance(id: String, name: String)
 

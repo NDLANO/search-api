@@ -15,7 +15,7 @@ import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.{ElasticIndexingException, article}
 import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
-import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyBundle, TaxonomyResource}
+import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.domain.{Language, TaxonomyContext}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.service.ConverterService
@@ -27,6 +27,7 @@ import scala.util.{Failure, Success, Try}
 
 trait SearchConverterService {
   this: DraftApiClient
+  with TaxonomyApiClient
   with ConverterService =>
   val searchConverterService: SearchConverterService
 
@@ -40,22 +41,103 @@ trait SearchConverterService {
       }
     }
 
+    private def fetchTaxonomyResourcesAndTopicsForId(contentUri: String, taxonomyType: String): Try[(Seq[TaxonomyQueryResourceResult], Seq[TaxonomyResource])] = {
+      (taxonomyApiClient.queryResources(contentUri),
+        taxonomyApiClient.queryTopics(contentUri)) match {
+        case (Success(r), Success(t)) => Success((r,t))
+        case (r, t) =>
+          r match {
+            case Failure(ex) =>
+              logger.error(s"Failed to fetch resource with contentUri: '$contentUri', got message: ${ex.getMessage}")
+            case _ =>
+          }
 
-    // TODO: Rename getTaxonomyStuff
-    // TODO: include type in this? learningpath:123 and article:123 is not the same
-    // TODO: Get taxonomy for single article/learningpath
-    def getTaxonomyStuff(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = ???
+          t match {
+            case Failure(ex) =>
+              logger.error(s"Failed to fetch topic with contentUri: '$contentUri', got message: ${ex.getMessage}")
+            case _ =>
+          }
+          Failure(ElasticIndexingException(s"Could not query taxonomy for contentUri: '$contentUri'"))
+      }
+    }
+
+    /**
+      * Returns Sequence of [[TaxonomyContext]] for a single resource/topic.
+      * @param id of article/learningpath
+      * @param taxonomyType Type of resource used in contentUri.
+      *                     Example: "learningpath" in "urn:learningpath:123"
+      * @return Taxonomy that is to be indexed.
+      */
+    def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = {
+      val contentUri = s"urn:$taxonomyType:$id"
+
+      fetchTaxonomyResourcesAndTopicsForId(contentUri, taxonomyType) match {
+        case Success((Seq(resource), Seq())) =>
+          taxonomyApiClient.getFilterConnectionsForResource(resource.id) match {
+            case Success(filterConnections) =>
+
+              val contexts = filterConnections.map(filterCon => {
+                val relevanceId = filterCon.relevanceId
+                val resourceTypes = resource.resourceTypes
+
+                taxonomyApiClient.getFilter(filterCon.id) match {
+                  case Success(filter) =>
+                    Success(TaxonomyContext(
+                      filterId = filter.id,
+                      relevanceIds = Seq(relevanceId),
+                      resourceTypes = resourceTypes.map(_.id),
+                      subjectId = filter.subjectId
+                    ))
+                  case Failure(ex) => Failure(ex)
+                }
+              })
+              Try(contexts.map(_.get)) // Seq[Try[_]] to Try[Seq[_]]
+            case Failure(ex) =>
+              logger.error(s"Fetching filterConnections for resource ${resource.id} failed...")
+              Failure(ex)
+          }
+        case Success((Seq(), Seq(topic))) =>
+          taxonomyApiClient.getFilterConnectionsForTopic(topic.id) match {
+            case Success(filterConnections) =>
+              val contexts = filterConnections.map(filterCon => {
+                val relevanceId = filterCon.relevanceId
+
+                taxonomyApiClient.getFilter(filterCon.id) match {
+                  case Success(filter) =>
+                    Success(TaxonomyContext(
+                      filterId = filter.id,
+                      relevanceIds = Seq(relevanceId), //TODO: consider this as not list in mapping?
+                      resourceTypes = Seq.empty, // Topics does not have resourceTypes
+                      subjectId = filter.subjectId
+                    ))
+                  case Failure(ex) => Failure(ex)
+                }
+              })
+              Try(contexts.map(_.get))
+            case Failure(ex) =>
+              logger.error(s"Fetching filterConnections for topic ${topic.id} failed...")
+              Failure(ex)
+          }
+        case Success((r, t)) =>
+          val taxonomyEntries = r ++ t
+          val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
+        case Failure(ex) => Failure(ex)
+      }
+    }
 
 
-    // TODO: Rename getTaxonomyStuff
     /**
       * Parses [[TaxonomyBundle]] to get taxonomy for a single resource/topic.
       *
-      * @param id of article
-      * @param bundle bundle of all taxonomy
+      * @param id of article/learningpath
+      * @param taxonomyType Type of resource used in contentUri.
+      *                     Example: "learningpath" in "urn:learningpath:123"
+      * @param bundle All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    def getTaxonomyStuff(id: Long, bundle: TaxonomyBundle, taxonomyType: String): Try[Seq[TaxonomyContext]] = {
+    def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: TaxonomyBundle): Try[Seq[TaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$id could not be found in taxonomy."
@@ -120,8 +202,8 @@ trait SearchConverterService {
 
     def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): Try[SearchableArticle] = {
       val taxonomyForArticle = taxonomyBundle match {
-        case Some(bundle) => getTaxonomyStuff(ai.id.get, bundle, "article")
-        case None => getTaxonomyStuff(ai.id.get, "article")
+        case Some(bundle) => getTaxonomyContexts(ai.id.get, "article", bundle)
+        case None => getTaxonomyContexts(ai.id.get, "article")
       }
       taxonomyForArticle match {
         case Success(contexts) =>
