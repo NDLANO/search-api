@@ -36,7 +36,7 @@ trait ArticleIndexService {
       searchConverterService.asSearchableArticle(domainModel, taxonomyBundle) match {
         case Success(searchableArticle) =>
           val source = write(searchableArticle)
-          Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString)) // TODO: make this failure if taxnomyBundle is nonexistant OR make asSearchableArticle return a Try
+          Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString))
         case Failure(ex) => Failure(ex)
       }
     }

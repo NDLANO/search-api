@@ -1,0 +1,19 @@
+/*
+ * Part of NDLA search_api.
+ * Copyright (C) 2018 NDLA
+ *
+ * See LICENSE
+ */
+
+package no.ndla.searchapi.model.api
+
+import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
+
+import scala.annotation.meta.field
+
+@ApiModel(description = "Taxonomy context for the resource")
+case class ApiTaxonomyContext(@(ApiModelProperty@field)(description = "Name of the subject this context is in") subjectName: String,
+                              @(ApiModelProperty@field)(description = "Path to the resource in this context") path: String,
+                              @(ApiModelProperty@field)(description = "Breadcrumbs of path to the resource in this context") breadcrumbs: Seq[String],
+                              @(ApiModelProperty@field)(description = "Relevance in this context. Mainly core or supplementary") relevance: String,
+                              @(ApiModelProperty@field)(description = "Article type in this context. Standard- or Topic-article") articleType: String)

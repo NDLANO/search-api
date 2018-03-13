@@ -11,8 +11,8 @@ import com.sksamuel.elastic4s.http.search.SearchHit
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.api.{ElasticIndexingException, article}
+import no.ndla.searchapi.model.api.article.{ArticleSummary, MultiSummary}
+import no.ndla.searchapi.model.api.{ElasticIndexingException, MultiSearchSummary, article}
 import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
@@ -68,7 +68,7 @@ trait SearchConverterService {
       *                     Example: "learningpath" in "urn:learningpath:123"
       * @return Taxonomy that is to be indexed.
       */
-    def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = {
+    private def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = {
       val contentUri = s"urn:$taxonomyType:$id"
 
       fetchTaxonomyResourcesAndTopicsForId(contentUri, taxonomyType) match {
@@ -106,7 +106,7 @@ trait SearchConverterService {
                   case Success(filter) =>
                     Success(TaxonomyContext(
                       filterId = filter.id,
-                      relevanceIds = Seq(relevanceId), //TODO: consider this as not list in mapping?
+                      relevanceIds = Seq(relevanceId), //TODO: consider this as not list in domain class?
                       resourceTypes = Seq.empty, // Topics does not have resourceTypes
                       subjectId = filter.subjectId
                     ))
@@ -137,7 +137,7 @@ trait SearchConverterService {
       * @param bundle All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: TaxonomyBundle): Try[Seq[TaxonomyContext]] = {
+    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: TaxonomyBundle): Try[Seq[TaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$id could not be found in taxonomy."
@@ -238,10 +238,6 @@ trait SearchConverterService {
 
     }
 
-    def createUrlToArticle(id: Long): String = {
-      s"${ApplicationUrl.get}$id"
-    }
-
     /**
       * Attempts to extract language that hit from highlights in elasticsearch response.
       * @param result Elasticsearch hit.
@@ -307,5 +303,8 @@ trait SearchConverterService {
         supportedLanguages
       )
     }
+
+    def hitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = ??? // TODO: hits needs to be resovled hehe
+
   }
 }

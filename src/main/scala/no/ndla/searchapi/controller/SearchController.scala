@@ -152,7 +152,7 @@ trait SearchController {
       )
         authorizations "oauth2"
         responseMessages response500)
-    get("/article", operation(articleSearchDoc)) {
+    get("/article/", operation(articleSearchDoc)) {
       val query = paramOrNone(this.query.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
       val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
@@ -164,6 +164,23 @@ trait SearchController {
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
 
       articleSearch(query, sort, language, license, page, pageSize, idList, articleTypesFilter, fallback)
+    }
+
+
+    get("/multi/") { // TODO: Documentation
+      val query = paramOrNone(this.query.paramName)
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val license = paramOrNone(this.license.paramName)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val page = intOrDefault(this.pageNo.paramName, 1)
+      val idList = paramAsListOfLong(this.articleIds.paramName)
+      val articleTypesFilter = paramAsListOfString(this.articleTypes.paramName)
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+
+      
+
+
     }
 
   }
