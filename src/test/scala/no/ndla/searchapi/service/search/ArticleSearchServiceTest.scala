@@ -8,7 +8,7 @@
 
 package no.ndla.searchapi.service.search
 
-import no.ndla.searchapi.integration.Elastic4sClientFactory
+import no.ndla.searchapi.integration.{Elastic4sClientFactory, TaxonomyQueryResourceResult, TaxonomyResourceType}
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
@@ -16,6 +16,9 @@ import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import no.ndla.tag.IntegrationTest
 import org.joda.time.DateTime
+import org.mockito
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 
 import scala.util.Success
 
@@ -142,6 +145,24 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override def beforeAll = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
+
+    when(taxonomyApiClient.queryResources(any[String])).thenReturn(Success(Seq(
+      TaxonomyQueryResourceResult(
+        id = "urn:resource:1:21495",
+        name = "Føflekkreft",
+        resourceTypes = Seq(
+          TaxonomyResourceType(
+            id = "urn:resourcetype:academicArticle",
+            name = "Fagartikkel",
+            subtypes = None
+          )
+        ),
+        contentUri = s"urn:article:1",
+        path = "/subject:4/topic:1:172816/topic:1:173961/resource:1:21495"
+      )
+    )))
+    when(taxonomyApiClient.queryTopics(any[String])).thenReturn(Success(Seq.empty))
+    when(taxonomyApiClient.getFilterConnectionsForResource(any[String])).thenReturn(Success(Seq.empty))
 
     articleIndexService.indexDocument(article1)
     articleIndexService.indexDocument(article2)

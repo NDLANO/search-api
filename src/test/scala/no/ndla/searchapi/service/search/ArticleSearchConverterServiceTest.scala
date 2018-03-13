@@ -7,12 +7,14 @@
 
 package no.ndla.searchapi.service.search
 
+import no.ndla.searchapi.integration.{TaxonomyQueryResourceResult, TaxonomyResourceType}
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent, ArticleTag, ArticleTitle}
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageList, SearchableLanguageValues}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
+import scala.util.Success
 
 class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
@@ -42,32 +44,52 @@ class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   override def beforeAll() = {
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) => invocation.getArgumentAt(0, sampleArticle.getClass()))
+
+    when(taxonomyApiClient.queryResources(any[String])).thenReturn(Success(Seq(
+      TaxonomyQueryResourceResult(
+        id = "urn:resource:1:21495",
+        name = "Føflekkreft",
+        resourceTypes = Seq(
+          TaxonomyResourceType(
+            id = "urn:resourcetype:academicArticle",
+            name = "Fagartikkel",
+            subtypes = None
+          )
+        ),
+        contentUri = s"urn:article:1",
+        path = "/subject:4/topic:1:172816/topic:1:173961/resource:1:21495"
+      )
+    )))
+    when(taxonomyApiClient.queryTopics(any[String])).thenReturn(Success(Seq.empty))
+    when(taxonomyApiClient.getFilterConnectionsForResource(any[String])).thenReturn(Success(Seq.empty))
   }
 
   test("That asSearchableArticle converts titles with correct language") {
+
+
     val article = TestData.sampleArticleWithByNcSa.copy(title=titles)
-    val searchableArticle = searchConverterService.asSearchableArticle(article)
+    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     verifyTitles(searchableArticle)
   }
 
 
   test("That asSearchable converts articles with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(content=articles)
-    val searchableArticle = searchConverterService.asSearchableArticle(article)
+    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     verifyArticles(searchableArticle)
   }
 
 
   test("That asSearchable converts tags with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(tags=articleTags)
-    val searchableArticle = searchConverterService.asSearchableArticle(article)
+    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     verifyTags(searchableArticle)
   }
 
 
   test("That asSearchable converts all fields with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(title=titles, content=articles, tags=articleTags)
-    val searchableArticle = searchConverterService.asSearchableArticle(article)
+    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
 
     verifyTitles(searchableArticle)
     verifyArticles(searchableArticle)
@@ -77,7 +99,7 @@ class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {
   test("That asSearchableArticle converts titles with license from agreement") {
     val article = TestData.sampleArticleWithByNcSa.copy(title=titles)
     when(converterService.withAgreementCopyright(any[Article])).thenReturn(article.copy(copyright = article.copyright.copy(license="gnu")))
-    val searchableArticle = searchConverterService.asSearchableArticle(article)
+    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     searchableArticle.license should equal("gnu")
   }
 
