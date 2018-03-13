@@ -64,5 +64,6 @@ trait TestEnvironment
   val converterService = mock[ConverterService]
   val searchConverterService = mock[SearchConverterService]
   val articleSearchService = mock[ArticleSearchService]
+  val multiSearchService = mock[MultiSearchService]
   val articleIndexService = mock[ArticleIndexService]
 }

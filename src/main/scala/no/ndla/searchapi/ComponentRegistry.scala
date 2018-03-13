@@ -14,7 +14,7 @@ import no.ndla.searchapi.controller.{HealthController, InternController, SearchC
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.SearchApiProperties._
 import no.ndla.searchapi.service.search._
-import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients}
+import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients, search}
 
 object ComponentRegistry
     extends ArticleApiClient
@@ -67,5 +67,6 @@ object ComponentRegistry
   lazy val converterService = new ConverterService
   lazy val searchConverterService = new SearchConverterService
   lazy val articleSearchService = new ArticleSearchService
+  lazy val multiSearchService = new MultiSearchService
   lazy val articleIndexService = new ArticleIndexService
 }

@@ -22,12 +22,12 @@ import no.ndla.searchapi.model.domain.{Language, Sort}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-trait ArticleSearchService {
+trait MultiSearchService {
   this: Elastic4sClient
     with SearchConverterService
     with SearchService
     with ArticleIndexService =>
-  val articleSearchService: ArticleSearchService
+  val multiSearchService: MultiSearchService
 
   class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
@@ -38,25 +38,21 @@ trait ArticleSearchService {
       searchConverterService.hitAsMultiSummary(hit, language)
     }
 
-    def all(withIdIn: List[Long],
-            language: String,
-            license: Option[String],
+    def all(language: String,
             page: Int,
             pageSize: Int,
             sort: Sort.Value,
-            articleTypes: Seq[String],
+            types: Seq[String],
             fallback: Boolean): Try[SearchResult[MultiSearchSummary]] = { // TODO: SearchResult with totalLearningpathCount, totalTopicArticleCount... etc?
-      executeSearch(withIdIn, language, license, sort, page, pageSize, boolQuery(), articleTypes, fallback)
+      executeSearch(language, sort, page, pageSize, boolQuery(), types, fallback)
     }
 
     def matchingQuery(query: String,
-                      withIdIn: List[Long],
                       searchLanguage: String,
-                      license: Option[String],
                       page: Int,
                       pageSize: Int,
                       sort: Sort.Value,
-                      articleTypes: Seq[String],
+                      types: Seq[String],
                       fallback: Boolean): Try[SearchResult[MultiSearchSummary]] = {
       val language = if (searchLanguage == Language.AllLanguages || fallback) "*" else searchLanguage
       val titleSearch = simpleStringQuery(query).field(s"title.$language", 2)
@@ -77,26 +73,18 @@ trait ArticleSearchService {
             )
         )
 
-      executeSearch(withIdIn, searchLanguage, license, sort, page, pageSize, fullQuery, articleTypes, fallback)
+      executeSearch(searchLanguage, sort, page, pageSize, fullQuery, types, fallback)
     }
 
-    def executeSearch(withIdIn: List[Long],
-                      language: String,
-                      license: Option[String],
+    def executeSearch(language: String,
                       sort: Sort.Value,
                       page: Int,
                       pageSize: Int,
                       queryBuilder: BoolQueryDefinition,
-                      articleTypes: Seq[String],
+                      types: Seq[String],
                       fallback: Boolean): Try[api.SearchResult[MultiSearchSummary]] = {
 
-      val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
-      val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
-
-      val licenseFilter = license match {
-        case None => Some(noCopyright)
-        case Some(lic) => Some(termQuery("license", lic))
-      }
+      val typesFilter = if (types.nonEmpty) Some(constantScoreQuery(termsQuery("type", types))) else None // TODO: update this after type is stored in index somehow
 
       val (languageFilter, searchLanguage) = language match {
         case "" | Language.AllLanguages =>
@@ -108,7 +96,7 @@ trait ArticleSearchService {
           }
       }
 
-      val filters = List(licenseFilter, idFilter, languageFilter, articleTypesFilter)
+      val filters = List(languageFilter)
       val filteredSearch = queryBuilder.filter(filters.flatten)
 
       val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)

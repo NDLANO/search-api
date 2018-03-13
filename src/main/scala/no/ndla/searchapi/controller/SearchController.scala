@@ -14,7 +14,7 @@ import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.{Error, SearchResult, SearchResults, ValidationError}
 import no.ndla.searchapi.model.domain.article.ArticleType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
-import no.ndla.searchapi.service.search.ArticleSearchService
+import no.ndla.searchapi.service.search.{ArticleSearchService, MultiSearchService}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport, SwaggerSupportSyntax}
@@ -26,6 +26,7 @@ trait SearchController {
   this: ApiSearchService
     with SearchClients
     with SearchApiClient
+    with MultiSearchService
     with ArticleSearchService =>
   val searchController: SearchController
 
@@ -43,6 +44,8 @@ trait SearchController {
     val response404 = ResponseMessage(404, "Not found", Some("Error"))
     val response500 = ResponseMessage(500, "Unknown error", Some("Error"))
 
+
+    // TODO: Documentation for multi rather than article
     private val correlationId = Param("X-Correlation-ID", "User supplied correlation-id. May be omitted.")
     private val query = Param("query", "Return only articles with content matching the specified query.")
     private val language = Param("language", "The ISO 639-1 language code describing language.")
@@ -174,13 +177,48 @@ trait SearchController {
       val license = paramOrNone(this.license.paramName)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val page = intOrDefault(this.pageNo.paramName, 1)
-      val idList = paramAsListOfLong(this.articleIds.paramName)
-      val articleTypesFilter = paramAsListOfString(this.articleTypes.paramName)
+      val typeFilter = paramAsListOfString(this.typeFilter.paramName)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
 
-      
+      // TODO: compare params to articleSearch and learningpathSearch
+      multiSearch(query, sort, language, page, pageSize, typeFilter, fallback)
 
+    }
 
+    private def multiSearch(query: Option[String],
+                              sort: Option[Sort.Value],
+                              language: String,
+                              page: Int,
+                              pageSize: Int,
+                              typeFilter: Seq[String],
+                              fallback: Boolean) = {
+      val result = query match {
+        case Some(q) => multiSearchService.matchingQuery(
+          query = q,
+          searchLanguage = language,
+          page = page,
+          pageSize = if (idList.isEmpty) pageSize else idList.size,
+          sort = sort.getOrElse(Sort.ByRelevanceDesc),
+          typeFilter, // TODO: handle this filter somehow if (typeFilter.isEmpty) ArticleType.all else articleTypesFilter
+          fallback = fallback
+        )
+
+        case None => articleSearchService.all(
+          withIdIn = idList,
+          language = language,
+          license = license,
+          page = page,
+          pageSize = if (idList.isEmpty) pageSize else idList.size,
+          sort = sort.getOrElse(Sort.ByIdAsc),
+          if (articleTypesFilter.isEmpty) ArticleType.all else articleTypesFilter,
+          fallback = fallback
+        )
+      }
+
+      result match {
+        case Success(searchResult) => searchResult
+        case Failure(ex) => errorHandler(ex)
+      }
     }
 
   }
