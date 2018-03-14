@@ -10,6 +10,8 @@ package no.ndla.searchapi.integration
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
 import no.ndla.network.NdlaClient
+import no.ndla.searchapi.model.domain.Language
+import no.ndla.searchapi.model.taxonomy._
 
 import scala.util.{Failure, Success, Try}
 import scalaj.http.Http
@@ -24,12 +26,27 @@ trait TaxonomyApiClient {
 
     def getResource(nodeId: String): Try[TaxonomyResource] = {
       val resourceId = s"urn:resource:1:$nodeId"
-      get[TaxonomyResource](s"$TaxonomyApiEndpoint/resources/$resourceId") match {
-        case Failure(ex) =>
-          Failure(ex)
-        case Success(a) =>
-          Success(a)
-      }
+      get[TaxonomyResource](s"$TaxonomyApiEndpoint/resources/$resourceId")
+    }
+
+    /**
+      * Returns sequence of names with associated language in a tuple.
+      * @param subjectId Id of subject to fetch.
+      * @return Sequence of tuples with (name, language)
+      */
+    def getSubjectNames(subjectId: String): Try[Seq[TaxonomyTranslation]] = {
+      for {
+        subject <- get[TaxonomySubject](
+          s"$TaxonomyApiEndpoint/subjects/$subjectId")
+
+        subjectTranslations <- get[Seq[TaxonomyTranslation]](
+          s"$TaxonomyApiEndpoint/subjects/$subjectId/translations")
+
+        result <- subjectTranslations :+ TaxonomyTranslation(
+          Language.DefaultLanguage,
+          subject.name)
+
+      } yield result
     }
 
     def getAllResources: Try[Seq[TaxonomyResource]] =
@@ -84,7 +101,8 @@ trait TaxonomyApiClient {
       get[Seq[TaxonomyFilterConnection]](
         s"$TaxonomyApiEndpoint/resources/$resourceId/filters")
 
-    def getFilterConnectionsForTopic(topicId: String): Try[Seq[TaxonomyFilterConnection]] =
+    def getFilterConnectionsForTopic(
+        topicId: String): Try[Seq[TaxonomyFilterConnection]] =
       get[Seq[TaxonomyFilterConnection]](
         s"$TaxonomyApiEndpoint/topics/$topicId/filters"
       )
@@ -142,74 +160,3 @@ trait TaxonomyApiClient {
     }
   }
 }
-
-case class TaxonomyBundle(
-    filters: Seq[TaxonomyFilter],
-    relevances: Seq[TaxonomyRelevance],
-    resourceFilterConnections: Seq[TaxonomyResourceFilterConnection],
-    resourceResourceTypeConnections: Seq[
-      TaxonomyResourceResourceTypeConnection],
-    resourceTypes: Seq[TaxonomyResourceType],
-    resources: Seq[TaxonomyResource],
-    subjectTopicConnections: Seq[TaxonomySubjectTopicConnection],
-    subjects: Seq[TaxonomyResource],
-    topicFilterConnections: Seq[TaxonomyTopicFilterConnection],
-    topicResourceConnections: Seq[TaxonomyTopicResourceConnection],
-    topicSubtopicConnections: Seq[TaxonomyTopicSubtopicConnection],
-    topics: Seq[TaxonomyResource]
-)
-
-case class TaxonomyQueryResourceResult(
-    contentUri: String,
-    id: String,
-    name: String,
-    path: String,
-    resourceTypes: Seq[TaxonomyResourceType]
-)
-
-case class TaxonomyResourceFilterConnection(resourceId: String,
-                                            filterId: String,
-                                            id: String,
-                                            relevanceId: String)
-
-case class TaxonomyTopicFilterConnection(topicId: String,
-                                         filterId: String,
-                                         id: String,
-                                         relevanceId: String)
-
-case class TaxonomyFilterConnection(connectionId: String, id: String, name: String, relevanceId: String)
-
-case class TaxonomyRelevance(id: String, name: String)
-
-case class TaxonomyFilter(id: String, name: String, subjectId: String)
-
-case class TaxonomyTopicResourceConnection(topicid: String,
-                                           resourceId: String,
-                                           id: String,
-                                           primary: Boolean,
-                                           rank: Int)
-
-case class TaxonomyTopicSubtopicConnection(topicid: String,
-                                           subtopicid: String,
-                                           id: String,
-                                           primary: Boolean,
-                                           rank: Int)
-
-case class TaxonomyResourceResourceTypeConnection(resourceId: String,
-                                                  resourceTypeId: String,
-                                                  id: String)
-
-case class TaxonomySubjectTopicConnection(subjectid: String,
-                                          topicid: String,
-                                          id: String,
-                                          primary: Boolean,
-                                          rank: Int)
-
-case class TaxonomyResourceType(id: String,
-                                name: String,
-                                subtypes: Option[Seq[TaxonomyResourceType]])
-
-case class TaxonomyResource(id: String,
-                            name: String,
-                            contentUri: Option[String],
-                            path: String)

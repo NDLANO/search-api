@@ -8,6 +8,7 @@
 package no.ndla.searchapi.model.domain
 
 case class TaxonomyContext(
+    id: String,
     filterId: String,
     relevanceIds: Seq[String],
     resourceTypes: Seq[String],

@@ -16,6 +16,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.{ArticleApiClient, TaxonomyBundle}
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
+import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
@@ -52,6 +53,7 @@ trait ArticleIndexService {
           textField("articleType").analyzer("keyword"),
           longField("metaImageId"),
           nestedField("contexts").fields(
+            keywordField("id"),
             keywordField("resourceTypeIds"),
             keywordField("contentTypeIds"),
             keywordField("subjectIds")

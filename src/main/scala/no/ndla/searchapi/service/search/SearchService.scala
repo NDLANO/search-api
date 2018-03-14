@@ -11,7 +11,7 @@ package no.ndla.searchapi.service.search
 import java.lang.Math.max
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.SearchResponse
+import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
 import com.sksamuel.elastic4s.searches.sort.{FieldSortDefinition, SortOrder}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.integration.Elastic4sClient
@@ -20,7 +20,7 @@ import no.ndla.searchapi.SearchApiProperties.MaxPageSize
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait SearchService {
   this: Elastic4sClient with SearchConverterService with LazyLogging =>
@@ -34,23 +34,24 @@ trait SearchService {
       * @param language language as ISO639 code
       * @return api-model summary of hit
       */
-    def hitToApiModel(hit: String, language: String): T
+    def hitToApiModel(hit: SearchHit, language: String): Try[T]
 
-    def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[T] = {
+    def getHits(response: SearchResponse, language: String, fallback: Boolean): Try[Seq[T]] = {
       response.totalHits match {
         case count if count > 0 =>
           val resultArray = response.hits.hits
 
-          resultArray.map(result => {
+          val apiModels = resultArray.map(result => {
             val matchedLanguage = language match {
               case Language.AllLanguages | "*" =>
                 searchConverterService.getLanguageFromHit(result).getOrElse(language)
               case _ => language
             }
-
-            hitToApiModel(result.sourceAsString, matchedLanguage)
+            hitToApiModel(result, matchedLanguage)
           })
-        case _ => Seq()
+
+          Try(apiModels.map(_.get))
+        case _ => Success(Seq.empty)
       }
     }
 

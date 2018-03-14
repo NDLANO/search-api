@@ -11,15 +11,17 @@ import com.sksamuel.elastic4s.http.search.SearchHit
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.api.article.{ArticleSummary, MultiSummary}
-import no.ndla.searchapi.model.api.{ElasticIndexingException, MultiSearchSummary, article}
+import no.ndla.searchapi.model.api.article.ArticleSummary
+import no.ndla.searchapi.model.api._
 import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
+import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.domain.{Language, TaxonomyContext}
 import no.ndla.searchapi.model.search._
+import no.ndla.searchapi.model.taxonomy.{TaxonomyBundle, TaxonomyQueryResourceResult, TaxonomyResource}
 import no.ndla.searchapi.service.ConverterService
-import org.json4s.Formats
+import org.json4s.{DefaultFormats, Formats, ShortTypeHints, TypeHints}
 import org.json4s.native.Serialization.read
 import org.jsoup.Jsoup
 
@@ -83,6 +85,7 @@ trait SearchConverterService {
                 taxonomyApiClient.getFilter(filterCon.id) match {
                   case Success(filter) =>
                     Success(TaxonomyContext(
+                      id = resource.id,
                       filterId = filter.id,
                       relevanceIds = Seq(relevanceId),
                       resourceTypes = resourceTypes.map(_.id),
@@ -105,6 +108,7 @@ trait SearchConverterService {
                 taxonomyApiClient.getFilter(filterCon.id) match {
                   case Success(filter) =>
                     Success(TaxonomyContext(
+                      id = topic.id,
                       filterId = filter.id,
                       relevanceIds = Seq(relevanceId), //TODO: consider this as not list in domain class?
                       resourceTypes = Seq.empty, // Topics does not have resourceTypes
@@ -228,7 +232,7 @@ trait SearchConverterService {
             license = articleWithAgreement.copyright.license,
             authors = articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name),
             articleType = articleWithAgreement.articleType,
-            metaImageId = None, //TODO: get metaImageId
+            metaImageId = None, //TODO: get metaImageId // On second thought maybe just on way out and remove it from SearchableArticle?
             defaultTitle = defaultTitle.map(t => t.title),
             supportedLanguages = supportedLanguages,
             contexts = contexts
@@ -244,6 +248,8 @@ trait SearchConverterService {
       * @return Language if found.
       */
     def getLanguageFromHit(result: SearchHit): Option[String] = {
+      // TODO: Check if this is good enough for all types.
+      // TODO: Maybe do something like if any of the splits are in supportedLanguages that is a language? TEST IT
       def keyToLanguage(keys: Iterable[String]): Option[String] = {
         val keyLanguages = keys.toList.flatMap(key => key.split('.').toList match {
           case _ :: language :: _ => Some(language)
@@ -279,14 +285,14 @@ trait SearchConverterService {
 
       val searchableArticle = read[SearchableArticle](hitString)
 
-      val titles = searchableArticle.title.languageValues.map(lv => article.ArticleTitle(lv.value, lv.lang))
+      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.lang))
       val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => article.ArticleMetaDescription(lv.value, lv.lang))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
 
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
-      val title = findByLanguageOrBestEffort(titles, language).getOrElse(article.ArticleTitle("", Language.UnknownLanguage))
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val visualElement = findByLanguageOrBestEffort(visualElements, language)
       val introduction = findByLanguageOrBestEffort(introductions, language)
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language)
@@ -304,7 +310,60 @@ trait SearchConverterService {
       )
     }
 
-    def hitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = ??? // TODO: hits needs to be resovled hehe
+    def SearchableContextToApiContext(context: TaxonomyContext, language: String): ApiTaxonomyContext = {
+
+      val subjectNames = taxonomyApiClient.getSubjectNames(context.subjectId)
+
+
+      ApiTaxonomyContext(
+
+      )
+    }
+
+    // TODO: implement this
+    def learningpathHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+      val searchableLearningPath = read[SearchableLearningPath](hitString)
+
+      val titles = searchableLearningPath.titles.languageValues.map(lv => Title(lv.value, lv.lang))
+      val metaDescriptions = searchableLearningPath.descriptions.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+
+      // TODO: finish learningpath to multisummary
+    }
+
+
+    def articleHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+      val searchableArticle = read[SearchableArticle](hitString)
+
+      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.lang))
+      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
+      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+
+      val contexts = searchableArticle.contexts.map(c => SearchableContextToApiContext(c, language))
+      val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
+
+      val url = s"/article/${searchableArticle.id}" // TODO: Consider creating this url here.
+
+      MultiSearchSummary(
+        id = searchableArticle.id,
+        title = title,
+        metaDescription = metaDescription,
+        metaImageId = searchableArticle.metaImageId, //TODO: should this be url?
+        url = url,
+        contexts = contexts,
+        supportedLanguages = supportedLanguages,
+        entityType = searchableArticle.articleType //TODO: maybe 'standard' should be 'article' or something else.
+      )
+
+    }
 
   }
 }

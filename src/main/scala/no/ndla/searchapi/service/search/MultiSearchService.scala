@@ -11,12 +11,15 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.SearchDocuments
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.{MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
+import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.domain.{Language, Sort}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,21 +37,34 @@ trait MultiSearchService {
 
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
 
-    override def hitToApiModel(hit: String, language: String): MultiSearchSummary = {
-      searchConverterService.hitAsMultiSummary(hit, language)
+    override def hitToApiModel(hit: SearchHit, language: String): Try[MultiSearchSummary] = {
+
+      val articleType = SearchApiProperties.SearchDocuments("articles")
+      val learningpathType = SearchApiProperties.SearchDocuments("learningpaths")
+      hit.`type` match {
+        case articleType =>
+          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
+        case learningpathType =>
+          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+      }
+
     }
 
-    def all(language: String,
+    def all(withIdIn: List[Long],
+            language: String,
+            license: Option[String],
             page: Int,
             pageSize: Int,
             sort: Sort.Value,
             types: Seq[String],
-            fallback: Boolean): Try[SearchResult[MultiSearchSummary]] = { // TODO: SearchResult with totalLearningpathCount, totalTopicArticleCount... etc?
-      executeSearch(language, sort, page, pageSize, boolQuery(), types, fallback)
+            fallback: Boolean): Try[SearchResult[MultiSearchSummary]] = {
+      executeSearch(withIdIn, language, license, sort, page, pageSize, boolQuery(), types, fallback)
     }
 
     def matchingQuery(query: String,
+                      withIdIn: List[Long],
                       searchLanguage: String,
+                      license: Option[String],
                       page: Int,
                       pageSize: Int,
                       sort: Sort.Value,
@@ -73,10 +89,12 @@ trait MultiSearchService {
             )
         )
 
-      executeSearch(searchLanguage, sort, page, pageSize, fullQuery, types, fallback)
+      executeSearch(withIdIn, searchLanguage, license, sort, page, pageSize, fullQuery, types, fallback)
     }
 
-    def executeSearch(language: String,
+    def executeSearch(withIdIn: List[Long],
+                      language: String,
+                      license: Option[String],
                       sort: Sort.Value,
                       page: Int,
                       pageSize: Int,
@@ -84,7 +102,13 @@ trait MultiSearchService {
                       types: Seq[String],
                       fallback: Boolean): Try[api.SearchResult[MultiSearchSummary]] = {
 
-      val typesFilter = if (types.nonEmpty) Some(constantScoreQuery(termsQuery("type", types))) else None // TODO: update this after type is stored in index somehow
+      val typesFilter = None// TODO: handle typesfilter somehow according to mapping // OLD -> val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
+      val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
+
+      val licenseFilter = license match {
+        case None => Some(noCopyright)
+        case Some(lic) => Some(termQuery("license", lic))
+      }
 
       val (languageFilter, searchLanguage) = language match {
         case "" | Language.AllLanguages =>
@@ -96,7 +120,7 @@ trait MultiSearchService {
           }
       }
 
-      val filters = List(languageFilter)
+      val filters = List(licenseFilter, idFilter, languageFilter, typesFilter)
       val filteredSearch = queryBuilder.filter(filters.flatten)
 
       val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)

@@ -20,6 +20,7 @@ trait TestEnvironment
   extends ArticleApiClient
     with ArticleIndexService
     with ArticleSearchService
+    with MultiSearchService
     with AudioApiClient
     with ConverterService
     with DraftApiClient

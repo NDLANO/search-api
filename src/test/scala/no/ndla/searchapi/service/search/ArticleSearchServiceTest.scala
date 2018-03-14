@@ -8,12 +8,13 @@
 
 package no.ndla.searchapi.service.search
 
-import no.ndla.searchapi.integration.{Elastic4sClientFactory, TaxonomyQueryResourceResult, TaxonomyResourceType}
+import no.ndla.searchapi.integration.Elastic4sClientFactory
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import com.sksamuel.elastic4s.http.ElasticDsl._
+import no.ndla.searchapi.model.taxonomy.{TaxonomyQueryResourceResult, TaxonomyResourceType}
 import no.ndla.tag.IntegrationTest
 import org.joda.time.DateTime
 import org.mockito

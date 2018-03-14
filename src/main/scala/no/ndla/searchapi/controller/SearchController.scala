@@ -177,33 +177,37 @@ trait SearchController {
       val license = paramOrNone(this.license.paramName)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val page = intOrDefault(this.pageNo.paramName, 1)
-      val typeFilter = paramAsListOfString(this.typeFilter.paramName)
+      val idList = paramAsListOfLong(this.articleIds.paramName)
+      val typeFilter = paramAsListOfString(this.articleTypes.paramName)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
 
       // TODO: compare params to articleSearch and learningpathSearch
-      multiSearch(query, sort, language, page, pageSize, typeFilter, fallback)
-
+      multiSearch(query, sort, language, license, page, pageSize, idList, typeFilter, fallback)
     }
 
     private def multiSearch(query: Option[String],
                               sort: Option[Sort.Value],
                               language: String,
+                              license: Option[String],
                               page: Int,
                               pageSize: Int,
-                              typeFilter: Seq[String],
+                              idList: List[Long],
+                              articleTypesFilter: Seq[String],
                               fallback: Boolean) = {
       val result = query match {
         case Some(q) => multiSearchService.matchingQuery(
           query = q,
+          withIdIn = idList,
           searchLanguage = language,
+          license = license,
           page = page,
           pageSize = if (idList.isEmpty) pageSize else idList.size,
           sort = sort.getOrElse(Sort.ByRelevanceDesc),
-          typeFilter, // TODO: handle this filter somehow if (typeFilter.isEmpty) ArticleType.all else articleTypesFilter
+          if (articleTypesFilter.isEmpty) ArticleType.all else articleTypesFilter,
           fallback = fallback
         )
 
-        case None => articleSearchService.all(
+        case None => multiSearchService.all(
           withIdIn = idList,
           language = language,
           license = license,

@@ -15,7 +15,7 @@ import no.ndla.network.ApplicationUrl
 import com.netaporter.uri.dsl._
 import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model
-import no.ndla.searchapi.model.api.article.ArticleMetaDescription
+import no.ndla.searchapi.model.api.MetaDescription
 import no.ndla.searchapi.model.domain.article.Article
 
 trait ConverterService {

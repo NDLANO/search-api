@@ -22,6 +22,7 @@ import no.ndla.searchapi.model.api.ElasticIndexingException
 import no.ndla.searchapi.model.domain.ReindexResult
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
 import no.ndla.searchapi.model.domain.article.Content
+import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 
 import scala.util.{Failure, Success, Try}
 

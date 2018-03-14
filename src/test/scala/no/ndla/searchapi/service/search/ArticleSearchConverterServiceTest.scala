@@ -7,13 +7,14 @@
 
 package no.ndla.searchapi.service.search
 
-import no.ndla.searchapi.integration.{TaxonomyQueryResourceResult, TaxonomyResourceType}
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent, ArticleTag, ArticleTitle}
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageList, SearchableLanguageValues}
+import no.ndla.searchapi.model.taxonomy.{TaxonomyQueryResourceResult, TaxonomyResourceType}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
+
 import scala.util.Success
 
 class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {

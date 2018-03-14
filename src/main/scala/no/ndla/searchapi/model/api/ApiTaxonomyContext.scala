@@ -16,4 +16,5 @@ case class ApiTaxonomyContext(@(ApiModelProperty@field)(description = "Name of t
                               @(ApiModelProperty@field)(description = "Path to the resource in this context") path: String,
                               @(ApiModelProperty@field)(description = "Breadcrumbs of path to the resource in this context") breadcrumbs: Seq[String],
                               @(ApiModelProperty@field)(description = "Relevance in this context. Mainly core or supplementary") relevance: String,
-                              @(ApiModelProperty@field)(description = "Article type in this context. Standard- or Topic-article") articleType: String)
+                              @(ApiModelProperty@field)(description = "Type in this context.") entityType: String, // TODO: rename this when renaming entityType elsewhere.
+                              @(ApiModelProperty@field)(description = "Language for this context") language: String)

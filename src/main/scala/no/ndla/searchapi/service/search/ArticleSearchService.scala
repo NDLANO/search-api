@@ -11,6 +11,7 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
@@ -35,8 +36,8 @@ trait ArticleSearchService {
 
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
 
-    override def hitToApiModel(hit: String, language: String): ArticleSummary = {
-      searchConverterService.hitAsArticleSummary(hit, language)
+    override def hitToApiModel(hit: SearchHit, language: String): Try[ArticleSummary] = {
+      Success(searchConverterService.hitAsArticleSummary(hit.sourceAsString, language))
     }
 
     def all(withIdIn: List[Long],
@@ -128,13 +129,16 @@ trait ArticleSearchService {
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
-            Success(api.SearchResult[ArticleSummary](
-              response.result.totalHits,
-              page,
-              numResults,
-              if (language == "*") Language.AllLanguages else language,
-              getHits(response.result, language, fallback)
-            ))
+            getHits(response.result, language, fallback) match {
+              case Success(hits) =>
+                Success(api.SearchResult[ArticleSummary](
+                  response.result.totalHits,
+                  page,
+                  numResults,
+                  if (language == "*") Language.AllLanguages else language,
+                  hits
+                ))
+            }
           case Failure(ex) => errorHandler(ex)
         }
       }
