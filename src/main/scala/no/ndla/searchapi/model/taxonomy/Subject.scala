@@ -7,4 +7,9 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class TaxonomyFilter(id: String, name: String, subjectId: String)
+case class Subject(
+    contentUri: String,
+    id: String,
+    name: String,
+    path: String
+)

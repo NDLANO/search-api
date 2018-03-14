@@ -42,9 +42,9 @@ trait MultiSearchService {
       val articleType = SearchApiProperties.SearchDocuments("articles")
       val learningpathType = SearchApiProperties.SearchDocuments("learningpaths")
       hit.`type` match {
-        case articleType =>
+        case `articleType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        case learningpathType =>
+        case `learningpathType` =>
           searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
 

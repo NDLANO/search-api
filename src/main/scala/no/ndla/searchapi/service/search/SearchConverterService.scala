@@ -19,7 +19,7 @@ import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.domain.{Language, TaxonomyContext}
 import no.ndla.searchapi.model.search._
-import no.ndla.searchapi.model.taxonomy.{TaxonomyBundle, TaxonomyQueryResourceResult, TaxonomyResource}
+import no.ndla.searchapi.model.taxonomy.{Bundle, QueryResourceResult, Resource}
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.{DefaultFormats, Formats, ShortTypeHints, TypeHints}
 import org.json4s.native.Serialization.read
@@ -43,7 +43,7 @@ trait SearchConverterService {
       }
     }
 
-    private def fetchTaxonomyResourcesAndTopicsForId(contentUri: String, taxonomyType: String): Try[(Seq[TaxonomyQueryResourceResult], Seq[TaxonomyResource])] = {
+    private def fetchTaxonomyResourcesAndTopicsForId(contentUri: String, taxonomyType: String): Try[(Seq[QueryResourceResult], Seq[Resource])] = {
       (taxonomyApiClient.queryResources(contentUri),
         taxonomyApiClient.queryTopics(contentUri)) match {
         case (Success(r), Success(t)) => Success((r,t))
@@ -133,7 +133,7 @@ trait SearchConverterService {
 
 
     /**
-      * Parses [[TaxonomyBundle]] to get taxonomy for a single resource/topic.
+      * Parses [[Bundle]] to get taxonomy for a single resource/topic.
       *
       * @param id of article/learningpath
       * @param taxonomyType Type of resource used in contentUri.
@@ -141,7 +141,7 @@ trait SearchConverterService {
       * @param bundle All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: TaxonomyBundle): Try[Seq[TaxonomyContext]] = {
+    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[Seq[TaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$id could not be found in taxonomy."
@@ -190,7 +190,7 @@ trait SearchConverterService {
       }
     }
 
-    private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: TaxonomyBundle, taxonomyType: String) = {
+    private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: Bundle, taxonomyType: String) = {
       val resources = bundle.resources.filter(resource => resource.contentUri match {
         case Some(contentUri) => compareId(contentUri, id, taxonomyType)
         case None => false
@@ -204,7 +204,7 @@ trait SearchConverterService {
       (resources, topics)
     }
 
-    def asSearchableArticle(ai: Article, taxonomyBundle: Option[TaxonomyBundle]): Try[SearchableArticle] = {
+    def asSearchableArticle(ai: Article, taxonomyBundle: Option[Bundle]): Try[SearchableArticle] = {
       val taxonomyForArticle = taxonomyBundle match {
         case Some(bundle) => getTaxonomyContexts(ai.id.get, "article", bundle)
         case None => getTaxonomyContexts(ai.id.get, "article")
@@ -310,7 +310,7 @@ trait SearchConverterService {
       )
     }
 
-    def SearchableContextToApiContext(context: TaxonomyContext, language: String): ApiTaxonomyContext = {
+    def SearchableContextToApiContext(context: TaxonomyContext, language: String): Try[ApiTaxonomyContext] = {
 
       val subjectNames = taxonomyApiClient.getSubjectNames(context.subjectId)
 
@@ -348,6 +348,9 @@ trait SearchConverterService {
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
 
       val contexts = searchableArticle.contexts.map(c => SearchableContextToApiContext(c, language))
+
+
+
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
       val url = s"/article/${searchableArticle.id}" // TODO: Consider creating this url here.
@@ -360,7 +363,7 @@ trait SearchConverterService {
         url = url,
         contexts = contexts,
         supportedLanguages = supportedLanguages,
-        entityType = searchableArticle.articleType //TODO: maybe 'standard' should be 'article' or something else.
+        learningResourceType = searchableArticle.articleType //TODO: maybe 'standard' should be 'article' or something else.
       )
 
     }

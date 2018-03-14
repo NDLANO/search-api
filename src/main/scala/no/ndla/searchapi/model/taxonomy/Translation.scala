@@ -9,7 +9,7 @@ package no.ndla.searchapi.model.taxonomy
 
 import no.ndla.searchapi.model.domain.LanguageField
 
-case class TaxonomyTranslation(
+case class Translation(
     language: String,
     name: String
 ) extends LanguageField[String] {

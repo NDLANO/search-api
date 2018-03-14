@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class TaxonomyFilterConnection(connectionId: String,
+case class ResourceFilterConnection(resourceId: String,
+                                    filterId: String,
                                     id: String,
-                                    name: String,
                                     relevanceId: String)

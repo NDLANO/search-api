@@ -9,7 +9,7 @@ package no.ndla.searchapi.service.search
 
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent, ArticleTag, ArticleTitle}
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageList, SearchableLanguageValues}
-import no.ndla.searchapi.model.taxonomy.{TaxonomyQueryResourceResult, TaxonomyResourceType}
+import no.ndla.searchapi.model.taxonomy.{QueryResourceResult, ResourceType}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -47,11 +47,11 @@ class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) => invocation.getArgumentAt(0, sampleArticle.getClass()))
 
     when(taxonomyApiClient.queryResources(any[String])).thenReturn(Success(Seq(
-      TaxonomyQueryResourceResult(
+      QueryResourceResult(
         id = "urn:resource:1:21495",
         name = "Føflekkreft",
         resourceTypes = Seq(
-          TaxonomyResourceType(
+          ResourceType(
             id = "urn:resourcetype:academicArticle",
             name = "Fagartikkel",
             subtypes = None

@@ -22,7 +22,7 @@ import no.ndla.searchapi.model.api.ElasticIndexingException
 import no.ndla.searchapi.model.domain.ReindexResult
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
 import no.ndla.searchapi.model.domain.article.Content
-import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
+import no.ndla.searchapi.model.taxonomy.Bundle
 
 import scala.util.{Failure, Success, Try}
 
@@ -38,9 +38,9 @@ trait IndexService {
 
     def getMapping: MappingDefinition
 
-    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[IndexDefinition]
+    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition]
 
-    def indexDocument(imported: D, taxonomyBundle: Option[TaxonomyBundle] = None): Try[D] = {
+    def indexDocument(imported: D, taxonomyBundle: Option[Bundle] = None): Try[D] = {
       for {
         _ <- getAliasTarget.map {
           case Some(index) => Success(index)
@@ -90,7 +90,7 @@ trait IndexService {
       }
     }
 
-    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: Option[TaxonomyBundle]): Try[Int] = {
+    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: Option[Bundle]): Try[Int] = {
       if (contents.isEmpty) {
         Success(0)
       }

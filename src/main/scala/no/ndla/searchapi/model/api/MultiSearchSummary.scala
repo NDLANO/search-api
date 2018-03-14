@@ -20,4 +20,4 @@ case class MultiSearchSummary(@(ApiModelProperty@field)(description = "The uniqu
                               @(ApiModelProperty@field)(description = "Url pointing to the resource") url: String,
                               @(ApiModelProperty@field)(description = "Contexts of the resource") contexts: Seq[ApiTaxonomyContext],
                               @(ApiModelProperty@field)(description = "Languages the resource exists in") supportedLanguages: Seq[String],
-                              @(ApiModelProperty@field)(description = "Type of the resource") entityType: String) //TODO: Rename this
+                              @(ApiModelProperty@field)(description = "Type of the resource") learningResourceType: String)

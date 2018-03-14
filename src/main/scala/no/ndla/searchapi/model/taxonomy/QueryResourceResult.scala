@@ -7,9 +7,12 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class TaxonomySubject(
+import ResourceType
+
+case class QueryResourceResult(
     contentUri: String,
     id: String,
     name: String,
-    path: String
+    path: String,
+    resourceTypes: Seq[ResourceType]
 )

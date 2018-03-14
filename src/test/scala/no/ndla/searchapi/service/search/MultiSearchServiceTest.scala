@@ -13,7 +13,7 @@ import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.integration.Elastic4sClientFactory
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.{Language, Sort}
-import no.ndla.searchapi.model.taxonomy.{TaxonomyQueryResourceResult, TaxonomyResourceType}
+import no.ndla.searchapi.model.taxonomy.{QueryResourceResult, ResourceType}
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.tag.IntegrationTest
 import org.joda.time.DateTime
@@ -147,11 +147,11 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
 
     when(taxonomyApiClient.queryResources(any[String])).thenReturn(Success(Seq(
-      TaxonomyQueryResourceResult(
+      QueryResourceResult(
         id = "urn:resource:1:21495",
         name = "Føflekkreft",
         resourceTypes = Seq(
-          TaxonomyResourceType(
+          ResourceType(
             id = "urn:resourcetype:academicArticle",
             name = "Fagartikkel",
             subtypes = None
