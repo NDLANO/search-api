@@ -267,20 +267,28 @@ trait IndexService {
       * @return Sequence of FieldDefinitions for a field.
       */
     protected def generateLanguageSupportedFieldList(fieldName: String, keepRaw: Boolean = false): Seq[FieldDefinition] = {
-      keepRaw match {
-        case true =>
-          languageAnalyzers.map(langAnalyzer =>
-            textField(s"$fieldName.${langAnalyzer.lang}")
-              .fielddata(false)
-              .analyzer(langAnalyzer.analyzer)
-              .fields(keywordField("raw")))
-        case false =>
-          languageAnalyzers.map(langAnalyzer =>
-            textField(s"$fieldName.${langAnalyzer.lang}")
-              .fielddata(false)
-              .analyzer(langAnalyzer.analyzer))
+      if (keepRaw) {
+        generateLanguageFieldWithSubFields(fieldName, Seq(keywordField("raw")))
+      } else {
+        generateLanguageFieldWithSubFields(fieldName, Seq.empty)
       }
     }
+
+    private def generateLanguageFieldWithSubFields(fieldName: String, subFields: Seq[FieldDefinition]): Seq[FieldDefinition] = {
+      languageAnalyzers.map(langAnalyzer =>
+        textField(s"$fieldName.${langAnalyzer.lang}")
+          .fielddata(false)
+          .analyzer(langAnalyzer.analyzer)
+          .fields(subFields))
+    }
+
+    protected def generateNestedLanguageFields(fieldName: String, subFields: Seq[FieldDefinition]): Seq[FieldDefinition] = {
+      languageAnalyzers.map(langAnalyzer =>
+        nestedField(s"$fieldName.${langAnalyzer.lang}")
+          .analyzer(langAnalyzer.analyzer)
+          .fields(subFields))
+    }
+
   }
 
 }

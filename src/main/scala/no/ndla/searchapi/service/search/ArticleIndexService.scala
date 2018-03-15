@@ -53,11 +53,17 @@ trait ArticleIndexService {
           textField("articleType").analyzer("keyword"),
           longField("metaImageId"),
           nestedField("contexts").fields(
-            keywordField("id"),
-            keywordField("resourceTypeIds"),
-            keywordField("contentTypeIds"),
-            keywordField("subjectIds"),
-            keywordField("typeInContext")
+            List(
+              keywordField("id"),
+              keywordField("path"),
+              keywordField("contextType")
+            ) ++
+            generateLanguageSupportedFieldList("subject", keepRaw = true) ++
+            generateLanguageSupportedFieldList("breadcrumbs") ++
+            generateNestedLanguageFields("filters", Seq(
+              keywordField("name"),
+              keywordField("relevanceName")
+            ))
           )
         )
           ++
