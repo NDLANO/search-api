@@ -53,6 +53,13 @@ object SearchApiProperties extends LazyLogging {
   val IndexBulkSize = 2000
   val ElasticSearchIndexMaxResultWindow = 10000
 
+  val ExternalApiUrls: Map[String, String] = Map(
+    "article-api" -> s"$Domain/article-api/v2/articles",
+    "learningpath-api" -> s"$Domain/learningpath-api/v2/learningpaths",
+    "raw-image" -> s"$Domain/image-api/raw/id"
+  )
+
+
 
   def booleanProp(key: String) = prop(key).toBoolean
 

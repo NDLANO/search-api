@@ -14,6 +14,7 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api._
 import no.ndla.network.ApplicationUrl
+import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api
@@ -40,6 +41,22 @@ trait SearchConverterService {
       split match {
         case Array(_, cType: String, cId: String) => id.toString == cId && cType == `type`
         case _ => false
+      }
+    }
+
+    private def getContextType(resourceId: String, contentUri: Option[String]): Try[String] = {
+      contentUri match {
+        case Some(uri) if uri.contains("article") =>
+          if (resourceId.contains(":topic:")) {
+            Success("topic-article")
+          } else {
+            Success("article")
+          }
+        case Some(uri) if uri.contains("learningpath") => Success("learningpath")
+        case _ =>
+          val msg = s"Could not find type for resource $resourceId"
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
       }
     }
 
@@ -84,14 +101,18 @@ trait SearchConverterService {
 
                 taxonomyApiClient.getFilter(filterCon.id) match {
                   case Success(filter) =>
-                    Success(TaxonomyContext(
-                      id = resource.id,
-                      filterId = filter.id,
-                      relevanceId = relevanceId,
-                      resourceTypes = resourceTypes.map(_.id),
-                      subjectId = filter.subjectId,
-                      typeInContext = taxonomyType
-                    ))
+                    getContextType(resource.id, Some(resource.contentUri)) match {
+                      case Success(contextType) =>
+                        Success(TaxonomyContext(
+                          id = resource.id,
+                          filterId = filter.id,
+                          relevanceId = relevanceId,
+                          resourceTypes = resourceTypes.map(_.id),
+                          subjectId = filter.subjectId,
+                          typeInContext = contextType
+                        ))
+                      case Failure(ex) => Failure(ex)
+                    }
                   case Failure(ex) => Failure(ex)
                 }
               })
@@ -108,14 +129,19 @@ trait SearchConverterService {
 
                 taxonomyApiClient.getFilter(filterCon.id) match {
                   case Success(filter) =>
-                    Success(TaxonomyContext(
-                      id = topic.id,
-                      filterId = filter.id,
-                      relevanceId = relevanceId,
-                      resourceTypes = Seq.empty,
-                      subjectId = filter.subjectId,
-                      typeInContext = taxonomyType
-                    ))
+                    getContextType(topic.id, topic.contentUri) match {
+                      case Success(contextType) =>
+                        Success(TaxonomyContext(
+                          id = topic.id,
+                          filterId = filter.id,
+                          relevanceId = relevanceId,
+                          resourceTypes = Seq.empty,
+                          subjectId = filter.subjectId,
+                          typeInContext = contextType
+
+                        ))
+                      case Failure(ex) => Failure(ex)
+                    }
                   case Failure(ex) => Failure(ex)
                 }
               })
@@ -154,40 +180,47 @@ trait SearchConverterService {
           val filters = bundle.filters
             .filter(f => filterConnections.map(_.filterId).contains(f.id))
 
-          val contexts = filters.map(filter => {
-            val relId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
-            val resourceTypes = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id).map(_.resourceTypeId)
+          getContextType(resource.id, resource.contentUri) match {
+            case Success(contextType) =>
+              val contexts = filters.map(filter => {
+                val relId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
+                val resourceTypes = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id).map(_.resourceTypeId)
 
-            TaxonomyContext(
-              id = resource.id,
-              filterId = filter.id,
-              relevanceId = relId,
-              resourceTypes = resourceTypes,
-              subjectId = filter.subjectId,
-              typeInContext = taxonomyType
-            )
-          })
-          Success(contexts)
+                TaxonomyContext(
+                  id = resource.id,
+                  filterId = filter.id,
+                  relevanceId = relId,
+                  resourceTypes = resourceTypes,
+                  subjectId = filter.subjectId,
+                  typeInContext = contextType
+                )
+              })
+              Success(contexts)
+            case Failure(ex) => Failure(ex)
+          }
         case (Nil, Seq(topic)) =>
 
           val filterConnections = bundle.topicFilterConnections.filter(_.topicId == topic.id)
           val filters = bundle.filters
             .filter(f => filterConnections.map(_.filterId).contains(f.id))
 
-          val contexts = filters.map(filter => {
-            val relevanceId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
+          getContextType(topic.id, topic.contentUri) match {
+            case Success(contextType) =>
+              val contexts = filters.map(filter => {
+                val relevanceId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
 
-            TaxonomyContext(
-              id = topic.id,
-              filterId = filter.id,
-              relevanceId = relevanceId,
-              resourceTypes = Seq.empty,
-              subjectId = filter.subjectId,
-              typeInContext = taxonomyType
-            )
-          })
-
-          Success(contexts)
+                TaxonomyContext(
+                  id = topic.id,
+                  filterId = filter.id,
+                  relevanceId = relevanceId,
+                  resourceTypes = Seq.empty,
+                  subjectId = filter.subjectId,
+                  typeInContext = contextType
+                )
+              })
+              Success(contexts)
+            case Failure(ex) => Failure(ex)
+          }
         case (r, t) =>
           val taxonomyEntries = r ++ t
           val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
@@ -336,9 +369,6 @@ trait SearchConverterService {
       )
     }
 
-
-
-
     // TODO: implement this
     /*
     def learningpathHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
@@ -358,7 +388,9 @@ trait SearchConverterService {
     def articleHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableArticle = read[SearchableArticle](hitString)
+      val start = System.currentTimeMillis()
       val contextTries = searchableArticle.contexts.map(c => searchableContextToApiContext(c, language))
+      logger.info(s"Fetching taxonomy for hit ${searchableArticle.id} took: ${System.currentTimeMillis() - start} ms...")
 
       Try(contextTries.map(_.get)) match {
         case Success(contexts) =>
@@ -372,17 +404,17 @@ trait SearchConverterService {
 
           val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
-          val url = s"/article/${searchableArticle.id}" // TODO: Consider creating this url here.
+          val url = s"${SearchApiProperties.ExternalApiUrls("article-api")}/${searchableArticle.id}"
+          val metaImageUrl = searchableArticle.metaImageId.map(id => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id")
 
           Success(MultiSearchSummary(
             id = searchableArticle.id,
             title = title,
             metaDescription = metaDescription,
-            metaImageId = searchableArticle.metaImageId, //TODO: should this be url?
+            metaImage = metaImageUrl,
             url = url,
             contexts = contexts,
-            supportedLanguages = supportedLanguages,
-            learningResourceType = searchableArticle.articleType //TODO: maybe 'standard' should be 'article' or something else.
+            supportedLanguages = supportedLanguages
           ))
         case Failure(ex) => Failure(ex)
       }
