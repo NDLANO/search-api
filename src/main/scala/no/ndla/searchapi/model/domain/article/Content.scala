@@ -40,13 +40,14 @@ object Article {
   )
 }
 
-object ArticleType extends Enumeration {
+object LearningResourceType extends Enumeration {
   val Standard = Value("standard")
   val TopicArticle = Value("topic-article")
+  val LearningPath = Value("learningpath")
 
-  def all = ArticleType.values.map(_.toString).toSeq
+  def all = LearningResourceType.values.map(_.toString).toSeq
 
-  def valueOf(s: String): Option[ArticleType.Value] = ArticleType.values.find(_.toString == s)
+  def valueOf(s: String): Option[LearningResourceType.Value] = LearningResourceType.values.find(_.toString == s)
 }
 
 case class Concept(id: Option[Long],

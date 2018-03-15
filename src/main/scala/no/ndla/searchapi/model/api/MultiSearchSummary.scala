@@ -7,7 +7,6 @@
 
 package no.ndla.searchapi.model.api
 
-import MetaDescription
 import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 
 import scala.annotation.meta.field

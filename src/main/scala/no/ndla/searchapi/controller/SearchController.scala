@@ -12,7 +12,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.SearchApiClient
 import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.{Error, SearchResult, SearchResults, ValidationError}
-import no.ndla.searchapi.model.domain.article.ArticleType
+import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.service.search.{ArticleSearchService, MultiSearchService}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
@@ -116,7 +116,7 @@ trait SearchController {
           page = page,
           pageSize = if (idList.isEmpty) pageSize else idList.size,
           sort = sort.getOrElse(Sort.ByRelevanceDesc),
-          if (articleTypesFilter.isEmpty) ArticleType.all else articleTypesFilter,
+          if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
           fallback = fallback
         )
 
@@ -127,7 +127,7 @@ trait SearchController {
           page = page,
           pageSize = if (idList.isEmpty) pageSize else idList.size,
           sort = sort.getOrElse(Sort.ByIdAsc),
-          if (articleTypesFilter.isEmpty) ArticleType.all else articleTypesFilter,
+          if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
           fallback = fallback
         )
       }
@@ -203,7 +203,7 @@ trait SearchController {
           page = page,
           pageSize = if (idList.isEmpty) pageSize else idList.size,
           sort = sort.getOrElse(Sort.ByRelevanceDesc),
-          if (articleTypesFilter.isEmpty) ArticleType.all else articleTypesFilter,
+          if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
           fallback = fallback
         )
 
@@ -214,7 +214,7 @@ trait SearchController {
           page = page,
           pageSize = if (idList.isEmpty) pageSize else idList.size,
           sort = sort.getOrElse(Sort.ByIdAsc),
-          if (articleTypesFilter.isEmpty) ArticleType.all else articleTypesFilter,
+          if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
           fallback = fallback
         )
       }

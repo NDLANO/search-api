@@ -138,6 +138,7 @@ trait ArticleSearchService {
                   if (language == "*") Language.AllLanguages else language,
                   hits
                 ))
+              case Failure(ex) => errorHandler(ex)
             }
           case Failure(ex) => errorHandler(ex)
         }

@@ -7,8 +7,6 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-import ResourceType
-
 case class QueryResourceResult(
     contentUri: String,
     id: String,

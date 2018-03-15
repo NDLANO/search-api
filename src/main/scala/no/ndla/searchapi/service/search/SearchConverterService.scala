@@ -87,9 +87,10 @@ trait SearchConverterService {
                     Success(TaxonomyContext(
                       id = resource.id,
                       filterId = filter.id,
-                      relevanceIds = Seq(relevanceId),
+                      relevanceId = relevanceId,
                       resourceTypes = resourceTypes.map(_.id),
-                      subjectId = filter.subjectId
+                      subjectId = filter.subjectId,
+                      typeInContext = taxonomyType
                     ))
                   case Failure(ex) => Failure(ex)
                 }
@@ -110,9 +111,10 @@ trait SearchConverterService {
                     Success(TaxonomyContext(
                       id = topic.id,
                       filterId = filter.id,
-                      relevanceIds = Seq(relevanceId), //TODO: consider this as not list in domain class?
-                      resourceTypes = Seq.empty, // Topics does not have resourceTypes
-                      subjectId = filter.subjectId
+                      relevanceId = relevanceId,
+                      resourceTypes = Seq.empty,
+                      subjectId = filter.subjectId,
+                      typeInContext = taxonomyType
                     ))
                   case Failure(ex) => Failure(ex)
                 }
@@ -153,14 +155,16 @@ trait SearchConverterService {
             .filter(f => filterConnections.map(_.filterId).contains(f.id))
 
           val contexts = filters.map(filter => {
-            val relevanceIds = filterConnections.filter(_.filterId == filter.id).map(_.relevanceId)
+            val relId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
             val resourceTypes = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id).map(_.resourceTypeId)
 
             TaxonomyContext(
+              id = resource.id,
               filterId = filter.id,
-              relevanceIds = relevanceIds,
+              relevanceId = relId,
               resourceTypes = resourceTypes,
-              subjectId = filter.subjectId
+              subjectId = filter.subjectId,
+              typeInContext = taxonomyType
             )
           })
           Success(contexts)
@@ -171,13 +175,15 @@ trait SearchConverterService {
             .filter(f => filterConnections.map(_.filterId).contains(f.id))
 
           val contexts = filters.map(filter => {
-            val relevanceIds = filterConnections.filter(_.filterId == filter.id).map(_.relevanceId)
+            val relevanceId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
 
             TaxonomyContext(
+              id = topic.id,
               filterId = filter.id,
-              relevanceIds = relevanceIds,
-              resourceTypes = Seq.empty, // Topics do not have resourceTypes
-              subjectId = filter.subjectId
+              relevanceId = relevanceId,
+              resourceTypes = Seq.empty,
+              subjectId = filter.subjectId,
+              typeInContext = taxonomyType
             )
           })
 
@@ -310,17 +316,31 @@ trait SearchConverterService {
       )
     }
 
-    def SearchableContextToApiContext(context: TaxonomyContext, language: String): Try[ApiTaxonomyContext] = {
+    def searchableContextToApiContext(context: TaxonomyContext, language: String): Try[ApiTaxonomyContext] = {
+      for {
+        subjectNames <- taxonomyApiClient.getTranslations(context.subjectId)
 
-      val subjectNames = taxonomyApiClient.getSubjectNames(context.subjectId)
+        resource <- if (context.id.contains("topic")) taxonomyApiClient.getTopic(context.id)
+        else taxonomyApiClient.getResource(context.id)
 
+        crumbs <- taxonomyApiClient.getBreadcrumbs(resource.path, language)
 
-      ApiTaxonomyContext(
-
+        relevance <- taxonomyApiClient.getRelevanceById(context.relevanceId)
+      } yield ApiTaxonomyContext(
+        findByLanguageOrBestEffort(subjectNames, language).map(_.name).getOrElse(""),
+        resource.path,
+        crumbs,
+        relevance.name,
+        context.typeInContext,
+        language
       )
     }
 
+
+
+
     // TODO: implement this
+    /*
     def learningpathHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableLearningPath = read[SearchableLearningPath](hitString)
@@ -332,41 +352,41 @@ trait SearchConverterService {
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
 
       // TODO: finish learningpath to multisummary
-    }
+    }*/
 
 
     def articleHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableArticle = read[SearchableArticle](hitString)
+      val contextTries = searchableArticle.contexts.map(c => searchableContextToApiContext(c, language))
 
-      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.lang))
-      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
-      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
+      Try(contextTries.map(_.get)) match {
+        case Success(contexts) =>
+          val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.lang))
+          val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
+          val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
+          val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
 
-      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+          val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+          val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
 
-      val contexts = searchableArticle.contexts.map(c => SearchableContextToApiContext(c, language))
+          val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
+          val url = s"/article/${searchableArticle.id}" // TODO: Consider creating this url here.
 
-
-      val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
-
-      val url = s"/article/${searchableArticle.id}" // TODO: Consider creating this url here.
-
-      MultiSearchSummary(
-        id = searchableArticle.id,
-        title = title,
-        metaDescription = metaDescription,
-        metaImageId = searchableArticle.metaImageId, //TODO: should this be url?
-        url = url,
-        contexts = contexts,
-        supportedLanguages = supportedLanguages,
-        learningResourceType = searchableArticle.articleType //TODO: maybe 'standard' should be 'article' or something else.
-      )
+          Success(MultiSearchSummary(
+            id = searchableArticle.id,
+            title = title,
+            metaDescription = metaDescription,
+            metaImageId = searchableArticle.metaImageId, //TODO: should this be url?
+            url = url,
+            contexts = contexts,
+            supportedLanguages = supportedLanguages,
+            learningResourceType = searchableArticle.articleType //TODO: maybe 'standard' should be 'article' or something else.
+          ))
+        case Failure(ex) => Failure(ex)
+      }
 
     }
-
   }
 }

@@ -110,7 +110,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("baldur"), "nb")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
   val article9 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(9),
@@ -120,7 +120,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("baldur"), "nb")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
   val article10 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(10),
@@ -130,7 +130,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("englando"), "en")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
   val article11 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
@@ -141,7 +141,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("ikkehund"), "nb"), ArticleTag(List("notdog"), "en")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
 
   override def beforeAll = {
@@ -210,10 +210,10 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("all should return only articles of a given type if a type filter is specified") {
-    val Success(results) = articleSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, Seq(ArticleType.TopicArticle.toString), fallback = false)
+    val Success(results) = articleSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, Seq(LearningResourceType.TopicArticle.toString), fallback = false)
     results.totalCount should be(3)
 
-    val Success(results2) = articleSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, ArticleType.all, fallback = false)
+    val Success(results2) = articleSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, LearningResourceType.all, fallback = false)
     results2.totalCount should be(9)
   }
 
@@ -331,10 +331,10 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("matchingQuery should filter results based on an article type filter") {
-    val results = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(ArticleType.TopicArticle.toString), fallback = false)
+    val results = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.TopicArticle.toString), fallback = false)
     results.get.totalCount should be(0)
 
-    val results2 = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(ArticleType.Standard.toString), fallback = false)
+    val results2 = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.Standard.toString), fallback = false)
     results2.get.totalCount should be(3)
   }
 

@@ -7,10 +7,9 @@
 
 package no.ndla.searchapi.model.domain
 
-case class TaxonomyContext(
-    id: String,
-    filterId: String,
-    relevanceIds: Seq[String],
-    resourceTypes: Seq[String],
-    subjectId: String
-)
+case class TaxonomyContext(id: String,
+                           filterId: String,
+                           relevanceId: String,
+                           resourceTypes: Seq[String],
+                           subjectId: String,
+                           typeInContext: String)

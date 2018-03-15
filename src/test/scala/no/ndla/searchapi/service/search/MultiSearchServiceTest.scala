@@ -11,8 +11,9 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.integration.Elastic4sClientFactory
+import no.ndla.searchapi.model.api.ApiTaxonomyContext
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.model.domain.{Language, Sort, TaxonomyContext}
 import no.ndla.searchapi.model.taxonomy.{QueryResourceResult, ResourceType}
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.tag.IntegrationTest
@@ -40,14 +41,39 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   val today = DateTime.now()
 
-  val article1 = TestData.sampleArticleWithByNcSa.copy(
-    id = Option(1),
-    title = List(ArticleTitle("Batmen er på vift med en bil", "nb")),
-    introduction = List(ArticleIntroduction("Batmen", "nb")),
-    content = List(ArticleContent("Bilde av en <strong>bil</strong> flaggermusmann som vifter med vingene <em>bil</em>.", "nb")),
-    tags = List(ArticleTag(List("fugl"), "nb")),
-    created = today.minusDays(4).toDate,
-    updated = today.minusDays(3).toDate)
+  case class TaxonomyTestingArticle(article: Article, taxonomyIndexedContexts: Seq[TaxonomyContext], taxonomyOutContexts: Seq[ApiTaxonomyContext])
+
+
+  val article1 =
+    TaxonomyTestingArticle(
+      article =
+        TestData.sampleArticleWithByNcSa.copy(
+          id = Option(1),
+          title = List(ArticleTitle("Batmen er på vift med en bil", "nb")),
+          introduction = List(ArticleIntroduction("Batmen", "nb")),
+          content = List(ArticleContent("Bilde av en <strong>bil</strong> flaggermusmann som vifter med vingene <em>bil</em>.", "nb")),
+          tags = List(ArticleTag(List("fugl"), "nb")),
+          created = today.minusDays(4).toDate,
+          updated = today.minusDays(3).toDate),
+      taxonomyIndexedContext = Vector(
+        TaxonomyContext(
+          id = "urn:resource:123",
+          filterId = "urn:filter:1filter",
+          relevanceId = "urn:relevance:1relevance",
+          resourceTypes = Seq("urn:resourcetype:subjectMaterial"),
+          subjectId:
+
+
+
+        )
+      ),
+      taxonomyOutContexts = Vector(
+        ApiTaxonomyContext(
+
+        )
+      )
+    )
+
   val article2 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(2),
     title = List(ArticleTitle("Pingvinen er ute og går", "nb")),
@@ -109,7 +135,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("baldur"), "nb")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
   val article9 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(9),
@@ -119,7 +145,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("baldur"), "nb")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
   val article10 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(10),
@@ -129,7 +155,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("englando"), "en")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
   val article11 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
@@ -140,7 +166,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     tags = List(ArticleTag(List("ikkehund"), "nb"), ArticleTag(List("notdog"), "en")),
     created = today.minusDays(10).toDate,
     updated = today.minusDays(5).toDate,
-    articleType = ArticleType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle.toString
   )
 
   override def beforeAll = {
@@ -209,10 +235,10 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("all should return only articles of a given type if a type filter is specified") {
-    val Success(results) = multiSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, Seq(ArticleType.TopicArticle.toString), fallback = false)
+    val Success(results) = multiSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, Seq(LearningResourceType.TopicArticle.toString), fallback = false)
     results.totalCount should be(3)
 
-    val Success(results2) = multiSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, ArticleType.all, fallback = false)
+    val Success(results2) = multiSearchService.all(List(), Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, LearningResourceType.all, fallback = false)
     results2.totalCount should be(9)
   }
 
@@ -308,10 +334,10 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("matchingQuery should filter results based on an article type filter") {
-    val results = multiSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(ArticleType.TopicArticle.toString), fallback = false)
+    val results = multiSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.TopicArticle.toString), fallback = false)
     results.get.totalCount should be(0)
 
-    val results2 = multiSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(ArticleType.Standard.toString), fallback = false)
+    val results2 = multiSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.Standard.toString), fallback = false)
     results2.get.totalCount should be(3)
   }
 

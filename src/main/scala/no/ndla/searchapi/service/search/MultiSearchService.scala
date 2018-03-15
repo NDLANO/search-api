@@ -45,7 +45,8 @@ trait MultiSearchService {
         case `articleType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
         case `learningpathType` =>
-          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
+          //TODO: searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
 
     }
@@ -139,13 +140,17 @@ trait MultiSearchService {
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
-            Success(api.SearchResult[MultiSearchSummary](
-              response.result.totalHits,
-              page,
-              numResults,
-              if (language == "*") Language.AllLanguages else language,
-              getHits(response.result, language, fallback)
-            ))
+            getHits(response.result, language, fallback) match {
+              case Success(hits) =>
+                Success(api.SearchResult[MultiSearchSummary](
+                  response.result.totalHits,
+                  page,
+                  numResults,
+                  if (language == "*") Language.AllLanguages else language,
+                  hits
+                ))
+              case Failure(ex) => errorHandler(ex)
+            }
           case Failure(ex) => errorHandler(ex)
         }
       }

@@ -13,7 +13,7 @@ import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings._
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.{ArticleApiClient, TaxonomyBundle}
+import no.ndla.searchapi.integration.ArticleApiClient
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.Bundle
@@ -56,7 +56,8 @@ trait ArticleIndexService {
             keywordField("id"),
             keywordField("resourceTypeIds"),
             keywordField("contentTypeIds"),
-            keywordField("subjectIds")
+            keywordField("subjectIds"),
+            keywordField("typeInContext")
           )
         )
           ++
