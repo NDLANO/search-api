@@ -50,7 +50,7 @@ trait ArticleIndexService {
           dateField("lastUpdated"),
           keywordField("license"),
           textField("authors").fielddata(true),
-          textField("articleType").analyzer("keyword"),
+          keywordField("articleType"),
           longField("metaImageId"),
           nestedField("contexts").fields(
             List(

@@ -78,12 +78,15 @@ trait IndexService {
           logger.info("Successfully fetched taxonomy...")
           val stream = apiClient.getChunks[D]
           var count = 0 // TODO: more functional? Is it even possible with streams?
+          var totalCount = 0
           stream.foreach({
             case Success(c) =>
-              indexDocuments(c, indexName, Some(bundle)).map(c => count += c)
+              indexDocuments(c, indexName, Some(bundle)).map(numIndexed => count += numIndexed)
+              totalCount += c.size
             case Failure(ex) => return Failure(ex)
           })
-          Success(count)
+          logger.info(s"$count/$totalCount documents were indexed successfully.")
+          Success(totalCount)
         case Failure(ex) =>
           logger.error("Could not fetch taxonomy for indexing...")
           Failure(ex)
@@ -106,8 +109,9 @@ trait IndexService {
 
             response match {
               case Success(r) =>
-                logger.info(s"Indexed ${contents.size} documents. No of failed items: ${r.result.failures.size + failedToCreateRequests.size}")
-                Success(contents.size)
+                val numFailed = r.result.failures.size + failedToCreateRequests.size
+                logger.info(s"Indexed ${contents.size} documents. No of failed items: $numFailed")
+                Success(contents.size - numFailed )
               case Failure(ex) => Failure(ex)
             }
         } else {

@@ -91,14 +91,6 @@ trait SearchConverterService {
       */
     private def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = ???
 
-
-    /*def getParentTopics(topic: Resource, bundle: Bundle, path: List[String]): List[Resource] = {
-      val parentConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == topic.id)
-      val parents = bundle.topics.filter(t => parentConnections.map(_.topicid).contains(t.id))
-
-      parents.flatMap(parent => getParentTopics(parent, bundle, path :+ topic.id)) :+ topic
-    }*/
-
     def getParentTopicsAndPaths(topic: Resource, bundle: Bundle, path: List[String]): List[(Resource, List[String])] = {
       val parentConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == topic.id)
       val parents = bundle.topics.filter(t => parentConnections.map(_.topicid).contains(t.id))
