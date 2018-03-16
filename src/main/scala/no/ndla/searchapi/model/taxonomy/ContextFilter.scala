@@ -7,4 +7,4 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class ContextFilter(name: Translation, relevance: Translation)
+case class ContextFilter(name: Seq[Translation], relevance: Seq[Translation])

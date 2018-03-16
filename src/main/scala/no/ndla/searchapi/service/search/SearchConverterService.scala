@@ -89,6 +89,53 @@ trait SearchConverterService {
       */
     private def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] =  ???
 
+    private def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[Seq[TaxonomyContext]] = {
+      val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
+      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
+
+      getContextType(resource.id, resource.contentUri) match {
+        case Success(contextType) =>
+          val contexts = topics.flatMap(topic => {
+            val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
+            val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
+
+            subjects.map(subject => {
+              val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
+              val filterConnections = bundle.resourceFilterConnections
+                .filter(_.resourceId == resource.id)
+                .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
+
+              val connectedFilters = filterConnections.map(fc => {
+                (bundle.filters.find(_.id == fc.filterId), fc)
+              })
+
+              val contextFilters = connectedFilters.flatMap({
+                case (Some(filter), filterConnection) =>
+                  val relevanceName = bundle.relevances
+                    .find(r => r.id == filterConnection.relevanceId).map(_.name).getOrElse("")
+
+                  Some(ContextFilter(
+                    name = Seq(Translation(Language.DefaultLanguage, filter.name)), // TODO: Get translations
+                    relevance = Seq(Translation(Language.DefaultLanguage, relevanceName)) // TODO: Get translations
+                  ))
+                case _ => None
+              })
+
+              TaxonomyContext(
+                id = resource.id,
+                subjectName = Seq(Translation(Language.DefaultLanguage, subject.name)), // TODO: Get translations
+                path = resource.path,
+                contextType = contextType,
+                breadcrumbs = Seq(), // TODO: breadcrumbs
+                filters = contextFilters
+              )
+            })
+          })
+          Success(contexts)
+        case Failure(ex) => Failure(ex)
+      }
+    }
+
     /**
       * Parses [[Bundle]] to get taxonomy for a single resource/topic.
       *
@@ -105,67 +152,10 @@ trait SearchConverterService {
           logger.error(msg)
           Failure(ElasticIndexingException(msg))
         case (Seq(resource), Nil) =>
-          val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
-          val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
-
-          getContextType(resource.id, resource.contentUri) match {
-            case Success(contextType) =>
-              val contexts = topics.map(topic => {
-                val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
-                val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
-
-                subjects.map(subject => {
-                  val filterConnections = bundle.resourceFilterConnections.filter(_.resourceId == resource.id).map(fc => {
-                    bundle.filters
-
-                  })
-                  // TODO: get relevances for this subject/context and connected to this resource
-
-                  filters.map(f => ContextFilter(
-                    name = Seq(Translation(Language.DefaultLanguage, f.name)), // TODO: Get translations
-                    relevance =
-                  ))
-
-                  TaxonomyContext(
-                    id = resource.id,
-                    subjectName = Seq(Translation(Language.DefaultLanguage, subject.name)), // TODO: Get translations
-                    path = resource.path,
-                    contextType = contextType,
-                    breadcrumbs = Seq(), // TODO: breadcrumbs
-                    filters = Seq() // TODO: filters
-                  )
-
-                })
-              })
-
-
-              Success(contexts)
-            case Failure(ex) => Failure(ex)
-          }
+          getResourceTaxonomyContexts(resource, taxonomyType, bundle)
         case (Nil, Seq(topic)) =>
           // TODO: Redo this like resources are done ^
 
-          val filterConnections = bundle.topicFilterConnections.filter(_.topicId == topic.id)
-          val filters = bundle.filters
-            .filter(f => filterConnections.map(_.filterId).contains(f.id))
-
-          getContextType(topic.id, topic.contentUri) match {
-            case Success(contextType) =>
-              val contexts = filters.map(filter => {
-                val relevanceId = filterConnections.find(_.filterId == filter.id).map(_.relevanceId).getOrElse("")
-
-                TaxonomyContext(
-                  id = topic.id,
-                  filterId = filter.id,
-                  relevanceId = relevanceId,
-                  resourceTypes = Seq.empty,
-                  subjectId = filter.subjectId,
-                  typeInContext = contextType
-                )
-              })
-              Success(contexts)
-            case Failure(ex) => Failure(ex)
-          }
         case (r, t) =>
           val taxonomyEntries = r ++ t
           val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
