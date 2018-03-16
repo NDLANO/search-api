@@ -41,38 +41,16 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   val today = DateTime.now()
 
-  case class TaxonomyTestingArticle(article: Article, taxonomyIndexedContexts: Seq[TaxonomyContext], taxonomyOutContexts: Seq[ApiTaxonomyContext])
 
-
-  val article1 =
-    TaxonomyTestingArticle(
-      article =
-        TestData.sampleArticleWithByNcSa.copy(
+  val article1 = TestData.sampleArticleWithByNcSa.copy(
           id = Option(1),
           title = List(ArticleTitle("Batmen er på vift med en bil", "nb")),
           introduction = List(ArticleIntroduction("Batmen", "nb")),
           content = List(ArticleContent("Bilde av en <strong>bil</strong> flaggermusmann som vifter med vingene <em>bil</em>.", "nb")),
           tags = List(ArticleTag(List("fugl"), "nb")),
           created = today.minusDays(4).toDate,
-          updated = today.minusDays(3).toDate),
-      taxonomyIndexedContext = Vector(
-        TaxonomyContext(
-          id = "urn:resource:123",
-          filterId = "urn:filter:1filter",
-          relevanceId = "urn:relevance:1relevance",
-          resourceTypes = Seq("urn:resourcetype:subjectMaterial"),
-          subjectId:
-
-
-
+          updated = today.minusDays(3).toDate
         )
-      ),
-      taxonomyOutContexts = Vector(
-        ApiTaxonomyContext(
-
-        )
-      )
-    )
 
   val article2 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(2),
@@ -171,24 +149,6 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override def beforeAll = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
-
-    when(taxonomyApiClient.queryResources(any[String])).thenReturn(Success(Seq(
-      QueryResourceResult(
-        id = "urn:resource:1:21495",
-        name = "Føflekkreft",
-        resourceTypes = Seq(
-          ResourceType(
-            id = "urn:resourcetype:academicArticle",
-            name = "Fagartikkel",
-            subtypes = None
-          )
-        ),
-        contentUri = s"urn:article:1",
-        path = "/subject:4/topic:1:172816/topic:1:173961/resource:1:21495"
-      )
-    )))
-    when(taxonomyApiClient.queryTopics(any[String])).thenReturn(Success(Seq.empty))
-    when(taxonomyApiClient.getFilterConnectionsForResource(any[String])).thenReturn(Success(Seq.empty))
 
     articleIndexService.indexDocument(article1)
     articleIndexService.indexDocument(article2)

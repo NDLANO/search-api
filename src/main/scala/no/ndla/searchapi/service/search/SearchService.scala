@@ -34,14 +34,14 @@ trait SearchService {
       * @param language language as ISO639 code
       * @return api-model summary of hit
       */
-    def hitToApiModel(hit: SearchHit, language: String): Try[T]
+    def hitToApiModel(hit: SearchHit, language: String): T
 
-    def getHits(response: SearchResponse, language: String, fallback: Boolean): Try[Seq[T]] = {
+    def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[T] = {
       response.totalHits match {
         case count if count > 0 =>
           val resultArray = response.hits.hits
 
-          val apiModels = resultArray.map(result => {
+          resultArray.map(result => {
             val matchedLanguage = language match {
               case Language.AllLanguages | "*" =>
                 searchConverterService.getLanguageFromHit(result).getOrElse(language)
@@ -49,9 +49,7 @@ trait SearchService {
             }
             hitToApiModel(result, matchedLanguage)
           })
-
-          Try(apiModels.map(_.get))
-        case _ => Success(Seq.empty)
+        case _ => Seq.empty
       }
     }
 

@@ -7,20 +7,34 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-import no.ndla.searchapi.integration._
-
 case class Bundle(
-                   filters: Seq[Filter],
-                   relevances: Seq[Relevance],
-                   resourceFilterConnections: Seq[ResourceFilterConnection],
-                   resourceResourceTypeConnections: Seq[
-      ResourceResourceTypeConnection],
-                   resourceTypes: Seq[ResourceType],
-                   resources: Seq[Resource],
-                   subjectTopicConnections: Seq[SubjectTopicConnection],
-                   subjects: Seq[Resource],
-                   topicFilterConnections: Seq[TopicFilterConnection],
-                   topicResourceConnections: Seq[TopicResourceConnection],
-                   topicSubtopicConnections: Seq[TopicSubtopicConnection],
-                   topics: Seq[Resource]
-)
+    filters: List[Filter],
+    relevances: List[Relevance],
+    resourceFilterConnections: List[ResourceFilterConnection],
+    resourceResourceTypeConnections: List[ResourceResourceTypeConnection],
+    resourceTypes: List[ResourceType],
+    resources: List[Resource],
+    subjectTopicConnections: List[SubjectTopicConnection],
+    subjects: List[Resource],
+    topicFilterConnections: List[TopicFilterConnection],
+    topicResourceConnections: List[TopicResourceConnection],
+    topicSubtopicConnections: List[TopicSubtopicConnection],
+    topics: List[Resource]
+) {
+  def getResourceTopics(resource: Resource): List[Resource] = {
+    val tc = topicResourceConnections.filter(_.resourceId == resource.id)
+    topics.filter(topic => tc.map(_.topicid).contains(topic.id))
+  }
+
+  def getObject(id: String): Option[Resource] = {
+    if (id.contains(":resource:")) {
+      resources.find(_.id == id)
+    } else if (id.contains(":topic:")) {
+      topics.find(_.id == id)
+    } else if (id.contains(":subject:")) {
+      subjects.find(_.id == id)
+    } else {
+      None
+    }
+  }
+}

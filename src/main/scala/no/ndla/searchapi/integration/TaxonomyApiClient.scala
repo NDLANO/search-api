@@ -41,7 +41,7 @@ trait TaxonomyApiClient {
       get[Relevance](s"$TaxonomyApiEndpoint/relevances/$relevanceId")
     }
 
-    def getBreadcrumbs(path: String, language: String): Try[Seq[String]] = {
+    def getBreadcrumbs(path: String, language: String): Try[List[String]] = {
       resolvePath(path) match {
         case Success(resolved) =>
           val fetchedTranslations = resolved.parents.map(pid => getTranslations(pid))
@@ -53,7 +53,7 @@ trait TaxonomyApiClient {
           } else {
             val bestTranslations = pathTranslations.map(objectTranslations => {
               Language.findByLanguageOrBestEffort(objectTranslations, language)
-            })
+            }).toList
 
             if(bestTranslations.contains(None)){
               Failure(new RuntimeException(s"We could not find translation for $path")) // TODO: better exception
@@ -68,12 +68,12 @@ trait TaxonomyApiClient {
     /**
       * Returns sequence of names with associated language in a tuple.
       * @param resourceId Id of resource to fetch.
-      * @return Sequence of tuples with (name, language)
+      * @return Listuence of tuples with (name, language)
       */
-    def getResourceTranslations(resourceId: String): Try[Seq[Translation]] = {
+    def getResourceTranslations(resourceId: String): Try[List[Translation]] = {
       for {
         topic <- getTopic(resourceId)
-        translations <- get[Seq[Translation]](
+        translations <- get[List[Translation]](
           s"$TaxonomyApiEndpoint/resources/$resourceId/translations")
       } yield translations :+ Translation(Language.DefaultLanguage, topic.name)
     }
@@ -81,12 +81,12 @@ trait TaxonomyApiClient {
     /**
       * Returns sequence of names with associated language in a tuple.
       * @param topicId Id of topic to fetch.
-      * @return Sequence of tuples with (name, language)
+      * @return Listuence of tuples with (name, language)
       */
-    def getTopicTranslations(topicId: String): Try[Seq[Translation]] = {
+    def getTopicTranslations(topicId: String): Try[List[Translation]] = {
       for {
         topic <- getTopic(topicId)
-        translations <- get[Seq[Translation]](
+        translations <- get[List[Translation]](
           s"$TaxonomyApiEndpoint/topics/$topicId/translations")
       } yield translations :+ Translation(Language.DefaultLanguage, topic.name)
     }
@@ -94,18 +94,18 @@ trait TaxonomyApiClient {
     /**
       * Returns sequence of names with associated language in a tuple.
       * @param subjectId Id of subject to fetch.
-      * @return Sequence of tuples with (name, language)
+      * @return Listuence of tuples with (name, language)
       */
-    def getSubjectTranslations(subjectId: String): Try[Seq[Translation]] = {
+    def getSubjectTranslations(subjectId: String): Try[List[Translation]] = {
       for {
         subject <- getSubject(subjectId)
-        translations <- get[Seq[Translation]](
+        translations <- get[List[Translation]](
           s"$TaxonomyApiEndpoint/subjects/$subjectId/translations")
       } yield
         translations :+ Translation(Language.DefaultLanguage, subject.name)
     }
 
-    def getTranslations(id: String): Try[Seq[Translation]] = {
+    def getTranslations(id: String): Try[List[Translation]] = {
       if (id.contains(":resource:")) {
         getResourceTranslations(id)
       } else if (id.contains(":topic:")) {
@@ -122,64 +122,64 @@ trait TaxonomyApiClient {
       get[PathResolve](s"$TaxonomyApiEndpoint/url/resolve", ("path", path))
     }
 
-    def getAllResources: Try[Seq[Resource]] =
-      get[Seq[Resource]](s"$TaxonomyApiEndpoint/resources/")
+    def getAllResources: Try[List[Resource]] =
+      get[List[Resource]](s"$TaxonomyApiEndpoint/resources/")
 
-    def getAllSubjects: Try[Seq[Resource]] =
-      get[Seq[Resource]](s"$TaxonomyApiEndpoint/subjects/")
+    def getAllSubjects: Try[List[Resource]] =
+      get[List[Resource]](s"$TaxonomyApiEndpoint/subjects/")
 
-    def getAllTopics: Try[Seq[Resource]] =
-      get[Seq[Resource]](s"$TaxonomyApiEndpoint/topics/")
+    def getAllTopics: Try[List[Resource]] =
+      get[List[Resource]](s"$TaxonomyApiEndpoint/topics/")
 
-    def getAllResourceTypes: Try[Seq[ResourceType]] =
-      get[Seq[ResourceType]](s"$TaxonomyApiEndpoint/resource-types/")
+    def getAllResourceTypes: Try[List[ResourceType]] =
+      get[List[ResourceType]](s"$TaxonomyApiEndpoint/resource-types/")
 
-    def getAllTopicResourceConnections: Try[Seq[TopicResourceConnection]] =
-      get[Seq[TopicResourceConnection]](
+    def getAllTopicResourceConnections: Try[List[TopicResourceConnection]] =
+      get[List[TopicResourceConnection]](
         s"$TaxonomyApiEndpoint/topic-resources/")
 
-    def getAllTopicSubtopicConnections: Try[Seq[TopicSubtopicConnection]] =
-      get[Seq[TopicSubtopicConnection]](
+    def getAllTopicSubtopicConnections: Try[List[TopicSubtopicConnection]] =
+      get[List[TopicSubtopicConnection]](
         s"$TaxonomyApiEndpoint/topic-subtopics/")
 
     def getAllResourceResourceTypeConnections
-      : Try[Seq[ResourceResourceTypeConnection]] =
-      get[Seq[ResourceResourceTypeConnection]](
+      : Try[List[ResourceResourceTypeConnection]] =
+      get[List[ResourceResourceTypeConnection]](
         s"$TaxonomyApiEndpoint/resource-resourcetypes/")
 
-    def getAllSubjectTopicConnections: Try[Seq[SubjectTopicConnection]] =
-      get[Seq[SubjectTopicConnection]](s"$TaxonomyApiEndpoint/subject-topics/")
+    def getAllSubjectTopicConnections: Try[List[SubjectTopicConnection]] =
+      get[List[SubjectTopicConnection]](s"$TaxonomyApiEndpoint/subject-topics/")
 
-    def getAllRelevances: Try[Seq[Relevance]] =
-      get[Seq[Relevance]](s"$TaxonomyApiEndpoint/relevances/")
+    def getAllRelevances: Try[List[Relevance]] =
+      get[List[Relevance]](s"$TaxonomyApiEndpoint/relevances/")
 
-    def getAllFilters: Try[Seq[Filter]] =
-      get[Seq[Filter]](s"$TaxonomyApiEndpoint/filters/")
+    def getAllFilters: Try[List[Filter]] =
+      get[List[Filter]](s"$TaxonomyApiEndpoint/filters/")
 
-    def getAllResourceFilterConnections: Try[Seq[ResourceFilterConnection]] =
-      get[Seq[ResourceFilterConnection]](
+    def getAllResourceFilterConnections: Try[List[ResourceFilterConnection]] =
+      get[List[ResourceFilterConnection]](
         s"$TaxonomyApiEndpoint/resource-filters/")
 
-    def getAllTopicFilterConnections: Try[Seq[TopicFilterConnection]] =
-      get[Seq[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/")
+    def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
+      get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/")
 
     def getFilterConnectionsForResource(
-        resourceId: String): Try[Seq[FilterConnection]] =
-      get[Seq[FilterConnection]](
+        resourceId: String): Try[List[FilterConnection]] =
+      get[List[FilterConnection]](
         s"$TaxonomyApiEndpoint/resources/$resourceId/filters")
 
     def getFilterConnectionsForTopic(
-        topicId: String): Try[Seq[FilterConnection]] =
-      get[Seq[FilterConnection]](
+        topicId: String): Try[List[FilterConnection]] =
+      get[List[FilterConnection]](
         s"$TaxonomyApiEndpoint/topics/$topicId/filters"
       )
 
-    def queryResources(contentUri: String): Try[Seq[QueryResourceResult]] =
-      get[Seq[QueryResourceResult]](
+    def queryResources(contentUri: String): Try[List[QueryResourceResult]] =
+      get[List[QueryResourceResult]](
         s"$TaxonomyApiEndpoint/queries/resources/?contentURI=$contentUri")
 
-    def queryTopics(contentUri: String): Try[Seq[Resource]] =
-      get[Seq[Resource]](
+    def queryTopics(contentUri: String): Try[List[Resource]] =
+      get[List[Resource]](
         s"$TaxonomyApiEndpoint/queries/topics/?contentURI=$contentUri")
 
     def getFilter(filterId: String): Try[Filter] =

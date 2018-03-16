@@ -10,8 +10,8 @@ package no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, Translation}
 
 case class TaxonomyContext(id: String,
-                          subjectName: Seq[Translation],
+                          subjectName: List[Translation],
                           path: String,
-                          breadcrumbs: Seq[Translation],
+                          breadcrumbs: List[List[Translation]],
                           contextType: String,
-                          filters: Seq[ContextFilter])
+                          filters: List[ContextFilter])

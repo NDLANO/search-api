@@ -17,7 +17,7 @@ import org.mockito.invocation.InvocationOnMock
 
 import scala.util.Success
 
-class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {
+class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   override val searchConverterService = new SearchConverterService
   val sampleArticle = TestData.sampleArticleWithPublicDomain.copy()
@@ -45,24 +45,6 @@ class ArticleSearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   override def beforeAll() = {
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) => invocation.getArgumentAt(0, sampleArticle.getClass()))
-
-    when(taxonomyApiClient.queryResources(any[String])).thenReturn(Success(Seq(
-      QueryResourceResult(
-        id = "urn:resource:1:21495",
-        name = "Føflekkreft",
-        resourceTypes = Seq(
-          ResourceType(
-            id = "urn:resourcetype:academicArticle",
-            name = "Fagartikkel",
-            subtypes = None
-          )
-        ),
-        contentUri = s"urn:article:1",
-        path = "/subject:4/topic:1:172816/topic:1:173961/resource:1:21495"
-      )
-    )))
-    when(taxonomyApiClient.queryTopics(any[String])).thenReturn(Success(Seq.empty))
-    when(taxonomyApiClient.getFilterConnectionsForResource(any[String])).thenReturn(Success(Seq.empty))
   }
 
   test("That asSearchableArticle converts titles with correct language") {

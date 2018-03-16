@@ -266,15 +266,15 @@ trait IndexService {
       *                  Usually used for sorting, aggregations or scripts.
       * @return Sequence of FieldDefinitions for a field.
       */
-    protected def generateLanguageSupportedFieldList(fieldName: String, keepRaw: Boolean = false): Seq[FieldDefinition] = {
+    protected def generateLanguageSupportedFieldList(fieldName: String, keepRaw: Boolean = false): List[FieldDefinition] = {
       if (keepRaw) {
-        generateLanguageFieldWithSubFields(fieldName, Seq(keywordField("raw")))
+        generateLanguageFieldWithSubFields(fieldName, List(keywordField("raw")))
       } else {
-        generateLanguageFieldWithSubFields(fieldName, Seq.empty)
+        generateLanguageFieldWithSubFields(fieldName, List.empty)
       }
     }
 
-    private def generateLanguageFieldWithSubFields(fieldName: String, subFields: Seq[FieldDefinition]): Seq[FieldDefinition] = {
+    private def generateLanguageFieldWithSubFields(fieldName: String, subFields: List[FieldDefinition]): List[FieldDefinition] = {
       languageAnalyzers.map(langAnalyzer =>
         textField(s"$fieldName.${langAnalyzer.lang}")
           .fielddata(false)
@@ -282,11 +282,11 @@ trait IndexService {
           .fields(subFields))
     }
 
-    protected def generateNestedLanguageFields(fieldName: String, subFields: Seq[FieldDefinition]): Seq[FieldDefinition] = {
+    protected def generateNestedLanguageFields(fieldName: String, subFields: List[FieldDefinition]): List[FieldDefinition] = {
       languageAnalyzers.map(langAnalyzer =>
         nestedField(s"$fieldName.${langAnalyzer.lang}")
-          .analyzer(langAnalyzer.analyzer)
-          .fields(subFields))
+          .fields(subFields.map(f => f.analyzer(langAnalyzer.analyzer)))
+      )
     }
 
   }

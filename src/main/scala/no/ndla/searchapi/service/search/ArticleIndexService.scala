@@ -60,9 +60,9 @@ trait ArticleIndexService {
             ) ++
             generateLanguageSupportedFieldList("subject", keepRaw = true) ++
             generateLanguageSupportedFieldList("breadcrumbs") ++
-            generateNestedLanguageFields("filters", Seq(
-              keywordField("name"),
-              keywordField("relevanceName")
+            generateNestedLanguageFields("filters", List(
+              textField("name").fields(keywordField("raw")),
+              textField("relevanceName").fields(keywordField("raw"))
             ))
           )
         )

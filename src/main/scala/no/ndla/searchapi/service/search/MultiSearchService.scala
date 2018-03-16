@@ -37,7 +37,7 @@ trait MultiSearchService {
 
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
 
-    override def hitToApiModel(hit: SearchHit, language: String): Try[MultiSearchSummary] = {
+    override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
 
       val articleType = SearchApiProperties.SearchDocuments("articles")
       val learningpathType = SearchApiProperties.SearchDocuments("learningpaths")
@@ -46,7 +46,7 @@ trait MultiSearchService {
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
         case `learningpathType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-          //TODO: searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+        //TODO: searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
 
     }
@@ -103,7 +103,8 @@ trait MultiSearchService {
                       types: Seq[String],
                       fallback: Boolean): Try[api.SearchResult[MultiSearchSummary]] = {
 
-      val typesFilter = None// TODO: handle typesfilter somehow according to mapping // OLD -> val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
+      val typesFilter = None
+      // TODO: handle typesfilter somehow according to mapping // OLD -> val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
       val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
 
       val licenseFilter = license match {
@@ -140,17 +141,13 @@ trait MultiSearchService {
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
-            getHits(response.result, language, fallback) match {
-              case Success(hits) =>
-                Success(api.SearchResult[MultiSearchSummary](
-                  response.result.totalHits,
-                  page,
-                  numResults,
-                  if (language == "*") Language.AllLanguages else language,
-                  hits
-                ))
-              case Failure(ex) => errorHandler(ex)
-            }
+            Success(api.SearchResult[MultiSearchSummary](
+              response.result.totalHits,
+              page,
+              numResults,
+              if (language == "*") Language.AllLanguages else language,
+              getHits(response.result, language, fallback)
+            ))
           case Failure(ex) => errorHandler(ex)
         }
       }
