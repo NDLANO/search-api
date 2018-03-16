@@ -164,13 +164,13 @@ trait TaxonomyApiClient {
       get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/")
 
     def getFilterConnectionsForResource(
-        resourceId: String): Try[List[FilterConnection]] =
-      get[List[FilterConnection]](
+        resourceId: String): Try[List[ResourceFilterConnection]] =
+      get[List[ResourceFilterConnection]](
         s"$TaxonomyApiEndpoint/resources/$resourceId/filters")
 
     def getFilterConnectionsForTopic(
-        topicId: String): Try[List[FilterConnection]] =
-      get[List[FilterConnection]](
+        topicId: String): Try[List[TopicFilterConnection]] =
+      get[List[TopicFilterConnection]](
         s"$TaxonomyApiEndpoint/topics/$topicId/filters"
       )
 

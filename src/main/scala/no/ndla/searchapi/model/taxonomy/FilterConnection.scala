@@ -7,7 +7,12 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class FilterConnection(connectionId: String,
-                            id: String,
-                            name: String,
-                            relevanceId: String)
+trait FilterConnection {
+  def objectId: String
+
+  def filterId: String
+
+  def id: String
+
+  def relevanceId: String
+}
