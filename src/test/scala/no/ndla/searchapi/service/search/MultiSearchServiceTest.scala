@@ -13,7 +13,7 @@ import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.integration.Elastic4sClientFactory
 import no.ndla.searchapi.model.api.ApiTaxonomyContext
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.{Language, Sort, TaxonomyContext}
+import no.ndla.searchapi.model.domain.{Language, Sort, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.taxonomy.{QueryResourceResult, ResourceType}
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.tag.IntegrationTest

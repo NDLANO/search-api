@@ -18,7 +18,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api
-import no.ndla.searchapi.model.domain.{Language, TaxonomyContext}
+import no.ndla.searchapi.model.domain.{Language, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, _}
 import no.ndla.searchapi.model.taxonomy
@@ -82,14 +82,14 @@ trait SearchConverterService {
     }
 
     /**
-      * Returns Sequence of [[TaxonomyContext]] for a single resource/topic.
+      * Returns Sequence of [[SearchableTaxonomyContext]] for a single resource/topic.
       *
       * @param id           of article/learningpath
       * @param taxonomyType Type of resource used in contentUri.
       *                     Example: "learningpath" in "urn:learningpath:123"
       * @return Taxonomy that is to be indexed.
       */
-    private def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[TaxonomyContext]] = ???
+    private def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[SearchableTaxonomyContext]] = ???
 
     def getParentTopicsAndPaths(topic: Resource, bundle: Bundle, path: List[String]): List[(Resource, List[String])] = {
       val parentConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == topic.id)
@@ -98,7 +98,7 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
-    private def getBreadcrumbFromIds(ids: List[String], bundle: Bundle): List[String] = {
+    private def getBreadcrumbFromIds(ids: List[String], bundle: Bundle): Seq[String] = {
       ids.map(id => {
         bundle.getObject(id).map(_.name).getOrElse("")
       })
@@ -129,14 +129,14 @@ trait SearchConverterService {
             .find(r => r.id == filterConnection.relevanceId).map(_.name).getOrElse("")
 
           Some(taxonomy.ContextFilter(
-            name = List(Translation(Language.DefaultLanguage, filter.name)), // TODO: Get translations
-            relevance = List(Translation(Language.DefaultLanguage, relevanceName)) // TODO: Get translations
+            name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
+            relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
           ))
         case _ => None
       })
     }
 
-    private[service] def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[TaxonomyContext]] = {
+    private[service] def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -155,14 +155,16 @@ trait SearchConverterService {
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
                 val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
-                val breadcrumb = getBreadcrumbFromIds(pathIds.dropRight(1), bundle).map(crumb => List(Translation(Language.DefaultLanguage, crumb))) // TODO: Get translations
+                val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
+                val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
+                val breadcrumbs = SearchableLanguageList(breadcrumbList)
 
-                TaxonomyContext(
+                SearchableTaxonomyContext(
                   id = resource.id,
-                  subjectName = List(Translation(Language.DefaultLanguage, subject.name)), // TODO: Get translations
+                  subject = subjectLanguageValues,
                   path = path,
                   contextType = contextType,
-                  breadcrumbs = breadcrumb,
+                  breadcrumbs = breadcrumbs,
                   filters = contextFilters
                 )
               })
@@ -172,7 +174,7 @@ trait SearchConverterService {
       }
     }
 
-    private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[TaxonomyContext]] = {
+    private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       // TODO: this is probably not working yet (copied from resource without testing). Check this.
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
@@ -192,14 +194,17 @@ trait SearchConverterService {
                 val pathIds = (topic.id +: topicPath :+ subject.id).reverse
                 val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/") // TODO: This path is weird on topics (double last element)
 
-                val breadcrumb = getBreadcrumbFromIds(pathIds.dropRight(1), bundle).map(crumb => List(Translation(Language.DefaultLanguage, crumb))) // TODO: Get translations
+                val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
 
-                TaxonomyContext(
+                val breadcrumb = getBreadcrumbFromIds(pathIds.dropRight(1), bundle).map(crumb => LanguageValue(Language.DefaultLanguage, Seq(crumb))) // TODO: Get translations
+                val breadcrumbs = SearchableLanguageList(breadcrumb)
+
+                SearchableTaxonomyContext(
                   id = topic.id,
-                  subjectName = List(Translation(Language.DefaultLanguage, subject.name)), // TODO: Get translations
+                  subject = subjectLanguageValues,
                   path = path,
                   contextType = contextType,
-                  breadcrumbs = breadcrumb,
+                  breadcrumbs = breadcrumbs,
                   filters = contextFilters
                 )
               })
@@ -219,7 +224,7 @@ trait SearchConverterService {
       * @param bundle       All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[Seq[TaxonomyContext]] = {
+    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[Seq[SearchableTaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$id could not be found in taxonomy."
@@ -339,10 +344,10 @@ trait SearchConverterService {
 
       val searchableArticle = read[SearchableArticle](hitString)
 
-      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.lang))
-      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
-      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
+      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.language))
+      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.language))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.language))
+      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.language))
 
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
@@ -365,9 +370,8 @@ trait SearchConverterService {
     }
 
     def taxonomyFilterToApiFilter(filter: taxonomy.ContextFilter, language: String): api.ContextFilter = {
-
-      val name = findByLanguageOrBestEffort(filter.name, language).map(_.name).getOrElse("")
-      val relevance = findByLanguageOrBestEffort(filter.relevance, language).map(_.name).getOrElse("")
+      val name = findByLanguageOrBestEffort(filter.name.languageValues, language).map(_.value).getOrElse("")
+      val relevance = findByLanguageOrBestEffort(filter.relevance.languageValues, language).map(_.value).getOrElse("")
 
       api.ContextFilter(
         name,
@@ -375,10 +379,10 @@ trait SearchConverterService {
       )
     }
 
-    def searchableContextToApiContext(context: TaxonomyContext, language: String): ApiTaxonomyContext = {
-      val subjectName = findByLanguageOrBestEffort(context.subjectName, language).map(_.name).getOrElse("")
-      val breadcrumbs = context.breadcrumbs
-        .map(bc => findByLanguageOrBestEffort(bc, language).map(_.name).getOrElse(""))
+    def searchableContextToApiContext(context: SearchableTaxonomyContext, language: String): ApiTaxonomyContext = {
+      val subjectName = findByLanguageOrBestEffort(context.subject.languageValues, language).map(_.value).getOrElse("")
+      val breadcrumbs = findByLanguageOrBestEffort(context.breadcrumbs.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
+
       val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
 
       ApiTaxonomyContext(
@@ -416,10 +420,10 @@ trait SearchConverterService {
       val contexts = searchableArticle.contexts.map(c => searchableContextToApiContext(c, language))
 
 
-      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.lang))
-      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.lang))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
-      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.lang))
+      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.language))
+      val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.language))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.language))
+      val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))

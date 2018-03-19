@@ -7,12 +7,13 @@
 
 package no.ndla.searchapi.model.search
 
+import no.ndla.searchapi.model.domain.LanguageField
 import no.ndla.searchapi.model.search.LanguageValue.{LanguageValue => LV}
 import org.json4s.JsonAST.{JArray, JField, JObject, JString}
 
 object LanguageValue {
 
-  case class LanguageValue[T](lang: String, value: T)
+  case class LanguageValue[T](language: String, value: T) extends LanguageField[T]
 
   def apply[T](lang: String, value: T): LanguageValue[T] =
     LanguageValue(lang, value)
@@ -20,13 +21,13 @@ object LanguageValue {
 
 case class SearchableLanguageValues(languageValues: Seq[LV[String]]) {
   def toJsonField(name: String): Seq[JField] =
-    languageValues.map(lv => JField(s"$name.${lv.lang}", JString(lv.value)))
+    languageValues.map(lv => JField(s"$name.${lv.language}", JString(lv.value)))
 }
 
 case class SearchableLanguageList(languageValues: Seq[LV[Seq[String]]]) {
   def toJsonField(name: String): Seq[JField] =
     languageValues.map(lv =>
-      JField(s"$name.${lv.lang}", JArray(lv.value.map(JString).toList)))
+      JField(s"$name.${lv.language}", JArray(lv.value.map(JString).toList)))
 }
 
 object SearchableLanguageValues {

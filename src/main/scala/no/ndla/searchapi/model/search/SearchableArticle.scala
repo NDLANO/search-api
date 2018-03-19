@@ -8,7 +8,7 @@
 package no.ndla.searchapi.model.search
 
 import java.util.Date
-import no.ndla.searchapi.model.domain.TaxonomyContext
+import no.ndla.searchapi.model.domain.SearchableTaxonomyContext
 
 case class SearchableArticle(
     id: Long,
@@ -25,7 +25,7 @@ case class SearchableArticle(
     metaImageId: Option[Long],
     defaultTitle: Option[String],
     supportedLanguages: Seq[String],
-    contexts: Seq[TaxonomyContext]
+    contexts: Seq[SearchableTaxonomyContext]
 ) extends Searchable
 
 object LanguagelessSearchableArticle {
@@ -38,7 +38,7 @@ object LanguagelessSearchableArticle {
       metaImageId: Option[Long],
       defaultTitle: Option[String],
       supportedLanguages: Seq[String],
-      contexts: Seq[TaxonomyContext]
+      contexts: Seq[SearchableTaxonomyContext]
   )
 
   def apply(
