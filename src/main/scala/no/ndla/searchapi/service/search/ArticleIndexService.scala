@@ -58,6 +58,7 @@ trait ArticleIndexService {
               keywordField("path"),
               keywordField("contextType")
             ) ++
+            generateLanguageSupportedFieldList("resourceTypes", keepRaw = true) ++
             generateLanguageSupportedFieldList("subject", keepRaw = true) ++
             generateLanguageSupportedFieldList("breadcrumbs") ++
             List(nestedField("filters").fields(

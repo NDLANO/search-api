@@ -70,7 +70,8 @@ class TaxonomyContextSerializer
             path = (obj \ "path").extract[String],
             breadcrumbs = SearchableLanguageList("breadcrumbs", obj),
             contextType = (obj \ "contextType").extract[String],
-            filters = SearchableContextFilters("filters", obj)
+            filters = SearchableContextFilters("filters", obj),
+            resourceTypes = SearchableLanguageList("resourceTypes", obj)
           )
       }, {
         case context: SearchableTaxonomyContext =>
@@ -78,6 +79,7 @@ class TaxonomyContextSerializer
           val languageFields =
             List(
               context.breadcrumbs.toJsonField("breadcrumbs"),
+              context.resourceTypes.toJsonField("resourceTypes"),
               context.subject.toJsonField("subject")
             ).flatMap {
               case l: Seq[JField] => l

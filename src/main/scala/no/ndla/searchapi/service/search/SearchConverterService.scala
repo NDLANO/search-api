@@ -141,6 +141,15 @@ trait SearchConverterService {
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
 
+      val resourceTypeConnections = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id)
+      val subResourceTypes = bundle.resourceTypes.flatMap(rt => rt.subtypes).flatten
+      val allResourceTypes = bundle.resourceTypes ++ subResourceTypes
+
+      val resourceTypes = allResourceTypes.filter(r => resourceTypeConnections.map(_.resourceTypeId).contains(r.id))
+
+
+      val searchableResourceTypes = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
+
       getContextType(resource.id, resource.contentUri) match {
         case Success(contextType) =>
           val contexts = parentTopicsAndPaths.map({
@@ -152,7 +161,7 @@ trait SearchConverterService {
                 val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(resource.id, pathIds, subject.name, contextType, contextFilters, bundle)
+                getSearchableTaxonomyContext(resource.id, pathIds, subject.name, contextType, contextFilters, searchableResourceTypes, bundle)
               })
           })
           Success(contexts.flatten)
@@ -165,6 +174,7 @@ trait SearchConverterService {
                                              subjectName: String,
                                              contextType: String,
                                              contextFilters: List[ContextFilter],
+                                             resourceTypes: SearchableLanguageList,
                                              bundle: Bundle) = {
 
       val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
@@ -179,7 +189,8 @@ trait SearchConverterService {
         path = path,
         contextType = contextType,
         breadcrumbs = breadcrumbs,
-        filters = contextFilters
+        filters = contextFilters,
+        resourceTypes = resourceTypes
       )
     }
 
@@ -199,7 +210,7 @@ trait SearchConverterService {
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
                 val pathIds = (topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(topic.id, pathIds, subject.name, contextType, contextFilters, bundle)
+                getSearchableTaxonomyContext(topic.id, pathIds, subject.name, contextType, contextFilters, SearchableLanguageList(Seq.empty), bundle)
               })
           })
           Success(contexts.flatten)

@@ -15,7 +15,9 @@ case class SearchableTaxonomyContext(id: String,
                                      path: String,
                                      breadcrumbs: SearchableLanguageList,
                                      contextType: String,
-                                     filters: List[ContextFilter])
+                                     filters: List[ContextFilter],
+                                     resourceTypes: SearchableLanguageList
+                                    )
 
 
 object LanguagelessSearchableTaxonomyContext {
