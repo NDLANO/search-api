@@ -149,29 +149,38 @@ trait SearchConverterService {
               val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
 
               subjects.map(subject => {
-
                 val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
-
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
-                val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
-                val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
-                val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
-                val breadcrumbs = SearchableLanguageList(breadcrumbList)
-
-                SearchableTaxonomyContext(
-                  id = resource.id,
-                  subject = subjectLanguageValues,
-                  path = path,
-                  contextType = contextType,
-                  breadcrumbs = breadcrumbs,
-                  filters = contextFilters
-                )
+                getSearchableTaxonomyContext(resource.id, pathIds, subject.name, contextType, contextFilters, bundle)
               })
           })
           Success(contexts.flatten)
         case Failure(ex) => Failure(ex)
       }
+    }
+
+    private def getSearchableTaxonomyContext(taxonomyId: String,
+                                             pathIds: List[String],
+                                             subjectName: String,
+                                             contextType: String,
+                                             contextFilters: List[ContextFilter],
+                                             bundle: Bundle) = {
+
+      val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
+
+      val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subjectName))) // TODO: Get translations
+      val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
+      val breadcrumbs = SearchableLanguageList(breadcrumbList)
+
+      SearchableTaxonomyContext(
+        id = taxonomyId,
+        subject = subjectLanguageValues,
+        path = path,
+        contextType = contextType,
+        breadcrumbs = breadcrumbs,
+        filters = contextFilters
+      )
     }
 
     private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
@@ -187,24 +196,10 @@ trait SearchConverterService {
               val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
 
               subjects.map(subject => {
-
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
-
                 val pathIds = (topicPath :+ subject.id).reverse
-                val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
-                val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
-                val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
-                val breadcrumbs = SearchableLanguageList(breadcrumbList)
-
-                SearchableTaxonomyContext(
-                  id = topic.id,
-                  subject = subjectLanguageValues,
-                  path = path,
-                  contextType = contextType,
-                  breadcrumbs = breadcrumbs,
-                  filters = contextFilters
-                )
+                getSearchableTaxonomyContext(topic.id, pathIds, subject.name, contextType, contextFilters, bundle)
               })
           })
           Success(contexts.flatten)
@@ -231,7 +226,6 @@ trait SearchConverterService {
         case (Seq(resource), Nil) =>
           getResourceTaxonomyContexts(resource, taxonomyType, bundle)
         case (Nil, Seq(topic)) =>
-          logger.info(s"WE GOT A TOPIC HERE: '$id' IS IT WORKING? ") //TODO: remove this <-
           getTopicTaxonomyContexs(topic, taxonomyType, bundle)
         case (r, t) =>
           val taxonomyEntries = r ++ t
