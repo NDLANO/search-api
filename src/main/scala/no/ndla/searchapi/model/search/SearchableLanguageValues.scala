@@ -13,7 +13,8 @@ import org.json4s.JsonAST.{JArray, JField, JObject, JString}
 
 object LanguageValue {
 
-  case class LanguageValue[T](language: String, value: T) extends LanguageField[T]
+  case class LanguageValue[T](language: String, value: T)
+      extends LanguageField[T]
 
   def apply[T](lang: String, value: T): LanguageValue[T] =
     LanguageValue(lang, value)

@@ -38,7 +38,8 @@ trait ArticleIndexService {
         case Success(searchableArticle) =>
           val source = write(searchableArticle)
           Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString))
-        case Failure(ex) => Failure(ex)
+        case Failure(ex) =>
+          Failure(ex)
       }
     }
 

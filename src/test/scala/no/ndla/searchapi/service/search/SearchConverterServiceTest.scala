@@ -9,7 +9,7 @@ package no.ndla.searchapi.service.search
 
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent, ArticleTag, ArticleTitle}
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageList, SearchableLanguageValues}
-import no.ndla.searchapi.model.taxonomy.{QueryResourceResult, ResourceType}
+import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -45,6 +45,29 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   override def beforeAll() = {
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) => invocation.getArgumentAt(0, sampleArticle.getClass()))
+
+    val resources = List(Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1"))
+    val topics = List(Resource("urn:topic:10", "Topic1", Some("urn:article:10"), "/subject:1/topic:10"))
+    val topicResourceConnections = List(TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
+    val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
+    val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
+
+
+    val emptyBundle = Bundle(
+      filters = List.empty,
+      relevances = List.empty,
+      resourceFilterConnections = List.empty,
+      resourceResourceTypeConnections = List.empty,
+      resourceTypes = List.empty,
+      resources = resources,
+      subjectTopicConnections = subjectTopicConnections,
+      subjects = subjects,
+      topicFilterConnections = List.empty,
+      topicResourceConnections = topicResourceConnections,
+      topicSubtopicConnections = List.empty,
+      topics = topics
+    )
+    when(taxonomyApiClient.getTaxonomyBundle).thenReturn(Success(emptyBundle))
   }
 
   test("That asSearchableArticle converts titles with correct language") {

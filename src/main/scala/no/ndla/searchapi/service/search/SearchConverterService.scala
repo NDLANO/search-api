@@ -37,60 +37,6 @@ trait SearchConverterService {
 
   class SearchConverterService extends LazyLogging {
 
-    private def compareId(contentUri: String, id: Long, `type`: String): Boolean = {
-      val split = contentUri.split(':')
-      split match {
-        case Array(_, cType: String, cId: String) => id.toString == cId && cType == `type`
-        case _ => false
-      }
-    }
-
-    private def getContextType(resourceId: String, contentUri: Option[String]): Try[String] = {
-      contentUri match {
-        case Some(uri) if uri.contains("article") =>
-          if (resourceId.contains(":topic:")) {
-            Success("topic-article")
-          } else {
-            Success("article")
-          }
-        case Some(uri) if uri.contains("learningpath") => Success("learningpath")
-        case _ =>
-          val msg = s"Could not find type for resource $resourceId"
-          logger.error(msg)
-          Failure(ElasticIndexingException(msg))
-      }
-    }
-
-    private def fetchTaxonomyResourcesAndTopicsForId(contentUri: String, taxonomyType: String): Try[(Seq[QueryResourceResult], Seq[Resource])] = {
-      (taxonomyApiClient.queryResources(contentUri),
-        taxonomyApiClient.queryTopics(contentUri)) match {
-        case (Success(r), Success(t)) => Success((r, t))
-        case (r, t) =>
-          r match {
-            case Failure(ex) =>
-              logger.error(s"Failed to fetch resource with contentUri: '$contentUri', got message: ${ex.getMessage}")
-            case _ =>
-          }
-
-          t match {
-            case Failure(ex) =>
-              logger.error(s"Failed to fetch topic with contentUri: '$contentUri', got message: ${ex.getMessage}")
-            case _ =>
-          }
-          Failure(ElasticIndexingException(s"Could not query taxonomy for contentUri: '$contentUri'"))
-      }
-    }
-
-    /**
-      * Returns Sequence of [[SearchableTaxonomyContext]] for a single resource/topic.
-      *
-      * @param id           of article/learningpath
-      * @param taxonomyType Type of resource used in contentUri.
-      *                     Example: "learningpath" in "urn:learningpath:123"
-      * @return Taxonomy that is to be indexed.
-      */
-    private def getTaxonomyContexts(id: Long, taxonomyType: String): Try[Seq[SearchableTaxonomyContext]] = ???
-
     def getParentTopicsAndPaths(topic: Resource, bundle: Bundle, path: List[String]): List[(Resource, List[String])] = {
       val parentConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == topic.id)
       val parents = bundle.topics.filter(t => parentConnections.map(_.topicid).contains(t.id))
@@ -98,173 +44,19 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
-    private def getBreadcrumbFromIds(ids: List[String], bundle: Bundle): Seq[String] = {
-      ids.map(id => {
-        bundle.getObject(id).map(_.name).getOrElse("")
-      })
-    }
-
-    /**
-      * Returns filters connected to an object and a subject.
-      *
-      * @param resource Taxonomy Object (Can be resource or topic)
-      * @param subject Filters must be connected to subject
-      * @param bundle Bundle for resolving taxonomy
-      * @param objectFilterConnections [[ResourceFilterConnection]]'s or [[TopicFilterConnection]]'s
-      * @return
-      */
-    private def getFilters(resource: Resource, subject: Resource, bundle: Bundle, objectFilterConnections: List[FilterConnection]): List[ContextFilter] = {
-      val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
-      val filterConnections = objectFilterConnections
-        .filter(_.objectId == resource.id)
-        .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
-
-      val connectedFilters = filterConnections.map(fc =>
-        (bundle.filters.find(_.id == fc.filterId), fc)
-      )
-
-      connectedFilters.flatMap({
-        case (Some(filter), filterConnection) =>
-          val relevanceName = bundle.relevances
-            .find(r => r.id == filterConnection.relevanceId).map(_.name).getOrElse("")
-
-          Some(taxonomy.ContextFilter(
-            name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
-            relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
-          ))
-        case _ => None
-      })
-    }
-
-    private[service] def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
-      val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
-      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
-      val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
-
-      val resourceTypeConnections = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id)
-      val subResourceTypes = bundle.resourceTypes.flatMap(rt => rt.subtypes).flatten
-      val allResourceTypes = bundle.resourceTypes ++ subResourceTypes
-
-      val resourceTypes = allResourceTypes.filter(r => resourceTypeConnections.map(_.resourceTypeId).contains(r.id))
-
-
-      val searchableResourceTypes = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
-
-      getContextType(resource.id, resource.contentUri) match {
-        case Success(contextType) =>
-          val contexts = parentTopicsAndPaths.map({
-            case (topic, topicPath) =>
-              val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
-              val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
-
-              subjects.map(subject => {
-                val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
-                val pathIds = (resource.id +: topicPath :+ subject.id).reverse
-
-                getSearchableTaxonomyContext(resource.id, pathIds, subject.name, contextType, contextFilters, searchableResourceTypes, bundle)
-              })
-          })
-          Success(contexts.flatten)
-        case Failure(ex) => Failure(ex)
-      }
-    }
-
-    private def getSearchableTaxonomyContext(taxonomyId: String,
-                                             pathIds: List[String],
-                                             subjectName: String,
-                                             contextType: String,
-                                             contextFilters: List[ContextFilter],
-                                             resourceTypes: SearchableLanguageList,
-                                             bundle: Bundle) = {
-
-      val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
-
-      val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subjectName))) // TODO: Get translations
-      val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
-      val breadcrumbs = SearchableLanguageList(breadcrumbList)
-
-      SearchableTaxonomyContext(
-        id = taxonomyId,
-        subject = subjectLanguageValues,
-        path = path,
-        contextType = contextType,
-        breadcrumbs = breadcrumbs,
-        filters = contextFilters,
-        resourceTypes = resourceTypes
-      )
-    }
-
-    private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
-      val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
-      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
-      val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
-
-      getContextType(topic.id, topic.contentUri) match {
-        case Success(contextType) =>
-          val contexts = parentTopicsAndPaths.map({
-            case (parentTopic, topicPath) =>
-              val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == parentTopic.id)
-              val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
-
-              subjects.map(subject => {
-                val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
-                val pathIds = (topicPath :+ subject.id).reverse
-
-                getSearchableTaxonomyContext(topic.id, pathIds, subject.name, contextType, contextFilters, SearchableLanguageList(Seq.empty), bundle)
-              })
-          })
-          Success(contexts.flatten)
-        case Failure(ex) => Failure(ex)
-      }
-
-    }
-
-    /**
-      * Parses [[Bundle]] to get taxonomy for a single resource/topic.
-      *
-      * @param id           of article/learningpath
-      * @param taxonomyType Type of resource used in contentUri.
-      *                     Example: "learningpath" in "urn:learningpath:123"
-      * @param bundle       All taxonomy in an object.
-      * @return Taxonomy that is to be indexed.
-      */
-    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[Seq[SearchableTaxonomyContext]] = {
-      getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
-        case (Nil, Nil) =>
-          val msg = s"$id could not be found in taxonomy."
-          logger.error(msg)
-          Failure(ElasticIndexingException(msg))
-        case (Seq(resource), Nil) =>
-          getResourceTaxonomyContexts(resource, taxonomyType, bundle)
-        case (Nil, Seq(topic)) =>
-          getTopicTaxonomyContexs(topic, taxonomyType, bundle)
-        case (r, t) =>
-          val taxonomyEntries = r ++ t
-          val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
-          logger.error(msg)
-          Failure(ElasticIndexingException(msg))
-      }
-    }
-
-    private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: Bundle, taxonomyType: String) = {
-      val resources = bundle.resources.filter(resource => resource.contentUri match {
-        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
-        case None => false
-      }).distinct
-
-      val topics = bundle.topics.filter(topic => topic.contentUri match {
-        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
-        case None => false
-      }).distinct
-
-      (resources, topics)
-    }
-
     def asSearchableArticle(ai: Article, taxonomyBundle: Option[Bundle]): Try[SearchableArticle] = {
       val taxonomyForArticle = taxonomyBundle match {
         case Some(bundle) => getTaxonomyContexts(ai.id.get, "article", bundle)
-        case None => getTaxonomyContexts(ai.id.get, "article")
+        case None =>
+          taxonomyApiClient.getTaxonomyBundle match {
+            case Success(bundle) =>
+              getTaxonomyContexts(ai.id.get, "article", bundle)
+            case Failure(ex) =>
+              logger.error("Could not fetch bundle from taxonomy...")
+              Failure(ex)
+          }
       }
+
       taxonomyForArticle match {
         case Success(contexts) =>
           if (contexts.isEmpty) {
@@ -372,50 +164,6 @@ trait SearchConverterService {
       )
     }
 
-    def taxonomyFilterToApiFilter(filter: taxonomy.ContextFilter, language: String): api.ContextFilter = {
-      val name = findByLanguageOrBestEffort(filter.name.languageValues, language).map(_.value).getOrElse("")
-      val relevance = findByLanguageOrBestEffort(filter.relevance.languageValues, language).map(_.value).getOrElse("")
-
-      api.ContextFilter(
-        name,
-        relevance
-      )
-    }
-
-    def searchableContextToApiContext(context: SearchableTaxonomyContext, language: String): ApiTaxonomyContext = {
-      val subjectName = findByLanguageOrBestEffort(context.subject.languageValues, language).map(_.value).getOrElse("")
-      val breadcrumbs = findByLanguageOrBestEffort(context.breadcrumbs.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
-
-      val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
-
-      ApiTaxonomyContext(
-        id = context.id,
-        subject = subjectName,
-        path = context.path,
-        breadcrumbs = breadcrumbs,
-        filters = filters,
-        learningResourceType = context.contextType,
-        language = language
-      )
-
-    }
-
-    // TODO: implement this
-    /*
-    def learningpathHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
-      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-      val searchableLearningPath = read[SearchableLearningPath](hitString)
-
-      val titles = searchableLearningPath.titles.languageValues.map(lv => Title(lv.value, lv.lang))
-      val metaDescriptions = searchableLearningPath.descriptions.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
-
-      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
-
-      // TODO: finish learningpath to multisummary
-    }*/
-
-
     def articleHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableArticle = read[SearchableArticle](hitString)
@@ -446,6 +194,254 @@ trait SearchConverterService {
         supportedLanguages = supportedLanguages
       )
 
+    }
+
+    def searchableContextToApiContext(context: SearchableTaxonomyContext, language: String): ApiTaxonomyContext = {
+      val subjectName = findByLanguageOrBestEffort(context.subject.languageValues, language).map(_.value).getOrElse("")
+      val breadcrumbs = findByLanguageOrBestEffort(context.breadcrumbs.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
+
+      val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
+
+      ApiTaxonomyContext(
+        id = context.id,
+        subject = subjectName,
+        path = context.path,
+        breadcrumbs = breadcrumbs,
+        filters = filters,
+        learningResourceType = context.contextType,
+        language = language
+      )
+
+    }
+
+    def taxonomyFilterToApiFilter(filter: taxonomy.ContextFilter, language: String): api.ContextFilter = {
+      val name = findByLanguageOrBestEffort(filter.name.languageValues, language).map(_.value).getOrElse("")
+      val relevance = findByLanguageOrBestEffort(filter.relevance.languageValues, language).map(_.value).getOrElse("")
+
+      api.ContextFilter(
+        name,
+        relevance
+      )
+    }
+
+    private def compareId(contentUri: String, id: Long, `type`: String): Boolean = {
+      val split = contentUri.split(':')
+      split match {
+        case Array(_, cType: String, cId: String) => id.toString == cId && cType == `type`
+        case _ => false
+      }
+    }
+
+    private def getContextType(resourceId: String, contentUri: Option[String]): Try[String] = {
+      contentUri match {
+        case Some(uri) if uri.contains("article") =>
+          if (resourceId.contains(":topic:")) {
+            Success("topic-article")
+          } else {
+            Success("article")
+          }
+        case Some(uri) if uri.contains("learningpath") => Success("learningpath")
+        case _ =>
+          val msg = s"Could not find type for resource $resourceId"
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
+      }
+    }
+
+    private def fetchTaxonomyResourcesAndTopicsForId(contentUri: String, taxonomyType: String): Try[(Seq[QueryResourceResult], Seq[Resource])] = {
+      (taxonomyApiClient.queryResources(contentUri),
+        taxonomyApiClient.queryTopics(contentUri)) match {
+        case (Success(r), Success(t)) => Success((r, t))
+        case (r, t) =>
+          r match {
+            case Failure(ex) =>
+              logger.error(s"Failed to fetch resource with contentUri: '$contentUri', got message: ${ex.getMessage}")
+            case _ =>
+          }
+
+          t match {
+            case Failure(ex) =>
+              logger.error(s"Failed to fetch topic with contentUri: '$contentUri', got message: ${ex.getMessage}")
+            case _ =>
+          }
+          Failure(ElasticIndexingException(s"Could not query taxonomy for contentUri: '$contentUri'"))
+      }
+    }
+
+    private def getBreadcrumbFromIds(ids: List[String], bundle: Bundle): Seq[String] = {
+      ids.map(id => {
+        bundle.getObject(id).map(_.name).getOrElse("")
+      })
+    }
+
+    /**
+      * Returns filters connected to an object and a subject.
+      *
+      * @param resource Taxonomy Object (Can be resource or topic)
+      * @param subject Filters must be connected to subject
+      * @param bundle Bundle for resolving taxonomy
+      * @param objectFilterConnections [[ResourceFilterConnection]]'s or [[TopicFilterConnection]]'s
+      * @return
+      */
+    private def getFilters(resource: Resource, subject: Resource, bundle: Bundle, objectFilterConnections: List[FilterConnection]): List[ContextFilter] = {
+      val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
+      val filterConnections = objectFilterConnections
+        .filter(_.objectId == resource.id)
+        .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
+
+      val connectedFilters = filterConnections.map(fc =>
+        (bundle.filters.find(_.id == fc.filterId), fc)
+      )
+
+      connectedFilters.flatMap({
+        case (Some(filter), filterConnection) =>
+          val relevanceName = bundle.relevances
+            .find(r => r.id == filterConnection.relevanceId).map(_.name).getOrElse("")
+
+          Some(taxonomy.ContextFilter(
+            name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
+            relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
+          ))
+        case _ => None
+      })
+    }
+
+    private[service] def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+      val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
+      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
+      val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
+
+      val resourceTypeConnections = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id)
+      val subResourceTypes = bundle.resourceTypes.flatMap(rt => rt.subtypes).flatten
+      val allResourceTypes = bundle.resourceTypes ++ subResourceTypes
+
+      val resourceTypes = allResourceTypes.filter(r => resourceTypeConnections.map(_.resourceTypeId).contains(r.id))
+
+      val searchableResourceTypes = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
+
+      getContextType(resource.id, resource.contentUri) match {
+        case Success(contextType) =>
+          val contexts = parentTopicsAndPaths.map({
+            case (topic, topicPath) =>
+              val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
+              val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
+
+              subjects.map(subject => {
+                val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
+                val pathIds = (resource.id +: topicPath :+ subject.id).reverse
+
+                getSearchableTaxonomyContext(resource.id, pathIds, subject.name, contextType, contextFilters, searchableResourceTypes, bundle)
+              })
+          })
+          Success(contexts.flatten)
+        case Failure(ex) => Failure(ex)
+      }
+    }
+
+    private def getSearchableTaxonomyContext(taxonomyId: String,
+                                             pathIds: List[String],
+                                             subjectName: String,
+                                             contextType: String,
+                                             contextFilters: List[ContextFilter],
+                                             resourceTypes: SearchableLanguageList,
+                                             bundle: Bundle) = {
+
+      val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
+
+      val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subjectName))) // TODO: Get translations
+      val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
+      val breadcrumbs = SearchableLanguageList(breadcrumbList)
+
+      SearchableTaxonomyContext(
+        id = taxonomyId,
+        subject = subjectLanguageValues,
+        path = path,
+        contextType = contextType,
+        breadcrumbs = breadcrumbs,
+        filters = contextFilters,
+        resourceTypes = resourceTypes
+      )
+    }
+
+    private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+      val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
+      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
+      val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
+
+      getContextType(topic.id, topic.contentUri) match {
+        case Success(contextType) =>
+          val contexts = parentTopicsAndPaths.map({
+            case (parentTopic, topicPath) =>
+              val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == parentTopic.id)
+              val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
+
+              subjects.map(subject => {
+                val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
+                val pathIds = (topicPath :+ subject.id).reverse
+
+                getSearchableTaxonomyContext(topic.id, pathIds, subject.name, contextType, contextFilters, SearchableLanguageList(Seq.empty), bundle)
+              })
+          })
+          Success(contexts.flatten)
+        case Failure(ex) => Failure(ex)
+      }
+
+    }
+
+    /**
+      * Parses [[Bundle]] to get taxonomy for a single resource/topic.
+      *
+      * @param id           of article/learningpath
+      * @param taxonomyType Type of resource used in contentUri.
+      *                     Example: "learningpath" in "urn:learningpath:123"
+      * @param bundle       All taxonomy in an object.
+      * @return Taxonomy that is to be indexed.
+      */
+    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[Seq[SearchableTaxonomyContext]] = {
+      getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
+        case (Nil, Nil) =>
+          val msg = s"$id could not be found in taxonomy."
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
+        case (Seq(resource), Nil) =>
+          getResourceTaxonomyContexts(resource, taxonomyType, bundle)
+        case (Nil, Seq(topic)) =>
+          getTopicTaxonomyContexs(topic, taxonomyType, bundle)
+        case (r, t) =>
+          val taxonomyEntries = r ++ t
+          val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
+          logger.error(msg)
+          Failure(ElasticIndexingException(msg))
+      }
+    }
+
+    // TODO: implement this
+    /*
+    def learningpathHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+      val searchableLearningPath = read[SearchableLearningPath](hitString)
+
+      val titles = searchableLearningPath.titles.languageValues.map(lv => Title(lv.value, lv.lang))
+      val metaDescriptions = searchableLearningPath.descriptions.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+
+      // TODO: finish learningpath to multisummary
+    }*/
+
+    private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: Bundle, taxonomyType: String) = {
+      val resources = bundle.resources.filter(resource => resource.contentUri match {
+        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
+        case None => false
+      }).distinct
+
+      val topics = bundle.topics.filter(topic => topic.contentUri match {
+        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
+        case None => false
+      }).distinct
+
+      (resources, topics)
     }
   }
 
