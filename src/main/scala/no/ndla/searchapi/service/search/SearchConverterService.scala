@@ -175,7 +175,6 @@ trait SearchConverterService {
     }
 
     private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
-      // TODO: this is probably not working yet (copied from resource without testing). Check this.
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -189,15 +188,14 @@ trait SearchConverterService {
 
               subjects.map(subject => {
 
-                val contextFilters = getFilters(topic, subject, bundle, bundle.resourceFilterConnections)
+                val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
 
-                val pathIds = (topic.id +: topicPath :+ subject.id).reverse
-                val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/") // TODO: This path is weird on topics (double last element)
+                val pathIds = (topicPath :+ subject.id).reverse
+                val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
                 val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
-
-                val breadcrumb = getBreadcrumbFromIds(pathIds.dropRight(1), bundle).map(crumb => LanguageValue(Language.DefaultLanguage, Seq(crumb))) // TODO: Get translations
-                val breadcrumbs = SearchableLanguageList(breadcrumb)
+                val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
+                val breadcrumbs = SearchableLanguageList(breadcrumbList)
 
                 SearchableTaxonomyContext(
                   id = topic.id,
