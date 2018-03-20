@@ -45,7 +45,7 @@ object LearningResourceType extends Enumeration {
   val TopicArticle = Value("topic-article")
   val LearningPath = Value("learningpath")
 
-  def all = LearningResourceType.values.map(_.toString).toSeq
+  def all = LearningResourceType.values.map(_.toString).toList
 
   def valueOf(s: String): Option[LearningResourceType.Value] = LearningResourceType.values.find(_.toString == s)
 }

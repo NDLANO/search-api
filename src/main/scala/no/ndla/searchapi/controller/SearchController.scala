@@ -14,6 +14,7 @@ import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.{Error, SearchResult, SearchResults, ValidationError}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
+import no.ndla.searchapi.model.search.SearchSettings
 import no.ndla.searchapi.service.search.{ArticleSearchService, MultiSearchService}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
@@ -186,37 +187,33 @@ trait SearchController {
     }
 
     private def multiSearch(query: Option[String],
-                              sort: Option[Sort.Value],
-                              language: String,
-                              license: Option[String],
-                              page: Int,
-                              pageSize: Int,
-                              idList: List[Long],
-                              articleTypesFilter: Seq[String],
-                              fallback: Boolean) = {
-      val result = query match {
-        case Some(q) => multiSearchService.matchingQuery(
-          query = q,
-          withIdIn = idList,
-          searchLanguage = language,
-          license = license,
-          page = page,
-          pageSize = if (idList.isEmpty) pageSize else idList.size,
-          sort = sort.getOrElse(Sort.ByRelevanceDesc),
-          if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
-          fallback = fallback
-        )
+                            sort: Option[Sort.Value],
+                            language: String,
+                            license: Option[String],
+                            page: Int,
+                            pageSize: Int,
+                            idList: List[Long],
+                            articleTypesFilter: List[String],
+                            fallback: Boolean) = {
 
-        case None => multiSearchService.all(
-          withIdIn = idList,
-          language = language,
-          license = license,
-          page = page,
-          pageSize = if (idList.isEmpty) pageSize else idList.size,
-          sort = sort.getOrElse(Sort.ByIdAsc),
-          if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
-          fallback = fallback
-        )
+      val settings = SearchSettings(
+        fallback = fallback,
+        language = language,
+        license = license,
+        page = page,
+        pageSize = pageSize,
+        sort = Sort.ByIdAsc,
+        types = if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
+        withIdIn = idList
+      )
+
+      val result = query match {
+        case Some(q) =>
+          multiSearchService.matchingQuery(
+            query = q,
+            settings.copy(sort = sort.getOrElse(Sort.ByRelevanceDesc))
+          )
+        case None => multiSearchService.all(settings)
       }
 
       result match {
@@ -224,7 +221,6 @@ trait SearchController {
         case Failure(ex) => errorHandler(ex)
       }
     }
-
   }
 
 }

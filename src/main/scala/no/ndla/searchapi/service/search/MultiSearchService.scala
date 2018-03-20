@@ -21,6 +21,7 @@ import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.{MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
 import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.model.search.SearchSettings
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -51,32 +52,17 @@ trait MultiSearchService {
 
     }
 
-    def all(withIdIn: List[Long],
-            language: String,
-            license: Option[String],
-            page: Int,
-            pageSize: Int,
-            sort: Sort.Value,
-            types: Seq[String],
-            fallback: Boolean): Try[SearchResult[MultiSearchSummary]] = {
-      executeSearch(withIdIn, language, license, sort, page, pageSize, boolQuery(), types, fallback)
+    def all(settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = {
+      executeSearch(settings, boolQuery())
     }
 
-    def matchingQuery(query: String,
-                      withIdIn: List[Long],
-                      searchLanguage: String,
-                      license: Option[String],
-                      page: Int,
-                      pageSize: Int,
-                      sort: Sort.Value,
-                      types: Seq[String],
-                      fallback: Boolean): Try[SearchResult[MultiSearchSummary]] = {
-      val language = if (searchLanguage == Language.AllLanguages || fallback) "*" else searchLanguage
-      val titleSearch = simpleStringQuery(query).field(s"title.$language", 2)
-      val introSearch = simpleStringQuery(query).field(s"introduction.$language", 2)
-      val metaSearch = simpleStringQuery(query).field(s"metaDescription.$language", 1)
-      val contentSearch = simpleStringQuery(query).field(s"content.$language", 1)
-      val tagSearch = simpleStringQuery(query).field(s"tags.$language", 1)
+    def matchingQuery(query: String, settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = {
+      val searchLanguage = if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
+      val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
+      val introSearch = simpleStringQuery(query).field(s"introduction.$searchLanguage", 2)
+      val metaSearch = simpleStringQuery(query).field(s"metaDescription.$searchLanguage", 1)
+      val contentSearch = simpleStringQuery(query).field(s"content.$searchLanguage", 1)
+      val tagSearch = simpleStringQuery(query).field(s"tags.$searchLanguage", 1)
 
       val fullQuery = boolQuery()
         .must(
@@ -90,32 +76,23 @@ trait MultiSearchService {
             )
         )
 
-      executeSearch(withIdIn, searchLanguage, license, sort, page, pageSize, fullQuery, types, fallback)
+      executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(withIdIn: List[Long],
-                      language: String,
-                      license: Option[String],
-                      sort: Sort.Value,
-                      page: Int,
-                      pageSize: Int,
-                      queryBuilder: BoolQueryDefinition,
-                      types: Seq[String],
-                      fallback: Boolean): Try[api.SearchResult[MultiSearchSummary]] = {
+    def executeSearch(settings: SearchSettings, queryBuilder: BoolQueryDefinition): Try[api.SearchResult[MultiSearchSummary]] = {
+      val typesFilter = if (settings.types.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", settings.types))) else None
+      val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
 
-      val typesFilter = if (types.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", types))) else None
-      val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
-
-      val licenseFilter = license match {
+      val licenseFilter = settings.license match {
         case None => Some(noCopyright)
         case Some(lic) => Some(termQuery("license", lic))
       }
 
-      val (languageFilter, searchLanguage) = language match {
+      val (languageFilter, searchLanguage) = settings.language match {
         case "" | Language.AllLanguages =>
           (None, "*")
         case lang =>
-          fallback match {
+          settings.fallback match {
             case true => (None, "*")
             case false => (Some(existsQuery(s"title.$lang")), lang)
           }
@@ -124,8 +101,8 @@ trait MultiSearchService {
       val filters = List(licenseFilter, idFilter, languageFilter, typesFilter)
       val filteredSearch = queryBuilder.filter(filters.flatten)
 
-      val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)
-      val requestedResultWindow = pageSize * page
+      val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
+      val requestedResultWindow = settings.pageSize * settings.page
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
@@ -136,16 +113,16 @@ trait MultiSearchService {
           .from(startAt)
           .query(filteredSearch)
           .highlighting(highlight("*"))
-          .sortBy(getSortDefinition(sort, searchLanguage))
+          .sortBy(getSortDefinition(settings.sort, searchLanguage))
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
             Success(api.SearchResult[MultiSearchSummary](
               response.result.totalHits,
-              page,
+              settings.page,
               numResults,
-              if (language == "*") Language.AllLanguages else language,
-              getHits(response.result, language, fallback)
+              if (settings.language == "*") Language.AllLanguages else settings.language,
+              getHits(response.result, settings.language, settings.fallback)
             ))
           case Failure(ex) => errorHandler(ex)
         }
