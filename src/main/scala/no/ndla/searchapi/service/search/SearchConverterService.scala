@@ -363,7 +363,7 @@ trait SearchConverterService {
       )
     }
 
-    private def getTopicTaxonomyContexs(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getTopicTaxonomyContexts(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -406,7 +406,7 @@ trait SearchConverterService {
         case (Seq(resource), Nil) =>
           getResourceTaxonomyContexts(resource, taxonomyType, bundle)
         case (Nil, Seq(topic)) =>
-          getTopicTaxonomyContexs(topic, taxonomyType, bundle)
+          getTopicTaxonomyContexts(topic, taxonomyType, bundle)
         case (r, t) =>
           val taxonomyEntries = r ++ t
           val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."

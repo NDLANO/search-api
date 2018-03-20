@@ -176,7 +176,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
           val topicResourceConnections = List()
           val topics = List(Resource(s"urn:topic:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:$index"))
           val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
-          val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
+          val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", s"urn:topic:$index", "urn:subject-topic:8180abc", true, 1))
 
           (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
       }
