@@ -80,8 +80,11 @@ trait MultiSearchService {
     }
 
     def executeSearch(settings: SearchSettings, queryBuilder: BoolQueryDefinition): Try[api.SearchResult[MultiSearchSummary]] = {
-      val typesFilter = if (settings.types.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", settings.types))) else None
+      val typesFilter = if (settings.types.isEmpty) None else Some(constantScoreQuery(termsQuery("articleType", settings.types)))
       val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
+
+      val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else None
+
 
       val licenseFilter = settings.license match {
         case None => Some(noCopyright)
@@ -114,6 +117,8 @@ trait MultiSearchService {
           .query(filteredSearch)
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, searchLanguage))
+
+        val json = e4sClient.httpClient.show(searchToExec)
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>

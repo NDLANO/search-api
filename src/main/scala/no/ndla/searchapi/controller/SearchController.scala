@@ -181,9 +181,10 @@ trait SearchController {
       val idList = paramAsListOfLong(this.articleIds.paramName)
       val typeFilter = paramAsListOfString(this.articleTypes.paramName)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+      val taxonomyFilters = paramAsListOfString("levels")
 
       // TODO: compare params to articleSearch and learningpathSearch
-      multiSearch(query, sort, language, license, page, pageSize, idList, typeFilter, fallback)
+      multiSearch(query, sort, language, license, page, pageSize, idList, typeFilter, fallback, taxonomyFilters)
     }
 
     private def multiSearch(query: Option[String],
@@ -194,7 +195,9 @@ trait SearchController {
                             pageSize: Int,
                             idList: List[Long],
                             articleTypesFilter: List[String],
-                            fallback: Boolean) = {
+                            fallback: Boolean,
+                            taxonomyFilters: List[String]
+                           ) = {
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -204,7 +207,8 @@ trait SearchController {
         pageSize = pageSize,
         sort = Sort.ByIdAsc,
         types = if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
-        withIdIn = idList
+        withIdIn = idList,
+        taxonomyFilters = taxonomyFilters
       )
 
       val result = query match {

@@ -246,7 +246,17 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     topics = topics
   )
 
-  val searchSettings = SearchSettings(fallback = false, Language.DefaultLanguage, None, 1, 10, Sort.ByIdAsc, List.empty, List.empty)
+  val searchSettings = SearchSettings(
+    fallback = false,
+    language = Language.DefaultLanguage,
+    license = None,
+    page = 1,
+    pageSize = 10,
+    sort = Sort.ByIdAsc,
+    types = List.empty,
+    withIdIn = List.empty,
+    taxonomyFilters = List.empty
+  )
 
   override def beforeAll = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))

@@ -17,5 +17,6 @@ case class SearchSettings(
     pageSize: Int,
     sort: Sort.Value,
     types: List[String],
-    withIdIn: List[Long]
+    withIdIn: List[Long],
+    taxonomyFilters: List[String]
 )
