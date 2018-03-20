@@ -103,8 +103,7 @@ trait MultiSearchService {
                       types: Seq[String],
                       fallback: Boolean): Try[api.SearchResult[MultiSearchSummary]] = {
 
-      val typesFilter = None
-      // TODO: handle typesfilter somehow according to mapping // OLD -> val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
+      val typesFilter = if (types.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", types))) else None
       val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
 
       val licenseFilter = license match {

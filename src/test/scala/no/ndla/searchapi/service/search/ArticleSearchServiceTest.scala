@@ -14,7 +14,7 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import no.ndla.searchapi.model.taxonomy.{QueryResourceResult, ResourceType}
+import no.ndla.searchapi.model.taxonomy._
 import no.ndla.tag.IntegrationTest
 import org.joda.time.DateTime
 import org.mockito
@@ -144,20 +144,57 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
     articleType = LearningResourceType.TopicArticle.toString
   )
 
+  val articlesToIndex = List(
+    article1, article2, article3, article4, article5, article6, article7, article8, article9, article10, article11
+  )
+
   override def beforeAll = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
 
-    articleIndexService.indexDocument(article1)
-    articleIndexService.indexDocument(article2)
-    articleIndexService.indexDocument(article3)
-    articleIndexService.indexDocument(article4)
-    articleIndexService.indexDocument(article5)
-    articleIndexService.indexDocument(article6)
-    articleIndexService.indexDocument(article7)
-    articleIndexService.indexDocument(article8)
-    articleIndexService.indexDocument(article9)
-    articleIndexService.indexDocument(article10)
-    articleIndexService.indexDocument(article11)
+    articlesToIndex.zipWithIndex.map{case (article: Article, index: Int) =>
+      val (
+        resources,
+        topics,
+        topicResourceConnections,
+        subjects,
+        subjectTopicConnections
+        ) = article.articleType match {
+        case "standard" =>
+          val resources = List(Resource(s"urn:resource:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:100/resource:$index"))
+          val topics = List(Resource("urn:topic:100", "Topic1", Some("urn:article:100"), "/subject:1/topic:100"))
+          val topicResourceConnections = List(TopicResourceConnection("urn:topic:100", s"urn:resource:$index", "urn:topic-resource:abc123", true, 1))
+          val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
+          val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:100", "urn:subject-topic:8180abc", true, 1))
+
+          (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
+        case "topic-article" =>
+          val resources = List()
+        val topicResourceConnections = List()
+          val topics = List(Resource(s"urn:topic:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:$index"))
+          val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
+          val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", s"urn:topic:$index", "urn:subject-topic:8180abc", true, 1))
+
+          (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
+      }
+
+      val generatedBundle = Bundle(
+        filters = List.empty,
+        relevances = List.empty,
+        resourceFilterConnections = List.empty,
+        resourceResourceTypeConnections = List.empty,
+        resourceTypes = List.empty,
+        resources = resources,
+        subjectTopicConnections = subjectTopicConnections,
+        subjects = subjects,
+        topicFilterConnections = List.empty,
+        topicResourceConnections = topicResourceConnections,
+        topicSubtopicConnections = List.empty,
+        topics = topics
+      )
+
+      articleIndexService.indexDocument(article, Some(generatedBundle))
+
+    }
 
     blockUntil(() => articleSearchService.countDocuments == 11)
   }
