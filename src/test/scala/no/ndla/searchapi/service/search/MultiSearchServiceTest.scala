@@ -148,60 +148,112 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     articleType = LearningResourceType.TopicArticle.toString
   )
 
+  val articlesToIndex: Seq[Article] = List(
+    article1, article2, article3, article4, article5, article6, article7, article8, article9, article10, article11
+  )
 
-  val articlesToIndex: immutable.Seq[Article] = List(article1, article2, article3, article4, article5, article6, article7, article8, article9, article10, article11)
+  val subjects = List(
+    Resource("urn:subject:1", "Matte", None, "/subject:1"),
+    Resource("urn:subject:2", "Historie", None, "/subject:2")
+  )
+  val filters = List(
+    Filter("urn:filter:1", "VG1", "urn:subject:1"),
+    Filter("urn:filter:2", "VG2", "urn:subject:1"),
+    Filter("urn:filter:3", "VG3", "urn:subject:1"),
+    Filter("urn:filter:4", "VG1", "urn:subject:2"),
+    Filter("urn:filter:5", "VG2", "urn:subject:2"),
+    Filter("urn:filter:6", "YF-VG1", "urn:subject:2")
+  )
+  val resourceFilterConnections = List(
+    ResourceFilterConnection("urn:resource:1", "urn:filter:1", "urn:resource-filter:1", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:2", "urn:resource-filter:1", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:3", "urn:resource-filter:1", "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:3", "urn:filter:2", "urn:resource-filter:3", "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:4", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:5", "urn:relevance:core"),
+  )
+  val relevances = List(
+    Relevance("urn:relevance:core", "Kjernestoff"),
+    Relevance("urn:relevance:supplementary", "Tilleggsstoff")
+  )
+  val resourceTypes = List(
+    ResourceType("urn:resourcetype:learningpath", "Læringssti", None),
+    ResourceType("urn:resourcetype:subjectMaterial", "Fagstoff", Some(List(
+      ResourceType("urn:resourcetype:academicArticle", "Fagartikkel", None),
+      ResourceType("urn:resourcetype:guidance", "Veiledning", None)
+    )))
+  )
+  val resources = List(
+    Resource("urn:resource:1", article1.title.head.title, Some(s"urn:article:${article1.id.get}"), s"/subject:1/topic:1/resource:1"),
+    Resource("urn:resource:2", article2.title.head.title, Some(s"urn:article:${article2.id.get}"), s"/subject:1/topic:1/resource:2"),
+    Resource("urn:resource:3", article3.title.head.title, Some(s"urn:article:${article3.id.get}"), s"/subject:1/topic:3/resource:3"),
+    Resource("urn:resource:4", article4.title.head.title, Some(s"urn:article:${article4.id.get}"), s"/subject:1/topic:1/topic:2/resource:4"),
+    Resource("urn:resource:5", article5.title.head.title, Some(s"urn:article:${article5.id.get}"), s"/subject:2/topic:4/resource:5"),
+    Resource("urn:resource:6", article6.title.head.title, Some(s"urn:article:${article6.id.get}"), s"/subject:2/topic:4/resource:6"),
+    Resource("urn:resource:7", article7.title.head.title, Some(s"urn:article:${article7.id.get}"), s"/subject:2/topic:4/resource:7")
+  )
+  val topics = List(
+    Resource("urn:topic:1", article8.title.head.title, Some(s"urn:article:${article8.id.get}"), "/subject:1/topic:1"),
+    Resource("urn:topic:2", article9.title.head.title, Some(s"urn:article:${article9.id.get}"), "/subject:1/topic:1/topic:2"),
+    Resource("urn:topic:3", article10.title.head.title, Some(s"urn:article:${article10.id.get}"), "/subject:1/topic:3"),
+    Resource("urn:topic:4", article11.title.head.title, Some(s"urn:article:${article11.id.get}"), "/subject:2/topic:4")
+  )
+  val subjectTopicConnections = List(
+    SubjectTopicConnection("urn:subject:1", "urn:topic:1", "urn:subject-topic:1", true, 1),
+    SubjectTopicConnection("urn:subject:1", "urn:topic:3", "urn:subject-topic:2", true, 1),
+    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", true, 1)
+  )
+  val topicResourceConnections = List(
+    TopicResourceConnection("urn:topic:1", "urn:resource:1", "urn:topic-resource:1", true, 1),
+    TopicResourceConnection("urn:topic:1", "urn:resource:2", "urn:topic-resource:2", true, 1),
+    TopicResourceConnection("urn:topic:3", "urn:resource:3", "urn:topic-resource:3", true, 1),
+    TopicResourceConnection("urn:topic:2", "urn:resource:4", "urn:topic-resource:4", true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:5", true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:6", true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:7", true, 1)
+  )
+  val topicSubtopicConnections = List(
+    TopicSubtopicConnection("urn:topic:1", "urn:topic:2", "urn:topic-subtopic:1", true, 1)
+  )
+  val resourceResourceTypeConnections = List(
+    ResourceResourceTypeConnection("urn:resource:1", "urn:subjectMaterial", "urn:resource-resourcetype:1"),
+    ResourceResourceTypeConnection("urn:resource:2", "urn:subjectMaterial", "urn:resource-resourcetype:2"),
+    ResourceResourceTypeConnection("urn:resource:2", "urn:academicArticle", "urn:resource-resourcetype:3"),
+    ResourceResourceTypeConnection("urn:resource:3", "urn:subjectMaterial", "urn:resource-resourcetype:4"),
+    ResourceResourceTypeConnection("urn:resource:4", "urn:subjectMaterial", "urn:resource-resourcetype:5"),
+    ResourceResourceTypeConnection("urn:resource:5", "urn:academicArticle", "urn:resource-resourcetype:6"),
+    ResourceResourceTypeConnection("urn:resource:6", "urn:subjectMaterial", "urn:resource-resourcetype:7"),
+    ResourceResourceTypeConnection("urn:resource:7", "urn:guidance", "urn:resource-resourcetype:8")
+  )
+
+  val taxonomyTestBundle = Bundle(
+    filters = filters,
+    relevances = relevances,
+    resourceFilterConnections = List.empty, // TODO: connect filters to some resources pls
+    resourceResourceTypeConnections = resourceResourceTypeConnections,
+    resourceTypes = resourceTypes,
+    resources = resources,
+    subjectTopicConnections = subjectTopicConnections,
+    subjects = subjects,
+    topicFilterConnections = List.empty, //TODO: maybe connect filters to topics? This is always empty in taxonomy-Test
+    topicResourceConnections = topicResourceConnections,
+    topicSubtopicConnections = topicSubtopicConnections,
+    topics = topics
+  )
 
 
   override def beforeAll = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
 
-    articlesToIndex.zipWithIndex.map{case (article: Article, index: Int) =>
-      val (
-        resources,
-        topics,
-        topicResourceConnections,
-        subjects,
-        subjectTopicConnections
-        ) = article.articleType match {
-        case "standard" =>
-          val resources = List(Resource(s"urn:resource:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:100/resource:$index"))
-          val topics = List(Resource("urn:topic:100", "Topic1", Some("urn:article:100"), "/subject:1/topic:100"))
-          val topicResourceConnections = List(TopicResourceConnection("urn:topic:100", s"urn:resource:$index", "urn:topic-resource:abc123", true, 1))
-          val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
-          val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:100", "urn:subject-topic:8180abc", true, 1))
+    articlesToIndex.map(article =>
+      articleIndexService.indexDocument(article, Some(taxonomyTestBundle))
+    )
 
-          (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
-        case "topic-article" =>
-          val resources = List() // TODO: For some reason this doesnt work for topic article. Look into and fix tests
-          val topicResourceConnections = List()
-          val topics = List(Resource(s"urn:topic:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:$index"))
-          val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
-          val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", s"urn:topic:$index", "urn:subject-topic:8180abc", true, 1))
-
-          (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
-      }
-
-      val generatedBundle = Bundle(
-        filters = List.empty,
-        relevances = List.empty,
-        resourceFilterConnections = List.empty,
-        resourceResourceTypeConnections = List.empty,
-        resourceTypes = List.empty,
-        resources = resources,
-        subjectTopicConnections = subjectTopicConnections,
-        subjects = subjects,
-        topicFilterConnections = List.empty,
-        topicResourceConnections = topicResourceConnections,
-        topicSubtopicConnections = List.empty,
-        topics = topics
-      )
-
-      articleIndexService.indexDocument(article, Some(generatedBundle))
-
-    }
-
-
-    blockUntil(() => multiSearchService.countDocuments == 11)
+    blockUntil(() => multiSearchService.countDocuments == articlesToIndex.size)
   }
 
   private def deleteIndexesThatStartWith(startsWith: String): Unit = {
