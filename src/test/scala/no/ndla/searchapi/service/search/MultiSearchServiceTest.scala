@@ -167,15 +167,16 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   )
   val resourceFilterConnections = List(
     ResourceFilterConnection("urn:resource:1", "urn:filter:1", "urn:resource-filter:1", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:2", "urn:resource-filter:1", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:3", "urn:resource-filter:1", "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:3", "urn:filter:2", "urn:resource-filter:3", "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:4", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:5", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:5", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:5", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:5", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:2", "urn:resource-filter:2", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:3", "urn:resource-filter:3", "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:3", "urn:filter:2", "urn:resource-filter:4", "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:2", "urn:resource-filter:6", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:7", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:8", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:9", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:10", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:11", "urn:relevance:core"),
   )
   val relevances = List(
     Relevance("urn:relevance:core", "Kjernestoff"),
@@ -234,7 +235,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   val taxonomyTestBundle = Bundle(
     filters = filters,
     relevances = relevances,
-    resourceFilterConnections = List.empty, // TODO: connect filters to some resources pls
+    resourceFilterConnections = resourceFilterConnections,
     resourceResourceTypeConnections = resourceResourceTypeConnections,
     resourceTypes = resourceTypes,
     resources = resources,
@@ -541,10 +542,18 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search.results(2).title.language should equal("en")
   }
 
-  test("That filtering for levels/filters works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(withIdIn = List(9, 10, 11), language = "en"))
+  test("That filtering for levels/filters on resources works as expected") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = "all", taxonomyFilters = List("YF-VG1")))
+    search.totalCount should be(2)
+    search.results.map(_.id) should equal(Seq(6, 7))
 
+    val Success(search2) = multiSearchService.all(searchSettings.copy(language = "all", taxonomyFilters = List("VG2")))
+    search2.totalCount should be(4)
+    search2.results.map(_.id) should equal(Seq(1, 3, 5, 6))
 
+    val Success(search3) = multiSearchService.all(searchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
+    search3.totalCount should be(4)
+    search3.results.map(_.id) should equal(Seq(1, 5, 6, 7))
   }
 
   def blockUntil(predicate: () => Boolean) = {

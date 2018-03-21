@@ -34,8 +34,6 @@ trait MultiSearchService {
   val multiSearchService: MultiSearchService
 
   class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
-    private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
-
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
@@ -80,17 +78,6 @@ trait MultiSearchService {
     }
 
     def executeSearch(settings: SearchSettings, queryBuilder: BoolQueryDefinition): Try[api.SearchResult[MultiSearchSummary]] = {
-      val typesFilter = if (settings.types.isEmpty) None else Some(constantScoreQuery(termsQuery("articleType", settings.types)))
-      val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
-
-      val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else None
-
-
-      val licenseFilter = settings.license match {
-        case None => Some(noCopyright)
-        case Some(lic) => Some(termQuery("license", lic))
-      }
-
       val (languageFilter, searchLanguage) = settings.language match {
         case "" | Language.AllLanguages =>
           (None, "*")
@@ -101,7 +88,26 @@ trait MultiSearchService {
           }
       }
 
-      val filters = List(licenseFilter, idFilter, languageFilter, typesFilter)
+      val typesFilter = if (settings.types.isEmpty) None else Some(constantScoreQuery(termsQuery("articleType", settings.types)))
+      val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
+
+      val licenseFilter = settings.license match {
+        case None => Some(boolQuery().not(termQuery("license", "copyrighted")))
+        case Some(lic) => Some(termQuery("license", lic))
+      }
+
+      val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else Some(
+        nestedQuery("contexts.filters")
+          .query(
+            boolQuery()
+              .should(
+                settings.taxonomyFilters.map(filterName =>
+                  simpleStringQuery(filterName).field(s"contexts.filters.name.$searchLanguage.raw"))
+              )
+          )
+      )
+
+      val filters = List(licenseFilter, idFilter, languageFilter, typesFilter, taxonomyFilterFilter)
       val filteredSearch = queryBuilder.filter(filters.flatten)
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
@@ -118,7 +124,7 @@ trait MultiSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, searchLanguage))
 
-        val json = e4sClient.httpClient.show(searchToExec)
+        val json = e4sClient.httpClient.show(searchToExec) // TODO: Remove
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
