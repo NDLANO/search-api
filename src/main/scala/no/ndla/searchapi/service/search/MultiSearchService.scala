@@ -97,14 +97,13 @@ trait MultiSearchService {
       }
 
       val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else Some(
-        nestedQuery("contexts.filters")
-          .query(
-            boolQuery()
-              .should(
-                settings.taxonomyFilters.map(filterName =>
-                  simpleStringQuery(filterName).field(s"contexts.filters.name.$searchLanguage.raw"))
-              )
+        boolQuery().must(
+          settings.taxonomyFilters.map(filterName =>
+            nestedQuery("contexts.filters").query(
+              simpleStringQuery(filterName).field(s"contexts.filters.name.$searchLanguage.raw")
+            )
           )
+        )
       )
 
       val filters = List(licenseFilter, idFilter, languageFilter, typesFilter, taxonomyFilterFilter)
@@ -123,8 +122,6 @@ trait MultiSearchService {
           .query(filteredSearch)
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, searchLanguage))
-
-        val json = e4sClient.httpClient.show(searchToExec) // TODO: Remove
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>

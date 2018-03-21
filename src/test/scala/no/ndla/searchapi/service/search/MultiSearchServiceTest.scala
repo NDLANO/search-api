@@ -169,14 +169,20 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     ResourceFilterConnection("urn:resource:1", "urn:filter:1", "urn:resource-filter:1", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:1", "urn:filter:2", "urn:resource-filter:2", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:1", "urn:filter:3", "urn:resource-filter:3", "urn:relevance:supplementary"),
+
     ResourceFilterConnection("urn:resource:3", "urn:filter:2", "urn:resource-filter:4", "urn:relevance:supplementary"),
+
     ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:5", "urn:relevance:core"),
+
     ResourceFilterConnection("urn:resource:5", "urn:filter:2", "urn:resource-filter:6", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:7", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:8", "urn:relevance:core"),
+
     ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:9", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:10", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:11", "urn:relevance:core"),
+
+    ResourceFilterConnection("urn:resource:7", "urn:filter:4", "urn:resource-filter:11", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:12", "urn:relevance:core"),
   )
   val relevances = List(
     Relevance("urn:relevance:core", "Kjernestoff"),
@@ -552,8 +558,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search2.results.map(_.id) should equal(Seq(1, 3, 5, 6))
 
     val Success(search3) = multiSearchService.all(searchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
-    search3.totalCount should be(4)
-    search3.results.map(_.id) should equal(Seq(1, 5, 6, 7))
+    search3.totalCount should be(1)
+    search3.results.map(_.id) should equal(Seq(7))
   }
 
   def blockUntil(predicate: () => Boolean) = {
