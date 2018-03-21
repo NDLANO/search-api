@@ -182,22 +182,7 @@ trait SearchController {
       val typeFilter = paramAsListOfString(this.articleTypes.paramName)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val taxonomyFilters = paramAsListOfString("levels")
-
-      // TODO: compare params to articleSearch and learningpathSearch
-      multiSearch(query, sort, language, license, page, pageSize, idList, typeFilter, fallback, taxonomyFilters)
-    }
-
-    private def multiSearch(query: Option[String],
-                            sort: Option[Sort.Value],
-                            language: String,
-                            license: Option[String],
-                            page: Int,
-                            pageSize: Int,
-                            idList: List[Long],
-                            articleTypesFilter: List[String],
-                            fallback: Boolean,
-                            taxonomyFilters: List[String]
-                           ) = {
+      val subjects = paramAsListOfString("subjects")
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -205,18 +190,19 @@ trait SearchController {
         license = license,
         page = page,
         pageSize = pageSize,
-        sort = Sort.ByIdAsc,
-        types = if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
+        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
+        types = if (typeFilter.isEmpty) LearningResourceType.all else typeFilter,
         withIdIn = idList,
-        taxonomyFilters = taxonomyFilters
+        taxonomyFilters = taxonomyFilters,
+        subjects = subjects
       )
+      // TODO: compare params to articleSearch and learningpathSearch
+      multiSearch(query, settings)
+    }
 
+    private def multiSearch(query: Option[String], settings: SearchSettings) = {
       val result = query match {
-        case Some(q) =>
-          multiSearchService.matchingQuery(
-            query = q,
-            settings.copy(sort = sort.getOrElse(Sort.ByRelevanceDesc))
-          )
+        case Some(q) => multiSearchService.matchingQuery(query = q, settings)
         case None => multiSearchService.all(settings)
       }
 

@@ -217,25 +217,26 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   )
   val topicResourceConnections = List(
     TopicResourceConnection("urn:topic:1", "urn:resource:1", "urn:topic-resource:1", true, 1),
-    TopicResourceConnection("urn:topic:1", "urn:resource:2", "urn:topic-resource:2", true, 1),
-    TopicResourceConnection("urn:topic:3", "urn:resource:3", "urn:topic-resource:3", true, 1),
-    TopicResourceConnection("urn:topic:2", "urn:resource:4", "urn:topic-resource:4", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:5", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:6", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:7", true, 1)
+    TopicResourceConnection("urn:topic:4", "urn:resource:1", "urn:topic-resource:2", true, 1),
+    TopicResourceConnection("urn:topic:1", "urn:resource:2", "urn:topic-resource:3", true, 1),
+    TopicResourceConnection("urn:topic:3", "urn:resource:3", "urn:topic-resource:4", true, 1),
+    TopicResourceConnection("urn:topic:2", "urn:resource:4", "urn:topic-resource:5", true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:6", true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:7", true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:8", true, 1)
   )
   val topicSubtopicConnections = List(
     TopicSubtopicConnection("urn:topic:1", "urn:topic:2", "urn:topic-subtopic:1", true, 1)
   )
   val resourceResourceTypeConnections = List(
-    ResourceResourceTypeConnection("urn:resource:1", "urn:subjectMaterial", "urn:resource-resourcetype:1"),
-    ResourceResourceTypeConnection("urn:resource:2", "urn:subjectMaterial", "urn:resource-resourcetype:2"),
-    ResourceResourceTypeConnection("urn:resource:2", "urn:academicArticle", "urn:resource-resourcetype:3"),
-    ResourceResourceTypeConnection("urn:resource:3", "urn:subjectMaterial", "urn:resource-resourcetype:4"),
-    ResourceResourceTypeConnection("urn:resource:4", "urn:subjectMaterial", "urn:resource-resourcetype:5"),
-    ResourceResourceTypeConnection("urn:resource:5", "urn:academicArticle", "urn:resource-resourcetype:6"),
-    ResourceResourceTypeConnection("urn:resource:6", "urn:subjectMaterial", "urn:resource-resourcetype:7"),
-    ResourceResourceTypeConnection("urn:resource:7", "urn:guidance", "urn:resource-resourcetype:8")
+    ResourceResourceTypeConnection("urn:resource:1", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:1"),
+    ResourceResourceTypeConnection("urn:resource:2", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:2"),
+    ResourceResourceTypeConnection("urn:resource:2", "urn:resourcetype:academicArticle", "urn:resource-resourcetype:3"),
+    ResourceResourceTypeConnection("urn:resource:3", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:4"),
+    ResourceResourceTypeConnection("urn:resource:4", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:5"),
+    ResourceResourceTypeConnection("urn:resource:5", "urn:resourcetype:academicArticle", "urn:resource-resourcetype:6"),
+    ResourceResourceTypeConnection("urn:resource:6", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:7"),
+    ResourceResourceTypeConnection("urn:resource:7", "urn:resourcetype:guidance", "urn:resource-resourcetype:8")
   )
 
   val taxonomyTestBundle = Bundle(
@@ -262,7 +263,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     sort = Sort.ByIdAsc,
     types = List.empty,
     withIdIn = List.empty,
-    taxonomyFilters = List.empty
+    taxonomyFilters = List.empty,
+    subjects = List.empty
   )
 
   override def beforeAll = {
@@ -479,13 +481,13 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("Search for all languages should return all articles in different languages") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(sort = Sort.ByTitleAsc, pageSize = 100, language = Language.AllLanguages))
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, pageSize = 100, sort = Sort.ByTitleAsc))
 
     search.totalCount should equal(10)
   }
 
   test("Search for all languages should return all articles in correct language") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(pageSize = 100, language = Language.AllLanguages))
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, pageSize = 100))
     val hits = search.results
 
     search.totalCount should equal(10)
@@ -504,7 +506,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("Search for all languages should return all languages if copyrighted") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(pageSize = 100, language = Language.AllLanguages, license = Some("copyrighted"), sort = Sort.ByTitleAsc))
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, license = Some("copyrighted"), pageSize = 100, sort = Sort.ByTitleAsc))
     val hits = search.results
 
     search.totalCount should equal(1)
@@ -537,7 +539,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That searching with fallback parameter returns article in language priority even if doesnt match on language") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(withIdIn = List(9, 10, 11), language = "en", fallback = true))
+    val Success(search) = multiSearchService.all(searchSettings.copy(fallback = true, language = "en", withIdIn = List(9, 10, 11)))
 
     search.totalCount should equal(3)
     search.results.head.id should equal(9)
@@ -551,15 +553,25 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   test("That filtering for levels/filters on resources works as expected") {
     val Success(search) = multiSearchService.all(searchSettings.copy(language = "all", taxonomyFilters = List("YF-VG1")))
     search.totalCount should be(2)
-    search.results.map(_.id) should equal(Seq(6, 7))
+    search.results.map(_.id) should be(Seq(6, 7))
 
     val Success(search2) = multiSearchService.all(searchSettings.copy(language = "all", taxonomyFilters = List("VG2")))
     search2.totalCount should be(4)
-    search2.results.map(_.id) should equal(Seq(1, 3, 5, 6))
+    search2.results.map(_.id) should be(Seq(1, 3, 5, 6))
 
     val Success(search3) = multiSearchService.all(searchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
     search3.totalCount should be(1)
-    search3.results.map(_.id) should equal(Seq(7))
+    search3.results.map(_.id) should be(Seq(7))
+  }
+
+  test("That filtering for subjects works as expected") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("Historie")))
+    search.totalCount should be(5)
+    search.results.map(_.id) should be(Seq(1, 5, 6, 7, 11))
+
+    val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("Historie", "Matte")))
+    search2.totalCount should be(1)
+    search2.results.map(_.id) should be(Seq(1))
   }
 
   def blockUntil(predicate: () => Boolean) = {

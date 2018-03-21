@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
-import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
+import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefinition}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.SearchDocuments
@@ -50,9 +50,7 @@ trait MultiSearchService {
 
     }
 
-    def all(settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = {
-      executeSearch(settings, boolQuery())
-    }
+    def all(settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = executeSearch(settings, boolQuery())
 
     def matchingQuery(query: String, settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = {
       val searchLanguage = if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
@@ -73,41 +71,11 @@ trait MultiSearchService {
               tagSearch
             )
         )
-
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: SearchSettings, queryBuilder: BoolQueryDefinition): Try[api.SearchResult[MultiSearchSummary]] = {
-      val (languageFilter, searchLanguage) = settings.language match {
-        case "" | Language.AllLanguages =>
-          (None, "*")
-        case lang =>
-          settings.fallback match {
-            case true => (None, "*")
-            case false => (Some(existsQuery(s"title.$lang")), lang)
-          }
-      }
-
-      val typesFilter = if (settings.types.isEmpty) None else Some(constantScoreQuery(termsQuery("articleType", settings.types)))
-      val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
-
-      val licenseFilter = settings.license match {
-        case None => Some(boolQuery().not(termQuery("license", "copyrighted")))
-        case Some(lic) => Some(termQuery("license", lic))
-      }
-
-      val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else Some(
-        boolQuery().must(
-          settings.taxonomyFilters.map(filterName =>
-            nestedQuery("contexts.filters").query(
-              simpleStringQuery(filterName).field(s"contexts.filters.name.$searchLanguage.raw")
-            )
-          )
-        )
-      )
-
-      val filters = List(licenseFilter, idFilter, languageFilter, typesFilter, taxonomyFilterFilter)
-      val filteredSearch = queryBuilder.filter(filters.flatten)
+    def executeSearch(settings: SearchSettings, baseQuery: BoolQueryDefinition): Try[api.SearchResult[MultiSearchSummary]] = {
+      val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
@@ -115,13 +83,12 @@ trait MultiSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-
         val searchToExec = search(searchIndex)
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
           .highlighting(highlight("*"))
-          .sortBy(getSortDefinition(settings.sort, searchLanguage))
+          .sortBy(getSortDefinition(settings.sort, settings.language))
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
@@ -135,6 +102,52 @@ trait MultiSearchService {
           case Failure(ex) => errorHandler(ex)
         }
       }
+    }
+
+    /**
+      * Returns a list of QueryDefinitions of different search filters depending on settings.
+      * @param settings SearchSettings object.
+      * @return List of QueryDefinitions.
+      */
+    private def getSearchFilters(settings: SearchSettings): List[QueryDefinition] = {
+      val (languageFilter, searchLanguage) = settings.language match {
+        case "" | Language.AllLanguages =>
+          (None, "*")
+        case lang =>
+          settings.fallback match {
+            case true => (None, "*")
+            case false => (Some(existsQuery(s"title.$lang")), lang)
+          }
+      }
+
+      val typesFilter = if (settings.types.isEmpty) None else Some(constantScoreQuery(termsQuery("articleType", settings.types))) // TODO: Consider changing this to handle learningpaths and such. (OR add a entierly new filter).
+      val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
+
+      val licenseFilter = settings.license match {
+        case None => Some(boolQuery().not(termQuery("license", "copyrighted")))
+        case Some(lic) => Some(termQuery("license", lic))
+      }
+
+      val taxonomySubjectFilter = if(settings.subjects.isEmpty) None else Some(
+        boolQuery().must(
+          settings.subjects.map(subjectName =>
+            nestedQuery("contexts").query(
+              simpleStringQuery(subjectName).field(s"contexts.subject.*.raw")
+            )
+          )
+        )
+      )
+
+      val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else Some(
+        boolQuery().must(
+          settings.taxonomyFilters.map(filterName =>
+            nestedQuery("contexts.filters").query(
+              simpleStringQuery(filterName).field(s"contexts.filters.name.$searchLanguage.raw")
+            )
+          )
+        )
+      )
+      List(licenseFilter, idFilter, languageFilter, typesFilter, taxonomyFilterFilter, taxonomySubjectFilter).flatten
     }
 
     override def scheduleIndexDocuments(): Unit = {
