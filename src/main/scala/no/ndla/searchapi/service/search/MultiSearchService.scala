@@ -120,7 +120,10 @@ trait MultiSearchService {
           }
       }
 
-      val typesFilter = if (settings.types.isEmpty) None else Some(constantScoreQuery(termsQuery("articleType", settings.types))) // TODO: Consider changing this to handle learningpaths and such. (OR add a entierly new filter).
+      // TODO: Consider changing typesFilter to handle learningpaths, articles and topic-articles.
+      val typesFilter = if (settings.types.isEmpty) None else Some(
+        constantScoreQuery(termsQuery("articleType", settings.types))
+      )
       val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
 
       val licenseFilter = settings.license match {
@@ -147,7 +150,27 @@ trait MultiSearchService {
           )
         )
       )
-      List(licenseFilter, idFilter, languageFilter, typesFilter, taxonomyFilterFilter, taxonomySubjectFilter).flatten
+
+      val taxonomyResourceTypesFilter = if (settings.resourceTypes.isEmpty) None else Some(
+        boolQuery().must(
+          settings.resourceTypes.map(resourceTypeName =>
+            nestedQuery("contexts").query(
+              simpleStringQuery(resourceTypeName).field(s"contexts.resourceTypes.$searchLanguage")
+            )
+
+          )
+        )
+      )
+
+      List(
+        licenseFilter,
+        idFilter,
+        languageFilter,
+        typesFilter,
+        taxonomyFilterFilter,
+        taxonomySubjectFilter,
+        taxonomyResourceTypesFilter
+      ).flatten
     }
 
     override def scheduleIndexDocuments(): Unit = {

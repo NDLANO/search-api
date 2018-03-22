@@ -248,26 +248,6 @@ trait SearchConverterService {
       }
     }
 
-    private def fetchTaxonomyResourcesAndTopicsForId(contentUri: String, taxonomyType: String): Try[(Seq[QueryResourceResult], Seq[Resource])] = {
-      (taxonomyApiClient.queryResources(contentUri),
-        taxonomyApiClient.queryTopics(contentUri)) match {
-        case (Success(r), Success(t)) => Success((r, t))
-        case (r, t) =>
-          r match {
-            case Failure(ex) =>
-              logger.error(s"Failed to fetch resource with contentUri: '$contentUri', got message: ${ex.getMessage}")
-            case _ =>
-          }
-
-          t match {
-            case Failure(ex) =>
-              logger.error(s"Failed to fetch topic with contentUri: '$contentUri', got message: ${ex.getMessage}")
-            case _ =>
-          }
-          Failure(ElasticIndexingException(s"Could not query taxonomy for contentUri: '$contentUri'"))
-      }
-    }
-
     private def getBreadcrumbFromIds(ids: List[String], bundle: Bundle): Seq[String] = {
       ids.map(id => {
         bundle.getObject(id).map(_.name).getOrElse("")
@@ -306,18 +286,63 @@ trait SearchConverterService {
       })
     }
 
+    /**
+      * Returns every parent of resourceType.
+      * @param resourceType ResourceType to derive parents for.
+      * @param allTypes All resourceTypes to derive parents from.
+      * @return List of parents including resourceType.
+      */
+    def getResourceTypeParents(resourceType: ResourceType, allTypes: List[ResourceType]): List[ResourceType] = {
+      def allTypesWithParents(allTypes: List[ResourceType], parents: List[ResourceType]): List[(ResourceType, List[ResourceType])] = {
+        allTypes.flatMap(resourceType => {
+          val thisLevelWithParents = allTypes.map(resourceType =>
+            (resourceType, parents)
+          )
+
+          val nextLevelWithParents = resourceType.subtypes match {
+            case Some(subtypes) => allTypesWithParents(subtypes, parents :+ resourceType)
+            case None => List.empty
+          }
+          nextLevelWithParents ++ thisLevelWithParents
+        })
+      }
+      allTypesWithParents(allTypes, List.empty).filter(x => x._1 == resourceType).flatMap(_._2).distinct
+    }
+
+    /**
+      * Returns a flattened list of resourceType with its subtypes
+      * @param resourceType A resource with subtypes
+      * @return
+      */
+    private def getTypeAndSubtypes(resourceType: ResourceType): List[ResourceType] = {
+      def getTypeAndSubtypesWithParent(resourceType: ResourceType, parents: List[ResourceType] = List.empty): List[ResourceType] = {
+        resourceType.subtypes match {
+          case None => (parents :+ resourceType).distinct
+          case Some(subtypes) =>
+            subtypes.flatMap(x =>
+              getTypeAndSubtypesWithParent(x, parents :+ resourceType)
+            )
+        }
+      }
+      getTypeAndSubtypesWithParent(resourceType, List.empty)
+    }
+
     private[service] def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
 
       val resourceTypeConnections = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id)
-      val subResourceTypes = bundle.resourceTypes.flatMap(rt => rt.subtypes).flatten
-      val allResourceTypes = bundle.resourceTypes ++ subResourceTypes
+      val allResourceTypes = bundle.resourceTypes.flatMap(rt => getTypeAndSubtypes(rt))
 
+      // Every explicitly specified resourceType
       val resourceTypes = allResourceTypes.filter(r => resourceTypeConnections.map(_.resourceTypeId).contains(r.id))
 
-      val searchableResourceTypes = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
+      // Include parents of resourceTypes if they exist
+      val subParents = resourceTypes.flatMap(rt => getResourceTypeParents(rt, bundle.resourceTypes)).filterNot(resourceTypes.contains)
+      val resourceTypesWithParents = (resourceTypes ++ subParents).distinct
+
+      val searchableResourceTypes = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypesWithParents.map(_.name)))) // TODO: Get translations
 
       getContextType(resource.id, resource.contentUri) match {
         case Success(contextType) =>

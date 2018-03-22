@@ -18,4 +18,6 @@ case class SearchSettings(fallback: Boolean,
                           types: List[String],
                           withIdIn: List[Long],
                           taxonomyFilters: List[String],
-                          subjects: List[String])
+                          subjects: List[String],
+                          resourceTypes: List[String]
+                         )

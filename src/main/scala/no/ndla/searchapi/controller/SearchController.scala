@@ -183,6 +183,7 @@ trait SearchController {
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val taxonomyFilters = paramAsListOfString("levels")
       val subjects = paramAsListOfString("subjects")
+      val resourceTypes = paramAsListOfString("resource-types")
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -194,7 +195,8 @@ trait SearchController {
         types = if (typeFilter.isEmpty) LearningResourceType.all else typeFilter,
         withIdIn = idList,
         taxonomyFilters = taxonomyFilters,
-        subjects = subjects
+        subjects = subjects,
+        resourceTypes = resourceTypes
       )
       // TODO: compare params to articleSearch and learningpathSearch
       multiSearch(query, settings)

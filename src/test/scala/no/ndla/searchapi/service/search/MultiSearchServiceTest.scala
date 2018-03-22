@@ -193,8 +193,16 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     ResourceType("urn:resourcetype:subjectMaterial", "Fagstoff", Some(List(
       ResourceType("urn:resourcetype:academicArticle", "Fagartikkel", None),
       ResourceType("urn:resourcetype:guidance", "Veiledning", None)
+    ))),
+    ResourceType("urn:resourcetype:reviewResource", "Vurderingsressurs", Some(List(
+      ResourceType("urn:resourcetype:teacherEvaluation", "Lærervurdering", None),
+      ResourceType("urn:resourcetype:selfEvaluation", "Egenvurdering", None),
+      ResourceType("urn:resourcetype:peerEvaluation", "Medelevvurdering", Some(List(
+        ResourceType("urn:resourcetype:nested", "SuperNested ResourceType", None)
+      )))
     )))
   )
+
   val resources = List(
     Resource("urn:resource:1", article1.title.head.title, Some(s"urn:article:${article1.id.get}"), s"/subject:1/topic:1/resource:1"),
     Resource("urn:resource:2", article2.title.head.title, Some(s"urn:article:${article2.id.get}"), s"/subject:1/topic:1/resource:2"),
@@ -211,22 +219,22 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     Resource("urn:topic:4", article11.title.head.title, Some(s"urn:article:${article11.id.get}"), "/subject:2/topic:4")
   )
   val subjectTopicConnections = List(
-    SubjectTopicConnection("urn:subject:1", "urn:topic:1", "urn:subject-topic:1", true, 1),
-    SubjectTopicConnection("urn:subject:1", "urn:topic:3", "urn:subject-topic:2", true, 1),
-    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", true, 1)
+    SubjectTopicConnection("urn:subject:1", "urn:topic:1", "urn:subject-topic:1", primary = true, 1),
+    SubjectTopicConnection("urn:subject:1", "urn:topic:3", "urn:subject-topic:2", primary = true, 1),
+    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1)
   )
   val topicResourceConnections = List(
-    TopicResourceConnection("urn:topic:1", "urn:resource:1", "urn:topic-resource:1", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:1", "urn:topic-resource:2", true, 1),
-    TopicResourceConnection("urn:topic:1", "urn:resource:2", "urn:topic-resource:3", true, 1),
-    TopicResourceConnection("urn:topic:3", "urn:resource:3", "urn:topic-resource:4", true, 1),
-    TopicResourceConnection("urn:topic:2", "urn:resource:4", "urn:topic-resource:5", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:6", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:7", true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:8", true, 1)
+    TopicResourceConnection("urn:topic:1", "urn:resource:1", "urn:topic-resource:1", primary = true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:1", "urn:topic-resource:2", primary = true, 1),
+    TopicResourceConnection("urn:topic:1", "urn:resource:2", "urn:topic-resource:3", primary = true, 1),
+    TopicResourceConnection("urn:topic:3", "urn:resource:3", "urn:topic-resource:4", primary = true, 1),
+    TopicResourceConnection("urn:topic:2", "urn:resource:4", "urn:topic-resource:5", primary = true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:6", primary = true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:7", primary = true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:8", primary = true, 1)
   )
   val topicSubtopicConnections = List(
-    TopicSubtopicConnection("urn:topic:1", "urn:topic:2", "urn:topic-subtopic:1", true, 1)
+    TopicSubtopicConnection("urn:topic:1", "urn:topic:2", "urn:topic-subtopic:1", primary = true, 1)
   )
   val resourceResourceTypeConnections = List(
     ResourceResourceTypeConnection("urn:resource:1", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:1"),
@@ -236,7 +244,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     ResourceResourceTypeConnection("urn:resource:4", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:5"),
     ResourceResourceTypeConnection("urn:resource:5", "urn:resourcetype:academicArticle", "urn:resource-resourcetype:6"),
     ResourceResourceTypeConnection("urn:resource:6", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:7"),
-    ResourceResourceTypeConnection("urn:resource:7", "urn:resourcetype:guidance", "urn:resource-resourcetype:8")
+    ResourceResourceTypeConnection("urn:resource:7", "urn:resourcetype:guidance", "urn:resource-resourcetype:8"),
+      ResourceResourceTypeConnection("urn:resource:7", "urn:resourcetype:nested", "urn:resource-resourcetype:9")
   )
 
   val taxonomyTestBundle = Bundle(
@@ -264,7 +273,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     types = List.empty,
     withIdIn = List.empty,
     taxonomyFilters = List.empty,
-    subjects = List.empty
+    subjects = List.empty,
+    resourceTypes = List.empty
   )
 
   override def beforeAll = {
@@ -572,6 +582,20 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("Historie", "Matte")))
     search2.totalCount should be(1)
     search2.results.map(_.id) should be(Seq(1))
+  }
+
+  test("That filtering for resource-types works as expected") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagartikkel")))
+    search.totalCount should be(2)
+    search.results.map(_.id) should be(Seq(2, 5))
+
+    val Success(search2) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff")))
+    search2.totalCount should be(6)
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
+
+    val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff", "Vurderingsressurs")))
+    search3.totalCount should be(1)
+    search3.results.map(_.id) should be(Seq(7))
   }
 
   def blockUntil(predicate: () => Boolean) = {
