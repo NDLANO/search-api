@@ -69,7 +69,7 @@ trait SearchConverterService {
               languagePriority.indexOf(title.language)
             }).lastOption
 
-            val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
+            val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags).toList
 
             Success(SearchableArticle(
               id = articleWithAgreement.id.get,
@@ -81,7 +81,7 @@ trait SearchConverterService {
               tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
               lastUpdated = articleWithAgreement.updated,
               license = articleWithAgreement.copyright.license,
-              authors = articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name),
+              authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
               articleType = articleWithAgreement.articleType,
               metaImageId = None, //TODO: get metaImageId // On second thought maybe just on way out and remove it from SearchableArticle?
               defaultTitle = defaultTitle.map(t => t.title),
@@ -312,7 +312,7 @@ trait SearchConverterService {
     /**
       * Returns a flattened list of resourceType with its subtypes
       * @param resourceType A resource with subtypes
-      * @return
+      * @return Flattened list of resourceType with subtypes.
       */
     private def getTypeAndSubtypes(resourceType: ResourceType): List[ResourceType] = {
       def getTypeAndSubtypesWithParent(resourceType: ResourceType, parents: List[ResourceType] = List.empty): List[ResourceType] = {
@@ -422,7 +422,7 @@ trait SearchConverterService {
       * @param bundle       All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[Seq[SearchableTaxonomyContext]] = {
+    private def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$id could not be found in taxonomy."

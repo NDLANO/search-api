@@ -8,7 +8,9 @@
 package no.ndla.searchapi.model.search
 
 import java.util.Date
+
 import no.ndla.searchapi.model.domain.SearchableTaxonomyContext
+import org.joda.time.DateTime
 
 case class SearchableArticle(
     id: Long,
@@ -18,27 +20,27 @@ case class SearchableArticle(
     introduction: SearchableLanguageValues,
     metaDescription: SearchableLanguageValues,
     tags: SearchableLanguageList,
-    lastUpdated: Date,
+    lastUpdated: DateTime,
     license: String,
-    authors: Seq[String],
+    authors: List[String],
     articleType: String,
     metaImageId: Option[Long],
     defaultTitle: Option[String],
-    supportedLanguages: Seq[String],
-    contexts: Seq[SearchableTaxonomyContext]
+    supportedLanguages: List[String],
+    contexts: List[SearchableTaxonomyContext]
 ) extends Searchable
 
 object LanguagelessSearchableArticle {
   case class LanguagelessSearchableArticle(
       id: Long,
-      lastUpdated: Date,
+      lastUpdated: DateTime,
       license: String,
-      authors: Seq[String],
+      authors: List[String],
       articleType: String,
       metaImageId: Option[Long],
       defaultTitle: Option[String],
-      supportedLanguages: Seq[String],
-      contexts: Seq[SearchableTaxonomyContext]
+      supportedLanguages: List[String],
+      contexts: List[SearchableTaxonomyContext]
   )
 
   def apply(

@@ -51,9 +51,11 @@ lazy val search_api = (project in file(".")).
       "com.sksamuel.elastic4s" %% "elastic4s-core" % Elastic4sVersion,
       "com.sksamuel.elastic4s" %% "elastic4s-http" % Elastic4sVersion,
       "com.sksamuel.elastic4s" %% "elastic4s-aws" % Elastic4sVersion,
+      "com.sksamuel.elastic4s" %% "elastic4s-embedded" % Elastic4sVersion,
       "org.eclipse.jetty" % "jetty-webapp" % Jettyversion % "container;compile",
       "org.eclipse.jetty" % "jetty-plus" % Jettyversion % "container",
       "org.json4s"   %% "json4s-native" % "3.5.0",
+      "org.json4s"   %% "json4s-ext" % "3.5.0",
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
       "org.mockito" % "mockito-all" % MockitoVersion % "test"

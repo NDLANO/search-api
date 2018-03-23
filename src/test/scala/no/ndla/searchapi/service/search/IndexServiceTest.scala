@@ -7,32 +7,25 @@
 
 package no.ndla.searchapi.service.search
 
+import com.sksamuel.elastic4s.embedded.LocalNode
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import no.ndla.searchapi.integration.Elastic4sClientFactory
 import no.ndla.searchapi.{TestEnvironment, UnitSuite}
-import no.ndla.tag.IntegrationTest
 
 import scala.util.Success
 
-@IntegrationTest
 class IndexServiceTest extends UnitSuite with TestEnvironment {
+  val esPort = 9203
 
-  val esPort = 9200
+  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, s"/tmp/${this.getClass.getName}") + ("http.port" -> s"$esPort")
+  val localNode = LocalNode(localNodeSettings)
 
-  override val e4sClient = Elastic4sClientFactory.getClient(searchServer = s"http://localhost:$esPort")
+  override val e4sClient = Elastic4sClientFactory.getClient(searchServer = s"elasticsearch://${localNode.ipAndPort}")
+
   val testIndexPrefix = "searchapi-index-service-test"
 
   val searchIndexService = new ArticleIndexService {
     override val searchIndex = s"${testIndexPrefix}_article"
-  }
-
-  private def deleteIndexesThatStartWith(startsWith: String): Unit = {
-    val Success(result) = e4sClient.execute(getAliases())
-    val toDelete = result.result.mappings.filter(_._1.name.startsWith(startsWith)).map(_._1.name)
-
-    if(toDelete.nonEmpty) {
-      e4sClient.execute(deleteIndex(toDelete))
-    }
   }
 
   test("That cleanupIndexes does not delete others indexes") {
@@ -61,7 +54,7 @@ class IndexServiceTest extends UnitSuite with TestEnvironment {
     searchIndexService.cleanupIndexes(testIndexPrefix)
   }
 
-  override def afterAll =  {
-    deleteIndexesThatStartWith(testIndexPrefix)
+  override def afterAll: Unit =  {
+    localNode.stop(true)
   }
 }

@@ -7,10 +7,11 @@
 
 package no.ndla.searchapi.model.search
 
-import java.util.Date
+import java.util.{Date, TimeZone}
 
 import no.ndla.searchapi.model.domain.{LanguagelessSearchableTaxonomyContext, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, SearchableContextFilters}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.{CustomSerializer, Extraction}
 import org.json4s._
@@ -19,8 +20,13 @@ class SearchableArticleSerializer
     extends CustomSerializer[SearchableArticle](_ =>
       ({
         case obj: JObject =>
-          implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer
-          SearchableArticle(
+          implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+
+          val time = (obj \ "lastUpdated").extract[DateTime]
+          val tz = TimeZone.getDefault
+          val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
+
+          val x = SearchableArticle(
             id = (obj \ "id").extract[Long],
             title = SearchableLanguageValues("title", obj),
             content = SearchableLanguageValues("content", obj),
@@ -28,19 +34,20 @@ class SearchableArticleSerializer
             introduction = SearchableLanguageValues("introduction", obj),
             metaDescription = SearchableLanguageValues("metaDescription", obj),
             tags = SearchableLanguageList("tags", obj),
-            lastUpdated = (obj \ "lastUpdated").extract[Date],
+            lastUpdated = lastUpdated,
             license = (obj \ "license").extract[String],
-            authors = (obj \ "authors").extract[Seq[String]],
+            authors = (obj \ "authors").extract[List[String]],
             articleType = (obj \ "articleType").extract[String],
             defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
             metaImageId = (obj \ "metaImageId").extract[Option[Long]],
             supportedLanguages =
-              (obj \ "supportedLanguages").extract[Seq[String]],
-            contexts = (obj \ "contexts").extract[Seq[SearchableTaxonomyContext]]
+              (obj \ "supportedLanguages").extract[List[String]],
+            contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
+          x
       }, {
         case article: SearchableArticle =>
-          implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer
+          implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
           val languageFields =
             List(
               article.title.toJsonField("title"),

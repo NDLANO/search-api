@@ -79,17 +79,6 @@ trait SearchService {
       }
     }
 
-    def countDocuments: Long = {
-      val response = e4sClient.execute{
-        catCount(searchIndex)
-      }
-
-      response match {
-        case Success(resp) => resp.result.count
-        case Failure(_) => 0
-      }
-    }
-
     def getStartAtAndNumResults(page: Int, pageSize: Int): (Int, Int) = {
       val numResults = max(pageSize.min(MaxPageSize), 0)
       val startAt = (page - 1).max(0) * numResults

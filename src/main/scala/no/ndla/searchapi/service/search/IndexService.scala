@@ -249,6 +249,17 @@ trait IndexService {
 
     }
 
+    def countDocuments: Long = {
+      val response = e4sClient.execute{
+        catCount(searchIndex)
+      }
+
+      response match {
+        case Success(resp) => resp.result.count
+        case Failure(_) => 0
+      }
+    }
+
     def indexWithNameExists(indexName: String): Try[Boolean] = {
       val response = e4sClient.execute {
         indexExists(indexName)
