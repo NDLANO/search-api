@@ -112,6 +112,36 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchable7.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("SuperNested ResourceType", "Medelevvurdering", "Vurderingsressurs", "Veiledning", "Fagstoff").sorted))
   }
 
+  test("That breadcrumbs are derived correctly") {
+    val Success(searchable1) = searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable6) = searchConverterService.asSearchableArticle(TestData.article6, Some(TestData.taxonomyTestBundle))
+
+    searchable1.contexts.size should be(2)
+    searchable1.contexts.head.breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
+      "Matte",
+      "Baldur har mareritt"
+    )))
+
+    searchable1.contexts(1).breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
+      "Historie",
+      "Katter"
+    )))
+
+    searchable4.contexts.size should be(1)
+    searchable4.contexts.head.breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
+      "Matte",
+      "Baldur har mareritt",
+      "En Baldur har mareritt om Ragnarok"
+    )))
+
+    searchable6.contexts.size should be(1)
+    searchable6.contexts.head.breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
+      "Historie",
+      "Katter"
+    )))
+  }
+
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
     searchableArticle.title.languageValues.size should equal(titles.size)
     languageValueWithLang(searchableArticle.title, "nb") should equal(titleForLang(titles, "nb"))
