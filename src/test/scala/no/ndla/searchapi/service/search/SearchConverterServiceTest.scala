@@ -14,7 +14,6 @@ import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
-
 import scala.util.Success
 
 class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
@@ -101,6 +100,16 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     when(converterService.withAgreementCopyright(any[Article])).thenReturn(article.copy(copyright = article.copyright.copy(license="gnu")))
     val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     searchableArticle.license should equal("gnu")
+  }
+
+  test("That resource types are derived correctly") {
+    val Success(searchable2) = searchConverterService.asSearchableArticle(TestData.article2, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable7) = searchConverterService.asSearchableArticle(TestData.article7, Some(TestData.taxonomyTestBundle))
+
+    searchable2.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("Fagstoff", "Fagartikkel").sorted))
+    searchable4.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("Fagstoff")))
+    searchable7.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("SuperNested ResourceType", "Medelevvurdering", "Vurderingsressurs", "Veiledning", "Fagstoff").sorted))
   }
 
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
