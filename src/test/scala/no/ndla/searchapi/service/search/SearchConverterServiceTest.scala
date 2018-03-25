@@ -142,6 +142,22 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     )))
   }
 
+  test("That subjects are derived correctly from taxonomy") {
+    val Success(searchable1) = searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable5) = searchConverterService.asSearchableArticle(TestData.article5, Some(TestData.taxonomyTestBundle))
+
+    searchable1.contexts.size should be(2)
+    searchable1.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
+    searchable1.contexts(1).subject.languageValues.map(_.value) should be(Seq("Historie"))
+
+    searchable4.contexts.size should be(1)
+    searchable4.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
+
+    searchable5.contexts.size should be(1)
+    searchable5.contexts.head.subject.languageValues.map(_.value) should be(Seq("Historie"))
+  }
+
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
     searchableArticle.title.languageValues.size should equal(titles.size)
     languageValueWithLang(searchableArticle.title, "nb") should equal(titleForLang(titles, "nb"))
