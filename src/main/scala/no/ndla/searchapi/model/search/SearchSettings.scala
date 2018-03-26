@@ -20,5 +20,5 @@ case class SearchSettings(fallback: Boolean,
                           taxonomyFilters: List[String],
                           subjects: List[String],
                           resourceTypes: List[String],
-                          contextTypes: List[LearningResourceType.Value]
-                         )
+                          contextTypes: List[LearningResourceType.Value],
+                          supportedLanguages: List[String])

@@ -15,15 +15,13 @@ import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefinition}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.SearchDocuments
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.{MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
-import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.search.SearchSettings
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
 
 trait MultiSearchService {
@@ -37,17 +35,14 @@ trait MultiSearchService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
-
       val articleType = SearchApiProperties.SearchDocuments("articles")
       val learningpathType = SearchApiProperties.SearchDocuments("learningpaths")
       hit.`type` match {
         case `articleType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
         case `learningpathType` =>
-          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        //TODO: searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+          ??? //TODO: searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
-
     }
 
     def all(settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = executeSearch(settings, boolQuery())
@@ -169,6 +164,13 @@ trait MultiSearchService {
         )
       )
 
+      val supportedLanguageFilter = if(settings.supportedLanguages.isEmpty) None else Some(
+        boolQuery().should(
+          settings.supportedLanguages.map(l =>
+            termQuery("supportedLanguages", l))
+        )
+      )
+
       List(
         licenseFilter,
         idFilter,
@@ -176,12 +178,13 @@ trait MultiSearchService {
         taxonomyFilterFilter,
         taxonomySubjectFilter,
         taxonomyResourceTypesFilter,
-        taxonomyContextFilter
+        taxonomyContextFilter,
+        supportedLanguageFilter
       ).flatten
     }
 
     override def scheduleIndexDocuments(): Unit = {
-      implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
+      implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
       val f = Future {
         articleIndexService.indexDocuments
       }

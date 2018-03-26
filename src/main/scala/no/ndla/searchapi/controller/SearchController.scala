@@ -66,6 +66,7 @@ trait SearchController {
     private val subjects = Param("subjects", "A comma separated list of subjects the learning resources should be filtered by.")
     private val resourceTypes = Param("resource-types", "A comma separated list of resource-types the learning resources should be filtered by.")
     private val contextTypes = Param("context-types", "A comma separated list of context-types the learning resources should be filtered by.")
+    private val supportedLanguages = Param("language-filter", "A comma separated list of ISO 639-1 language codes that the learning resource can be available in.")
 
     private def asQueryParam[T: Manifest : NotNothing](param: Param) = queryParam[T](param.paramName).description(param.description)
     private def asHeaderParam[T: Manifest : NotNothing](param: Param) = headerParam[T](param.paramName).description(param.description)
@@ -207,6 +208,7 @@ trait SearchController {
       val subjects = paramAsListOfString(this.subjects.paramName)
       val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val supportedLanguagesFilter = paramAsListOfString(this.supportedLanguages.paramName)
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -219,7 +221,8 @@ trait SearchController {
         taxonomyFilters = taxonomyFilters,
         subjects = subjects,
         resourceTypes = resourceTypes,
-        contextTypes = contextTypes.flatMap(LearningResourceType.valueOf)
+        contextTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        supportedLanguages = supportedLanguagesFilter
       )
       multiSearch(query, settings)
     }

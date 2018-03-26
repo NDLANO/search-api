@@ -127,7 +127,9 @@ object TestData {
     id = Option(1),
     title = List(ArticleTitle("Batmen er på vift med en bil", "nb")),
     introduction = List(ArticleIntroduction("Batmen", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("Bilde av en <strong>bil</strong> flaggermusmann som vifter med vingene <em>bil</em>.", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("fugl"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(3)
@@ -137,7 +139,9 @@ object TestData {
     id = Option(2),
     title = List(ArticleTitle("Pingvinen er ute og går", "nb")),
     introduction = List(ArticleIntroduction("Pingvinen", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av en</p><p> en <em>pingvin</em> som vagger borover en gate</p>", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("fugl"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(2))
@@ -145,7 +149,9 @@ object TestData {
     id = Option(3),
     title = List(ArticleTitle("Donald Duck kjører bil", "nb")),
     introduction = List(ArticleIntroduction("Donald Duck", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av en en and</p><p> som <strong>kjører</strong> en rød bil.</p>", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("and"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(1)
@@ -154,7 +160,9 @@ object TestData {
     id = Option(4),
     title = List(ArticleTitle("Superman er ute og flyr", "nb")),
     introduction = List(ArticleIntroduction("Superman", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av en flygende mann</p><p> som <strong>har</strong> superkrefter.</p>", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("supermann"), "nb")),
     created = today.minusDays(4),
     updated = today
@@ -163,7 +171,9 @@ object TestData {
     id = Option(5),
     title = List(ArticleTitle("Hulken løfter biler", "nb")),
     introduction = List(ArticleIntroduction("Hulken", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av hulk</p><p> som <strong>løfter</strong> en rød bil.</p>", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("hulk"), "nb")),
     created = today.minusDays(40),
     updated = today.minusDays(35)
@@ -172,7 +182,9 @@ object TestData {
     id = Option(6),
     title = List(ArticleTitle("Loke og Tor prøver å fange midgaardsormen", "nb")),
     introduction = List(ArticleIntroduction("Loke og Tor", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av <em>Loke</em> og <em>Tor</em></p><p> som <strong>fisker</strong> fra Naglfar.</p>", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("Loke", "Tor", "Naglfar"), "nb")),
     created = today.minusDays(30),
     updated = today.minusDays(25)
@@ -181,7 +193,9 @@ object TestData {
     id = Option(7),
     title = List(ArticleTitle("Yggdrasil livets tre", "nb")),
     introduction = List(ArticleIntroduction("Yggdrasil", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av <em>Yggdrasil</em> livets tre med alle dyrene som bor i det.", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("yggdrasil"), "nb")),
     created = today.minusDays(20),
     updated = today.minusDays(15)
@@ -190,7 +204,9 @@ object TestData {
     id = Option(8),
     title = List(ArticleTitle("Baldur har mareritt", "nb")),
     introduction = List(ArticleIntroduction("Baldur", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av <em>Baldurs</em> mareritt om Ragnarok.", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("baldur"), "nb")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
@@ -200,7 +216,9 @@ object TestData {
     id = Option(9),
     title = List(ArticleTitle("En Baldur har mareritt om Ragnarok", "nb")),
     introduction = List(ArticleIntroduction("Baldur", "nb")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Bilde av <em>Baldurs</em> som har  mareritt.", "nb")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("baldur"), "nb")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
@@ -210,7 +228,9 @@ object TestData {
     id = Option(10),
     title = List(ArticleTitle("This article is in english", "en")),
     introduction = List(ArticleIntroduction("Engulsk", "en")),
+    metaDescription = List.empty,
     content = List(ArticleContent("<p>Something something <em>english</em> What", "en")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("englando"), "en")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
@@ -222,6 +242,7 @@ object TestData {
     introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
     metaDescription = List(ArticleMetaDescription("hurr durr ima sheep", "en")),
     content = List(ArticleContent("<p>Noe om en katt</p>", "nb"), ArticleContent("<p>Something about a cat</p>", "en")),
+    visualElement = List.empty,
     tags = List(ArticleTag(List("ikkehund"), "nb"), ArticleTag(List("notdog"), "en")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
@@ -354,6 +375,7 @@ object TestData {
     taxonomyFilters = List.empty,
     subjects = List.empty,
     resourceTypes = List.empty,
-    contextTypes = List.empty
+    contextTypes = List.empty,
+    supportedLanguages = List.empty
   )
 }
