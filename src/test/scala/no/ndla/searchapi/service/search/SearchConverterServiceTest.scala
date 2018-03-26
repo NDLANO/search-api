@@ -154,8 +154,26 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchable4.contexts.size should be(1)
     searchable4.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
 
-    searchable5.contexts.size should be(1)
-    searchable5.contexts.head.subject.languageValues.map(_.value) should be(Seq("Historie"))
+    searchable5.contexts.size should be(2)
+    searchable5.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
+    searchable5.contexts(1).subject.languageValues.map(_.value) should be(Seq("Historie"))
+  }
+
+  test("That taxonomy filters are derived correctly") {
+    val Success(searchable1) = searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable5) = searchConverterService.asSearchableArticle(TestData.article5, Some(TestData.taxonomyTestBundle))
+
+    searchable1.contexts.size should be(2)
+    searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1"), Seq("VG2"), Seq("VG3")))
+    searchable1.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
+
+    searchable4.contexts.size should be(1)
+    searchable4.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG3")))
+
+    searchable5.contexts.size should be(2)
+    searchable5.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG2")))
+    searchable5.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1"), Seq("VG2")))
   }
 
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
