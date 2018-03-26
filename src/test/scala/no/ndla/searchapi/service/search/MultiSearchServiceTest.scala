@@ -11,7 +11,7 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.embedded.LocalNode
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
-import no.ndla.searchapi.integration.Elastic4sClientFactory
+import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
 import no.ndla.searchapi.model.api.ApiTaxonomyContext
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.{Language, SearchableTaxonomyContext, Sort}
@@ -29,7 +29,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, s"/tmp/${this.getClass.getName}") + ("http.port" -> s"$esPort")
   val localNode = LocalNode(localNodeSettings)
 
-  override val e4sClient = Elastic4sClientFactory.getClient(searchServer = s"elasticsearch://${localNode.ipAndPort}")
+  override val e4sClient = NdlaE4sClient(localNode.http(true))
 
   override val multiSearchService = new MultiSearchService
   override val articleIndexService = new ArticleIndexService
@@ -45,15 +45,6 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     )
 
     blockUntil(() => articleIndexService.countDocuments == articlesToIndex.size)
-  }
-
-  private def deleteIndexesThatStartWith(startsWith: String): Unit = {
-    val Success(result) = e4sClient.execute(getAliases())
-    val toDelete = result.result.mappings.filter(_._1.name.startsWith(startsWith)).map(_._1.name)
-
-    if(toDelete.nonEmpty) {
-      e4sClient.execute(deleteIndex(toDelete))
-    }
   }
 
   override def afterAll(): Unit = {

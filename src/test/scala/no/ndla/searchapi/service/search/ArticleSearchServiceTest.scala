@@ -9,7 +9,7 @@
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.embedded.LocalNode
-import no.ndla.searchapi.integration.Elastic4sClientFactory
+import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
@@ -29,7 +29,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
   val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, s"/tmp/${this.getClass.getName}") + ("http.port" -> s"$esPort")
   val localNode = LocalNode(localNodeSettings)
 
-  override val e4sClient = Elastic4sClientFactory.getClient(searchServer = s"elasticsearch://${localNode.ipAndPort}")
+  override val e4sClient = NdlaE4sClient(localNode.http(true))
 
   override val articleSearchService = new ArticleSearchService
   override val articleIndexService = new ArticleIndexService
