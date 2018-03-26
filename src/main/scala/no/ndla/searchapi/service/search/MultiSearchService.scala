@@ -20,6 +20,7 @@ import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.{MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
 import no.ndla.searchapi.model.domain.Language
+import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.search.SearchSettings
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
@@ -125,52 +126,10 @@ trait MultiSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
 
-      // TODO: Generalize getting filters somehow. (Or refactor each filter to a separate function)
-      val taxonomySubjectFilter = if(settings.subjects.isEmpty) None else Some(
-        boolQuery().must(
-          settings.subjects.map(subjectName =>
-            nestedQuery("contexts").query(
-              boolQuery().should(
-                ISO639.languagePriority.map(l => termQuery(s"contexts.subject.$l.raw", subjectName))
-              )
-            )
-          )
-        )
-      )
-
-      val taxonomyFilterFilter = if (settings.taxonomyFilters.isEmpty) None else Some(
-        boolQuery().must(
-          settings.taxonomyFilters.map(filterName =>
-            nestedQuery("contexts.filters").query(
-              boolQuery().should(
-                ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
-              )
-            )
-          )
-        )
-      )
-
-      val taxonomyResourceTypesFilter = if (settings.resourceTypes.isEmpty) None else Some(
-        boolQuery().must(
-          settings.resourceTypes.map(resourceTypeName =>
-            nestedQuery("contexts").query(
-              boolQuery().should(
-                ISO639.languagePriority.map(l => termQuery(s"contexts.resourceTypes.$l.raw", resourceTypeName))
-              )
-            )
-          )
-        )
-      )
-
-      val taxonomyContextFilter = if (settings.contextTypes.isEmpty) None else Some(
-        boolQuery().should(
-          settings.contextTypes.map(contextType =>
-            nestedQuery("contexts").query(
-              termQuery("contexts.contextType", contextType.toString)
-            )
-          )
-        )
-      )
+      val taxonomyContextFilter = contextTypeFilter(settings.contextTypes)
+      val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
+      val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
+      val taxonomySubjectFilter = subjectFilter(settings.subjects)
 
       val supportedLanguageFilter = if(settings.supportedLanguages.isEmpty) None else Some(
         boolQuery().should(
@@ -189,6 +148,59 @@ trait MultiSearchService {
         taxonomyContextFilter,
         supportedLanguageFilter
       ).flatten
+    }
+
+    private def subjectFilter(subjects: List[String]) = {
+      if(subjects.isEmpty) None else Some(
+        boolQuery().must(
+          subjects.map(subjectName =>
+            nestedQuery("contexts").query(
+              boolQuery().should(
+                ISO639.languagePriority.map(l => termQuery(s"contexts.subject.$l.raw", subjectName))
+              )
+            )
+          )
+        )
+      )
+    }
+
+    private def levelFilter(taxonomyFilters: List[String]) = {
+      if (taxonomyFilters.isEmpty) None else Some(
+        boolQuery().must(
+          taxonomyFilters.map(filterName =>
+            nestedQuery("contexts.filters").query(
+              boolQuery().should(
+                ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
+              )
+            )
+          )
+        )
+      )
+    }
+
+    private def resourceTypeFilter(resourceTypes: List[String]) = {
+      if (resourceTypes.isEmpty) None else Some(
+        boolQuery().must(
+          resourceTypes.map(resourceTypeName =>
+            nestedQuery("contexts").query(
+              boolQuery().should(
+                ISO639.languagePriority.map(l => termQuery(s"contexts.resourceTypes.$l.raw", resourceTypeName))
+              )
+            )
+          )
+        )
+      )
+    }
+
+    private def contextTypeFilter(contextTypes: List[LearningResourceType.Value]) = {
+      if (contextTypes.isEmpty) None else Some(
+        boolQuery().should(
+          contextTypes.map(ct =>
+            nestedQuery("contexts").query(
+              termQuery("contexts.contextType", ct.toString)
+            ))
+        )
+      )
     }
 
     override def scheduleIndexDocuments(): Unit = {
