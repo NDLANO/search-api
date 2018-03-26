@@ -14,6 +14,7 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefinition}
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api
@@ -124,11 +125,14 @@ trait MultiSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
 
+      // TODO: Generalize getting filters somehow. (Or refactor each filter to a separate function)
       val taxonomySubjectFilter = if(settings.subjects.isEmpty) None else Some(
         boolQuery().must(
           settings.subjects.map(subjectName =>
             nestedQuery("contexts").query(
-              simpleStringQuery(subjectName).field(s"contexts.subject.*.raw")
+              boolQuery().should(
+                ISO639.languagePriority.map(l => termQuery(s"contexts.subject.$l.raw", subjectName))
+              )
             )
           )
         )
@@ -138,7 +142,9 @@ trait MultiSearchService {
         boolQuery().must(
           settings.taxonomyFilters.map(filterName =>
             nestedQuery("contexts.filters").query(
-              simpleStringQuery(filterName).field(s"contexts.filters.name.$searchLanguage.raw")
+              boolQuery().should(
+                ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
+              )
             )
           )
         )
@@ -148,7 +154,9 @@ trait MultiSearchService {
         boolQuery().must(
           settings.resourceTypes.map(resourceTypeName =>
             nestedQuery("contexts").query(
-              simpleStringQuery(resourceTypeName).field(s"contexts.resourceTypes.$searchLanguage")
+              boolQuery().should(
+                ISO639.languagePriority.map(l => termQuery(s"contexts.resourceTypes.$l.raw", resourceTypeName))
+              )
             )
           )
         )

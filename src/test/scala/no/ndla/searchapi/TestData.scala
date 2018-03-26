@@ -263,7 +263,8 @@ object TestData {
     Filter("urn:filter:3", "VG3", "urn:subject:1"),
     Filter("urn:filter:4", "VG1", "urn:subject:2"),
     Filter("urn:filter:5", "VG2", "urn:subject:2"),
-    Filter("urn:filter:6", "YF-VG1", "urn:subject:2")
+    Filter("urn:filter:6", "YF-VG1", "urn:subject:2"),
+    Filter("urn:filter:7", "Tysk 2", "urn:subject:1")
   )
   val resourceFilterConnections = List(
     ResourceFilterConnection("urn:resource:1", "urn:filter:1", "urn:resource-filter:1", "urn:relevance:core"),
@@ -271,18 +272,19 @@ object TestData {
     ResourceFilterConnection("urn:resource:1", "urn:filter:3", "urn:resource-filter:3", "urn:relevance:supplementary"),
 
     ResourceFilterConnection("urn:resource:3", "urn:filter:2", "urn:resource-filter:4", "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:3", "urn:filter:7", "urn:resource-filter:5", "urn:relevance:supplementary"),
 
-    ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:5", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:6", "urn:relevance:core"),
 
-    ResourceFilterConnection("urn:resource:5", "urn:filter:2", "urn:resource-filter:6", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:7", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:8", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:2", "urn:resource-filter:7", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:8", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:9", "urn:relevance:core"),
 
-    ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:9", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:10", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:10", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:11", "urn:relevance:core"),
 
-    ResourceFilterConnection("urn:resource:7", "urn:filter:4", "urn:resource-filter:11", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:12", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:7", "urn:filter:4", "urn:resource-filter:12", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:13", "urn:relevance:core"),
   )
   val relevances = List(
     Relevance("urn:relevance:core", "Kjernestoff"),

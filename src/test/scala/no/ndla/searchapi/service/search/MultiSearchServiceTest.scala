@@ -303,6 +303,12 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(7))
   }
 
+  test("That filtering for levels/filters works with spaces as well") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = "nb", taxonomyFilters = List("Tysk 2")))
+    search.totalCount should be(1)
+    search.results.map(_.id) should be(Seq(3))
+  }
+
   test("That filtering for subjects works as expected") {
     val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("Historie")))
     search.totalCount should be(5)
