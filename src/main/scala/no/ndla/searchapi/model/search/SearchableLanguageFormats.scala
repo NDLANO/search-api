@@ -9,6 +9,7 @@ package no.ndla.searchapi.model.search
 
 import java.util.{Date, TimeZone}
 
+import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{LanguagelessSearchableTaxonomyContext, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, SearchableContextFilters}
 import org.joda.time.{DateTime, DateTimeZone}

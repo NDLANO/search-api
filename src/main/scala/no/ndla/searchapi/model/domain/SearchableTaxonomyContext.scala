@@ -7,10 +7,7 @@
 
 package no.ndla.searchapi.model.domain
 
-import no.ndla.searchapi.model.search.{
-  SearchableLanguageList,
-  SearchableLanguageValues
-}
+import no.ndla.searchapi.model.search.{SearchableLanguageList, SearchableLanguageValues}
 import no.ndla.searchapi.model.taxonomy.ContextFilter
 
 case class SearchableTaxonomyContext(id: String,

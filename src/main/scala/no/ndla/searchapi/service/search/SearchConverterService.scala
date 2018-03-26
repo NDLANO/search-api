@@ -208,7 +208,7 @@ trait SearchConverterService {
         path = context.path,
         breadcrumbs = breadcrumbs,
         filters = filters,
-        learningResourceType = context.contextType,
+        learningResourceType = context.contextType.toString,
         language = language
       )
 
@@ -232,15 +232,15 @@ trait SearchConverterService {
       }
     }
 
-    private def getContextType(resourceId: String, contentUri: Option[String]): Try[String] = {
+    private def getContextType(resourceId: String, contentUri: Option[String]): Try[LearningResourceType.Value] = {
       contentUri match {
         case Some(uri) if uri.contains("article") =>
           if (resourceId.contains(":topic:")) {
-            Success("topic-article")
+            Success(LearningResourceType.TopicArticle)
           } else {
-            Success("article")
+            Success(LearningResourceType.Standard)
           }
-        case Some(uri) if uri.contains("learningpath") => Success("learningpath")
+        case Some(uri) if uri.contains("learningpath") => Success(LearningResourceType.LearningPath)
         case _ =>
           val msg = s"Could not find type for resource $resourceId"
           logger.error(msg)
@@ -366,7 +366,7 @@ trait SearchConverterService {
     private def getSearchableTaxonomyContext(taxonomyId: String,
                                              pathIds: List[String],
                                              subjectName: String,
-                                             contextType: String,
+                                             contextType: LearningResourceType.Value,
                                              contextFilters: List[ContextFilter],
                                              resourceTypes: SearchableLanguageList,
                                              bundle: Bundle) = {
@@ -381,7 +381,7 @@ trait SearchConverterService {
         id = taxonomyId,
         subject = subjectLanguageValues,
         path = path,
-        contextType = contextType,
+        contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
         filters = contextFilters,
         resourceTypes = resourceTypes

@@ -90,6 +90,8 @@ trait MultiSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
+        val json = e4sClient.httpClient.show(searchToExec) // TODO: remove
+
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
             Success(api.SearchResult[MultiSearchSummary](
@@ -120,10 +122,6 @@ trait MultiSearchService {
           }
       }
 
-      // TODO: Consider changing typesFilter to handle learningpaths, articles and topic-articles.
-      val typesFilter = if (settings.types.isEmpty) None else Some(
-        constantScoreQuery(termsQuery("articleType", settings.types))
-      )
       val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
 
       val licenseFilter = settings.license match {
@@ -157,7 +155,16 @@ trait MultiSearchService {
             nestedQuery("contexts").query(
               simpleStringQuery(resourceTypeName).field(s"contexts.resourceTypes.$searchLanguage")
             )
+          )
+        )
+      )
 
+      val taxonomyContextFilter = if (settings.contextTypes.isEmpty) None else Some(
+        boolQuery().should(
+          settings.contextTypes.map(contextType =>
+            nestedQuery("contexts").query(
+              termQuery("contexts.contextType", contextType.toString)
+            )
           )
         )
       )
@@ -166,10 +173,10 @@ trait MultiSearchService {
         licenseFilter,
         idFilter,
         languageFilter,
-        typesFilter,
         taxonomyFilterFilter,
         taxonomySubjectFilter,
-        taxonomyResourceTypesFilter
+        taxonomyResourceTypesFilter,
+        taxonomyContextFilter
       ).flatten
     }
 

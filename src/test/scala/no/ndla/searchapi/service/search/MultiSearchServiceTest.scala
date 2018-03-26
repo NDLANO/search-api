@@ -9,18 +9,12 @@
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.embedded.LocalNode
-import com.sksamuel.elastic4s.http.ElasticDsl._
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
-import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
-import no.ndla.searchapi.model.api.ApiTaxonomyContext
-import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.{Language, SearchableTaxonomyContext, Sort}
-import no.ndla.searchapi.model.search.SearchSettings
-import no.ndla.searchapi.model.taxonomy._
-import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
-import org.mockito.Matchers._
-import org.mockito.Mockito._
+import no.ndla.searchapi.integration.NdlaE4sClient
+import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 
 import scala.util.Success
 
@@ -37,10 +31,10 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   override val searchConverterService = new SearchConverterService
 
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
 
-    articlesToIndex.map(article =>
+    val indexed = articlesToIndex.map(article =>
       articleIndexService.indexDocument(article, Some(taxonomyTestBundle))
     )
 
@@ -65,14 +59,6 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     val page = 123
     val expectedStartAt = (page - 1) * DefaultPageSize
     multiSearchService.getStartAtAndNumResults(page, DefaultPageSize) should equal((expectedStartAt, DefaultPageSize))
-  }
-
-  test("all should return only articles of a given type if a type filter is specified") {
-    val Success(results) = multiSearchService.all(searchSettings.copy(types = List(LearningResourceType.TopicArticle.toString)))
-    results.totalCount should be(3)
-
-    val Success(results2) = multiSearchService.all(searchSettings.copy(types = LearningResourceType.all))
-    results2.totalCount should be(9)
   }
 
   test("That all returns all documents ordered by id ascending") {
@@ -164,14 +150,6 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     hits2.size should be(2)
     hits2.head.id should be(3)
     hits2.last.id should be(9)
-  }
-
-  test("matchingQuery should filter results based on an article type filter") {
-    val Success(results) = multiSearchService.matchingQuery("bil", searchSettings.copy(sort = Sort.ByRelevanceDesc, types = List(LearningResourceType.TopicArticle.toString)))
-    results.totalCount should be(0)
-
-    val Success(results2) = multiSearchService.matchingQuery("bil", searchSettings.copy(sort = Sort.ByRelevanceDesc, types = List(LearningResourceType.Standard.toString)))
-    results2.totalCount should be(3)
   }
 
   test("That search matches title and html-content ordered by relevance descending") {
@@ -349,7 +327,25 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(7))
   }
 
-  def blockUntil(predicate: () => Boolean) = {
+  test("That filtering on context-type works") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.Standard), language = "all"))
+    val Success(search2) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.TopicArticle), language = "all"))
+
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(1,2,3,5,6,7))
+
+    search2.totalCount should be(4)
+    search2.results.map(_.id) should be(Seq(8,9,10,11))
+  }
+
+  test("That filtering on multiple context-types returns every type") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.Standard, LearningResourceType.TopicArticle), language = "all"))
+
+    search.totalCount should be(10)
+    search.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,10,11))
+  }
+
+  def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false
 

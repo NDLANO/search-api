@@ -350,10 +350,10 @@ object TestData {
     page = 1,
     pageSize = 10,
     sort = Sort.ByIdAsc,
-    types = List.empty,
     withIdIn = List.empty,
     taxonomyFilters = List.empty,
     subjects = List.empty,
-    resourceTypes = List.empty
+    resourceTypes = List.empty,
+    contextTypes = List.empty
   )
 }
