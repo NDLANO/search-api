@@ -5,6 +5,6 @@
  * See LICENSE
  */
 
-package no.ndla.searchapi.model.domain.article
+package no.ndla.searchapi.model.domain
 
 case class Author(`type`: String, name: String)

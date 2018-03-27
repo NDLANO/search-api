@@ -46,3 +46,4 @@ class ValidationException(message: String = "Validation Error", val errors: Seq[
 class ApiSearchException(val apiName: String, message: String) extends RuntimeException(message)
 case class ResultWindowTooLargeException(message: String = Error.WINDOW_TOO_LARGE_DESCRIPTION) extends RuntimeException(message)
 case class ElasticIndexingException(message: String) extends RuntimeException(message)
+case class AccessDeniedException(message: String) extends RuntimeException(message)

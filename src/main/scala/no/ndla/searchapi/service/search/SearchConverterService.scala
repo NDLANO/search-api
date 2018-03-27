@@ -17,11 +17,10 @@ import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.model.api
+import no.ndla.searchapi.model.{api, domain, taxonomy}
 import no.ndla.searchapi.model.domain.{Language, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, _}
-import no.ndla.searchapi.model.taxonomy
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.{DefaultFormats, Formats, ShortTypeHints, TypeHints}
 import org.json4s.native.Serialization.read
@@ -139,9 +138,9 @@ trait SearchConverterService {
 
       val searchableArticle = read[SearchableArticle](hitString)
 
-      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.language))
+      val titles = searchableArticle.title.languageValues.map(lv => domain.Title(lv.value, lv.language))
       val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.language))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.language))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => domain.MetaDescription(lv.value, lv.language))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.language))
 
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
@@ -171,9 +170,9 @@ trait SearchConverterService {
       val contexts = searchableArticle.contexts.map(c => searchableContextToApiContext(c, language))
 
 
-      val titles = searchableArticle.title.languageValues.map(lv => Title(lv.value, lv.language))
+      val titles = searchableArticle.title.languageValues.map(lv => domain.Title(lv.value, lv.language))
       val introductions = searchableArticle.introduction.languageValues.map(lv => article.ArticleIntroduction(lv.value, lv.language))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => MetaDescription(lv.value, lv.language))
+      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => domain.MetaDescription(lv.value, lv.language))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => article.VisualElement(lv.value, lv.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))

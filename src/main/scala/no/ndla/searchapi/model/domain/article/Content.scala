@@ -7,6 +7,7 @@
 
 package no.ndla.searchapi.model.domain.article
 
+import no.ndla.searchapi.model.domain.{MetaDescription, Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer
 
@@ -16,14 +17,14 @@ sealed trait Content {
 
 case class Article(id: Option[Long],
                    revision: Option[Int],
-                   title: Seq[ArticleTitle],
+                   title: Seq[Title],
                    content: Seq[ArticleContent],
                    copyright: Copyright,
-                   tags: Seq[ArticleTag],
+                   tags: Seq[Tag],
                    requiredLibraries: Seq[RequiredLibrary],
                    visualElement: Seq[VisualElement],
                    introduction: Seq[ArticleIntroduction],
-                   metaDescription: Seq[ArticleMetaDescription],
+                   metaDescription: Seq[MetaDescription],
                    metaImageId: Option[String],
                    created: DateTime,
                    updated: DateTime,

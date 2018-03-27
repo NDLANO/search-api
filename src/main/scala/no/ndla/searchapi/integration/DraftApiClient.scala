@@ -11,8 +11,7 @@ import java.util.Date
 
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.model.domain.{ArticleApiSearchResults, SearchParams}
-import no.ndla.searchapi.model.domain.article
+import no.ndla.searchapi.model.domain.{ArticleApiSearchResults, Author, SearchParams, article}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -47,13 +46,13 @@ trait DraftApiClient {
 
 // TODO: Consider moving these to separate files
 case class ApiCopyright(license: License,
-                     origin: String,
-                     creators: Seq[article.Author],
-                     processors: Seq[article.Author],
-                     rightsholders: Seq[article.Author],
-                     agreementId: Option[Long],
-                     validFrom: Option[Date],
-                     validTo: Option[Date]) {
+                        origin: String,
+                        creators: Seq[Author],
+                        processors: Seq[Author],
+                        rightsholders: Seq[Author],
+                        agreementId: Option[Long],
+                        validFrom: Option[Date],
+                        validTo: Option[Date]) {
 
   def toDomainCopyright: article.Copyright = {
     article.Copyright(
