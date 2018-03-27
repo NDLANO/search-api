@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.domain.article
 
-import no.ndla.searchapi.model.domain.{MetaDescription, Tag, Title}
+import no.ndla.searchapi.model.domain.{Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer
 

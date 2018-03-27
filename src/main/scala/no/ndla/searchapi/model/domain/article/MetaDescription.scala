@@ -5,7 +5,9 @@
  * See LICENSE
  */
 
-package no.ndla.searchapi.model.domain
+package no.ndla.searchapi.model.domain.article
+
+import no.ndla.searchapi.model.domain.LanguageField
 
 case class MetaDescription(content: String, language: String) extends LanguageField[String] {
   override def value: String = content

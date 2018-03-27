@@ -54,6 +54,10 @@ object SearchableLanguageValues {
     }
     SearchableLanguageValues(languageValues)
   }
+
+  def fieldsToSearchableLanguageValues[T <: LanguageField[String]](fields: Seq[T]): SearchableLanguageValues = { // TODO: rename
+    SearchableLanguageValues(fields.map(f => LanguageValue(f.language, f.value)))
+  }
 }
 
 object SearchableLanguageList {

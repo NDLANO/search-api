@@ -13,13 +13,14 @@ import no.ndla.searchapi.model.domain.{LearningpathApiSearchResults, SearchParam
 import scala.concurrent.Future
 import scala.util.Try
 
-trait LearningpathApiClient {
+trait LearningPathApiClient {
   this: NdlaClient with SearchApiClient =>
-  val learningpathApiClient: LearningpathApiClient
+  val learningPathApiClient: LearningPathApiClient
 
-  class LearningpathApiClient(val baseUrl: String) extends SearchApiClient {
+  class LearningPathApiClient(val baseUrl: String) extends SearchApiClient {
     override val searchPath = "learningpath-api/v2/learningpaths"
     override val name = "learningpaths"
+    override val dumpDomainPath =  "intern/dump/learningpath"
 
     def search(searchParams: SearchParams): Future[Try[LearningpathApiSearchResults]] =
       search[LearningpathApiSearchResults](searchParams)

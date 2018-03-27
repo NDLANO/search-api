@@ -30,13 +30,14 @@ trait TestEnvironment
     with TaxonomyApiClient
     with IndexService
     with LazyLogging
-    with LearningpathApiClient
+    with LearningPathApiClient
     with NdlaClient
     with SearchClients
     with SearchConverterService
     with SearchService
     with ApiSearchService
     with SearchController
+    with LearningPathIndexService
     with InternController
     with SearchApiClient {
   val searchController = mock[SearchController]
@@ -50,13 +51,13 @@ trait TestEnvironment
   val taxonomyApiClient = mock[TaxonomyApiClient]
 
   val draftApiClient = mock[DraftApiClient]
-  val learningpathApiClient = mock[LearningpathApiClient]
+  val learningPathApiClient = mock[LearningPathApiClient]
   val imageApiClient = mock[ImageApiClient]
   val audioApiClient = mock[AudioApiClient]
   val articleApiClient = mock[ArticleApiClient]
   val SearchClients = Map[String, SearchApiClient](
     "articles" -> draftApiClient,
-    "learningpaths" -> learningpathApiClient,
+    "learningpaths" -> learningPathApiClient,
     "images" -> imageApiClient,
     "audios" -> audioApiClient
   )
@@ -67,4 +68,5 @@ trait TestEnvironment
   val articleSearchService = mock[ArticleSearchService]
   val multiSearchService = mock[MultiSearchService]
   val articleIndexService = mock[ArticleIndexService]
+  val learningPathIndexService = mock[LearningPathIndexService]
 }

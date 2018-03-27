@@ -26,10 +26,10 @@ class ApiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   test("search should return a list of search results from other apis") {
     when(draftApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleArticleSearch)))
-    when(learningpathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
+    when(learningPathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
 
     val searchParams = SearchParams("nb", Sort.ByRelevanceDesc, 1, 10, Map.empty)
-    val res = searchService.search(searchParams, Set(draftApiClient, learningpathApiClient))
+    val res = searchService.search(searchParams, Set(draftApiClient, learningPathApiClient))
 
     res.length should be (2)
     res.exists(ent => ent.isInstanceOf[api.ArticleResults]) should be (true)
@@ -39,7 +39,7 @@ class ApiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   test("search should contain an error entry if a search failed") {
     when(draftApiClient.search(any[SearchParams])).thenReturn(Future(Failure(new HttpRequestException("Connection refused"))))
-    when(learningpathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
+    when(learningPathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
     when(imageApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleImageSearch)))
     when(audioApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleAudio)))
 

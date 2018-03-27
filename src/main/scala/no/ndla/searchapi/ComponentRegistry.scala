@@ -20,6 +20,7 @@ object ComponentRegistry
     extends ArticleApiClient
     with ArticleIndexService
     with ArticleSearchService
+    with LearningPathIndexService
     with MultiSearchService
     with AudioApiClient
     with ConverterService
@@ -30,7 +31,7 @@ object ComponentRegistry
     with ImageApiClient
     with IndexService
     with LazyLogging
-    with LearningpathApiClient
+    with LearningPathApiClient
     with NdlaClient
     with SearchClients
     with SearchConverterService
@@ -53,13 +54,13 @@ object ComponentRegistry
   lazy val taxonomyApiClient = new TaxonomyApiClient
 
   lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
-  lazy val learningpathApiClient = new LearningpathApiClient(LearningpathApiUrl)
+  lazy val learningPathApiClient = new LearningPathApiClient(LearningpathApiUrl)
   lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
   lazy val audioApiClient = new AudioApiClient(AudioApiUrl)
   lazy val articleApiClient = new ArticleApiClient(ArticleApiUrl)
   lazy val SearchClients = Map[String, SearchApiClient](
     draftApiClient.name -> draftApiClient,
-    learningpathApiClient.name -> learningpathApiClient,
+    learningPathApiClient.name -> learningPathApiClient,
     imageApiClient.name -> imageApiClient,
     audioApiClient.name -> audioApiClient
   )
@@ -70,4 +71,5 @@ object ComponentRegistry
   lazy val articleSearchService = new ArticleSearchService
   lazy val multiSearchService = new MultiSearchService
   lazy val articleIndexService = new ArticleIndexService
+  lazy val learningPathIndexService = new LearningPathIndexService
 }

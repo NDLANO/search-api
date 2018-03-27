@@ -12,7 +12,9 @@ import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.api.ApiSearchException
+import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, SearchParams}
+import org.json4s.ext.EnumNameSerializer
 import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,7 +31,7 @@ trait SearchApiClient {
     val name: String
     val baseUrl: String
     val searchPath: String
-    val dumpDomainPath: String = "intern/dump/article"
+    val dumpDomainPath: String = s"intern/dump/$name"
 
 
     def getChunks[T](implicit mf: Manifest[T]): Stream[Try[Seq[T]]] = {
@@ -70,7 +72,14 @@ trait SearchApiClient {
     def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
 
     def get[T](path: String, params: Map[String, Any])(implicit mf: Manifest[T]): Try[T] = {
-      implicit val formats: Formats = DefaultFormats ++ org.json4s.ext.JodaTimeSerializers.all
+      implicit val formats: Formats =
+      org.json4s.DefaultFormats +
+        new EnumNameSerializer(LearningPathStatus) +
+        new EnumNameSerializer(LearningPathVerificationStatus) +
+        new EnumNameSerializer(StepType) +
+        new EnumNameSerializer(StepStatus) +
+        new EnumNameSerializer(EmbedType) ++ org.json4s.ext.JodaTimeSerializers.all
+
       ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)))
     }
 

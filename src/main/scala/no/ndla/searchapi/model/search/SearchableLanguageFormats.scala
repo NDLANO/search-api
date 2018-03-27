@@ -12,6 +12,7 @@ import java.util.{Date, TimeZone}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{LanguagelessSearchableTaxonomyContext, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, SearchableContextFilters}
+import no.ndla.searchapi.model.api
 import org.joda.time.{DateTime, DateTimeZone}
 import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.{CustomSerializer, Extraction}
@@ -65,6 +66,60 @@ class SearchableArticleSerializer
           val partialJObject = Extraction.decompose(partialSearchableArticle)
           partialJObject.merge(JObject(languageFields: _*))
       }))
+
+class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearningPath](_ => ({
+  case obj: JObject =>
+    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+    // TODO: include learningstep serializer somehow
+    val time = (obj \ "lastUpdated").extract[DateTime]
+    val tz = TimeZone.getDefault
+    val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
+
+    SearchableLearningPath(
+      id = (obj \ "id").extract[Long],
+      title = SearchableLanguageValues("title", obj),
+      description = SearchableLanguageValues("description", obj),
+      coverPhotoUrl = (obj \ "coverPhotoUrl").extract[Option[String]],
+      duration = (obj \ "duration").extract[Option[Int]],
+      status = (obj \ "status").extract[String],
+      verificationStatus = (obj \ "verificationStatus").extract[String],
+      lastUpdated = lastUpdated,
+      defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
+      tags = SearchableLanguageList("tags", obj),
+      learningsteps = (obj \ "learningsteps").extract[List[SearchableLearningStep]],
+      license = (obj \ "license").extract[api.learningpath.Copyright],
+      isBasedOn = (obj \ "isBasedOn").extract[Option[Long]]
+    )
+},{
+  case lp: SearchableLearningPath =>
+    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+
+
+}))
+
+class SearchableLearningStepSerializer extends CustomSerializer[SearchableLearningStep](_ => ({
+  case obj: JObject =>
+    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+    SearchableLearningStep(
+      stepType = (obj \ "stepType").extract[String],
+      title = SearchableLanguageValues("title", obj),
+      description = SearchableLanguageValues("description", obj)
+    )
+},{
+  case ls: SearchableLearningStep =>
+    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+    val languageFields =
+      List(
+        ls.title.toJsonField("title"),
+        ls.description.toJsonField("description")
+      ).flatMap {
+        case l: Seq[JField] => l
+        case _ => Seq.empty
+      }
+
+    val allFields = languageFields :+ JField("stepType", JString(ls.stepType))
+    JObject(allFields: _*)
+}))
 
 class TaxonomyContextSerializer
     extends CustomSerializer[SearchableTaxonomyContext](_ =>

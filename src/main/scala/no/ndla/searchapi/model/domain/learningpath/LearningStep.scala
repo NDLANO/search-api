@@ -8,7 +8,8 @@
 package no.ndla.searchapi.model.domain.learningpath
 
 import no.ndla.searchapi.model.api.{ValidationException, ValidationMessage}
-import no.ndla.searchapi.model.domain.{MetaDescription, Title}
+import no.ndla.searchapi.model.domain.Title
+import no.ndla.searchapi.model.domain.article.MetaDescription
 
 case class LearningStep(id: Option[Long],
                         revision: Option[Int],
@@ -16,7 +17,7 @@ case class LearningStep(id: Option[Long],
                         learningPathId: Option[Long],
                         seqNo: Int,
                         title: Seq[Title],
-                        description: Seq[MetaDescription],
+                        description: Seq[Description],
                         embedUrl: Seq[EmbedUrl],
                         `type`: StepType.Value,
                         license: Option[String],

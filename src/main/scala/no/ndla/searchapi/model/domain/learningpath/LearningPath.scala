@@ -8,7 +8,8 @@
 package no.ndla.searchapi.model.domain.learningpath
 
 import no.ndla.searchapi.model.api.{AccessDeniedException, ValidationException, ValidationMessage}
-import no.ndla.searchapi.model.domain.{MetaDescription, Tag, Title}
+import no.ndla.searchapi.model.domain.article.MetaDescription
+import no.ndla.searchapi.model.domain.{Tag, Title}
 import org.joda.time.DateTime
 
 case class LearningPath(id: Option[Long],
@@ -16,7 +17,7 @@ case class LearningPath(id: Option[Long],
                         externalId: Option[String],
                         isBasedOn: Option[Long],
                         title: Seq[Title],
-                        description: Seq[MetaDescription],
+                        description: Seq[Description],
                         coverPhotoId: Option[String],
                         duration: Option[Int],
                         status: LearningPathStatus.Value,
@@ -25,7 +26,7 @@ case class LearningPath(id: Option[Long],
                         tags: Seq[Tag],
                         owner: String,
                         copyright: Copyright,
-                        learningsteps: Seq[LearningStep] = Nil)
+                        learningsteps: List[LearningStep] = Nil)
 
 object LearningPathStatus extends Enumeration {
   val PUBLISHED, PRIVATE, DELETED = Value

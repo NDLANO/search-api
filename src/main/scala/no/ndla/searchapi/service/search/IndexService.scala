@@ -54,6 +54,7 @@ trait IndexService {
     }
 
     def indexDocuments(implicit mf: Manifest[D]): Try[ReindexResult] = synchronized {
+      // TODO: Unauthorized when calling api-gateway.ndla-local/taxonomy/v1/filters when reindexing sometimes. (After trying twice? Token expiry?)
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
         val operations = for {
@@ -112,7 +113,8 @@ trait IndexService {
                 val numFailed = r.result.failures.size + failedToCreateRequests.size
                 logger.info(s"Indexed ${contents.size} documents. No of failed items: $numFailed")
                 Success(contents.size - numFailed )
-              case Failure(ex) => Failure(ex)
+              case Failure(ex) =>
+                Failure(ex)
             }
         } else {
           logger.error(s"All ${contents.size} requests failed to be created.")

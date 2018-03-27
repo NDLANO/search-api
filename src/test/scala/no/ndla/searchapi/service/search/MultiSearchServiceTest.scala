@@ -19,7 +19,7 @@ import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 import scala.util.Success
 
 class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
-  val esPort = 9204
+  val esPort = 9205
   val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, s"/tmp/${this.getClass.getName}") + ("http.port" -> s"$esPort")
   val localNode = LocalNode(localNodeSettings)
 
