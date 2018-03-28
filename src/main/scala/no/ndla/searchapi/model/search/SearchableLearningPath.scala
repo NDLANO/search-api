@@ -25,3 +25,33 @@ case class SearchableLearningPath(id: Long,
                                   learningsteps: List[SearchableLearningStep],
                                   license: Copyright,
                                   isBasedOn: Option[Long])
+
+object LanguagelessSearchableLearningPath {
+  case class LanguagelesssSearchableLearningPath(
+      id: Long,
+      coverPhotoUrl: Option[String],
+      duration: Option[Int],
+      status: String,
+      verificationStatus: String,
+      lastUpdated: DateTime,
+      defaultTitle: Option[String],
+      learningsteps: List[SearchableLearningStep],
+      license: Copyright,
+      isBasedOn: Option[Long])
+
+  def apply(searchableLearningPath: SearchableLearningPath): LanguagelesssSearchableLearningPath = {
+    LanguagelesssSearchableLearningPath(
+      searchableLearningPath.id,
+      searchableLearningPath.coverPhotoUrl,
+      searchableLearningPath.duration,
+      searchableLearningPath.status,
+      searchableLearningPath.verificationStatus,
+      searchableLearningPath.lastUpdated,
+      searchableLearningPath.defaultTitle,
+      searchableLearningPath.learningsteps,
+      searchableLearningPath.license,
+      searchableLearningPath.isBasedOn
+    )
+  }
+
+}

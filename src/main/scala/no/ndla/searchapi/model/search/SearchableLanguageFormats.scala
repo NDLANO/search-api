@@ -7,22 +7,19 @@
 
 package no.ndla.searchapi.model.search
 
-import java.util.{Date, TimeZone}
-
-import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.domain.{LanguagelessSearchableTaxonomyContext, SearchableTaxonomyContext}
-import no.ndla.searchapi.model.taxonomy.{ContextFilter, SearchableContextFilters}
+import java.util.TimeZone
 import no.ndla.searchapi.model.api
+import no.ndla.searchapi.model.domain.{LanguagelessSearchableTaxonomyContext, SearchableTaxonomyContext}
+import no.ndla.searchapi.model.taxonomy.SearchableContextFilters
 import org.joda.time.{DateTime, DateTimeZone}
 import org.json4s.JsonAST.{JField, JObject}
-import org.json4s.{CustomSerializer, Extraction}
-import org.json4s._
+import org.json4s.{CustomSerializer, Extraction, _}
 
 class SearchableArticleSerializer
     extends CustomSerializer[SearchableArticle](_ =>
       ({
         case obj: JObject =>
-          implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
           val time = (obj \ "lastUpdated").extract[DateTime]
           val tz = TimeZone.getDefault
@@ -49,7 +46,7 @@ class SearchableArticleSerializer
           x
       }, {
         case article: SearchableArticle =>
-          implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
           val languageFields =
             List(
               article.title.toJsonField("title"),
@@ -69,8 +66,8 @@ class SearchableArticleSerializer
 
 class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearningPath](_ => ({
   case obj: JObject =>
-    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
-    // TODO: include learningstep serializer somehow
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+
     val time = (obj \ "lastUpdated").extract[DateTime]
     val tz = TimeZone.getDefault
     val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
@@ -92,14 +89,26 @@ class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearni
     )
 },{
   case lp: SearchableLearningPath =>
-    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
+    val languageFields =
+      List(
+        lp.title.toJsonField("title"),
+        lp.description.toJsonField("description")
+      ).flatMap{
+        case l: Seq[JField] => l // TODO: why do we do this rather than flatten again?
+        case _              => Seq.empty
+      }
+    val partialSearchableLearningPath = LanguagelessSearchableLearningPath(lp)
+    val partialJObject = Extraction.decompose(partialSearchableLearningPath)
+    partialJObject.merge(JObject(languageFields: _*))
 
 }))
 
 class SearchableLearningStepSerializer extends CustomSerializer[SearchableLearningStep](_ => ({
   case obj: JObject =>
-    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+
     SearchableLearningStep(
       stepType = (obj \ "stepType").extract[String],
       title = SearchableLanguageValues("title", obj),
@@ -107,7 +116,7 @@ class SearchableLearningStepSerializer extends CustomSerializer[SearchableLearni
     )
 },{
   case ls: SearchableLearningStep =>
-    implicit val formats: Formats = org.json4s.DefaultFormats + new TaxonomyContextSerializer ++ org.json4s.ext.JodaTimeSerializers.all
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
     val languageFields =
       List(
         ls.title.toJsonField("title"),
@@ -173,5 +182,8 @@ object SearchableLanguageFormats {
   val JSonFormats: Formats =
     org.json4s.DefaultFormats +
       new SearchableArticleSerializer +
-      new TaxonomyContextSerializer
+      new TaxonomyContextSerializer +
+      new SearchableLearningStepSerializer +
+      new SearchableLearningPathSerializer ++
+      org.json4s.ext.JodaTimeSerializers.all
 }

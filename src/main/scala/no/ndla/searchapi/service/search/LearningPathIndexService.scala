@@ -89,8 +89,8 @@ trait LearningPathIndexService {
               ))
           )
         ) ++
-          generateLanguageSupportedFieldList("titles", keepRaw = true) ++
-          generateLanguageSupportedFieldList("descriptions") ++
+          generateLanguageSupportedFieldList("title", keepRaw = true) ++
+          generateLanguageSupportedFieldList("description") ++
           generateLanguageSupportedFieldList("tags", keepRaw = true)
       )
     }
