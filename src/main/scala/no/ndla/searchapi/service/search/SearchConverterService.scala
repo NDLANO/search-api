@@ -148,10 +148,11 @@ trait SearchConverterService {
     }
 
     def asSearchableLearningStep(learningStep: LearningStep): SearchableLearningStep = {
+      val nonHtmlDescriptions = learningStep.description.map(desc => domain.learningpath.Description(Jsoup.parseBodyFragment(desc.description).text(), desc.language))
       SearchableLearningStep(
         learningStep.`type`.toString,
         SearchableLanguageValues.fieldsToSearchableLanguageValues(learningStep.title),
-        SearchableLanguageValues.fieldsToSearchableLanguageValues(learningStep.description))
+        SearchableLanguageValues.fieldsToSearchableLanguageValues(nonHtmlDescriptions))
     }
 
     /**

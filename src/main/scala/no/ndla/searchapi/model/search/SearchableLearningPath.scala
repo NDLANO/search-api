@@ -7,8 +7,6 @@
 
 package no.ndla.searchapi.model.search
 
-import java.util.Date
-
 import no.ndla.searchapi.model.api.learningpath.Copyright
 import org.joda.time.DateTime
 
@@ -27,7 +25,7 @@ case class SearchableLearningPath(id: Long,
                                   isBasedOn: Option[Long])
 
 object LanguagelessSearchableLearningPath {
-  case class LanguagelesssSearchableLearningPath(
+  case class LanguagelessSearchableLearningPath(
       id: Long,
       coverPhotoUrl: Option[String],
       duration: Option[Int],
@@ -39,8 +37,8 @@ object LanguagelessSearchableLearningPath {
       license: Copyright,
       isBasedOn: Option[Long])
 
-  def apply(searchableLearningPath: SearchableLearningPath): LanguagelesssSearchableLearningPath = {
-    LanguagelesssSearchableLearningPath(
+  def apply(searchableLearningPath: SearchableLearningPath): LanguagelessSearchableLearningPath = {
+    LanguagelessSearchableLearningPath(
       searchableLearningPath.id,
       searchableLearningPath.coverPhotoUrl,
       searchableLearningPath.duration,
