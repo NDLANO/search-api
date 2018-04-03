@@ -195,7 +195,7 @@ trait SearchController {
       )
       authorizations "oauth2"
       responseMessages response500)
-    get("/multi/", operation(multiSearchDoc)) {
+    get("/content/", operation(multiSearchDoc)) {
       val query = paramOrNone(this.query.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
       val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
