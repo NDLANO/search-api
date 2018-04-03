@@ -10,7 +10,7 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.SearchResponse
+import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
 import com.sksamuel.elastic4s.searches.ScoreMode
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.sksamuel.elastic4s.searches.sort.{FieldSortDefinition, SortOrder}
@@ -39,6 +39,11 @@ trait LearningPathSearchService {
 
   class LearningPathSearchService extends LazyLogging with SearchService[LearningPathSummary] {
     override val searchIndex: String = SearchApiProperties.SearchIndexes("learningpaths")
+
+    override def hitToApiModel(hit: SearchHit, language: String): LearningPathSummary = {
+      searchConverterService.asLearningPathSummary()
+
+    }
 
     def all(withIdIn: List[Long],
               taggedWith: Option[String],
@@ -144,7 +149,7 @@ trait LearningPathSearchService {
       val filters = List(tagFilter, idFilter)
       val filteredSearch = queryBuilder.filter(filters.flatten)
 
-      val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)
+      val (startAt, numResults) = getStartAtAndNumResults(page.getOrElse(1), pageSize.getOrElse(100))
       val requestedResultWindow = page.getOrElse(1) * numResults
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
@@ -166,7 +171,7 @@ trait LearningPathSearchService {
               getHits(response.result, language, fallback)
             ))
           case Failure(ex) =>
-            errorHandler(Failure(ex))
+            Failure(ex)
         }
       }
     }

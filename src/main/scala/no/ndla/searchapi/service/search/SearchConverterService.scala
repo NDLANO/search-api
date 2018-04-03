@@ -18,7 +18,7 @@ import no.ndla.network.ApplicationUrl
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep}
+import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
 import no.ndla.searchapi.model.{api, domain, taxonomy}
 import no.ndla.searchapi.model.domain.{Language, LanguageField, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.search._
@@ -27,6 +27,7 @@ import no.ndla.searchapi.service.ConverterService
 import org.json4s.{DefaultFormats, Formats, ShortTypeHints, TypeHints}
 import org.json4s.native.Serialization.read
 import no.ndla.mapping.License.getLicense
+import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import org.jsoup.Jsoup
 
 import scala.util.{Failure, Success, Try}
@@ -223,6 +224,47 @@ trait SearchConverterService {
         searchableArticle.articleType,
         supportedLanguages
       )
+    }
+
+    def hitAsLearningPathSummary(hitString: String, language: String): LearningPathSummary = {
+      val searchableLearningPath = read[SearchableLearningPath](hitString)
+
+      val titles = searchableLearningPath.title.languageValues.map(lv => api.Title(lv.value, lv.language))
+      val descriptions = searchableLearningPath.description.languageValues.map(lv => api.learningpath.Description(lv.value, lv.language))
+      val introductionStep = searchableLearningPath.learningsteps.find(_.stepType == StepType.INTRODUCTION.toString)
+      val introductions = asApiLearningPathIntroduction(introductionStep)
+      val tags = searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
+
+      val title = findByLanguageOrBestEffort(titles, language)
+      val description = findByLanguageOrBestEffort(descriptions, language)
+      val introduction = findByLanguageOrBestEffort(introductions, language)
+      val tag = findByLanguageOrBestEffort(tag, language)
+
+      val supportedLanguages = getSupportedLanguages(titles, descriptions, introductions, tags)
+
+      LearningPathSummary(
+        searchableLearningPath.id,
+        title,
+        description,
+        introduction,
+        createUrlToLearningPath(searchableLearningPath.id),
+        searchableLearningPath.coverPhotoUrl,
+        searchableLearningPath.duration,
+        searchableLearningPath.status,
+        searchableLearningPath.lastUpdated,
+        tag,
+        searchableLearningPath.license,
+        supportedLanguages,
+        searchableLearningPath.isBasedOn
+      )
+
+    }
+
+    def asApiLearningPathIntroduction(learningStep: Option[SearchableLearningStep]): List[api.learningpath.Introduction] = {
+      learningStep.map(_.description) match {
+        case Some(desc) => desc.languageValues.map(lv => api.learningpath.Introduction(lv.value, lv.language)).toList
+        case None => List.empty
+      }
     }
 
     def articleHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
