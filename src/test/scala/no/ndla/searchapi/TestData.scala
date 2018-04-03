@@ -360,7 +360,7 @@ object TestData {
     resources = resources,
     subjectTopicConnections = subjectTopicConnections,
     subjects = subjects,
-    topicFilterConnections = List.empty, //TODO: maybe connect filters to topics? This is always empty in taxonomy-Test
+    topicFilterConnections = List.empty,
     topicResourceConnections = topicResourceConnections,
     topicSubtopicConnections = topicSubtopicConnections,
     topics = topics

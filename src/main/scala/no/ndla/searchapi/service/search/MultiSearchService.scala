@@ -87,8 +87,6 @@ trait MultiSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
-        val json = e4sClient.httpClient.show(searchToExec) // TODO: remove
-
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
             Success(api.SearchResult[MultiSearchSummary](

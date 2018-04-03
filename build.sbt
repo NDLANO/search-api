@@ -34,7 +34,7 @@ lazy val search_api = (project in file(".")).
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature"),
     libraryDependencies ++= Seq(
-      "ndla" %% "network" % "0.30-SNAPSHOT", // TODO: upgrade to released version
+      "ndla" %% "network" % "0.30",
       "ndla" %% "mapping" % "0.7",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
       "org.apache.logging.log4j" % "log4j-api" % Log4JVersion,

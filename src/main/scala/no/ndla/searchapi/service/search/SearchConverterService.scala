@@ -83,7 +83,7 @@ trait SearchConverterService {
               license = articleWithAgreement.copyright.license,
               authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
               articleType = articleWithAgreement.articleType,
-              metaImageId = None, //TODO: get metaImageId // On second thought maybe just on way out and remove it from SearchableArticle?
+              metaImageId = None, //TODO: get metaImageId // Maybe fetch it on way out and remove it from SearchableArticle?
               defaultTitle = defaultTitle.map(t => t.title),
               supportedLanguages = supportedLanguages,
               contexts = contexts
