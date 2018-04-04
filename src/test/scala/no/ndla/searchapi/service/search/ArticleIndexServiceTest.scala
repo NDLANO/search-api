@@ -14,12 +14,14 @@ import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import org.json4s.native.Serialization.read
+import java.nio.file.{Files, Path}
 
 import scala.util.Success
 
+
 class ArticleIndexServiceTest extends UnitSuite with TestEnvironment {
-  val esPort = 9201
-  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, s"/tmp/${this.getClass.getName}") + ("http.port" -> s"$esPort")
+  val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
+  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
   val localNode = LocalNode(localNodeSettings)
 
   override val e4sClient = NdlaE4sClient(localNode.http(true))

@@ -77,16 +77,31 @@ trait IndexService {
         case Success(bundle) =>
           logger.info("Successfully fetched taxonomy...")
           val stream = apiClient.getChunks[D]
-          var count = 0 // TODO: more functional? Is it even possible with streams?
-          var totalCount = 0
-          stream.foreach({
+          val chunks = stream.map({
             case Success(c) =>
-              indexDocuments(c, indexName, Some(bundle)).map(numIndexed => count += numIndexed)
-              totalCount += c.size
-            case Failure(ex) => return Failure(ex)
-          })
-          logger.info(s"$count/$totalCount documents were indexed successfully.")
-          Success(totalCount)
+              val numIndexed = indexDocuments(c, indexName, Some(bundle))
+              Success(numIndexed.getOrElse(0), c.size)
+            case Failure(ex) => Failure(ex)
+          }).toList
+
+          chunks.collect { case Failure(ex) => Failure(ex) } match {
+            case Nil =>
+              val successfulChunks = chunks.collect {
+                case Success((chunkIndexed, chunkSize)) =>
+                  (chunkIndexed, chunkSize)
+              }
+
+              val (count, totalCount) = successfulChunks.foldLeft((0, 0)) {
+                case ((totalIndexed, totalSize), (chunkIndexed, chunkSize)) =>
+                  (totalIndexed + chunkIndexed, totalSize + chunkSize)
+              }
+
+              logger.info(
+                s"$count/$totalCount documents were indexed successfully.")
+              Success(totalCount)
+
+            case notEmpty => notEmpty.head
+          }
         case Failure(ex) =>
           logger.error("Could not fetch taxonomy for indexing...")
           Failure(ex)
@@ -99,21 +114,21 @@ trait IndexService {
       }
       else {
         val req = contents.map(content => createIndexRequest(content, indexName, taxonomyBundle))
-        val indexRequests = req.collect{ case Success(indexRequest) => indexRequest }
-        val failedToCreateRequests = req.collect{ case Failure(ex) => Failure(ex) }
+        val indexRequests = req.collect { case Success(indexRequest) => indexRequest }
+        val failedToCreateRequests = req.collect { case Failure(ex) => Failure(ex) }
 
-        if(indexRequests.nonEmpty) {
-            val response = e4sClient.execute {
-              bulk(indexRequests)
-            }
+        if (indexRequests.nonEmpty) {
+          val response = e4sClient.execute {
+            bulk(indexRequests)
+          }
 
-            response match {
-              case Success(r) =>
-                val numFailed = r.result.failures.size + failedToCreateRequests.size
-                logger.info(s"Indexed ${contents.size} documents. No of failed items: $numFailed")
-                Success(contents.size - numFailed )
-              case Failure(ex) => Failure(ex)
-            }
+          response match {
+            case Success(r) =>
+              val numFailed = r.result.failures.size + failedToCreateRequests.size
+              logger.info(s"Indexed ${contents.size} documents. No of failed items: $numFailed")
+              Success(contents.size - numFailed)
+            case Failure(ex) => Failure(ex)
+          }
         } else {
           logger.error(s"All ${contents.size} requests failed to be created.")
           Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
@@ -194,6 +209,7 @@ trait IndexService {
     /**
       * Deletes every index that is not in use by this indexService.
       * Only indexes starting with indexName are deleted.
+      *
       * @param indexName Start of index names that is deleted if not aliased.
       * @return Name of aliasTarget.
       */
@@ -212,7 +228,7 @@ trait IndexService {
 
           val toDelete = unreferencedIndexes ++ aliasIndexesToDelete
 
-          if (toDelete.isEmpty){
+          if (toDelete.isEmpty) {
             logger.info("No indexes to be deleted.")
             Success(aliasTarget)
           } else {
@@ -250,7 +266,7 @@ trait IndexService {
     }
 
     def countDocuments: Long = {
-      val response = e4sClient.execute{
+      val response = e4sClient.execute {
         catCount(searchIndex)
       }
 
@@ -276,6 +292,7 @@ trait IndexService {
 
     /**
       * Returns Sequence of FieldDefinitions for a given field.
+      *
       * @param fieldName Name of field in mapping.
       * @param keepRaw   Whether to add a keywordField named raw.
       *                  Usually used for sorting, aggregations or scripts.

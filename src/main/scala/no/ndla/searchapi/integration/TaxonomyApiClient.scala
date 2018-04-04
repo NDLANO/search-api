@@ -36,33 +36,8 @@ trait TaxonomyApiClient {
       get[Resource](s"$TaxonomyApiEndpoint/subjects/$subjectId")
     }
 
-
     def getRelevanceById(relevanceId: String): Try[Relevance] = {
       get[Relevance](s"$TaxonomyApiEndpoint/relevances/$relevanceId")
-    }
-
-    def getBreadcrumbs(path: String, language: String): Try[List[String]] = {
-      resolvePath(path) match {
-        case Success(resolved) =>
-          val fetchedTranslations = resolved.parents.map(pid => getTranslations(pid))
-          val pathTranslations = fetchedTranslations.collect{case Success(x) => x}
-          val failedTranslations = fetchedTranslations.collect{case Failure(ex) => Failure(ex)}
-
-          if(failedTranslations.nonEmpty) {
-            failedTranslations.head
-          } else {
-            val bestTranslations = pathTranslations.map(objectTranslations => {
-              Language.findByLanguageOrBestEffort(objectTranslations, language)
-            }).toList
-
-            if(bestTranslations.contains(None)){
-              Failure(new RuntimeException(s"We could not find translation for $path")) // TODO: better exception
-            } else {
-              Success(bestTranslations.flatten.map(_.name))
-            }
-          }
-        case Failure(ex) => Failure(ex)
-      }
     }
 
     /**
@@ -72,7 +47,7 @@ trait TaxonomyApiClient {
       */
     def getResourceTranslations(resourceId: String): Try[List[Translation]] = {
       for {
-        topic <- getTopic(resourceId)
+        topic <- getResource(resourceId)
         translations <- get[List[Translation]](
           s"$TaxonomyApiEndpoint/resources/$resourceId/translations")
       } yield translations :+ Translation(Language.DefaultLanguage, topic.name)
@@ -116,7 +91,6 @@ trait TaxonomyApiClient {
         Failure(new RuntimeException("Nope")) // TODO: find (make?) more fitting exception
       }
     }
-
 
     def resolvePath(path: String): Try[PathResolve] = {
       get[PathResolve](s"$TaxonomyApiEndpoint/url/resolve", ("path", path))
