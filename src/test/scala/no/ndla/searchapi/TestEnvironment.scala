@@ -8,6 +8,9 @@
 
 package no.ndla.searchapi
 
+import java.nio.file.{Files, Path}
+
+import com.sksamuel.elastic4s.embedded.{InternalLocalNode, LocalNode}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}

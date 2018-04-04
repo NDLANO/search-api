@@ -25,7 +25,7 @@ class SearchableArticleSerializer
           val tz = TimeZone.getDefault
           val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
 
-          val x = SearchableArticle(
+          SearchableArticle(
             id = (obj \ "id").extract[Long],
             title = SearchableLanguageValues("title", obj),
             content = SearchableLanguageValues("content", obj),
@@ -43,7 +43,6 @@ class SearchableArticleSerializer
               (obj \ "supportedLanguages").extract[List[String]],
             contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
-          x
       }, {
         case article: SearchableArticle =>
           implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
