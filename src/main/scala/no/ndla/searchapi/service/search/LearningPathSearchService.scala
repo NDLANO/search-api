@@ -103,16 +103,14 @@ trait LearningPathSearchService {
       val tagSearch = simpleStringQuery(query).field(s"tags.$searchLanguage", 2)
       val authorSearch = simpleStringQuery(query).field("author", 1)
 
-      val hi = highlight("*").preTag("").postTag("").numberOfFragments(0)
-
       val fullQuery = boolQuery()
         .must(
           boolQuery()
             .should(
               titleSearch,
               descSearch,
-              nestedQuery("learningsteps", stepTitleSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.title").highlighting(hi)),
-              nestedQuery("learningsteps", stepDescSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.description").highlighting(hi)),
+              nestedQuery("learningsteps", stepTitleSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.title")),
+              nestedQuery("learningsteps", stepDescSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.description")),
               tagSearch,
               authorSearch
             )

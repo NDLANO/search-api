@@ -203,16 +203,16 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
     hits(4).id should be(EnglandoId)
   }
 
-  test("That order by durationDesc orders search result by duration descending") { // TODO: Sort.ByDurationDesc
-    val Success(searchResult) = learningPathSearchService.all(List.empty, None, "nb", Sort.ByIdDesc, 1, 10, fallback = false)
+  test("That order by durationDesc orders search result by duration descending") {
+    val Success(searchResult) = learningPathSearchService.all(List.empty, None, "nb", Sort.ByDurationDesc, 1, 10, fallback = false)
     val hits = searchResult.results
 
     searchResult.totalCount should be(4)
     hits.head.id should be(UnrelatedId)
   }
 
-  test("That order ByDurationAsc orders search result by duration ascending") { // TODO: Sort.ByDurationAsc
-    val Success(searchResult) = learningPathSearchService.all(List.empty, None, "nb", Sort.ByIdDesc, 1, 10, fallback = false)
+  test("That order ByDurationAsc orders search result by duration ascending") {
+    val Success(searchResult) = learningPathSearchService.all(List.empty, None, "nb", Sort.ByDurationAsc, 1, 10, fallback = false)
     val hits = searchResult.results
 
     searchResult.totalCount should be(4)
