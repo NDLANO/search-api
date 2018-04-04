@@ -248,9 +248,9 @@ trait SearchController {
                                    withIdIn: List[Long],
                                    taggedWith: Option[String],
                                    sort: Option[Sort.Value],
-                                   language: Option[String],
-                                   page: Option[Int],
-                                   pageSize: Option[Int],
+                                   language: String,
+                                   page: Int,
+                                   pageSize: Int,
                                    fallback: Boolean) = {
 
       val result = query match {
@@ -286,9 +286,9 @@ trait SearchController {
     get("/learningpath/") { // TODO: Doc
       val query = paramOrNone(this.query.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val language = paramOrNone(this.language.paramName)
-      val pageSize = intOrNone(this.pageSize.paramName)
-      val page = intOrNone(this.pageNo.paramName)
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val page = intOrDefault(this.pageNo.paramName, 1)
       val idList = paramAsListOfLong(this.learningResourceIds.paramName)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val taggedWith = paramOrNone(this.tag.paramName)

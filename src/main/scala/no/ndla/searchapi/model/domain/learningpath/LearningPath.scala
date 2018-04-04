@@ -23,7 +23,7 @@ case class LearningPath(id: Option[Long],
                         status: LearningPathStatus.Value,
                         verificationStatus: LearningPathVerificationStatus.Value,
                         lastUpdated: DateTime,
-                        tags: Seq[Tag],
+                        tags: List[Tag],
                         owner: String,
                         copyright: Copyright,
                         learningsteps: List[LearningStep] = Nil)

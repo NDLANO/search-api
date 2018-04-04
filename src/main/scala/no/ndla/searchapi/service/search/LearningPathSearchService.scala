@@ -46,14 +46,14 @@ trait LearningPathSearchService {
 
     def all(withIdIn: List[Long],
             taggedWith: Option[String],
-            language: Option[String],
+            language: String,
             sort: Sort.Value,
-            page: Option[Int],
-            pageSize: Option[Int],
+            page: Int,
+            pageSize: Int,
             fallback: Boolean): Try[api.SearchResult[LearningPathSummary]] = {
       val searchLanguage = language match {
-        case None | Some(Language.AllLanguages) => "*"
-        case Some(lang) => lang
+        case "" | Language.AllLanguages => "*"
+        case lang => lang // TODO: fallback
       }
 
       val fullQuery = searchLanguage match {
@@ -64,8 +64,8 @@ trait LearningPathSearchService {
 
           boolQuery()
             .should(
-              nestedQuery("title", titleSearch).scoreMode(ScoreMode.Avg),
-              nestedQuery("description", descSearch).scoreMode(ScoreMode.Avg)
+              titleSearch,
+              descSearch
             )
         }
       }
@@ -85,15 +85,15 @@ trait LearningPathSearchService {
     def matchingQuery(query: String,
                       withIdIn: List[Long],
                       taggedWith: Option[String],
-                      language: Option[String],
+                      language: String,
                       sort: Sort.Value,
-                      page: Option[Int],
-                      pageSize: Option[Int],
+                      page: Int,
+                      pageSize: Int,
                       fallback: Boolean
                      ): Try[api.SearchResult[LearningPathSummary]] = {
       val searchLanguage = language match {
-        case None | Some(Language.AllLanguages) => "*"
-        case Some(lang) => lang
+        case "" | Language.AllLanguages => "*"
+        case lang => lang // TODO: fallback
       }
 
       val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
@@ -109,11 +109,11 @@ trait LearningPathSearchService {
         .must(
           boolQuery()
             .should(
-              nestedQuery("title", titleSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("title").highlighting(hi)),
-              nestedQuery("description", descSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("description").highlighting(hi)),
-              nestedQuery("learningsteps.title", stepTitleSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.title").highlighting(hi)),
-              nestedQuery("learningsteps.description", stepDescSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.description").highlighting(hi)),
-              nestedQuery("tags", tagSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("tags").highlighting(hi)),
+              titleSearch,
+              descSearch,
+              nestedQuery("learningsteps", stepTitleSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.title").highlighting(hi)),
+              nestedQuery("learningsteps", stepDescSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.description").highlighting(hi)),
+              tagSearch,
               authorSearch
             )
         )
@@ -134,22 +134,22 @@ trait LearningPathSearchService {
                       taggedWith: Option[String],
                       sort: Sort.Value,
                       language: String,
-                      page: Option[Int],
-                      pageSize: Option[Int],
+                      page: Int,
+                      pageSize: Int,
                       fallback: Boolean
                      ): Try[api.SearchResult[LearningPathSummary]] = {
 
       val tagFilter = taggedWith match {
         case None => None
-        case Some(tag) => Some(nestedQuery("tags", termQuery(s"tags.$language.raw", tag)).scoreMode(ScoreMode.None))
+        case Some(tag) => Some(termQuery(s"tags.$language.raw", tag))
       }
       val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
 
       val filters = List(tagFilter, idFilter)
       val filteredSearch = queryBuilder.filter(filters.flatten)
 
-      val (startAt, numResults) = getStartAtAndNumResults(page.getOrElse(1), pageSize.getOrElse(100))
-      val requestedResultWindow = page.getOrElse(1) * numResults
+      val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)
+      val requestedResultWindow = page * numResults
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
@@ -160,11 +160,13 @@ trait LearningPathSearchService {
             .query(filteredSearch)
             .sortBy(getSortDefinition(sort, language))
 
+        val json = e4sClient.httpClient.show(searchToExecute)
+
         e4sClient.execute(searchToExecute) match {
           case Success(response) =>
             Success(api.SearchResult[LearningPathSummary](
               response.result.totalHits,
-              page.getOrElse(1),
+              page,
               numResults,
               if(language == "*") Language.AllLanguages else language,
               getHits(response.result, language, fallback)
