@@ -32,88 +32,8 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
   override val learningPathIndexService = new LearningPathIndexService
   override val learningPathSearchService: LearningPathSearchService = new LearningPathSearchService
 
-  private val today = new DateTime().withMillisOfSecond(0)
-  val paul = Author("author", "Truly Weird Rand Paul")
-  val license = "publicdomain"
-  val copyright = Copyright(license, List(paul))
-  val DefaultLearningPath = LearningPath(
-    id = None,
-    revision = None, externalId = None, isBasedOn = None,
-    title = List(),
-    description = List(),
-    coverPhotoId = None,
-    duration = Some(0),
-    status = LearningPathStatus.PUBLISHED,
-    verificationStatus = LearningPathVerificationStatus.EXTERNAL,
-    lastUpdated = today,
-    tags = List(),
-    owner = "owner",
-    copyright = copyright)
-
-  val PenguinId = 1
-  val BatmanId = 2
-  val DonaldId = 3
-  val UnrelatedId = 4
-  val EnglandoId = 5
-
-  val yesterday = new DateTime().minusDays(1)
-  val tomorrow = new DateTime().plusDays(1)
-  val tomorrowp1 = new DateTime().plusDays(2)
-  val tomorrowp2 = new DateTime().plusDays(3)
-
-  val thePenguin = DefaultLearningPath.copy(
-    id = Some(PenguinId),
-    title = List(Title("Pingvinen er en kjeltring", "nb")),
-    description = List(Description("Dette handler om fugler", "nb")),
-    duration = Some(1),
-    lastUpdated = yesterday,
-    tags = List(Tag(List("superhelt", "kanikkefly"), "nb"))
-  )
-
-  val batman = DefaultLearningPath.copy(
-    id = Some(BatmanId),
-    title = List(Title("Batman er en tøff og morsom helt", "nb"), Title("Batman is a tough guy", "en")),
-    description = List(Description("Dette handler om flaggermus, som kan ligne litt på en fugl", "nb")),
-    duration = Some(2),
-    lastUpdated = today,
-    tags = List(Tag(Seq("superhelt", "kanfly"), "nb"))
-  )
-
-  val theDuck = DefaultLearningPath.copy(
-    id = Some(DonaldId),
-    title = List(Title("Donald er en tøff, rar og morsom and", "nb"), Title("Donald is a weird duck", "en")),
-    description = List(Description("Dette handler om en and, som også minner om både flaggermus og fugler.", "nb")),
-    duration = Some(3),
-    lastUpdated = tomorrow,
-    tags = List(Tag(Seq("disney", "kanfly"), "nb"))
-  )
-
-  val unrelated = DefaultLearningPath.copy(
-    id = Some(UnrelatedId),
-    title = List(Title("Unrelated", "en"), Title("Urelatert", "nb")),
-    description = List(Description("This is unrelated", "en"), Description("Dette er en urelatert", "nb")),
-    duration = Some(4),
-    lastUpdated = tomorrowp1,
-    tags = List()
-  )
-
-  val englando = DefaultLearningPath.copy(
-    id = Some(EnglandoId),
-    title = List(Title("Englando", "en")),
-    description = List(Description("This is a englando learningpath", "en")),
-    duration = Some(5),
-    lastUpdated = tomorrowp2,
-    tags = List()
-  )
-
-  val learningPathsToIndex: List[LearningPath] = List(
-    thePenguin, batman, theDuck, unrelated, englando
-  )
-
   override def beforeAll() = {
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("learningpaths"))
-
-    // TODO: why was this here? doReturn(api.Author("Forfatter", "En eier")).when(converterService).asAuthor(any[NdlaUserName])
 
     learningPathsToIndex.zipWithIndex.foreach{case (lp: LearningPath, index: Int) =>
           val resources = List(Resource(s"urn:resource:$index", lp.title.head.title, Some(s"urn:learningpath:${lp.id.get}"), s"/subject:1/topic:100/resource:$index"))

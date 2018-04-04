@@ -36,9 +36,11 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   override def beforeAll: Unit = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
 
-    val indexed = articlesToIndex.map(article =>
+    val indexedArticles = articlesToIndex.map(article =>
       articleIndexService.indexDocument(article, Some(taxonomyTestBundle))
     )
+
+    // TODO: indexedLearningPaths
 
     blockUntil(() => articleIndexService.countDocuments == articlesToIndex.size)
   }

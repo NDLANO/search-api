@@ -8,7 +8,9 @@
 package no.ndla.searchapi
 
 import no.ndla.searchapi.model.domain._
+import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.domain.learningpath.{Description, LearningPath, LearningPathStatus, LearningPathVerificationStatus}
 import no.ndla.searchapi.model.search.SearchSettings
 import no.ndla.searchapi.model.taxonomy._
 import org.joda.time.DateTime
@@ -379,5 +381,86 @@ object TestData {
     resourceTypes = List.empty,
     contextTypes = List.empty,
     supportedLanguages = List.empty
+  )
+
+  val paul = Author("author", "Truly Weird Rand Paul")
+  val license = "publicdomain"
+  val copyright = domain.learningpath.Copyright(license, List(paul))
+
+  val DefaultLearningPath = LearningPath(
+    id = None,
+    revision = None,
+    externalId = None,
+    isBasedOn = None,
+    title = List(),
+    description = List(),
+    coverPhotoId = None,
+    duration = Some(0),
+    status = LearningPathStatus.PUBLISHED,
+    verificationStatus = LearningPathVerificationStatus.EXTERNAL,
+    lastUpdated = today,
+    tags = List(),
+    owner = "owner",
+    copyright = copyright
+  )
+
+  val PenguinId = 1
+  val BatmanId = 2
+  val DonaldId = 3
+  val UnrelatedId = 4
+  val EnglandoId = 5
+
+  val yesterday = new DateTime().minusDays(1)
+  val tomorrow = new DateTime().plusDays(1)
+  val tomorrowp1 = new DateTime().plusDays(2)
+  val tomorrowp2 = new DateTime().plusDays(3)
+
+  val learningPath1 = DefaultLearningPath.copy(
+    id = Some(PenguinId),
+    title = List(Title("Pingvinen er en kjeltring", "nb")),
+    description = List(Description("Dette handler om fugler", "nb")),
+    duration = Some(1),
+    lastUpdated = yesterday,
+    tags = List(Tag(List("superhelt", "kanikkefly"), "nb"))
+  )
+
+  val learningPath2 = DefaultLearningPath.copy(
+    id = Some(BatmanId),
+    title = List(Title("Batman er en tøff og morsom helt", "nb"), Title("Batman is a tough guy", "en")),
+    description = List(Description("Dette handler om flaggermus, som kan ligne litt på en fugl", "nb")),
+    duration = Some(2),
+    lastUpdated = today,
+    tags = List(Tag(Seq("superhelt", "kanfly"), "nb"))
+  )
+
+  val learningPath3 = DefaultLearningPath.copy(
+    id = Some(DonaldId),
+    title = List(Title("Donald er en tøff, rar og morsom and", "nb"), Title("Donald is a weird duck", "en")),
+    description = List(Description("Dette handler om en and, som også minner om både flaggermus og fugler.", "nb")),
+    duration = Some(3),
+    lastUpdated = tomorrow,
+    tags = List(Tag(Seq("disney", "kanfly"), "nb"))
+  )
+
+  val learningPath4 = DefaultLearningPath.copy(
+    id = Some(UnrelatedId),
+    title = List(Title("Unrelated", "en"), Title("Urelatert", "nb")),
+    description = List(Description("This is unrelated", "en"), Description("Dette er en urelatert", "nb")),
+    duration = Some(4),
+    lastUpdated = tomorrowp1,
+    tags = List()
+  )
+
+  val learningPath5 = DefaultLearningPath.copy(
+    id = Some(EnglandoId),
+    title = List(Title("Englando", "en")),
+    description = List(Description("This is a englando learningpath", "en")),
+    duration = Some(5),
+    lastUpdated = tomorrowp2,
+    tags = List()
+  )
+
+  val learningPathsToIndex: List[LearningPath] = List(
+    learningPath1, learningPath2, learningPath3, learningPath4, learningPath5
   )
 }
