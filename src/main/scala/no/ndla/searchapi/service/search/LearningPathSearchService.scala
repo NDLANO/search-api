@@ -158,6 +158,7 @@ trait LearningPathSearchService {
             .size(numResults)
             .from(startAt)
             .query(filteredSearch)
+            .highlighting(highlight("*"))
             .sortBy(getSortDefinition(sort, language))
 
         val json = e4sClient.httpClient.show(searchToExecute)

@@ -94,7 +94,8 @@ class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearni
     val languageFields =
       List(
         lp.title.toJsonField("title"),
-        lp.description.toJsonField("description")
+        lp.description.toJsonField("description"),
+        lp.tags.toJsonField("tags")
       ).flatMap{
         case l: Seq[JField] => l // TODO: why do we do this rather than flatten again?
         case _              => Seq.empty
