@@ -41,17 +41,16 @@ trait LearningPathSearchService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes("learningpaths")
 
     override def hitToApiModel(hit: SearchHit, language: String): LearningPathSummary = {
-      searchConverterService.asLearningPathSummary()
-
+      searchConverterService.hitAsLearningPathSummary(hit.sourceAsString, language)
     }
 
     def all(withIdIn: List[Long],
-              taggedWith: Option[String],
-              sort: Sort.Value,
-              language: Option[String],
-              page: Option[Int],
-              pageSize: Option[Int],
-              fallback: Boolean): Try[api.SearchResult[LearningPathSummary]] = {
+            taggedWith: Option[String],
+            language: Option[String],
+            sort: Sort.Value,
+            page: Option[Int],
+            pageSize: Option[Int],
+            fallback: Boolean): Try[api.SearchResult[LearningPathSummary]] = {
       val searchLanguage = language match {
         case None | Some(Language.AllLanguages) => "*"
         case Some(lang) => lang
@@ -83,8 +82,8 @@ trait LearningPathSearchService {
       )
     }
 
-    def matchingQuery(withIdIn: List[Long],
-                      query: String,
+    def matchingQuery(query: String,
+                      withIdIn: List[Long],
                       taggedWith: Option[String],
                       language: Option[String],
                       sort: Sort.Value,

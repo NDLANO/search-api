@@ -219,7 +219,7 @@ trait SearchConverterService {
         visualElement,
         introduction,
         metaDescription,
-        ApplicationUrl.get + searchableArticle.id.toString,
+        searchableArticle.id.toString, // TODO: Create article url somehow?
         searchableArticle.license,
         searchableArticle.articleType,
         supportedLanguages
@@ -227,6 +227,7 @@ trait SearchConverterService {
     }
 
     def hitAsLearningPathSummary(hitString: String, language: String): LearningPathSummary = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableLearningPath = read[SearchableLearningPath](hitString)
 
       val titles = searchableLearningPath.title.languageValues.map(lv => api.Title(lv.value, lv.language))
@@ -235,10 +236,10 @@ trait SearchConverterService {
       val introductions = asApiLearningPathIntroduction(introductionStep)
       val tags = searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
 
-      val title = findByLanguageOrBestEffort(titles, language)
-      val description = findByLanguageOrBestEffort(descriptions, language)
-      val introduction = findByLanguageOrBestEffort(introductions, language)
-      val tag = findByLanguageOrBestEffort(tag, language)
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val description = findByLanguageOrBestEffort(descriptions, language).getOrElse(api.learningpath.Description("", Language.UnknownLanguage))
+      val introduction = findByLanguageOrBestEffort(introductions, language).getOrElse(api.learningpath.Introduction("", Language.UnknownLanguage))
+      val tag = findByLanguageOrBestEffort(tags, language).getOrElse(api.learningpath.LearningPathTags(Seq.empty, Language.UnknownLanguage))
 
       val supportedLanguages = getSupportedLanguages(titles, descriptions, introductions, tags)
 
@@ -247,7 +248,7 @@ trait SearchConverterService {
         title,
         description,
         introduction,
-        createUrlToLearningPath(searchableLearningPath.id),
+        searchableLearningPath.id.toString, // TODO: Create learningpath url somehow?
         searchableLearningPath.coverPhotoUrl,
         searchableLearningPath.duration,
         searchableLearningPath.status,

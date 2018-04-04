@@ -15,7 +15,7 @@ import no.ndla.searchapi.model.api.{Error, MultiSearchSummary, SearchResult, Sea
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.SearchSettings
-import no.ndla.searchapi.service.search.{ArticleSearchService, MultiSearchService}
+import no.ndla.searchapi.service.search.{ArticleSearchService, LearningPathSearchService, MultiSearchService}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport, SwaggerSupportSyntax}
@@ -28,7 +28,8 @@ trait SearchController {
     with SearchClients
     with SearchApiClient
     with MultiSearchService
-    with ArticleSearchService =>
+    with ArticleSearchService
+    with LearningPathSearchService =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -68,8 +69,12 @@ trait SearchController {
     private val contextTypes = Param("context-types", "A comma separated list of context-types the learning resources should be filtered by.")
     private val supportedLanguages = Param("language-filter", "A comma separated list of ISO 639-1 language codes that the learning resource can be available in.")
 
+    private val tag = Param("tag","Return only Learningpaths that are tagged with this exact tag.")
+
     private def asQueryParam[T: Manifest : NotNothing](param: Param) = queryParam[T](param.paramName).description(param.description)
+
     private def asHeaderParam[T: Manifest : NotNothing](param: Param) = headerParam[T](param.paramName).description(param.description)
+
     private def asPathParam[T: Manifest : NotNothing](param: Param) = pathParam[T](param.paramName).description(param.description)
 
     private val searchAPIs =
@@ -179,20 +184,20 @@ trait SearchController {
       summary "Find learning resources"
       notes "Shows all learning resources. You can search too."
       parameters(
-        asHeaderParam[Option[String]](correlationId),
-        asQueryParam[Option[Int]](pageNo),
-        asQueryParam[Option[Int]](pageSize),
-        asQueryParam[Option[String]](contextTypes),
-        asQueryParam[Option[String]](language),
-        asQueryParam[Option[String]](learningResourceIds),
-        asQueryParam[Option[String]](learningResourceTypes),
-        asQueryParam[Option[String]](levels),
-        asQueryParam[Option[String]](license),
-        asQueryParam[Option[String]](query),
-        asQueryParam[Option[String]](resourceTypes),
-        asQueryParam[Option[String]](sort),
-        asQueryParam[Option[String]](subjects)
-      )
+      asHeaderParam[Option[String]](correlationId),
+      asQueryParam[Option[Int]](pageNo),
+      asQueryParam[Option[Int]](pageSize),
+      asQueryParam[Option[String]](contextTypes),
+      asQueryParam[Option[String]](language),
+      asQueryParam[Option[String]](learningResourceIds),
+      asQueryParam[Option[String]](learningResourceTypes),
+      asQueryParam[Option[String]](levels),
+      asQueryParam[Option[String]](license),
+      asQueryParam[Option[String]](query),
+      asQueryParam[Option[String]](resourceTypes),
+      asQueryParam[Option[String]](sort),
+      asQueryParam[Option[String]](subjects)
+    )
       authorizations "oauth2"
       responseMessages response500)
     get("/content/", operation(multiSearchDoc)) {
@@ -238,6 +243,60 @@ trait SearchController {
         case Failure(ex) => errorHandler(ex)
       }
     }
+
+    private def learningPathSearch(query: Option[String],
+                                   withIdIn: List[Long],
+                                   taggedWith: Option[String],
+                                   sort: Option[Sort.Value],
+                                   language: Option[String],
+                                   page: Option[Int],
+                                   pageSize: Option[Int],
+                                   fallback: Boolean) = {
+
+      val result = query match {
+        case Some(q) =>
+          learningPathSearchService.matchingQuery(
+            query = q,
+            withIdIn = withIdIn,
+            taggedWith = taggedWith,
+            language = language,
+            sort = sort.getOrElse(Sort.ByRelevanceDesc),
+            page = page,
+            pageSize = pageSize,
+            fallback = fallback
+          )
+        case None =>
+          learningPathSearchService.all(
+            withIdIn = withIdIn,
+            taggedWith = taggedWith,
+            language = language,
+            sort = sort.getOrElse(Sort.ByTitleAsc),
+            page = page,
+            pageSize = pageSize,
+            fallback = fallback
+          )
+      }
+
+      result match {
+        case Success(searchResult) => searchResult
+        case Failure(ex) => errorHandler(ex)
+      }
+    }
+
+    get("/learningpath/") { // TODO: Doc
+      val query = paramOrNone(this.query.paramName)
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
+      val language = paramOrNone(this.language.paramName)
+      val pageSize = intOrNone(this.pageSize.paramName)
+      val page = intOrNone(this.pageNo.paramName)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+      val taggedWith = paramOrNone(this.tag.paramName)
+
+      learningPathSearch(query, idList, taggedWith, sort, language, page, pageSize, fallback)
+
+    }
+
   }
 
 }

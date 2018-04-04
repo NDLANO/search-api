@@ -38,6 +38,7 @@ trait TestEnvironment
     with ApiSearchService
     with SearchController
     with LearningPathIndexService
+    with LearningPathSearchService
     with InternController
     with SearchApiClient {
   val searchController = mock[SearchController]
@@ -69,4 +70,5 @@ trait TestEnvironment
   val multiSearchService = mock[MultiSearchService]
   val articleIndexService = mock[ArticleIndexService]
   val learningPathIndexService = mock[LearningPathIndexService]
+  val learningPathSearchService = mock[LearningPathSearchService]
 }
