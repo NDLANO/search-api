@@ -19,9 +19,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class SearchServiceTest extends UnitSuite with TestEnvironment {
+class ApiSearchServiceTest extends UnitSuite with TestEnvironment {
   ApplicationUrl.applicationUrl.set("https://unit-test")
-  override val searchService = new SearchService
+  override val searchService = new ApiSearchService
   override val converterService = new ConverterService
 
   test("search should return a list of search results from other apis") {

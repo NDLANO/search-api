@@ -16,16 +16,16 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-trait SearchService {
+trait ApiSearchService {
   this: ConverterService
     with SearchApiClient
     with DraftApiClient
     with LearningpathApiClient
     with ImageApiClient
     with AudioApiClient =>
-  val searchService: SearchService
+  val searchService: ApiSearchService
 
-  class SearchService {
+  class ApiSearchService {
     def search(searchParams: SearchParams, apisToSearchIn: Set[SearchApiClient]): Seq[SearchResults] = {
       val searchResults = apisToSearchIn.map(_.search(searchParams)).toSeq
       searchResults.map(searchResult => Await.result(searchResult, 5 seconds))

@@ -8,12 +8,18 @@
 package no.ndla.searchapi.service
 
 import no.ndla.searchapi.model.domain._
+import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.SearchApiProperties.Domain
 import no.ndla.network.ApplicationUrl
 import com.netaporter.uri.dsl._
+import no.ndla.searchapi.integration.DraftApiClient
+import no.ndla.searchapi.model
+import no.ndla.searchapi.model.api.MetaDescription
+import no.ndla.searchapi.model.domain.article.Article
 
 trait ConverterService {
+  this: DraftApiClient =>
   val converterService: ConverterService
 
   class ConverterService {
@@ -87,6 +93,28 @@ trait ConverterService {
       val url = audio.url.withHost(host).withScheme(scheme)
       api.AudioResult(audio.id, audio.title.title, url, audio.supportedLanguages)
     }
+
+    def domainModelToApiModel[T <: LanguageField[U], U](domainModel: LanguageField[U], apply: (U, String) => T): T = {
+      apply(
+        domainModel.value,
+        domainModel.language
+      )
+    }
+
+    def withAgreementCopyright(article: Article): Article = {
+      val agreementCopyright = article.copyright.agreementId.flatMap(aid =>
+        draftApiClient.getAgreementCopyright(aid)
+      ).getOrElse(article.copyright)
+
+      article.copy(copyright = article.copyright.copy(
+        license = agreementCopyright.license,
+        creators = agreementCopyright.creators,
+        rightsholders = agreementCopyright.rightsholders,
+        validFrom = agreementCopyright.validFrom,
+        validTo = agreementCopyright.validTo
+      ))
+    }
+
 
   }
 }

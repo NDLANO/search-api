@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest
 
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties.{CorrelationIdHeader, CorrelationIdKey}
-import no.ndla.searchapi.model.api.{Error, ValidationException, ValidationMessage}
+import no.ndla.searchapi.model.api.{Error, ResultWindowTooLargeException, ValidationException, ValidationMessage}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.logging.log4j.ThreadContext
 import org.json4s.native.Serialization.read
@@ -43,6 +43,7 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
   }
 
   error {
+    case rw: ResultWindowTooLargeException => UnprocessableEntity(body=Error(Error.WINDOW_TOO_LARGE, rw.getMessage))
     case t: Throwable => {
       logger.error(Error.GenericError.toString, t)
       InternalServerError(body=Error.GenericError)
@@ -95,6 +96,12 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
     }
   }
 
+  def booleanOrNone(paramName: String)(implicit request: HttpServletRequest): Option[Boolean] =
+    paramOrNone(paramName).flatMap(p => Try(p.toBoolean).toOption)
+
+  def booleanOrDefault(paramName: String, default: Boolean)(implicit request: HttpServletRequest): Boolean =
+    booleanOrNone(paramName).getOrElse(default)
+
   def extract[T](json: String)(implicit mf: scala.reflect.Manifest[T]): T = {
     Try(read[T](json)) match {
       case Failure(e) => {
@@ -104,6 +111,8 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
       case Success(data) => data
     }
   }
+
+  case class Param(paramName:String, description:String)
 
 }
 
