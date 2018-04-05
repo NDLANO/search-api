@@ -45,10 +45,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
       learningPathIndexService.indexDocument(lp, Some(taxonomyTestBundle))
     )
 
-    blockUntil(() => { // TODO: learningpaths are not indexed (probably taxonomy problem. IE: add taxonomy)
-      println(s"a: ${articleIndexService.countDocuments}")
-      println(s"l: ${learningPathIndexService.countDocuments}")
-      articleIndexService.countDocuments == articlesToIndex.size && learningPathIndexService.countDocuments == learningPathsToIndex.size
+    blockUntil(() => {
+      articleIndexService.countDocuments == articlesToIndex.size &&
+        learningPathIndexService.countDocuments == learningPathsToIndex.size
     })
   }
 

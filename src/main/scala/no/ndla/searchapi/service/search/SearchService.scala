@@ -26,7 +26,7 @@ trait SearchService {
   this: Elastic4sClient with SearchConverterService with LazyLogging =>
 
   trait SearchService[T] {
-    val searchIndex: String
+    val searchIndex: List[String]
 
     /**
       * Returns hit as summary
@@ -95,12 +95,13 @@ trait SearchService {
         case e: NdlaSearchException =>
           e.rf.status match {
             case notFound: Int if notFound == 404 =>
-              logger.error(s"Index $searchIndex not found. Scheduling a reindex.")
+              val msg = s"Index ${e.rf.error.index.getOrElse("")} not found. Scheduling a reindex."
+              logger.error(msg)
               scheduleIndexDocuments()
-              Failure(new IndexNotFoundException(s"Index $searchIndex not found. Scheduling a reindex"))
+              Failure(new IndexNotFoundException(msg))
             case _ =>
               logger.error(e.getMessage)
-              Failure(new ElasticsearchException(s"Unable to execute search in $searchIndex", e.getMessage))
+              Failure(new ElasticsearchException(s"Unable to execute search in ${e.rf.error.index.getOrElse("")}", e.getMessage))
           }
         case t: Throwable => Failure(t)
       }

@@ -38,7 +38,7 @@ class SearchableArticleSerializer
             authors = (obj \ "authors").extract[List[String]],
             articleType = (obj \ "articleType").extract[String],
             defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
-            metaImageId = (obj \ "metaImageId").extract[Option[Long]],
+            metaImageId = (obj \ "metaImageId").extract[Option[String]],
             supportedLanguages =
               (obj \ "supportedLanguages").extract[List[String]],
             contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
@@ -75,7 +75,7 @@ class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearni
       id = (obj \ "id").extract[Long],
       title = SearchableLanguageValues("title", obj),
       description = SearchableLanguageValues("description", obj),
-      coverPhotoUrl = (obj \ "coverPhotoUrl").extract[Option[String]],
+      coverPhotoId = (obj \ "coverPhotoUrl").extract[Option[String]],
       duration = (obj \ "duration").extract[Option[Int]],
       status = (obj \ "status").extract[String],
       verificationStatus = (obj \ "verificationStatus").extract[String],
@@ -84,7 +84,8 @@ class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearni
       tags = SearchableLanguageList("tags", obj),
       learningsteps = (obj \ "learningsteps").extract[List[SearchableLearningStep]],
       license = (obj \ "license").extract[api.learningpath.Copyright],
-      isBasedOn = (obj \ "isBasedOn").extract[Option[Long]]
+      isBasedOn = (obj \ "isBasedOn").extract[Option[Long]],
+      contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
     )
 },{
   case lp: SearchableLearningPath =>

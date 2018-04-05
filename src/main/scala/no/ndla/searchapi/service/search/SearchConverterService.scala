@@ -85,7 +85,7 @@ trait SearchConverterService {
               license = articleWithAgreement.copyright.license,
               authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
               articleType = articleWithAgreement.articleType,
-              metaImageId = None, //TODO: get metaImageId // Maybe fetch it on way out and remove it from SearchableArticle?
+              metaImageId = articleWithAgreement.metaImageId,
               defaultTitle = defaultTitle.map(t => t.title),
               supportedLanguages = supportedLanguages,
               contexts = contexts
@@ -125,7 +125,7 @@ trait SearchConverterService {
               id = lp.id.get,
               title = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.title),
               description = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.description),
-              coverPhotoUrl = None, // TODO: Fetch coverPhotoUrl
+              coverPhotoId = lp.coverPhotoId,
               duration = lp.duration,
               status = lp.status.toString,
               verificationStatus = lp.verificationStatus.toString,
@@ -134,7 +134,8 @@ trait SearchConverterService {
               tags = SearchableLanguageList(lp.tags.map(tag => LanguageValue(tag.language, tag.tags))),
               learningsteps = lp.learningsteps.map(asSearchableLearningStep),
               license = license,
-              isBasedOn = lp.isBasedOn
+              isBasedOn = lp.isBasedOn,
+              contexts = contexts
             ))
           }
         case Failure(ex) => Failure(ex)
@@ -249,7 +250,7 @@ trait SearchConverterService {
         description,
         introduction,
         searchableLearningPath.id.toString, // TODO: Create learningpath url somehow?
-        searchableLearningPath.coverPhotoUrl,
+        searchableLearningPath.coverPhotoId,
         searchableLearningPath.duration,
         searchableLearningPath.status,
         searchableLearningPath.lastUpdated,
@@ -297,7 +298,35 @@ trait SearchConverterService {
         contexts = contexts,
         supportedLanguages = supportedLanguages
       )
+    }
 
+
+    def learningpathHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+      val searchableLearningPath = read[SearchableLearningPath](hitString)
+
+      val contexts = searchableLearningPath.contexts.map(c => searchableContextToApiContext(c, language))
+
+      val titles = searchableLearningPath.title.languageValues.map(lv => api.Title(lv.value, lv.language))
+      val metaDescriptions = searchableLearningPath.description.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
+      val tags = searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
+
+      val supportedLanguages = getSupportedLanguages(titles, metaDescriptions, tags)
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+      val url = s"${SearchApiProperties.ExternalApiUrls("learningpath-api")}/${searchableLearningPath.id}"
+      val metaImageUrl = searchableLearningPath.coverPhotoId.map(id => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id")
+
+      MultiSearchSummary(
+        id = searchableLearningPath.id,
+        title = title,
+        metaDescription = metaDescription,
+        metaImage = metaImageUrl,
+        url = url,
+        contexts = contexts,
+        supportedLanguages = supportedLanguages
+      )
     }
 
     def searchableContextToApiContext(context: SearchableTaxonomyContext, language: String): ApiTaxonomyContext = {

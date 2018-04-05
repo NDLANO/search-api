@@ -34,7 +34,9 @@ trait MultiSearchService {
   val multiSearchService: MultiSearchService
 
   class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
-    override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
+    override val searchIndex: List[String] = List(
+      SearchApiProperties.SearchIndexes("articles"),
+      SearchApiProperties.SearchIndexes("learningpaths"))
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
       val articleType = SearchApiProperties.SearchDocuments("articles")
@@ -43,7 +45,7 @@ trait MultiSearchService {
         case `articleType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
         case `learningpathType` =>
-          ??? //TODO: searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
     }
 

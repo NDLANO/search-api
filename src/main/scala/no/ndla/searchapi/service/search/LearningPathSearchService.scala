@@ -38,7 +38,7 @@ trait LearningPathSearchService {
   val learningPathSearchService: LearningPathSearchService
 
   class LearningPathSearchService extends LazyLogging with SearchService[LearningPathSummary] {
-    override val searchIndex: String = SearchApiProperties.SearchIndexes("learningpaths")
+    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes("learningpaths"))
 
     override def hitToApiModel(hit: SearchHit, language: String): LearningPathSummary = {
       searchConverterService.hitAsLearningPathSummary(hit.sourceAsString, language)
@@ -170,8 +170,7 @@ trait LearningPathSearchService {
               if(language == "*") Language.AllLanguages else language,
               getHits(response.result, language, fallback)
             ))
-          case Failure(ex) =>
-            Failure(ex)
+          case Failure(ex) => errorHandler(ex)
         }
       }
     }

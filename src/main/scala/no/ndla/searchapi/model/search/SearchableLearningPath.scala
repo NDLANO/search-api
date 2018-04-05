@@ -8,12 +8,13 @@
 package no.ndla.searchapi.model.search
 
 import no.ndla.searchapi.model.api.learningpath.Copyright
+import no.ndla.searchapi.model.domain.SearchableTaxonomyContext
 import org.joda.time.DateTime
 
 case class SearchableLearningPath(id: Long,
                                   title: SearchableLanguageValues,
                                   description: SearchableLanguageValues,
-                                  coverPhotoUrl: Option[String],
+                                  coverPhotoId: Option[String],
                                   duration: Option[Int],
                                   status: String,
                                   verificationStatus: String,
@@ -22,7 +23,9 @@ case class SearchableLearningPath(id: Long,
                                   tags: SearchableLanguageList,
                                   learningsteps: List[SearchableLearningStep],
                                   license: Copyright,
-                                  isBasedOn: Option[Long])
+                                  isBasedOn: Option[Long],
+                                  contexts: List[SearchableTaxonomyContext]
+                                 )
 
 object LanguagelessSearchableLearningPath {
   case class LanguagelessSearchableLearningPath(
@@ -40,7 +43,7 @@ object LanguagelessSearchableLearningPath {
   def apply(searchableLearningPath: SearchableLearningPath): LanguagelessSearchableLearningPath = {
     LanguagelessSearchableLearningPath(
       searchableLearningPath.id,
-      searchableLearningPath.coverPhotoUrl,
+      searchableLearningPath.coverPhotoId,
       searchableLearningPath.duration,
       searchableLearningPath.status,
       searchableLearningPath.verificationStatus,

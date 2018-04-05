@@ -7,8 +7,6 @@
 
 package no.ndla.searchapi.model.search
 
-import java.util.Date
-
 import no.ndla.searchapi.model.domain.SearchableTaxonomyContext
 import org.joda.time.DateTime
 
@@ -24,7 +22,7 @@ case class SearchableArticle(
     license: String,
     authors: List[String],
     articleType: String,
-    metaImageId: Option[Long],
+    metaImageId: Option[String],
     defaultTitle: Option[String],
     supportedLanguages: List[String],
     contexts: List[SearchableTaxonomyContext]
@@ -37,7 +35,7 @@ object LanguagelessSearchableArticle {
       license: String,
       authors: List[String],
       articleType: String,
-      metaImageId: Option[Long],
+      metaImageId: Option[String],
       defaultTitle: Option[String],
       supportedLanguages: List[String],
       contexts: List[SearchableTaxonomyContext]
