@@ -421,9 +421,9 @@ object TestData {
     TopicResourceConnection("urn:topic:3", "urn:resource:5", "urn:topic-resource:9", primary = true, 1),
 
     TopicResourceConnection("urn:topic:1", "urn:resource:8", "urn:topic-resource:10", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:9", "urn:topic-resource:11", primary = true, 1),
+    TopicResourceConnection("urn:topic:1", "urn:resource:9", "urn:topic-resource:11", primary = true, 1),
     TopicResourceConnection("urn:topic:3", "urn:resource:10", "urn:topic-resource:12", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:11", "urn:topic-resource:13", primary = true, 1),
+    TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1),
     TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1)
 
   )

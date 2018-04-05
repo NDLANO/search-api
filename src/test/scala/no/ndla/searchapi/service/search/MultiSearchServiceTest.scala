@@ -201,8 +201,10 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   test("That search matches tags") {
     val Success(results) = multiSearchService.matchingQuery("and", searchSettings.copy(sort = Sort.ByTitleAsc))
     val hits = results.results
-    results.totalCount should be(1)
+    results.totalCount should be(2)
     hits.head.id should be(3)
+    hits(1).id should be(3)
+    hits(1).contexts.head.learningResourceType should be("learningpath")
   }
 
   test("That search does not return superman since it has license copyrighted and license is not specified") {
@@ -244,26 +246,32 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   test("Search for all languages should return all articles in different languages") {
     val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, pageSize = 100, sort = Sort.ByTitleAsc))
 
-    search.totalCount should equal(10)
+    search.totalCount should equal(15)
   }
 
   test("Search for all languages should return all articles in correct language") {
     val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, pageSize = 100))
     val hits = search.results
 
-    search.totalCount should equal(10)
-    hits(0).id should equal(1)
-    hits(1).id should equal(2)
-    hits(2).id should equal(3)
-    hits(3).id should equal(5)
-    hits(4).id should equal(6)
-    hits(5).id should equal(7)
-    hits(6).id should equal(8)
-    hits(7).id should equal(9)
-    hits(8).id should equal(10)
-    hits(9).id should equal(11)
-    hits(8).title.language should equal("en")
-    hits(9).title.language should equal("nb")
+    search.totalCount should equal(15)
+    hits.head.id should be(1)
+    hits(1).id should be(1)
+    hits(2).id should be(2)
+    hits(3).id should be(2)
+    hits(4).id should be(3)
+    hits(5).id should be(3)
+    hits(6).id should be(4)
+    hits(7).id should be(5)
+    hits(8).id should be(5)
+    hits(8).title.language should be("en")
+    hits(9).id should be(6)
+    hits(10).id should be(7)
+    hits(11).id should be(8)
+    hits(12).id should be(9)
+    hits(13).id should be(10)
+    hits(13).title.language should be("en")
+    hits(14).id should be(11)
+    hits(14).title.language should be("nb")
   }
 
   test("Search for all languages should return all languages if copyrighted") {
@@ -332,9 +340,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for subjects works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("Historie")))
-    search.totalCount should be(5)
-    search.results.map(_.id) should be(Seq(1, 5, 6, 7, 11))
+    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("Historie"), language="all"))
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11))
 
     val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("Historie", "Matte")))
     search2.totalCount should be(2)
