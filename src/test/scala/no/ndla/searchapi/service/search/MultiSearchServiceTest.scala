@@ -29,6 +29,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override val multiSearchService = new MultiSearchService
   override val articleIndexService = new ArticleIndexService
+  override val learningPathIndexService = new LearningPathIndexService
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
@@ -40,9 +41,15 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
       articleIndexService.indexDocument(article, Some(taxonomyTestBundle))
     )
 
-    // TODO: indexedLearningPaths
+    val indexedLearningPaths = learningPathsToIndex.map(lp =>
+      learningPathIndexService.indexDocument(lp, Some(taxonomyTestBundle))
+    )
 
-    blockUntil(() => articleIndexService.countDocuments == articlesToIndex.size)
+    blockUntil(() => { // TODO: learningpaths are not indexed (probably taxonomy problem. IE: add taxonomy)
+      println(s"a: ${articleIndexService.countDocuments}")
+      println(s"l: ${learningPathIndexService.countDocuments}")
+      articleIndexService.countDocuments == articlesToIndex.size && learningPathIndexService.countDocuments == learningPathsToIndex.size
+    })
   }
 
   override def afterAll(): Unit = {

@@ -431,7 +431,7 @@ trait SearchConverterService {
       getTypeAndSubtypesWithParent(resourceType, List.empty)
     }
 
-    private def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = { // TODO: When is it enough taxonomy? Does a resource need a connection to a topic? Does the topic need a connection to a subject?
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -529,7 +529,7 @@ trait SearchConverterService {
     private[service] def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
-          val msg = s"$id could not be found in taxonomy."
+          val msg = s"$taxonomyType $id could not be found in taxonomy."
           logger.error(msg)
           Failure(ElasticIndexingException(msg))
         case (Seq(resource), Nil) =>
