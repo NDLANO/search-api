@@ -82,14 +82,16 @@ trait MultiSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchToExec = search(searchIndex)
+        val searchToExecute = search(searchIndex)
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
-        e4sClient.execute(searchToExec) match {
+        e4sClient.httpClient.show(searchToExecute)
+
+        e4sClient.execute(searchToExecute) match {
           case Success(response) =>
             Success(api.SearchResult[MultiSearchSummary](
               response.result.totalHits,
@@ -109,13 +111,13 @@ trait MultiSearchService {
       * @return List of QueryDefinitions.
       */
     private def getSearchFilters(settings: SearchSettings): List[QueryDefinition] = {
-      val (languageFilter, searchLanguage) = settings.language match {
+      val languageFilter = settings.language match {
         case "" | Language.AllLanguages =>
-          (None, "*")
+          None
         case lang =>
           settings.fallback match {
-            case true => (None, "*")
-            case false => (Some(existsQuery(s"title.$lang")), lang)
+            case true => None
+            case false => Some(existsQuery(s"title.$lang"))
           }
       }
 

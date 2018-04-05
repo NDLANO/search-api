@@ -144,7 +144,7 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
     val hits = searchResult.results
 
     searchResult.totalCount should be(4)
-    hits.head.id should be(UnrelatedId)
+    hits.head.id should be(BatmanId)
     hits.last.id should be(PenguinId)
   }
 
@@ -154,7 +154,7 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
 
     searchResult.totalCount should be(4)
     hits.head.id should be(PenguinId)
-    hits.last.id should be(UnrelatedId)
+    hits.last.id should be(BatmanId)
   }
 
   test("That all filtered by id only returns learningpaths with the given ids") {

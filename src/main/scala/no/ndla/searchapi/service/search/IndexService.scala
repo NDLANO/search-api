@@ -16,6 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition}
+import no.ndla.network.AuthUser
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
@@ -54,7 +55,6 @@ trait IndexService {
     }
 
     def indexDocuments(implicit mf: Manifest[D]): Try[ReindexResult] = synchronized {
-      // TODO: Unauthorized when calling api-gateway.ndla-local/taxonomy/v1/filters when reindexing sometimes. (After trying twice? Token expiry?)
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
         val operations = for {
@@ -104,7 +104,7 @@ trait IndexService {
             case notEmpty => notEmpty.head
           }
         case Failure(ex) =>
-          logger.error("Could not fetch taxonomy for indexing...")
+          logger.error("Could not fetch taxonomy for indexing...", ex)
           Failure(ex)
       }
     }

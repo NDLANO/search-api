@@ -196,7 +196,7 @@ trait TaxonomyApiClient {
 
     private def get[A](url: String, params: (String, String)*)(
         implicit mf: Manifest[A]): Try[A] = {
-      ndlaClient.fetchWithForwardedAuth[A](Http(url).params(params))
+      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(20000,20000).params(params))
     }
   }
 }

@@ -24,8 +24,7 @@ case class SearchableLearningPath(id: Long,
                                   learningsteps: List[SearchableLearningStep],
                                   license: Copyright,
                                   isBasedOn: Option[Long],
-                                  contexts: List[SearchableTaxonomyContext]
-                                 )
+                                  contexts: List[SearchableTaxonomyContext])
 
 object LanguagelessSearchableLearningPath {
   case class LanguagelessSearchableLearningPath(
@@ -38,9 +37,11 @@ object LanguagelessSearchableLearningPath {
       defaultTitle: Option[String],
       learningsteps: List[SearchableLearningStep],
       license: Copyright,
-      isBasedOn: Option[Long])
+      isBasedOn: Option[Long],
+      contexts: List[SearchableTaxonomyContext])
 
-  def apply(searchableLearningPath: SearchableLearningPath): LanguagelessSearchableLearningPath = {
+  def apply(searchableLearningPath: SearchableLearningPath)
+    : LanguagelessSearchableLearningPath = {
     LanguagelessSearchableLearningPath(
       searchableLearningPath.id,
       searchableLearningPath.coverPhotoId,
@@ -51,7 +52,8 @@ object LanguagelessSearchableLearningPath {
       searchableLearningPath.defaultTitle,
       searchableLearningPath.learningsteps,
       searchableLearningPath.license,
-      searchableLearningPath.isBasedOn
+      searchableLearningPath.isBasedOn,
+      searchableLearningPath.contexts
     )
   }
 

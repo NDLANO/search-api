@@ -282,17 +282,12 @@ object TestData {
   val UnrelatedId = 4
   val EnglandoId = 5
 
-  val yesterday = new DateTime().minusDays(1)
-  val tomorrow = new DateTime().plusDays(1)
-  val tomorrowp1 = new DateTime().plusDays(2)
-  val tomorrowp2 = new DateTime().plusDays(3)
-
   val learningPath1 = DefaultLearningPath.copy(
     id = Some(PenguinId),
     title = List(Title("Pingvinen er en kjeltring", "nb")),
     description = List(Description("Dette handler om fugler", "nb")),
     duration = Some(1),
-    lastUpdated = yesterday,
+    lastUpdated = today.minusDays(34),
     tags = List(Tag(List("superhelt", "kanikkefly"), "nb"))
   )
 
@@ -301,7 +296,7 @@ object TestData {
     title = List(Title("Batman er en tøff og morsom helt", "nb"), Title("Batman is a tough guy", "en")),
     description = List(Description("Dette handler om flaggermus, som kan ligne litt på en fugl", "nb")),
     duration = Some(2),
-    lastUpdated = today,
+    lastUpdated = today.minusDays(3),
     tags = List(Tag(Seq("superhelt", "kanfly"), "nb"))
   )
 
@@ -310,7 +305,7 @@ object TestData {
     title = List(Title("Donald er en tøff, rar og morsom and", "nb"), Title("Donald is a weird duck", "en")),
     description = List(Description("Dette handler om en and, som også minner om både flaggermus og fugler.", "nb")),
     duration = Some(3),
-    lastUpdated = tomorrow,
+    lastUpdated = today.minusDays(4),
     tags = List(Tag(Seq("disney", "kanfly"), "nb"))
   )
 
@@ -319,7 +314,7 @@ object TestData {
     title = List(Title("Unrelated", "en"), Title("Urelatert", "nb")),
     description = List(Description("This is unrelated", "en"), Description("Dette er en urelatert", "nb")),
     duration = Some(4),
-    lastUpdated = tomorrowp1,
+    lastUpdated = today.minusDays(5),
     tags = List()
   )
 
@@ -328,7 +323,7 @@ object TestData {
     title = List(Title("Englando", "en")),
     description = List(Description("This is a englando learningpath", "en")),
     duration = Some(5),
-    lastUpdated = tomorrowp2,
+    lastUpdated = today.minusDays(6),
     tags = List()
   )
 
@@ -473,7 +468,7 @@ object TestData {
     language = Language.DefaultLanguage,
     license = None,
     page = 1,
-    pageSize = 10,
+    pageSize = 20,
     sort = Sort.ByIdAsc,
     withIdIn = List.empty,
     taxonomyFilters = List.empty,

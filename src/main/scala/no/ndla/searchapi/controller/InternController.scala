@@ -10,9 +10,11 @@ package no.ndla.searchapi.controller
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import no.ndla.network.{ApplicationUrl, AuthUser}
+import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
+import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.domain.ReindexResult
 import no.ndla.searchapi.service.search.{ArticleIndexService, IndexService, LearningPathIndexService}
+import org.apache.logging.log4j.ThreadContext
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 
@@ -50,9 +52,10 @@ trait InternController {
     }
 
     post("/index/article") {
+      val authHeader = request.getHeader("Authorization")
       val indexResults = for {
         articleIndex <- Future {
-          AuthUser.set(request)
+          AuthUser.setHeader(authHeader)
           articleIndexService.indexDocuments
         }
       } yield (articleIndex, Success(ReindexResult(0,0)))

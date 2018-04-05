@@ -7,27 +7,25 @@
 
 package no.ndla.searchapi.service.search
 
-import cats.instances.duration
 import com.sksamuel.elastic4s.http.search.SearchHit
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
-import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.api._
-import no.ndla.network.ApplicationUrl
+import no.ndla.mapping.License.getLicense
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.integration._
+import no.ndla.searchapi.model.api._
+import no.ndla.searchapi.model.api.article.ArticleSummary
+import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
+import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
+import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
-import no.ndla.searchapi.model.{api, domain, taxonomy}
-import no.ndla.searchapi.model.domain.{Language, LanguageField, SearchableTaxonomyContext}
+import no.ndla.searchapi.model.domain.{Language, SearchableTaxonomyContext}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, _}
+import no.ndla.searchapi.model.{api, domain, taxonomy}
 import no.ndla.searchapi.service.ConverterService
-import org.json4s.{DefaultFormats, Formats, ShortTypeHints, TypeHints}
+import org.json4s.Formats
 import org.json4s.native.Serialization.read
-import no.ndla.mapping.License.getLicense
-import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import org.jsoup.Jsoup
 
 import scala.util.{Failure, Success, Try}
