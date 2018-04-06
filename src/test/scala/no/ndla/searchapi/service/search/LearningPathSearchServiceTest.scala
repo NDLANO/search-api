@@ -7,23 +7,21 @@
 
 package no.ndla.searchapi.service.search
 
+import java.nio.file.{Files, Path}
+
 import com.sksamuel.elastic4s.embedded.LocalNode
-import no.ndla.searchapi.integration.NdlaE4sClient
-import no.ndla.searchapi.model.domain.{Author, Sort, Tag, Title}
-import no.ndla.searchapi.model.domain.learningpath._
-import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
-import no.ndla.searchapi.model.api.learningpath.LearningPathTags
+import no.ndla.searchapi.integration.NdlaE4sClient
+import no.ndla.searchapi.model.domain.Sort
+import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.taxonomy._
-import org.joda.time.DateTime
-import org.mockito.Matchers._
-import org.mockito.Mockito._
+import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 
 import scala.util.Success
 
 class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
-  val esPort = 9205
-  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, s"/tmp/${this.getClass.getName}") + ("http.port" -> s"$esPort")
+  val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
+  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
   val localNode = LocalNode(localNodeSettings)
 
   override val e4sClient = NdlaE4sClient(localNode.http(true))

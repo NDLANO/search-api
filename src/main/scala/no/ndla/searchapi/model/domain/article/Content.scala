@@ -49,19 +49,3 @@ object LearningResourceType extends Enumeration {
 
   def valueOf(s: String): Option[LearningResourceType.Value] = LearningResourceType.values.find(_.toString == s)
 }
-
-case class Concept(id: Option[Long],
-                   title: Seq[ConceptTitle],
-                   content: Seq[ConceptContent],
-                   copyright: Option[Copyright],
-                   created: DateTime,
-                   updated: DateTime) extends Content
-
-object Concept {
-  implicit val formats = org.json4s.DefaultFormats
-
-  val JSonSerializer = FieldSerializer[Concept](
-    FieldSerializer.ignore("id")
-      .orElse(FieldSerializer.ignore("revision"))
-  )
-}
