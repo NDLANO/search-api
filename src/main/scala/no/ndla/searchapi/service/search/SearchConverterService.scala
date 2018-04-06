@@ -19,7 +19,7 @@ import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
-import no.ndla.searchapi.model.domain.{Language, SearchableTaxonomyContext}
+import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.taxonomy.{ContextFilter, _}
 import no.ndla.searchapi.model.{api, domain, taxonomy}
