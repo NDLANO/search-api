@@ -361,6 +361,10 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff", "Vurderingsressurs")))
     search3.totalCount should be(1)
     search3.results.map(_.id) should be(Seq(7))
+
+    val Success(search4) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Læringssti")))
+    search4.totalCount should be(4)
+    search4.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }
 
   test("That filtering on context-type works") {
