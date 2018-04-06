@@ -31,7 +31,7 @@ trait InternController {
   class InternController extends NdlaController {
 
     protected implicit override val jsonFormats: Formats = DefaultFormats
-    implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
+    implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
 
     private def resolveResultFuture(indexResults: Future[(Try[ReindexResult], Try[ReindexResult])]): ActionResult = {
       Await.result(indexResults, Duration(10, TimeUnit.MINUTES)) match {
@@ -52,10 +52,9 @@ trait InternController {
     }
 
     post("/index/article") {
-      val authHeader = request.getHeader("Authorization")
       val indexResults = for {
         articleIndex <- Future {
-          AuthUser.setHeader(authHeader)
+          this.setupWithRequest(request)
           articleIndexService.indexDocuments
         }
       } yield (articleIndex, Success(ReindexResult(0,0)))
@@ -66,7 +65,7 @@ trait InternController {
     post("/index/learningpath") {
       val indexResults = for {
         learningPathIndex <- Future {
-          AuthUser.set(request)
+          this.setupWithRequest(request)
           learningPathIndexService.indexDocuments
         }
       } yield (Success(ReindexResult(0,0)), learningPathIndex)
@@ -77,11 +76,11 @@ trait InternController {
     post("/index") {
       val indexResults = for {
         articleIndex <- Future {
-          AuthUser.set(request)
+          this.setupWithRequest(request)
           articleIndexService.indexDocuments
         }
         learningPathIndex <- Future {
-          AuthUser.set(request)
+          this.setupWithRequest(request)
           learningPathIndexService.indexDocuments
         }
       } yield (articleIndex, learningPathIndex)

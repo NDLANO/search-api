@@ -26,13 +26,21 @@ import scala.util.{Failure, Success, Try}
 abstract class NdlaController extends ScalatraServlet with NativeJsonSupport with LazyLogging {
   protected implicit override val jsonFormats: Formats = DefaultFormats
 
-  before() {
+  /**
+    * Sets up multiple ThreadLocal values according to the request.
+    * @param request Request to fetch values from.
+    */
+  def setupWithRequest(request: HttpServletRequest): Unit = {
     contentType = formats("json")
     CorrelationID.set(Option(request.getHeader(CorrelationIdHeader)))
     ThreadContext.put(CorrelationIdKey, CorrelationID.get.getOrElse(""))
     ApplicationUrl.set(request)
     AuthUser.set(request)
     logger.info("{} {}{}", request.getMethod, request.getRequestURI, Option(request.getQueryString).map(s => s"?$s").getOrElse(""))
+  }
+
+  before() {
+    setupWithRequest(request)
   }
 
   after() {
