@@ -36,7 +36,7 @@ object SearchApiProperties extends LazyLogging {
   val AudioApiUrl = "http://audio-api.ndla-local"
   val ApiGatewayUrl = "api-gateway.ndla-local"
 
-  val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-multi.ndla-local")
+  val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-search-api.ndla-local")
   val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
   val RunWithSignedSearchRequests: Boolean = propOrElse("RUN_WITH_SIGNED_SEARCH_REQUESTS", "true").toBoolean
   val SearchIndexes: Map[String, String] = Map(
