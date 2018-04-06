@@ -381,6 +381,16 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,10,11))
   }
 
+  test("That filtering on learningpath context-type returns learningpaths") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.LearningPath), language = "all"))
+
+    search.totalCount should be(5)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5))
+    search.results.map(_.contexts.head.learningResourceType) should be(
+      Seq.fill(5){LearningResourceType.LearningPath.toString}
+    )
+  }
+
   test("That filtering on supportedLanguages works") {
     val Success(search) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en"), language = "all"))
     search.totalCount should be(2)
