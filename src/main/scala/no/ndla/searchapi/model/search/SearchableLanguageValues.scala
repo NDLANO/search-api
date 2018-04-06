@@ -21,14 +21,14 @@ object LanguageValue {
 }
 
 case class SearchableLanguageValues(languageValues: Seq[LV[String]]) {
-  def toJsonField(name: String): Seq[JField] =
-    languageValues.map(lv => JField(s"$name.${lv.language}", JString(lv.value)))
+  def toJsonField(name: String): List[JField] =
+    languageValues.map(lv => JField(s"$name.${lv.language}", JString(lv.value))).toList
 }
 
 case class SearchableLanguageList(languageValues: Seq[LV[Seq[String]]]) {
-  def toJsonField(name: String): Seq[JField] =
+  def toJsonField(name: String): List[JField] =
     languageValues.map(lv =>
-      JField(s"$name.${lv.language}", JArray(lv.value.map(JString).toList)))
+      JField(s"$name.${lv.language}", JArray(lv.value.map(JString).toList))).toList
 }
 
 object SearchableLanguageValues {
@@ -55,7 +55,7 @@ object SearchableLanguageValues {
     SearchableLanguageValues(languageValues)
   }
 
-  def fieldsToSearchableLanguageValues[T <: LanguageField[String]](fields: Seq[T]): SearchableLanguageValues = { // TODO: rename
+  def fieldsToSearchableLanguageValues[T <: LanguageField[String]](fields: Seq[T]): SearchableLanguageValues = {
     SearchableLanguageValues(fields.map(f => LanguageValue(f.language, f.value)))
   }
 }

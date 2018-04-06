@@ -212,13 +212,15 @@ trait SearchConverterService {
       val introduction = findByLanguageOrBestEffort(introductions, language)
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language)
 
+      val url = s"${SearchApiProperties.ExternalApiUrls("article-api")}/${searchableArticle.id}"
+
       ArticleSummary(
         searchableArticle.id,
         title,
         visualElement,
         introduction,
         metaDescription,
-        searchableArticle.id.toString, // TODO: Create article url somehow?
+        url,
         searchableArticle.license,
         searchableArticle.articleType,
         supportedLanguages
@@ -242,12 +244,14 @@ trait SearchConverterService {
 
       val supportedLanguages = getSupportedLanguages(titles, descriptions, introductions, tags)
 
+      val url = s"${SearchApiProperties.ExternalApiUrls("learningpath-api")}/${searchableLearningPath.id}"
+
       LearningPathSummary(
         searchableLearningPath.id,
         title,
         description,
         introduction,
-        searchableLearningPath.id.toString, // TODO: Create learningpath url somehow?
+        url,
         searchableLearningPath.coverPhotoId,
         searchableLearningPath.duration,
         searchableLearningPath.status,
@@ -458,7 +462,7 @@ trait SearchConverterService {
       getTypeAndSubtypesWithParent(resourceType, List.empty)
     }
 
-    private def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = { // TODO: When is it enough taxonomy? Does a resource need a connection to a topic? Does the topic need a connection to a subject?
+    private def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -570,21 +574,6 @@ trait SearchConverterService {
           Failure(ElasticIndexingException(msg))
       }
     }
-
-    // TODO: implement this
-    /*
-    def learningpathHitAsMultiSummary(hitString: String, language: String): Try[MultiSearchSummary] = {
-      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-      val searchableLearningPath = read[SearchableLearningPath](hitString)
-
-      val titles = searchableLearningPath.titles.languageValues.map(lv => Title(lv.value, lv.lang))
-      val metaDescriptions = searchableLearningPath.descriptions.languageValues.map(lv => MetaDescription(lv.value, lv.lang))
-
-      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
-
-      // TODO: finish learningpath to multisummary
-    }*/
 
     private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: Bundle, taxonomyType: String) = {
       val resources = bundle.resources.filter(resource => resource.contentUri match {

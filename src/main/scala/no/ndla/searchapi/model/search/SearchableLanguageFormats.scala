@@ -9,7 +9,10 @@ package no.ndla.searchapi.model.search
 
 import java.util.TimeZone
 import no.ndla.searchapi.model.api
-import no.ndla.searchapi.model.domain.{LanguagelessSearchableTaxonomyContext, SearchableTaxonomyContext}
+import no.ndla.searchapi.model.domain.{
+  LanguagelessSearchableTaxonomyContext,
+  SearchableTaxonomyContext
+}
 import no.ndla.searchapi.model.taxonomy.SearchableContextFilters
 import org.joda.time.{DateTime, DateTimeZone}
 import org.json4s.JsonAST.{JField, JObject}
@@ -39,14 +42,13 @@ class SearchableArticleSerializer
             articleType = (obj \ "articleType").extract[String],
             defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
             metaImageId = (obj \ "metaImageId").extract[Option[String]],
-            supportedLanguages =
-              (obj \ "supportedLanguages").extract[List[String]],
+            supportedLanguages = (obj \ "supportedLanguages").extract[List[String]],
             contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
       }, {
         case article: SearchableArticle =>
           implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-          val languageFields =
+          val languageFields: List[JField] =
             List(
               article.title.toJsonField("title"),
               article.content.toJsonField("content"),
@@ -54,82 +56,82 @@ class SearchableArticleSerializer
               article.introduction.toJsonField("introduction"),
               article.metaDescription.toJsonField("metaDescription"),
               article.tags.toJsonField("tags")
-            ).flatMap {
-              case l: Seq[JField] => l
-              case _              => Seq.empty
-            }
+            ).flatten
+
           val partialSearchableArticle = LanguagelessSearchableArticle(article)
           val partialJObject = Extraction.decompose(partialSearchableArticle)
           partialJObject.merge(JObject(languageFields: _*))
       }))
 
-class SearchableLearningPathSerializer extends CustomSerializer[SearchableLearningPath](_ => ({
-  case obj: JObject =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+class SearchableLearningPathSerializer
+    extends CustomSerializer[SearchableLearningPath](_ =>
+      ({
+        case obj: JObject =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-    val time = (obj \ "lastUpdated").extract[DateTime]
-    val tz = TimeZone.getDefault
-    val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
+          val time = (obj \ "lastUpdated").extract[DateTime]
+          val tz = TimeZone.getDefault
+          val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
 
-    SearchableLearningPath(
-      id = (obj \ "id").extract[Long],
-      title = SearchableLanguageValues("title", obj),
-      description = SearchableLanguageValues("description", obj),
-      coverPhotoId = (obj \ "coverPhotoUrl").extract[Option[String]],
-      duration = (obj \ "duration").extract[Option[Int]],
-      status = (obj \ "status").extract[String],
-      verificationStatus = (obj \ "verificationStatus").extract[String],
-      lastUpdated = lastUpdated,
-      defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
-      tags = SearchableLanguageList("tags", obj),
-      learningsteps = (obj \ "learningsteps").extract[List[SearchableLearningStep]],
-      license = (obj \ "license").extract[api.learningpath.Copyright],
-      isBasedOn = (obj \ "isBasedOn").extract[Option[Long]],
-      contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
-    )
-},{
-  case lp: SearchableLearningPath =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+          SearchableLearningPath(
+            id = (obj \ "id").extract[Long],
+            title = SearchableLanguageValues("title", obj),
+            description = SearchableLanguageValues("description", obj),
+            coverPhotoId = (obj \ "coverPhotoUrl").extract[Option[String]],
+            duration = (obj \ "duration").extract[Option[Int]],
+            status = (obj \ "status").extract[String],
+            verificationStatus = (obj \ "verificationStatus").extract[String],
+            lastUpdated = lastUpdated,
+            defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
+            tags = SearchableLanguageList("tags", obj),
+            learningsteps = (obj \ "learningsteps").extract[List[SearchableLearningStep]],
+            license = (obj \ "license").extract[api.learningpath.Copyright],
+            isBasedOn = (obj \ "isBasedOn").extract[Option[Long]],
+            contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
+          )
+      }, {
+        case lp: SearchableLearningPath =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-    val languageFields =
-      List(
-        lp.title.toJsonField("title"),
-        lp.description.toJsonField("description"),
-        lp.tags.toJsonField("tags")
-      ).flatMap{
-        case l: Seq[JField] => l // TODO: why do we do this rather than flatten again?
-        case _              => Seq.empty
-      }
-    val partialSearchableLearningPath = LanguagelessSearchableLearningPath(lp)
-    val partialJObject = Extraction.decompose(partialSearchableLearningPath)
-    partialJObject.merge(JObject(languageFields: _*))
+          val languageFields: List[JField] =
+            List(
+              lp.title.toJsonField("title"),
+              lp.description.toJsonField("description"),
+              lp.tags.toJsonField("tags")
+            ).flatten
 
-}))
+          val partialSearchableLearningPath =
+            LanguagelessSearchableLearningPath(lp)
+          val partialJObject =
+            Extraction.decompose(partialSearchableLearningPath)
+          partialJObject.merge(JObject(languageFields: _*))
 
-class SearchableLearningStepSerializer extends CustomSerializer[SearchableLearningStep](_ => ({
-  case obj: JObject =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+      }))
 
-    SearchableLearningStep(
-      stepType = (obj \ "stepType").extract[String],
-      title = SearchableLanguageValues("title", obj),
-      description = SearchableLanguageValues("description", obj)
-    )
-},{
-  case ls: SearchableLearningStep =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-    val languageFields =
-      List(
-        ls.title.toJsonField("title"),
-        ls.description.toJsonField("description")
-      ).flatMap {
-        case l: Seq[JField] => l
-        case _ => Seq.empty
-      }
+class SearchableLearningStepSerializer
+    extends CustomSerializer[SearchableLearningStep](_ =>
+      ({
+        case obj: JObject =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-    val allFields = languageFields :+ JField("stepType", JString(ls.stepType))
-    JObject(allFields: _*)
-}))
+          SearchableLearningStep(
+            stepType = (obj \ "stepType").extract[String],
+            title = SearchableLanguageValues("title", obj),
+            description = SearchableLanguageValues("description", obj)
+          )
+      }, {
+        case ls: SearchableLearningStep =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+          val languageFields: List[JField] =
+            List(
+              ls.title.toJsonField("title"),
+              ls.description.toJsonField("description")
+            ).flatten
+
+          val allFields = languageFields :+ JField("stepType",
+                                                   JString(ls.stepType))
+          JObject(allFields: _*)
+      }))
 
 class TaxonomyContextSerializer
     extends CustomSerializer[SearchableTaxonomyContext](_ =>
@@ -149,32 +151,28 @@ class TaxonomyContextSerializer
       }, {
         case context: SearchableTaxonomyContext =>
           implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
-          val languageFields =
+          val languageFields: List[JField] =
             List(
               context.breadcrumbs.toJsonField("breadcrumbs"),
               context.resourceTypes.toJsonField("resourceTypes"),
               context.subject.toJsonField("subject")
-            ).flatMap {
-              case l: Seq[JField] => l
-              case _              => Seq.empty
-            }
+            ).flatten
 
           val filters = JArray(context.filters.map(f => {
-            val fields = List(f.name.toJsonField("name"),
-            f.relevance.toJsonField("relevance")).flatMap{
-              case l: Seq[JField] => l
-              case _ => Seq.empty
-            }
+            val fields: List[JField] =
+              List(f.name.toJsonField("name"),
+                   f.relevance.toJsonField("relevance")).flatten
 
             JObject(fields: _*)
           }))
 
           val languageObject = JObject(
-              ("filters", filters)
+            ("filters", filters)
               +: languageFields
           )
 
-          val partialSearchableContext = LanguagelessSearchableTaxonomyContext(context)
+          val partialSearchableContext =
+            LanguagelessSearchableTaxonomyContext(context)
           val partialJObject = Extraction.decompose(partialSearchableContext)
           partialJObject.merge(languageObject)
       }))
