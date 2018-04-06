@@ -299,6 +299,15 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
     search.results.head.supportedLanguages should be(Seq("nb", "en"))
   }
 
+  test("That fallback returns best language first") {
+    val Success(search) = learningPathSearchService.all(List.empty, None, "nb", Sort.ByIdAsc, 1, 10, fallback = true)
+
+    search.totalCount should be(5)
+    search.results.map(_.id) should be(Seq(1,2,3,4,5))
+    search.results(3).title.language should be ("nb")
+    search.results(4).title.language should be ("en")
+  }
+
   def blockUntil(predicate: () => Boolean) = {
     var backoff = 0
     var done = false

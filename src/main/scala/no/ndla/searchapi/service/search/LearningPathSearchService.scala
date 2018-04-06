@@ -51,11 +51,7 @@ trait LearningPathSearchService {
             page: Int,
             pageSize: Int,
             fallback: Boolean): Try[api.SearchResult[LearningPathSummary]] = {
-      val searchLanguage = language match {
-        case "" | Language.AllLanguages => "*"
-        case lang => lang // TODO: fallback
-      }
-
+      val searchLanguage = if (language == Language.AllLanguages || fallback) "*" else language
       val fullQuery = searchLanguage match {
         case "*" => boolQuery()
         case lang => {
@@ -91,10 +87,7 @@ trait LearningPathSearchService {
                       pageSize: Int,
                       fallback: Boolean
                      ): Try[api.SearchResult[LearningPathSummary]] = {
-      val searchLanguage = language match {
-        case "" | Language.AllLanguages => "*"
-        case lang => lang // TODO: fallback
-      }
+      val searchLanguage = if (language == Language.AllLanguages || fallback) "*" else language
 
       val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
       val descSearch = simpleStringQuery(query).field(s"description.$searchLanguage", 2)
