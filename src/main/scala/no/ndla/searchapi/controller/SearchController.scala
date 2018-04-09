@@ -11,7 +11,8 @@ package no.ndla.searchapi.controller
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.SearchApiClient
 import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.api.{Error, MultiSearchSummary, SearchResult, SearchResults, ValidationError}
+import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
+import no.ndla.searchapi.model.api.{Error, MultiSearchResult, MultiSearchSummary, SearchResult, SearchResults, ValidationError}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.SearchSettings
@@ -64,7 +65,6 @@ trait SearchController {
     private val fallback = Param("fallback", "Fallback to existing language if language is specified.")
     private val levels = Param("levels", "A comma separated list of levels the learning resources should be filtered by.")
     private val subjects = Param("subjects", "A comma separated list of subjects the learning resources should be filtered by.")
-    private val resourceTypes = Param("resource-types", "A comma separated list of resource-types the learning resources should be filtered by.")
     private val contextTypes = Param("context-types", "A comma separated list of context-types the learning resources should be filtered by.")
     private val supportedLanguages = Param("language-filter", "A comma separated list of ISO 639-1 language codes that the learning resource can be available in.")
 
@@ -153,14 +153,15 @@ trait SearchController {
         notes "Shows all articles. You can search it too."
         parameters(
         asHeaderParam[Option[String]](correlationId),
-        asQueryParam[Option[String]](learningResourceTypes),
         asQueryParam[Option[String]](query),
-        asQueryParam[Option[String]](learningResourceIds),
+        asQueryParam[Option[String]](sort),
         asQueryParam[Option[String]](language),
         asQueryParam[Option[String]](license),
-        asQueryParam[Option[Int]](pageNo),
         asQueryParam[Option[Int]](pageSize),
-        asQueryParam[Option[String]](sort)
+        asQueryParam[Option[Int]](pageNo),
+        asQueryParam[Option[String]](learningResourceIds),
+        asQueryParam[Option[String]](learningResourceTypes),
+        asQueryParam[Option[Boolean]](fallback)
       )
         authorizations "oauth2"
         responseMessages response500)
@@ -179,7 +180,7 @@ trait SearchController {
     }
 
 
-    private val multiSearchDoc = (apiOperation[SearchResult[MultiSearchSummary]]("searchLearningResources")
+    private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
       summary "Find learning resources"
       notes "Shows all learning resources. You can search too."
       parameters(
@@ -193,25 +194,26 @@ trait SearchController {
       asQueryParam[Option[String]](levels),
       asQueryParam[Option[String]](license),
       asQueryParam[Option[String]](query),
-      asQueryParam[Option[String]](resourceTypes),
       asQueryParam[Option[String]](sort),
-      asQueryParam[Option[String]](subjects)
+      asQueryParam[Option[Boolean]](fallback),
+      asQueryParam[Option[String]](subjects),
+      asQueryParam[Option[List[String]]](supportedLanguages)
     )
       authorizations "oauth2"
       responseMessages response500)
     get("/content/", operation(multiSearchDoc)) {
+      val page = intOrDefault(this.pageNo.paramName, 1)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val resourceTypes = paramAsListOfString(this.learningResourceTypes.paramName)
+      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
+      val license = paramOrNone(this.license.paramName)
       val query = paramOrNone(this.query.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
-      val license = paramOrNone(this.license.paramName)
-      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
-      val page = intOrDefault(this.pageNo.paramName, 1)
-      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
-      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
       val subjects = paramAsListOfString(this.subjects.paramName)
-      val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
-      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.supportedLanguages.paramName)
 
       val settings = SearchSettings(
@@ -282,7 +284,23 @@ trait SearchController {
       }
     }
 
-    get("/learningpath/") { // TODO: Doc
+    private val learningPathSearchDoc = (apiOperation[SearchResult[LearningPathSummary]]("getLearningpaths")
+      summary "Find learningpaths"
+      notes "Shows all learningpaths. You can search too."
+      parameters(
+      asHeaderParam[Option[String]](correlationId),
+      asQueryParam[Option[String]](query),
+      asQueryParam[Option[String]](sort),
+      asQueryParam[Option[String]](language),
+      asQueryParam[Option[Int]](pageSize),
+      asQueryParam[Option[Int]](pageNo),
+      asQueryParam[Option[Long]](learningResourceIds),
+      asQueryParam[Option[Boolean]](fallback),
+      asQueryParam[Option[String]](tag)
+    )
+      authorizations "oauth2"
+      responseMessages response500)
+    get("/learningpath/", operation(learningPathSearchDoc)) {
       val query = paramOrNone(this.query.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
       val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
