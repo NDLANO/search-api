@@ -59,7 +59,7 @@ trait SearchApiClient {
         "page-size" -> pageSize
       )
 
-      get[DomainDumpResults[T]](dumpDomainPath, params) match {
+      get[DomainDumpResults[T]](dumpDomainPath, params, timeout = 20000) match {
         case Success(result) =>
           logger.info(s"Fetched chunk of ${result.results.size}...")
           Success(result)
@@ -71,7 +71,7 @@ trait SearchApiClient {
 
     def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
 
-    def get[T](path: String, params: Map[String, Any])(implicit mf: Manifest[T]): Try[T] = {
+    def get[T](path: String, params: Map[String, Any], timeout: Int = 5000)(implicit mf: Manifest[T]): Try[T] = {
       implicit val formats: Formats =
       org.json4s.DefaultFormats +
         new EnumNameSerializer(LearningPathStatus) +
@@ -80,7 +80,7 @@ trait SearchApiClient {
         new EnumNameSerializer(StepStatus) +
         new EnumNameSerializer(EmbedType) ++ org.json4s.ext.JodaTimeSerializers.all
 
-      ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)))
+      ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)).timeout(timeout, timeout))
     }
 
     protected def search[T <: ApiSearchResults](searchParams: SearchParams)(implicit mf: Manifest[T]): Future[Try[T]] = {

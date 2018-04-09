@@ -52,9 +52,11 @@ trait InternController {
     }
 
     post("/index/article") {
+      val authHeader = AuthUser.getHeader
       val indexResults = for {
         articleIndex <- Future {
           this.setupWithRequest(request)
+          AuthUser.setHeader(authHeader.getOrElse(""))
           articleIndexService.indexDocuments
         }
       } yield (articleIndex, Success(ReindexResult(0,0)))
@@ -63,9 +65,11 @@ trait InternController {
     }
 
     post("/index/learningpath") {
+      val authHeader = AuthUser.getHeader
       val indexResults = for {
         learningPathIndex <- Future {
           this.setupWithRequest(request)
+          AuthUser.setHeader(authHeader.getOrElse(""))
           learningPathIndexService.indexDocuments
         }
       } yield (Success(ReindexResult(0,0)), learningPathIndex)
@@ -74,13 +78,16 @@ trait InternController {
     }
 
     post("/index") {
+      val authHeader = AuthUser.getHeader
       val indexResults = for {
         articleIndex <- Future {
           this.setupWithRequest(request)
+          AuthUser.setHeader(authHeader.getOrElse(""))
           articleIndexService.indexDocuments
         }
         learningPathIndex <- Future {
           this.setupWithRequest(request)
+          AuthUser.setHeader(authHeader.getOrElse(""))
           learningPathIndexService.indexDocuments
         }
       } yield (articleIndex, learningPathIndex)

@@ -56,6 +56,7 @@ object Elastic4sClientFactory {
 
   private def getSigningClient(searchServer: String): HttpClient = {
     // Since elastic4s does not resolve internal CNAME by itself, we do it here
+    // TODO: fix this so we dont use cname and https (it runs on port 80)
     val in = java.net.InetAddress.getByName(searchServer.host.getOrElse("localhost"))
     val attr = new InitialDirContext().getAttributes("dns:/" + in.getHostName)
     val esEndpoint = attr.get("CNAME").get(0).toString.dropRight(1)
