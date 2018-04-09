@@ -48,6 +48,12 @@ object SearchApiProperties extends LazyLogging {
     "articles" -> "article",
     "learningpaths" -> "learningpath"
   )
+
+  val taxonomySubjectMaterialName = "Fagstoff"
+  val taxonomyLearningPathName = "Læringssti"
+  val taxonomyTasksName = "Oppgaver og aktiviteter"
+  val taxonomyResourceTypeNames = List(taxonomySubjectMaterialName, taxonomyLearningPathName, taxonomyTasksName)
+
   val DefaultPageSize = 10
   val MaxPageSize = 100
   val IndexBulkSize = 2000

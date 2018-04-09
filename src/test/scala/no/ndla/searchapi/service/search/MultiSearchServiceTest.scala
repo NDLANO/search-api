@@ -417,6 +417,15 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search.results.head.title.language should be("nb")
   }
 
+  test("That count of resource types is correct") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = "nb"))
+
+    search.totalCount should be (13)
+    search.totalCountLearningPaths should be(4)
+    search.totalCountSubjectMaterial should be(6)
+
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

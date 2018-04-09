@@ -12,13 +12,14 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
+import com.sksamuel.elastic4s.searches.aggs.AbstractAggregation
 import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefinition}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api
-import no.ndla.searchapi.model.api.{MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
+import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.search.SearchSettings
@@ -49,9 +50,9 @@ trait MultiSearchService {
       }
     }
 
-    def all(settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = executeSearch(settings, boolQuery())
+    def all(settings: SearchSettings): Try[MultiSearchResult] = executeSearch(settings, boolQuery())
 
-    def matchingQuery(query: String, settings: SearchSettings): Try[SearchResult[MultiSearchSummary]] = {
+    def matchingQuery(query: String, settings: SearchSettings): Try[MultiSearchResult] = {
       val searchLanguage = if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
       val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
       val introSearch = simpleStringQuery(query).field(s"introduction.$searchLanguage", 2)
@@ -73,8 +74,9 @@ trait MultiSearchService {
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: SearchSettings, baseQuery: BoolQueryDefinition): Try[api.SearchResult[MultiSearchSummary]] = {
+    def executeSearch(settings: SearchSettings, baseQuery: BoolQueryDefinition): Try[MultiSearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
+      val aggregations = getAggregations(settings)
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
@@ -83,28 +85,54 @@ trait MultiSearchService {
         Failure(ResultWindowTooLargeException())
       } else {
         val searchToExecute = search(searchIndex)
-          .size(numResults)
-          .from(startAt)
           .query(filteredSearch)
+          .aggregations(aggregations)
+          .from(startAt)
+          .size(numResults)
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
         e4sClient.execute(searchToExecute) match {
           case Success(response) =>
-            Success(api.SearchResult[MultiSearchSummary](
-              response.result.totalHits,
-              settings.page,
-              numResults,
-              if (settings.language == "*") Language.AllLanguages else settings.language,
-              getHits(response.result, settings.language, settings.fallback)
+
+            val resourceTypeAggregationMap = response.result.aggregations
+              .keyedFilters("resourceTypeAggregation").aggResults
+
+            val totalLearningPaths = resourceTypeAggregationMap
+              .get(SearchApiProperties.taxonomyLearningPathName).map(_.docCount).getOrElse(0: Long)
+            val totalSubjectMaterials = resourceTypeAggregationMap
+              .get(SearchApiProperties.taxonomySubjectMaterialName).map(_.docCount).getOrElse(0: Long)
+            val totalTasks = resourceTypeAggregationMap
+              .get(SearchApiProperties.taxonomyTasksName).map(_.docCount).getOrElse(0: Long)
+
+            Success(MultiSearchResult(
+              totalCount = response.result.totalHits,
+              totalCountLearningPaths = totalLearningPaths,
+              totalCountSubjectMaterial = totalSubjectMaterials,
+              totalCountTasks = totalTasks,
+              page = settings.page,
+              pageSize = numResults,
+              language = if (settings.language == "*") Language.AllLanguages else settings.language,
+              results = getHits(response.result, settings.language, settings.fallback)
             ))
           case Failure(ex) => errorHandler(ex)
         }
       }
     }
 
+    private def getAggregations(settings: SearchSettings): List[AbstractAggregation] = {
+
+      val resourceTypeFilters = SearchApiProperties.taxonomyResourceTypeNames.map(resourceType =>
+        (resourceType, boolQuery().must(
+          nestedQuery("contexts").query(termQuery("contexts.resourceTypes.nb.raw", resourceType)))
+      ))
+      val agg = filtersAggregation("resourceTypeAggregation").queries(resourceTypeFilters)
+      List(agg)
+    }
+
     /**
       * Returns a list of QueryDefinitions of different search filters depending on settings.
+      *
       * @param settings SearchSettings object.
       * @return List of QueryDefinitions.
       */
@@ -131,7 +159,7 @@ trait MultiSearchService {
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
 
-      val supportedLanguageFilter = if(settings.supportedLanguages.isEmpty) None else Some(
+      val supportedLanguageFilter = if (settings.supportedLanguages.isEmpty) None else Some(
         boolQuery().should(
           settings.supportedLanguages.map(l =>
             termQuery("supportedLanguages", l))
@@ -151,7 +179,7 @@ trait MultiSearchService {
     }
 
     private def subjectFilter(subjects: List[String]) = {
-      if(subjects.isEmpty) None else Some(
+      if (subjects.isEmpty) None else Some(
         boolQuery().must(
           subjects.map(subjectName =>
             nestedQuery("contexts").query(
