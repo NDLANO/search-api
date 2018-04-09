@@ -162,8 +162,6 @@ trait SearchConverterService {
       * @return Language if found.
       */
     def getLanguageFromHit(result: SearchHit): Option[String] = {
-      // TODO: Check if this is good enough for all types.
-      // TODO: Maybe do something like if any of the splits are in supportedLanguages that is a language? TEST IT
       def keyToLanguage(keys: Iterable[String]): Option[String] = {
         val keyLanguages = keys.toList.flatMap(key => key.split('.').toList match {
           case _ :: language :: _ => Some(language)

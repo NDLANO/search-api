@@ -47,7 +47,6 @@ trait SearchController {
     val response500 = ResponseMessage(500, "Unknown error", Some("Error"))
 
 
-    // TODO: Documentation for multi rather than article
     private val correlationId = Param("X-Correlation-ID", "User supplied correlation-id. May be omitted.")
     private val query = Param("query", "Return only results with content matching the specified query.")
     private val language = Param("language", "The ISO 639-1 language code describing language.")
