@@ -368,7 +368,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering on learning-resource-type works") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Standard), language = "all"))
+    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article), language = "all"))
     val Success(search2) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.TopicArticle), language = "all"))
 
     search.totalCount should be(6)
@@ -379,7 +379,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering on multiple context-types returns every type") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Standard, LearningResourceType.TopicArticle), language = "all"))
+    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle), language = "all"))
 
     search.totalCount should be(10)
     search.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,10,11))

@@ -48,8 +48,8 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
         topicResourceConnections,
         subjects,
         subjectTopicConnections
-        ) = article.articleType match {
-        case "standard" =>
+        ) = LearningResourceType.valueOf(article.articleType) match {
+        case Some(LearningResourceType.Article) =>
           val resources = List(Resource(s"urn:resource:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:100/resource:$index"))
           val topics = List(Resource("urn:topic:100", "Topic1", Some("urn:article:100"), "/subject:1/topic:100"))
           val topicResourceConnections = List(TopicResourceConnection("urn:topic:100", s"urn:resource:$index", "urn:topic-resource:abc123", true, 1))
@@ -57,7 +57,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
           val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:100", "urn:subject-topic:8180abc", true, 1))
 
           (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
-        case "topic-article" =>
+        case Some(LearningResourceType.TopicArticle) =>
           val resources = List()
         val topicResourceConnections = List()
           val topics = List(Resource(s"urn:topic:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:$index"))
@@ -65,6 +65,8 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
           val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", s"urn:topic:$index", "urn:subject-topic:8180abc", true, 1))
 
           (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
+        case _ =>
+          (List.empty, List.empty, List.empty, List.empty, List.empty)
       }
 
       val generatedBundle = Bundle(
@@ -234,7 +236,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
     val results = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.TopicArticle.toString), fallback = false)
     results.get.totalCount should be(0)
 
-    val results2 = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.Standard.toString), fallback = false)
+    val results2 = articleSearchService.matchingQuery("bil", List(), "nb", None, 1, 10, Sort.ByRelevanceDesc, Seq(LearningResourceType.Article.toString), fallback = false)
     results2.get.totalCount should be(3)
   }
 

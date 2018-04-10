@@ -41,7 +41,7 @@ object Article {
 }
 
 object LearningResourceType extends Enumeration {
-  val Standard = Value("standard")
+  val Article = Value("article")
   val TopicArticle = Value("topic-article")
   val LearningPath = Value("learningpath")
 

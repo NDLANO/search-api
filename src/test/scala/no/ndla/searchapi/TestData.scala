@@ -84,7 +84,7 @@ object TestData {
     today.minusDays(4),
     today.minusDays(2),
     "ndalId54321",
-    LearningResourceType.Standard.toString)
+    LearningResourceType.Article.toString)
 
   val sampleDomainArticle = Article(
     Option(articleId),
@@ -101,7 +101,7 @@ object TestData {
     today,
     today,
     "ndalId54321",
-    LearningResourceType.Standard.toString
+    LearningResourceType.Article.toString
   )
 
   val sampleDomainArticle2 = Article(
@@ -119,7 +119,7 @@ object TestData {
     today,
     today,
     "ndalId54321",
-    LearningResourceType.Standard.toString
+    LearningResourceType.Article.toString
   )
   val sampleArticleWithByNcSa: Article = sampleArticleWithPublicDomain.copy(copyright=byNcSaCopyright)
   val sampleArticleWithCopyrighted: Article = sampleArticleWithPublicDomain.copy(copyright=copyrighted )

@@ -374,7 +374,7 @@ trait SearchConverterService {
           if (resourceId.contains(":topic:")) {
             Success(LearningResourceType.TopicArticle)
           } else {
-            Success(LearningResourceType.Standard)
+            Success(LearningResourceType.Article)
           }
         case Some(uri) if uri.contains("learningpath") => Success(LearningResourceType.LearningPath)
         case _ =>

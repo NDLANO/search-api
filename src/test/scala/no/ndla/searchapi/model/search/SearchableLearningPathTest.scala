@@ -41,7 +41,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
         breadcrumbs = SearchableLanguageList(Seq(
           LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
         )),
-        contextType = LearningResourceType.Standard.toString,
+        contextType = LearningResourceType.Article.toString,
         filters = List(ContextFilter(
           name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
