@@ -206,7 +206,6 @@ trait SearchConverterService {
       val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
 
-      val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val visualElement = findByLanguageOrBestEffort(visualElements, language)
@@ -224,7 +223,7 @@ trait SearchConverterService {
         url,
         searchableArticle.license,
         searchableArticle.articleType,
-        supportedLanguages
+        searchableArticle.supportedLanguages
       )
     }
 
@@ -243,8 +242,6 @@ trait SearchConverterService {
       val introduction = findByLanguageOrBestEffort(introductions, language).getOrElse(api.learningpath.Introduction("", Language.UnknownLanguage))
       val tag = findByLanguageOrBestEffort(tags, language).getOrElse(api.learningpath.LearningPathTags(Seq.empty, Language.UnknownLanguage))
 
-      val supportedLanguages = getSupportedLanguages(titles, descriptions, introductions, tags)
-
       val url = s"${SearchApiProperties.ExternalApiUrls("learningpath-api")}/${searchableLearningPath.id}"
 
       LearningPathSummary(
@@ -259,7 +256,7 @@ trait SearchConverterService {
         searchableLearningPath.lastUpdated,
         tag,
         searchableLearningPath.license,
-        supportedLanguages,
+        searchableLearningPath.supportedLanguages,
         searchableLearningPath.isBasedOn
       )
 
@@ -564,15 +561,21 @@ trait SearchConverterService {
           val msg = s"$taxonomyType $id could not be found in taxonomy."
           logger.error(msg)
           Failure(ElasticIndexingException(msg))
-        case (Seq(resource), Nil) =>
-          getResourceTaxonomyContexts(resource, taxonomyType, bundle)
-        case (Nil, Seq(topic)) =>
-          getTopicTaxonomyContexts(topic, taxonomyType, bundle)
-        case (r, t) =>
-          val taxonomyEntries = r ++ t
-          val msg = s"$id is specified in taxonomy ${taxonomyEntries.size} times."
-          logger.error(msg)
-          Failure(ElasticIndexingException(msg))
+        case (resources, topics) =>
+
+          val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, taxonomyType, bundle))
+          val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, taxonomyType, bundle))
+
+          val all = resourceContexts ++ topicContexts
+
+          val successful = all.collect{case Success(c) => c}
+          val failed = all.collect{case Failure(e) => Failure(e)}
+
+          if(failed.nonEmpty) {
+            failed.head
+          } else {
+            Success(successful.flatten)
+          }
       }
     }
 
