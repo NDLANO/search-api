@@ -58,7 +58,6 @@ trait SearchController {
              Default is by -relevance (desc) when query is set, and id (asc) when query is empty.""".stripMargin)
     private val pageNo = Param("page", "The page number of the search hits to display.")
     private val pageSize = Param("page-size", "The number of search hits to display for each page.")
-    private val size = Param("size", "Limit the number of results to this many elements")
     private val learningResourceTypes = Param("learning-resource-types", "Return only learning resources of specific type(s). To provide multiple types, separate by comma (,).")
     private val learningResourceIds = Param("ids", "Return only learning resources that have one of the provided ids. To provide multiple ids, separate by comma (,).")
     private val types = Param("types", "A comma separated list of types to search in. f.ex articles,images")
@@ -76,7 +75,7 @@ trait SearchController {
 
     private def asPathParam[T: Manifest : NotNothing](param: Param) = pathParam[T](param.paramName).description(param.description)
 
-    private val searchAPIs =
+    private val draftSearchDoc =
       (apiOperation[Seq[SearchResults]]("searchAPIs")
         summary "search across APIs"
         notes "search across APIs"
@@ -90,8 +89,7 @@ trait SearchController {
       )
         authorizations "oauth2"
         responseMessages response500)
-
-    get("/", operation(searchAPIs)) {
+    get("/draft/", operation(draftSearchDoc)) {
       val language = paramOrDefault(this.language.paramName, "nb")
       val sort = Sort.ByRelevanceDesc
       val page = intOrDefault(this.pageNo.paramName, 1)
@@ -179,72 +177,6 @@ trait SearchController {
       articleSearch(query, sort, language, license, page, pageSize, idList, articleTypesFilter, fallback)
     }
 
-
-    private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
-      summary "Find learning resources"
-      notes "Shows all learning resources. You can search too."
-      parameters(
-      asHeaderParam[Option[String]](correlationId),
-      asQueryParam[Option[Int]](pageNo),
-      asQueryParam[Option[Int]](pageSize),
-      asQueryParam[Option[String]](contextTypes),
-      asQueryParam[Option[String]](language),
-      asQueryParam[Option[String]](learningResourceIds),
-      asQueryParam[Option[String]](learningResourceTypes),
-      asQueryParam[Option[String]](levels),
-      asQueryParam[Option[String]](license),
-      asQueryParam[Option[String]](query),
-      asQueryParam[Option[String]](sort),
-      asQueryParam[Option[Boolean]](fallback),
-      asQueryParam[Option[String]](subjects),
-      asQueryParam[Option[List[String]]](supportedLanguages)
-    )
-      authorizations "oauth2"
-      responseMessages response500)
-    get("/content/", operation(multiSearchDoc)) {
-      val page = intOrDefault(this.pageNo.paramName, 1)
-      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
-      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
-      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
-      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
-      val resourceTypes = paramAsListOfString(this.learningResourceTypes.paramName)
-      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
-      val license = paramOrNone(this.license.paramName)
-      val query = paramOrNone(this.query.paramName)
-      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
-      val subjects = paramAsListOfString(this.subjects.paramName)
-      val supportedLanguagesFilter = paramAsListOfString(this.supportedLanguages.paramName)
-
-      val settings = SearchSettings(
-        fallback = fallback,
-        language = language,
-        license = license,
-        page = page,
-        pageSize = pageSize,
-        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
-        withIdIn = idList,
-        taxonomyFilters = taxonomyFilters,
-        subjects = subjects,
-        resourceTypes = resourceTypes,
-        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter
-      )
-      multiSearch(query, settings)
-    }
-
-    private def multiSearch(query: Option[String], settings: SearchSettings) = {
-      val result = query match {
-        case Some(q) => multiSearchService.matchingQuery(query = q, settings)
-        case None => multiSearchService.all(settings)
-      }
-
-      result match {
-        case Success(searchResult) => searchResult
-        case Failure(ex) => errorHandler(ex)
-      }
-    }
-
     private def learningPathSearch(query: Option[String],
                                    withIdIn: List[Long],
                                    taggedWith: Option[String],
@@ -311,9 +243,72 @@ trait SearchController {
       val taggedWith = paramOrNone(this.tag.paramName)
 
       learningPathSearch(query, idList, taggedWith, sort, language, page, pageSize, fallback)
-
     }
 
+    private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
+      summary "Find learning resources"
+      notes "Shows all learning resources. You can search too."
+      parameters(
+      asHeaderParam[Option[String]](correlationId),
+      asQueryParam[Option[Int]](pageNo),
+      asQueryParam[Option[Int]](pageSize),
+      asQueryParam[Option[String]](contextTypes),
+      asQueryParam[Option[String]](language),
+      asQueryParam[Option[String]](learningResourceIds),
+      asQueryParam[Option[String]](learningResourceTypes),
+      asQueryParam[Option[String]](levels),
+      asQueryParam[Option[String]](license),
+      asQueryParam[Option[String]](query),
+      asQueryParam[Option[String]](sort),
+      asQueryParam[Option[Boolean]](fallback),
+      asQueryParam[Option[String]](subjects),
+      asQueryParam[Option[List[String]]](supportedLanguages)
+    )
+      authorizations "oauth2"
+      responseMessages response500)
+    get("/", operation(multiSearchDoc)) {
+      val page = intOrDefault(this.pageNo.paramName, 1)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val resourceTypes = paramAsListOfString(this.learningResourceTypes.paramName)
+      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
+      val license = paramOrNone(this.license.paramName)
+      val query = paramOrNone(this.query.paramName)
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+      val subjects = paramAsListOfString(this.subjects.paramName)
+      val supportedLanguagesFilter = paramAsListOfString(this.supportedLanguages.paramName)
+
+      val settings = SearchSettings(
+        fallback = fallback,
+        language = language,
+        license = license,
+        page = page,
+        pageSize = pageSize,
+        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
+        withIdIn = idList,
+        taxonomyFilters = taxonomyFilters,
+        subjects = subjects,
+        resourceTypes = resourceTypes,
+        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        supportedLanguages = supportedLanguagesFilter
+      )
+      multiSearch(query, settings)
+    }
+
+    private def multiSearch(query: Option[String], settings: SearchSettings) = {
+      val result = query match {
+        case Some(q) => multiSearchService.matchingQuery(query = q, settings)
+        case None => multiSearchService.all(settings)
+      }
+
+      result match {
+        case Success(searchResult) => searchResult
+        case Failure(ex) => errorHandler(ex)
+      }
+    }
   }
 
 }
