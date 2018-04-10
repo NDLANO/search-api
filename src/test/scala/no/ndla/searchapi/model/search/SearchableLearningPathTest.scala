@@ -83,6 +83,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
       learningsteps = learningsteps,
       license = Copyright(License("by-sa", Some("bysasaa"), None), Seq(Author("Supplier", "Jonas"), Author("Originator", "Kakemonsteret"))),
       isBasedOn = Some(1001),
+      supportedLanguages = List("nb", "en", "nn"),
       contexts = taxonomyContexts
     )
 

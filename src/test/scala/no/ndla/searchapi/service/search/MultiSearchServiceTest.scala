@@ -397,24 +397,24 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   test("That filtering on supportedLanguages works") {
     val Success(search) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en"), language = "all"))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(10,11))
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 10,11))
 
     val Success(search2) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
-    search2.totalCount should be(10)
-    search2.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,10,11))
+    search2.totalCount should be(15)
+    search2.results.map(_.id) should be(Seq(1,1,2,2,3,3,4,5,5,6,7,8,9,10,11))
 
     val Success(search3) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("nb"), language = "all"))
-    search3.totalCount should be(9)
-    search3.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,11))
+    search3.totalCount should be(13)
+    search3.results.map(_.id) should be(Seq(1,1,2,2,3,3,4,5,6,7,8,9,11))
   }
 
   test("That filtering on supportedLanguages should still prioritize the selected language") {
     val Success(search) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en"), language = "nb"))
 
-    search.totalCount should be(1)
-    search.results.head.id should be(11)
-    search.results.head.title.language should be("nb")
+    search.totalCount should be(4)
+    search.results.map(_.id) should be(Seq(2,3,4,11))
+    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb"))
   }
 
   test("That count of resource types is correct") {

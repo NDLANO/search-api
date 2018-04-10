@@ -107,6 +107,8 @@ trait SearchConverterService {
           }
       }
 
+      val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description, lp.tags).toList
+
       taxonomyForLearningPath match {
         case Success(contexts) =>
           if (contexts.isEmpty) {
@@ -133,6 +135,7 @@ trait SearchConverterService {
               learningsteps = lp.learningsteps.map(asSearchableLearningStep),
               license = license,
               isBasedOn = lp.isBasedOn,
+              supportedLanguages = supportedLanguages,
               contexts = contexts
             ))
           }

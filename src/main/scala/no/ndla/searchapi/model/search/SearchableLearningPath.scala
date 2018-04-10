@@ -26,6 +26,7 @@ case class SearchableLearningPath(id: Long,
                                   learningsteps: List[SearchableLearningStep],
                                   license: Copyright,
                                   isBasedOn: Option[Long],
+                                  supportedLanguages: List[String],
                                   contexts: List[SearchableTaxonomyContext])
 
 class SearchableLearningPathSerializer
@@ -53,6 +54,7 @@ class SearchableLearningPathSerializer
               (obj \ "learningsteps").extract[List[SearchableLearningStep]],
             license = (obj \ "license").extract[Copyright],
             isBasedOn = (obj \ "isBasedOn").extract[Option[Long]],
+            supportedLanguages = (obj \ "supportedLanguages").extract[List[String]],
             contexts =
               (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
@@ -87,6 +89,7 @@ object LanguagelessSearchableLearningPath {
       learningsteps: List[SearchableLearningStep],
       license: Copyright,
       isBasedOn: Option[Long],
+      supportedLanguages: List[String],
       contexts: List[SearchableTaxonomyContext])
 
   def apply(searchableLearningPath: SearchableLearningPath)
@@ -102,6 +105,7 @@ object LanguagelessSearchableLearningPath {
       searchableLearningPath.learningsteps,
       searchableLearningPath.license,
       searchableLearningPath.isBasedOn,
+      searchableLearningPath.supportedLanguages,
       searchableLearningPath.contexts
     )
   }
