@@ -227,7 +227,7 @@ trait SearchController {
         taxonomyFilters = taxonomyFilters,
         subjects = subjects,
         resourceTypes = resourceTypes,
-        contextTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter
       )
       multiSearch(query, settings)

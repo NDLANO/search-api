@@ -474,7 +474,7 @@ object TestData {
     taxonomyFilters = List.empty,
     subjects = List.empty,
     resourceTypes = List.empty,
-    contextTypes = List.empty,
+    learningResourceTypes = List.empty,
     supportedLanguages = List.empty
   )
 }

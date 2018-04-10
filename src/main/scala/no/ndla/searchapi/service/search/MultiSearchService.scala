@@ -154,7 +154,7 @@ trait MultiSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
 
-      val taxonomyContextFilter = contextTypeFilter(settings.contextTypes)
+      val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)

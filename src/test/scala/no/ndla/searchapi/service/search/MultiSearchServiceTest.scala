@@ -367,9 +367,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search4.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }
 
-  test("That filtering on context-type works") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.Standard), language = "all"))
-    val Success(search2) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.TopicArticle), language = "all"))
+  test("That filtering on learning-resource-type works") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Standard), language = "all"))
+    val Success(search2) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.TopicArticle), language = "all"))
 
     search.totalCount should be(6)
     search.results.map(_.id) should be(Seq(1,2,3,5,6,7))
@@ -379,14 +379,14 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering on multiple context-types returns every type") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.Standard, LearningResourceType.TopicArticle), language = "all"))
+    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Standard, LearningResourceType.TopicArticle), language = "all"))
 
     search.totalCount should be(10)
     search.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,10,11))
   }
 
-  test("That filtering on learningpath context-type returns learningpaths") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(contextTypes = List(LearningResourceType.LearningPath), language = "all"))
+  test("That filtering on learningpath learningresourcetype returns learningpaths") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.LearningPath), language = "all"))
 
     search.totalCount should be(5)
     search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5))
