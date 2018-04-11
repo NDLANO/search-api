@@ -7,8 +7,6 @@
 
 package no.ndla.searchapi.integration
 
-import javax.naming.directory.InitialDirContext
-
 import com.amazonaws.regions.{Region, Regions}
 import com.netaporter.uri.dsl._
 import com.sksamuel.elastic4s.ElasticsearchClientUri
