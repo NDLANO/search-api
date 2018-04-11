@@ -18,7 +18,9 @@ case class SearchableTaxonomyContext(id: String,
                                      breadcrumbs: SearchableLanguageList,
                                      contextType: String,
                                      filters: List[TaxonomyFilter],
-                                     resourceTypes: SearchableLanguageList)
+                                     resourceTypes: SearchableLanguageList,
+                                     resourceTypeIds: List[String]
+                                    )
 
 class SearchableTaxonomyContextSerializer
     extends CustomSerializer[SearchableTaxonomyContext](_ =>
@@ -34,7 +36,8 @@ class SearchableTaxonomyContextSerializer
             breadcrumbs = SearchableLanguageList("breadcrumbs", obj),
             contextType = (obj \ "contextType").extract[String],
             filters = SearchableContextFilters("filters", obj),
-            resourceTypes = SearchableLanguageList("resourceTypes", obj)
+            resourceTypes = SearchableLanguageList("resourceTypes", obj),
+            resourceTypeIds = (obj \ "resourceTypeIds").extract[List[String]]
           )
       }, {
         case context: SearchableTaxonomyContext =>
@@ -71,8 +74,8 @@ object LanguagelessSearchableTaxonomyContext {
   case class LanguagelessSearchableTaxonomyContext(id: String,
                                                    path: String,
                                                    subjectId: String,
-                                                   contextType: String
-                                                  )
+                                                   contextType: String,
+                                                   resourceTypeIds: List[String])
 
   def apply(searchableTaxonomyContext: SearchableTaxonomyContext)
     : LanguagelessSearchableTaxonomyContext = {
@@ -80,7 +83,8 @@ object LanguagelessSearchableTaxonomyContext {
       id = searchableTaxonomyContext.id,
       path = searchableTaxonomyContext.path,
       subjectId = searchableTaxonomyContext.subjectId,
-      contextType = searchableTaxonomyContext.contextType
+      contextType = searchableTaxonomyContext.contextType,
+      resourceTypeIds = searchableTaxonomyContext.resourceTypeIds
     )
   }
 }

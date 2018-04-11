@@ -350,19 +350,19 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for resource-types works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagartikkel")))
+    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:academicArticle")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(2, 5))
 
-    val Success(search2) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff")))
+    val Success(search2) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
     search2.totalCount should be(6)
     search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
 
-    val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff", "Vurderingsressurs")))
+    val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
     search3.totalCount should be(1)
     search3.results.map(_.id) should be(Seq(7))
 
-    val Success(search4) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Læringssti")))
+    val Success(search4) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:learningpath")))
     search4.totalCount should be(4)
     search4.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }

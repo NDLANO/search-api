@@ -476,8 +476,6 @@ trait SearchConverterService {
       val subParents = resourceTypes.flatMap(rt => getResourceTypeParents(rt, bundle.resourceTypes)).filterNot(resourceTypes.contains)
       val resourceTypesWithParents = (resourceTypes ++ subParents).distinct
 
-      val searchableResourceTypes = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypesWithParents.map(_.name)))) // TODO: Get translations
-
       getContextType(resource.id, resource.contentUri) match {
         case Success(contextType) =>
           val contexts = parentTopicsAndPaths.map({
@@ -489,7 +487,7 @@ trait SearchConverterService {
                 val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(resource.id, pathIds, subject, contextType, contextFilters, searchableResourceTypes, bundle)
+                getSearchableTaxonomyContext(resource.id, pathIds, subject, contextType, contextFilters, resourceTypesWithParents, bundle)
               })
           })
           Success(contexts.flatten)
@@ -502,11 +500,12 @@ trait SearchConverterService {
                                              subject: Resource,
                                              contextType: LearningResourceType.Value,
                                              contextFilters: List[TaxonomyFilter],
-                                             resourceTypes: SearchableLanguageList,
+                                             resourceTypes: List[ResourceType],
                                              bundle: Bundle) = {
 
       val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
+      val resourceTypesLanguageValues = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
       val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
       val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
       val breadcrumbs = SearchableLanguageList(breadcrumbList)
@@ -519,7 +518,8 @@ trait SearchConverterService {
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
         filters = contextFilters,
-        resourceTypes = resourceTypes
+        resourceTypes = resourceTypesLanguageValues,
+        resourceTypeIds = resourceTypes.map(_.id)
       )
     }
 
@@ -539,7 +539,7 @@ trait SearchConverterService {
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
                 val pathIds = (topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(topic.id, pathIds, subject, contextType, contextFilters, SearchableLanguageList(Seq.empty), bundle)
+                getSearchableTaxonomyContext(topic.id, pathIds, subject, contextType, contextFilters, List.empty, bundle)
               })
           })
           Success(contexts.flatten)

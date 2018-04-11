@@ -207,11 +207,9 @@ trait MultiSearchService {
     private def resourceTypeFilter(resourceTypes: List[String]) = {
       if (resourceTypes.isEmpty) None else Some(
         boolQuery().must(
-          resourceTypes.map(resourceTypeName =>
+          resourceTypes.map(resourceTypeId =>
             nestedQuery("contexts").query(
-              boolQuery().should(
-                ISO639.languagePriority.map(l => termQuery(s"contexts.resourceTypes.$l.raw", resourceTypeName))
-              )
+              termQuery(s"contexts.resourceTypeIds", resourceTypeId)
             )
           )
         )

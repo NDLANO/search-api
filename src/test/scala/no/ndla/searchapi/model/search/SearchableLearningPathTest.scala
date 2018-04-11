@@ -49,6 +49,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
         )
         ),
+        resourceTypeIds = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle"),
         resourceTypes = SearchableLanguageList(Seq(LanguageValue("nb", Seq("Fagstoff", "Fagartikkel"))))
       )
     )
