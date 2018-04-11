@@ -118,7 +118,8 @@ trait SearchController {
         supportedLanguages = List.empty
       )
 
-      groupSearch(query, settings.copy(resourceTypes = resourceTypes))
+      val x = groupSearch(query, settings.copy(resourceTypes = resourceTypes))
+      x
     }
 
     private def searchInGroup(query: Option[String], group: String, settings: SearchSettings): Try[GroupSearchResult] = {
@@ -142,7 +143,8 @@ trait SearchController {
     }
 
     private def groupSearch(query: Option[String], settings: SearchSettings) = {
-      implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(settings.resourceTypes.size))
+      implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(settings.resourceTypes.size))
+
       val searches = settings.resourceTypes.map(group =>
         Future{searchInGroup(query, group, settings.copy(resourceTypes = List(group)))})
 
