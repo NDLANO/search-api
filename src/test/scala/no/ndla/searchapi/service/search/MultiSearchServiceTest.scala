@@ -340,11 +340,11 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for subjects works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("Historie"), language="all"))
+    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2"), language="all"))
     search.totalCount should be(6)
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11))
 
-    val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("Historie", "Matte")))
+    val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2", "urn:subject:1")))
     search2.totalCount should be(2)
     search2.results.map(_.id) should be(Seq(1, 5))
   }

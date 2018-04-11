@@ -181,11 +181,9 @@ trait MultiSearchService {
     private def subjectFilter(subjects: List[String]) = {
       if (subjects.isEmpty) None else Some(
         boolQuery().must(
-          subjects.map(subjectName =>
+          subjects.map(subjectId =>
             nestedQuery("contexts").query(
-              boolQuery().should(
-                ISO639.languagePriority.map(l => termQuery(s"contexts.subject.$l.raw", subjectName))
-              )
+              termQuery(s"contexts.subjectId", subjectId)
             )
           )
         )
