@@ -76,7 +76,6 @@ trait MultiSearchService {
 
     def executeSearch(settings: SearchSettings, baseQuery: BoolQueryDefinition): Try[MultiSearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
-      val aggregations = getAggregations(settings)
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
@@ -86,7 +85,6 @@ trait MultiSearchService {
       } else {
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
-          .aggregations(aggregations)
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
@@ -95,21 +93,8 @@ trait MultiSearchService {
         e4sClient.execute(searchToExecute) match {
           case Success(response) =>
 
-            val resourceTypeAggregationMap = response.result.aggregations
-              .keyedFilters("resourceTypeAggregation").aggResults
-
-            val totalLearningPaths = resourceTypeAggregationMap
-              .get(SearchApiProperties.taxonomyLearningPathName).map(_.docCount).getOrElse(0: Long)
-            val totalSubjectMaterials = resourceTypeAggregationMap
-              .get(SearchApiProperties.taxonomySubjectMaterialName).map(_.docCount).getOrElse(0: Long)
-            val totalTasks = resourceTypeAggregationMap
-              .get(SearchApiProperties.taxonomyTasksName).map(_.docCount).getOrElse(0: Long)
-
             Success(MultiSearchResult(
               totalCount = response.result.totalHits,
-              totalCountLearningPaths = totalLearningPaths,
-              totalCountSubjectMaterial = totalSubjectMaterials,
-              totalCountTasks = totalTasks,
               page = settings.page,
               pageSize = numResults,
               language = if (settings.language == "*") Language.AllLanguages else settings.language,
@@ -118,16 +103,6 @@ trait MultiSearchService {
           case Failure(ex) => errorHandler(ex)
         }
       }
-    }
-
-    private def getAggregations(settings: SearchSettings): List[AbstractAggregation] = {
-
-      val resourceTypeFilters = SearchApiProperties.taxonomyResourceTypeNames.map(resourceType =>
-        (resourceType, boolQuery().must(
-          nestedQuery("contexts").query(termQuery("contexts.resourceTypes.nb.raw", resourceType)))
-      ))
-      val agg = filtersAggregation("resourceTypeAggregation").queries(resourceTypeFilters)
-      List(agg)
     }
 
     /**
