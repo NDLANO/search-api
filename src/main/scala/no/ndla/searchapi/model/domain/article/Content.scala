@@ -7,6 +7,7 @@
 
 package no.ndla.searchapi.model.domain.article
 
+import no.ndla.searchapi.model.domain.{Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer
 
@@ -16,14 +17,14 @@ sealed trait Content {
 
 case class Article(id: Option[Long],
                    revision: Option[Int],
-                   title: Seq[ArticleTitle],
+                   title: Seq[Title],
                    content: Seq[ArticleContent],
                    copyright: Copyright,
-                   tags: Seq[ArticleTag],
+                   tags: Seq[Tag],
                    requiredLibraries: Seq[RequiredLibrary],
                    visualElement: Seq[VisualElement],
                    introduction: Seq[ArticleIntroduction],
-                   metaDescription: Seq[ArticleMetaDescription],
+                   metaDescription: Seq[MetaDescription],
                    metaImageId: Option[String],
                    created: DateTime,
                    updated: DateTime,
@@ -40,27 +41,11 @@ object Article {
 }
 
 object LearningResourceType extends Enumeration {
-  val Standard = Value("standard")
+  val Article = Value("article")
   val TopicArticle = Value("topic-article")
   val LearningPath = Value("learningpath")
 
   def all = LearningResourceType.values.map(_.toString).toList
 
   def valueOf(s: String): Option[LearningResourceType.Value] = LearningResourceType.values.find(_.toString == s)
-}
-
-case class Concept(id: Option[Long],
-                   title: Seq[ConceptTitle],
-                   content: Seq[ConceptContent],
-                   copyright: Option[Copyright],
-                   created: DateTime,
-                   updated: DateTime) extends Content
-
-object Concept {
-  implicit val formats = org.json4s.DefaultFormats
-
-  val JSonSerializer = FieldSerializer[Concept](
-    FieldSerializer.ignore("id")
-      .orElse(FieldSerializer.ignore("revision"))
-  )
 }

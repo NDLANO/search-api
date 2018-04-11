@@ -16,6 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition}
+import no.ndla.network.AuthUser
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
@@ -103,7 +104,7 @@ trait IndexService {
             case notEmpty => notEmpty.head
           }
         case Failure(ex) =>
-          logger.error("Could not fetch taxonomy for indexing...")
+          logger.error("Could not fetch taxonomy for indexing...", ex)
           Failure(ex)
       }
     }

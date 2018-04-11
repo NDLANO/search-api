@@ -20,7 +20,7 @@ trait ApiSearchService {
   this: ConverterService
     with SearchApiClient
     with DraftApiClient
-    with LearningpathApiClient
+    with LearningPathApiClient
     with ImageApiClient
     with AudioApiClient =>
   val searchService: ApiSearchService

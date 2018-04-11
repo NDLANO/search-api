@@ -7,13 +7,15 @@
 
 package no.ndla.searchapi.service.search
 
-import no.ndla.searchapi.model.domain.article.{Article, ArticleContent, ArticleTag, ArticleTitle}
+import no.ndla.searchapi.model.domain.{Tag, Title}
+import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageList, SearchableLanguageValues}
 import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
+
 import scala.util.Success
 
 class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
@@ -23,10 +25,10 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
 
   val titles = List(
-    ArticleTitle("Bokmål tittel", "nb"), ArticleTitle("Nynorsk tittel", "nn"),
-    ArticleTitle("English title", "en"), ArticleTitle("Titre francais", "fr"),
-    ArticleTitle("Deutsch titel", "de"), ArticleTitle("Titulo espanol", "es"),
-    ArticleTitle("Nekonata titolo", "unknown"))
+    Title("Bokmål tittel", "nb"), Title("Nynorsk tittel", "nn"),
+    Title("English title", "en"), Title("Titre francais", "fr"),
+    Title("Deutsch titel", "de"), Title("Titulo espanol", "es"),
+    Title("Nekonata titolo", "unknown"))
 
   val articles = Seq(
     ArticleContent("Bokmål artikkel", "nb"), ArticleContent("Nynorsk artikkel", "nn"),
@@ -36,10 +38,10 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   )
 
   val articleTags = Seq(
-    ArticleTag(Seq("fugl", "fisk"), "nb"), ArticleTag(Seq("fugl", "fisk"), "nn"),
-    ArticleTag(Seq("bird", "fish"), "en"), ArticleTag(Seq("got", "tired"), "fr"),
-    ArticleTag(Seq("of", "translating"), "de"), ArticleTag(Seq("all", "of"), "es"),
-    ArticleTag(Seq("the", "words"), "unknown")
+    Tag(Seq("fugl", "fisk"), "nb"), Tag(Seq("fugl", "fisk"), "nn"),
+    Tag(Seq("bird", "fish"), "en"), Tag(Seq("got", "tired"), "fr"),
+    Tag(Seq("of", "translating"), "de"), Tag(Seq("all", "of"), "es"),
+    Tag(Seq("the", "words"), "unknown")
   )
 
   override def beforeAll(): Unit = {
@@ -216,7 +218,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     languageList.languageValues.find(_.language == lang).get.value
   }
 
-  private def titleForLang(titles: Seq[ArticleTitle], lang: String = "unknown"): String = {
+  private def titleForLang(titles: Seq[Title], lang: String = "unknown"): String = {
     titles.find(_.language == lang).get.title
   }
 
@@ -224,7 +226,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     articles.find(_.language == lang).get.content
   }
 
-  private def tagsForLang(tags: Seq[ArticleTag], lang: String = "unknown") = {
+  private def tagsForLang(tags: Seq[Tag], lang: String = "unknown") = {
     tags.find(_.language == lang).get.tags
   }
 }

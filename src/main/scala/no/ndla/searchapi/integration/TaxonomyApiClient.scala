@@ -10,10 +10,10 @@ package no.ndla.searchapi.integration
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
 import no.ndla.network.NdlaClient
-import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.taxonomy._
+import org.json4s.DefaultFormats
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import scalaj.http.Http
 
 trait TaxonomyApiClient {
@@ -21,80 +21,8 @@ trait TaxonomyApiClient {
   val taxonomyApiClient: TaxonomyApiClient
 
   class TaxonomyApiClient extends LazyLogging {
-    implicit val formats = org.json4s.DefaultFormats
+    implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
     private val TaxonomyApiEndpoint = s"http://$ApiGatewayUrl/taxonomy/v1"
-
-    def getResource(resourceId: String): Try[Resource] = {
-      get[Resource](s"$TaxonomyApiEndpoint/resources/$resourceId")
-    }
-
-    def getTopic(topicId: String): Try[Resource] = {
-      get[Resource](s"$TaxonomyApiEndpoint/topics/$topicId")
-    }
-
-    def getSubject(subjectId: String): Try[Resource] = {
-      get[Resource](s"$TaxonomyApiEndpoint/subjects/$subjectId")
-    }
-
-    def getRelevanceById(relevanceId: String): Try[Relevance] = {
-      get[Relevance](s"$TaxonomyApiEndpoint/relevances/$relevanceId")
-    }
-
-    /**
-      * Returns sequence of names with associated language in a tuple.
-      * @param resourceId Id of resource to fetch.
-      * @return Listuence of tuples with (name, language)
-      */
-    def getResourceTranslations(resourceId: String): Try[List[Translation]] = {
-      for {
-        topic <- getResource(resourceId)
-        translations <- get[List[Translation]](
-          s"$TaxonomyApiEndpoint/resources/$resourceId/translations")
-      } yield translations :+ Translation(Language.DefaultLanguage, topic.name)
-    }
-
-    /**
-      * Returns sequence of names with associated language in a tuple.
-      * @param topicId Id of topic to fetch.
-      * @return Listuence of tuples with (name, language)
-      */
-    def getTopicTranslations(topicId: String): Try[List[Translation]] = {
-      for {
-        topic <- getTopic(topicId)
-        translations <- get[List[Translation]](
-          s"$TaxonomyApiEndpoint/topics/$topicId/translations")
-      } yield translations :+ Translation(Language.DefaultLanguage, topic.name)
-    }
-
-    /**
-      * Returns sequence of names with associated language in a tuple.
-      * @param subjectId Id of subject to fetch.
-      * @return Listuence of tuples with (name, language)
-      */
-    def getSubjectTranslations(subjectId: String): Try[List[Translation]] = {
-      for {
-        subject <- getSubject(subjectId)
-        translations <- get[List[Translation]](
-          s"$TaxonomyApiEndpoint/subjects/$subjectId/translations")
-      } yield
-        translations :+ Translation(Language.DefaultLanguage, subject.name)
-    }
-
-    def getTranslations(id: String): Try[List[Translation]] = {
-      if (id.contains(":resource:")) {
-        getResourceTranslations(id)
-      } else if (id.contains(":topic:")) {
-        getTopicTranslations(id)
-      } else if (id.contains(":subject:")) {
-        getSubjectTranslations(id)
-      } else {
-        Failure(new RuntimeException("Nope")) // TODO: find (make?) more fitting exception
-      }
-    }
-
-    def resolvePath(path: String): Try[PathResolve] = {
-      get[PathResolve](s"$TaxonomyApiEndpoint/url/resolve", ("path", path))
-    }
 
     def getAllResources: Try[List[Resource]] =
       get[List[Resource]](s"$TaxonomyApiEndpoint/resources/")
@@ -137,28 +65,6 @@ trait TaxonomyApiClient {
     def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
       get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/")
 
-    def getFilterConnectionsForResource(
-        resourceId: String): Try[List[ResourceFilterConnection]] =
-      get[List[ResourceFilterConnection]](
-        s"$TaxonomyApiEndpoint/resources/$resourceId/filters")
-
-    def getFilterConnectionsForTopic(
-        topicId: String): Try[List[TopicFilterConnection]] =
-      get[List[TopicFilterConnection]](
-        s"$TaxonomyApiEndpoint/topics/$topicId/filters"
-      )
-
-    def queryResources(contentUri: String): Try[List[QueryResourceResult]] =
-      get[List[QueryResourceResult]](
-        s"$TaxonomyApiEndpoint/queries/resources/?contentURI=$contentUri")
-
-    def queryTopics(contentUri: String): Try[List[Resource]] =
-      get[List[Resource]](
-        s"$TaxonomyApiEndpoint/queries/topics/?contentURI=$contentUri")
-
-    def getFilter(filterId: String): Try[Filter] =
-      get[Filter](s"$TaxonomyApiEndpoint/filters/$filterId")
-
     def getTaxonomyBundle: Try[Bundle] = {
       logger.info("Fetching taxonomy in bulk...")
       for {
@@ -196,7 +102,7 @@ trait TaxonomyApiClient {
 
     private def get[A](url: String, params: (String, String)*)(
         implicit mf: Manifest[A]): Try[A] = {
-      ndlaClient.fetchWithForwardedAuth[A](Http(url).params(params))
+      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(20000,20000).params(params))
     }
   }
 }

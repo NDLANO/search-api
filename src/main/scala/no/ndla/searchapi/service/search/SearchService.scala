@@ -26,7 +26,7 @@ trait SearchService {
   this: Elastic4sClient with SearchConverterService with LazyLogging =>
 
   trait SearchService[T] {
-    val searchIndex: String
+    val searchIndex: List[String]
 
     /**
       * Returns hit as summary
@@ -70,6 +70,8 @@ trait SearchService {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.DESC).missing("_last")
             case _ => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.DESC).missing("_last")
           }
+        case (Sort.ByDurationAsc) => fieldSort("duration").order(SortOrder.ASC).missing("_last")
+        case (Sort.ByDurationDesc) => fieldSort("duration").order(SortOrder.DESC).missing("_last")
         case (Sort.ByRelevanceAsc) => fieldSort("_score").order(SortOrder.ASC)
         case (Sort.ByRelevanceDesc) => fieldSort("_score").order(SortOrder.DESC)
         case (Sort.ByLastUpdatedAsc) => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
@@ -93,12 +95,13 @@ trait SearchService {
         case e: NdlaSearchException =>
           e.rf.status match {
             case notFound: Int if notFound == 404 =>
-              logger.error(s"Index $searchIndex not found. Scheduling a reindex.")
+              val msg = s"Index ${e.rf.error.index.getOrElse("")} not found. Scheduling a reindex."
+              logger.error(msg)
               scheduleIndexDocuments()
-              Failure(new IndexNotFoundException(s"Index $searchIndex not found. Scheduling a reindex"))
+              Failure(new IndexNotFoundException(msg))
             case _ =>
               logger.error(e.getMessage)
-              Failure(new ElasticsearchException(s"Unable to execute search in $searchIndex", e.getMessage))
+              Failure(new ElasticsearchException(s"Unable to execute search in ${e.rf.error.index.getOrElse("")}", e.getMessage))
           }
         case t: Throwable => Failure(t)
       }

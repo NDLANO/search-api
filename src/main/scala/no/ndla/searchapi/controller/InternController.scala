@@ -10,44 +10,117 @@ package no.ndla.searchapi.controller
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import no.ndla.network.{ApplicationUrl, AuthUser}
-import no.ndla.searchapi.service.search.{ArticleIndexService, IndexService}
+import javax.servlet.http.HttpServletRequest
+import no.ndla.network.jwt.JWTExtractor
+import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
+import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.model.domain.ReindexResult
+import no.ndla.searchapi.service.search.{ArticleIndexService, IndexService, LearningPathIndexService}
+import org.apache.logging.log4j.ThreadContext
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.{BadRequest, InternalServerError, NotFound, Ok}
+import org.scalatra._
 
 import scala.concurrent._
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait InternController {
-  this: IndexService with ArticleIndexService =>
+  this: IndexService
+    with ArticleIndexService
+    with LearningPathIndexService =>
   val internController: InternController
 
   class InternController extends NdlaController {
 
     protected implicit override val jsonFormats: Formats = DefaultFormats
+    implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
 
-    post("/index") {
-      implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
-      val indexResults = for {
-        articleIndex <- Future {
-          AuthUser.set(request)
-          articleIndexService.indexDocuments
-        }
-        //TODO: learningpathIndex <- Future { learningpathIndexService.indexDocuments }
-      } yield articleIndex //TODO: Yield the others
-
-
+    private def resolveResultFuture(indexResults: Future[(Try[ReindexResult], Try[ReindexResult])]): ActionResult = {
       Await.result(indexResults, Duration(10, TimeUnit.MINUTES)) match {
-        case (Success(articleResult)) => //TODO: match others also
-          val indexTime = math.max(articleResult.millisUsed, 0)
-          val result = s"Completed indexing of ${articleResult.totalIndexed} articles in $indexTime ms." // TODO: update this
+        case (Success(articleResult), Success(learningPathResult)) =>
+          val arIndexTime = math.max(articleResult.millisUsed, 0)
+          val lpIndexTime = math.max(learningPathResult.millisUsed, 0)
+
+          val result = s"Completed indexing of ${articleResult.totalIndexed} articles in $arIndexTime ms, and ${learningPathResult.totalIndexed} learningpaths in $lpIndexTime ms."
           logger.info(result)
           Ok(result)
-        case (Failure(articleFail)) =>
-          logger.warn(articleFail.getMessage, articleFail)
+        case (Failure(articleFail), _) =>
+          logger.warn(s"Failed to index articles: ${articleFail.getMessage}", articleFail)
           InternalServerError(articleFail.getMessage)
+        case (_, Failure(learningPathFail)) =>
+          logger.warn(s"Failed to index learningpaths: ${learningPathFail.getMessage}", learningPathFail)
+          InternalServerError(learningPathFail.getMessage)
       }
     }
+
+    post("/index/article") {
+      val requestInfo = getRequestInfo
+      val indexResults = for {
+        articleIndex <- Future {
+          requestInfo.setRequestInfo()
+          articleIndexService.indexDocuments
+        }
+      } yield (articleIndex, Success(ReindexResult(0,0)))
+
+      resolveResultFuture(indexResults)
+    }
+
+    post("/index/learningpath") {
+      val requestInfo = getRequestInfo
+      val indexResults = for {
+        learningPathIndex <- Future {
+          requestInfo.setRequestInfo()
+          learningPathIndexService.indexDocuments
+        }
+      } yield (Success(ReindexResult(0,0)), learningPathIndex)
+
+      resolveResultFuture(indexResults)
+    }
+
+    post("/index") {
+      val requestInfo = getRequestInfo
+      val indexResults = for {
+        learningPathIndex <- Future {
+          requestInfo.setRequestInfo()
+          learningPathIndexService.indexDocuments
+        }
+        articleIndex <- Future {
+          requestInfo.setRequestInfo()
+          articleIndexService.indexDocuments
+        }
+      } yield (articleIndex, learningPathIndex)
+
+      resolveResultFuture(indexResults)
+    }
+
+    /** Helper class to keep Thread specific request information in futures. */
+    case class RequestInfo(CorrelationId: Option[String],
+                           AuthHeader: Option[String],
+                           UserId: Option[String],
+                           Roles: List[String],
+                           Name: Option[String],
+                           ClientId: Option[String]) {
+      def setRequestInfo(): Unit = {
+        ThreadContext.put(SearchApiProperties.CorrelationIdKey, CorrelationId.getOrElse(""))
+        CorrelationID.set(CorrelationId)
+        AuthUser.setHeader(AuthHeader.getOrElse(""))
+        AuthUser.setId(UserId)
+        AuthUser.setRoles(Roles)
+        AuthUser.setName(Name)
+        AuthUser.setClientId(ClientId)
+      }
+    }
+
+    private def getRequestInfo: RequestInfo = {
+      val correlationId = CorrelationID.get
+      val authHeader = AuthUser.getHeader
+      val userId = AuthUser.get
+      val roles = AuthUser.getRoles
+      val name = AuthUser.getName
+      val clientId = AuthUser.getClientId
+
+      RequestInfo(correlationId, authHeader, userId, roles, name, clientId)
+    }
+
   }
 }

@@ -19,7 +19,7 @@ class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with N
 
 object SearchApiInfo {
   val apiInfo = ApiInfo(
-  "Listing Api",
+  "Search Api",
   "Documentation for the Search API of NDLA.no",
   "https://ndla.no",
   SearchApiProperties.ContactEmail,
