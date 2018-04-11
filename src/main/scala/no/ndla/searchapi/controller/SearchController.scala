@@ -118,8 +118,7 @@ trait SearchController {
         supportedLanguages = List.empty
       )
 
-      val x = groupSearch(query, settings.copy(resourceTypes = resourceTypes))
-      x
+      groupSearch(query, settings.copy(resourceTypes = resourceTypes))
     }
 
     private def searchInGroup(query: Option[String], group: String, settings: SearchSettings): Try[GroupSearchResult] = {
