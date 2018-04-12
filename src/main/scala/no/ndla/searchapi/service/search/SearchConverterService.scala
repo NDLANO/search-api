@@ -83,7 +83,7 @@ trait SearchConverterService {
               lastUpdated = articleWithAgreement.updated,
               license = articleWithAgreement.copyright.license,
               authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
-              articleType = articleWithAgreement.articleType,
+              articleType = articleWithAgreement.articleType.toString,
               metaImage = SearchableLanguageValues(articleWithAgreement.metaImage.map(image => LanguageValue(image.language, image.imageId))),
               defaultTitle = defaultTitle.map(t => t.title),
               supportedLanguages = supportedLanguages,

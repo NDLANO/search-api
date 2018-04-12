@@ -12,6 +12,8 @@ import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.api.ApiSearchException
+import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, SearchParams}
 import org.json4s.ext.EnumNameSerializer
@@ -78,7 +80,10 @@ trait SearchApiClient {
         new EnumNameSerializer(LearningPathVerificationStatus) +
         new EnumNameSerializer(StepType) +
         new EnumNameSerializer(StepStatus) +
-        new EnumNameSerializer(EmbedType) ++ org.json4s.ext.JodaTimeSerializers.all
+        new EnumNameSerializer(EmbedType) +
+        new EnumNameSerializer(ArticleStatus) +
+        new EnumNameSerializer(LearningResourceType) ++
+          org.json4s.ext.JodaTimeSerializers.all
 
       ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)).timeout(timeout, timeout))
     }

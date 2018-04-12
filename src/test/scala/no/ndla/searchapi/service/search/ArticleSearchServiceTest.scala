@@ -48,8 +48,8 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
         topicResourceConnections,
         subjects,
         subjectTopicConnections
-        ) = LearningResourceType.valueOf(article.articleType) match {
-        case Some(LearningResourceType.Article) =>
+        ) = article.articleType match {
+        case LearningResourceType.Article =>
           val resources = List(Resource(s"urn:resource:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:100/resource:$index"))
           val topics = List(Resource("urn:topic:100", "Topic1", Some("urn:article:100"), "/subject:1/topic:100"))
           val topicResourceConnections = List(TopicResourceConnection("urn:topic:100", s"urn:resource:$index", "urn:topic-resource:abc123", true, 1))
@@ -57,7 +57,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
           val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:100", "urn:subject-topic:8180abc", true, 1))
 
           (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
-        case Some(LearningResourceType.TopicArticle) =>
+        case LearningResourceType.TopicArticle =>
           val resources = List()
         val topicResourceConnections = List()
           val topics = List(Resource(s"urn:topic:$index", article.title.head.title, Some(s"urn:article:${article.id.get}"), s"/subject:1/topic:$index"))

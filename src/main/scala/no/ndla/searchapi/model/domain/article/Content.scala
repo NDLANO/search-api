@@ -29,19 +29,11 @@ case class Article(id: Option[Long],
                    created: DateTime,
                    updated: DateTime,
                    updatedBy: String,
-                   articleType: String) extends Content
+                   articleType: LearningResourceType.Value) extends Content
 
-
-object Article {
-  implicit val formats = org.json4s.DefaultFormats
-
-  val JSonSerializer = FieldSerializer[Article](
-    FieldSerializer.ignore("id")
-  )
-}
 
 object LearningResourceType extends Enumeration {
-  val Article = Value("article")
+  val Article = Value("standard")
   val TopicArticle = Value("topic-article")
   val LearningPath = Value("learningpath")
 

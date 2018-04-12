@@ -84,7 +84,7 @@ object TestData {
     today.minusDays(4),
     today.minusDays(2),
     "ndalId54321",
-    LearningResourceType.Article.toString)
+    LearningResourceType.Article)
 
   val sampleDomainArticle = Article(
     Option(articleId),
@@ -101,7 +101,7 @@ object TestData {
     today,
     today,
     "ndalId54321",
-    LearningResourceType.Article.toString
+    LearningResourceType.Article
   )
 
   val sampleDomainArticle2 = Article(
@@ -119,7 +119,7 @@ object TestData {
     today,
     today,
     "ndalId54321",
-    LearningResourceType.Article.toString
+    LearningResourceType.Article
   )
   val sampleArticleWithByNcSa: Article = sampleArticleWithPublicDomain.copy(copyright=byNcSaCopyright)
   val sampleArticleWithCopyrighted: Article = sampleArticleWithPublicDomain.copy(copyright=copyrighted )
@@ -212,7 +212,7 @@ object TestData {
     tags = List(Tag(List("baldur"), "nb")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
-    articleType = LearningResourceType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle
   )
   val article9 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(9),
@@ -224,7 +224,7 @@ object TestData {
     tags = List(Tag(List("baldur"), "nb")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
-    articleType = LearningResourceType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle
   )
   val article10 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(10),
@@ -237,7 +237,7 @@ object TestData {
     tags = List(Tag(List("englando"), "en")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
-    articleType = LearningResourceType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle
   )
   val article11 = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
@@ -249,7 +249,7 @@ object TestData {
     tags = List(Tag(List("ikkehund"), "nb"), Tag(List("notdog"), "en")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
-    articleType = LearningResourceType.TopicArticle.toString
+    articleType = LearningResourceType.TopicArticle
   )
 
   val articlesToIndex: Seq[Article] = List(
