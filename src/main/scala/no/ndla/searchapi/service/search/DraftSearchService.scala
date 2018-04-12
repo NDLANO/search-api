@@ -11,9 +11,9 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.searchapi.model.api
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.draft.DraftSummary
@@ -24,7 +24,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait DraftSearchService {
-  this: Elastic4sClient with SearchConverterService with SearchService with DraftIndexService with SearchConverterService =>
+  this: Elastic4sClient
+    with SearchConverterService
+    with SearchService
+    with DraftIndexService
+    with SearchConverterService =>
   val draftSearchService: DraftSearchService
 
   class DraftSearchService extends LazyLogging with SearchService[DraftSummary] {
@@ -32,8 +36,9 @@ trait DraftSearchService {
 
     override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes("drafts"))
 
-    override def hitToApiModel(hit: String, language: String): DraftSummary =
-      searchConverterService.hitAsDraftSummary(hit, language)
+    override def hitToApiModel(hit: SearchHit, language: String): DraftSummary = {
+      searchConverterService.hitAsDraftSummary(hit.sourceAsString, language)
+    }
 
     def all(withIdIn: List[Long],
             language: String,

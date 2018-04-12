@@ -10,6 +10,7 @@ package no.ndla.searchapi
 import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Draft}
 import no.ndla.searchapi.model.domain.learningpath.{Description, LearningPath, LearningPathStatus, LearningPathVerificationStatus}
 import no.ndla.searchapi.model.search.SearchSettings
 import no.ndla.searchapi.model.taxonomy._
@@ -254,6 +255,131 @@ object TestData {
 
   val articlesToIndex: Seq[Article] = List(
     article1, article2, article3, article4, article5, article6, article7, article8, article9, article10, article11
+  )
+
+  val draftPublicDomainCopyright= draft.Copyright(Some("publicdomain"), Some(""), List.empty, List(), List(), None, None, None)
+  val draftByNcSaCopyright = draft.Copyright(Some("by-nc-sa"), Some("Gotham City"), List(Author("Forfatter", "DC Comics")), List(), List(), None, None, None)
+  val draftCopyrighted = draft.Copyright(Some("copyrighted"), Some("New York"), List(Author("Forfatter", "Clark Kent")), List(), List(), None, None, None)
+
+  val sampleDraftWithPublicDomain = Draft(
+    Option(1),
+    Option(1),
+    ArticleStatus.ValueSet(ArticleStatus.DRAFT),
+    Seq(Title("test", "en")),
+    Seq(ArticleContent("<section><div>test</div></section>", "en")),
+    Some(draftPublicDomainCopyright),
+    Seq.empty,
+    Seq.empty,
+    Seq(VisualElement("image", "en")),
+    Seq(ArticleIntroduction("This is an introduction", "en")),
+    Seq.empty,
+    Seq.empty,
+    DateTime.now().minusDays(4),
+    DateTime.now().minusDays(2),
+    "ndalId54321",
+    LearningResourceType.Article,
+    List.empty)
+
+  val sampleDraftWithByNcSa: Draft = sampleDraftWithPublicDomain.copy(copyright=Some(draftByNcSaCopyright))
+  val sampleDraftWithCopyrighted: Draft = sampleDraftWithPublicDomain.copy(copyright=Some(draftCopyrighted))
+
+
+  val draft1 = TestData.sampleDraftWithByNcSa.copy(
+    id = Option(1),
+    title = List(Title("Batmen er på vift med en bil", "nb")),
+    introduction = List(ArticleIntroduction("Batmen", "nb")),
+    content = List(ArticleContent("Bilde av en <strong>bil</strong> flaggermusmann som vifter med vingene <em>bil</em>.", "nb")),
+    tags = List(Tag(List("fugl"), "nb")),
+    created = today.minusDays(4),
+    updated = today.minusDays(3))
+  val draft2 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(2),
+    title = List(Title("Pingvinen er ute og går", "nb")),
+    introduction = List(ArticleIntroduction("Pingvinen", "nb")),
+    content = List(ArticleContent("<p>Bilde av en</p><p> en <em>pingvin</em> som vagger borover en gate</p>", "nb")),
+    tags = List(Tag(List("fugl"), "nb")),
+    created = today.minusDays(4),
+    updated = today.minusDays(2))
+  val draft3 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(3),
+    title = List(Title("Donald Duck kjører bil", "nb")),
+    introduction = List(ArticleIntroduction("Donald Duck", "nb")),
+    content = List(ArticleContent("<p>Bilde av en en and</p><p> som <strong>kjører</strong> en rød bil.</p>", "nb")),
+    tags = List(Tag(List("and"), "nb")),
+    created = today.minusDays(4),
+    updated = today.minusDays(1))
+  val draft4 = TestData.sampleDraftWithCopyrighted.copy(
+    id = Option(4),
+    title = List(Title("Superman er ute og flyr", "nb")),
+    introduction = List(ArticleIntroduction("Superman", "nb")),
+    content = List(ArticleContent("<p>Bilde av en flygende mann</p><p> som <strong>har</strong> superkrefter.</p>", "nb")),
+    tags = List(Tag(List("supermann"), "nb")),
+    created = today.minusDays(4),
+    updated = today)
+  val draft5 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(5),
+    title = List(Title("Hulken løfter biler", "nb")),
+    introduction = List(ArticleIntroduction("Hulken", "nb")),
+    content = List(ArticleContent("<p>Bilde av hulk</p><p> som <strong>løfter</strong> en rød bil.</p>", "nb")),
+    tags = List(Tag(List("hulk"), "nb")),
+    created = today.minusDays(40),
+    updated = today.minusDays(35),
+    notes = List("kakemonster"))
+  val draft6 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(6),
+    title = List(Title("Loke og Tor prøver å fange midgaardsormen", "nb")),
+    introduction = List(ArticleIntroduction("Loke og Tor", "nb")),
+    content = List(ArticleContent("<p>Bilde av <em>Loke</em> og <em>Tor</em></p><p> som <strong>fisker</strong> fra Naglfar.</p>", "nb")),
+    tags = List(Tag(List("Loke", "Tor", "Naglfar"), "nb")),
+    created = today.minusDays(30),
+    updated = today.minusDays(25))
+  val draft7 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(7),
+    title = List(Title("Yggdrasil livets tre", "nb")),
+    introduction = List(ArticleIntroduction("Yggdrasil", "nb")),
+    content = List(ArticleContent("<p>Bilde av <em>Yggdrasil</em> livets tre med alle dyrene som bor i det.", "nb")),
+    tags = List(Tag(List("yggdrasil"), "nb")),
+    created = today.minusDays(20),
+    updated = today.minusDays(15))
+  val draft8 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(8),
+    title = List(Title("Baldur har mareritt", "nb")),
+    introduction = List(ArticleIntroduction("Baldur", "nb")),
+    content = List(ArticleContent("<p>Bilde av <em>Baldurs</em> mareritt om Ragnarok.", "nb")),
+    tags = List(Tag(List("baldur"), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.TopicArticle)
+  val draft9 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(9),
+    title = List(Title("Baldur har mareritt om Ragnarok", "nb")),
+    introduction = List(ArticleIntroduction("Baldur", "nb")),
+    content = List(ArticleContent("<p>Bilde av <em>Baldurs</em> som har  mareritt.", "nb")),
+    tags = List(Tag(List("baldur"), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.TopicArticle)
+  val draft10 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(10),
+    title = List(Title("This article is in english", "en")),
+    introduction = List(ArticleIntroduction("Engulsk", "en")),
+    content = List(ArticleContent("<p>Something something <em>english</em> What", "en")),
+    tags = List(Tag(List("englando"), "en")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.TopicArticle)
+  val draft11 = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(11),
+    title = List(Title("Katter", "nb"), Title("Cats", "en")),
+    introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
+    content = List(ArticleContent("<p>Noe om en katt</p>", "nb"), ArticleContent("<p>Something about a cat</p>", "en")),
+    tags = List(Tag(List("katt"), "nb"), Tag(List("cat"), "en")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.TopicArticle)
+
+  val draftsToIndex: List[Draft] = List(
+    draft1, draft2, draft3, draft4, draft5, draft6, draft7, draft8, draft9, draft10, draft11
   )
 
   val paul = Author("author", "Truly Weird Rand Paul")

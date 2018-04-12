@@ -18,6 +18,7 @@ abstract class UnitSuite extends FunSuite with Matchers with OptionValues with I
   setEnv("RUN_WITH_SIGNED_SEARCH_REQUESTS", "false")
 
   setEnv("ARTICLE_SEARCH_INDEX_NAME", "searchapi-tests-articles")
+  setEnv("DRAFT_SEARCH_INDEX_NAME", "searchapi-tests-drafts")
   setEnv("LEARNINGPATH_SEARCH_INDEX_NAME", "searchapi-tests-learningpaths")
 
   def setEnv(key: String, value: String) = env.put(key, value)

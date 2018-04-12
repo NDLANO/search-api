@@ -58,11 +58,10 @@ object SearchApiProperties extends LazyLogging {
 
   val ExternalApiUrls: Map[String, String] = Map(
     "article-api" -> s"$Domain/article-api/v2/articles",
+    "draft-api" -> s"$Domain/draft-api/v1/drafts",
     "learningpath-api" -> s"$Domain/learningpath-api/v2/learningpaths",
     "raw-image" -> s"$Domain/image-api/raw/id"
   )
-
-
 
   def booleanProp(key: String) = prop(key).toBoolean
 
