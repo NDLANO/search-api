@@ -15,6 +15,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api._
 import no.ndla.searchapi.model.api.article.ArticleSummary
+import no.ndla.searchapi.model.api.draft.DraftSummary
 import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.model.domain.article._
@@ -280,6 +281,34 @@ trait SearchConverterService {
       )
     }
 
+    def hitAsDraftSummary(hitString: String, language: String): DraftSummary = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+
+      val searchableDraft = read[SearchableDraft](hitString)
+
+      val titles = searchableDraft.title.languageValues.map(lv => api.Title(lv.value, lv.language))
+      val visualElements = searchableDraft.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val introductions = searchableDraft.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val visualElement = findByLanguageOrBestEffort(visualElements, language)
+      val introduction = findByLanguageOrBestEffort(introductions, language)
+
+      val url = s"${SearchApiProperties.ExternalApiUrls("draft-api")}/${searchableDraft.id}"
+
+      DraftSummary(
+        id = searchableDraft.id,
+        title = title,
+        visualElement = visualElement,
+        introduction = introduction,
+        url = url,
+        license = searchableDraft.license.getOrElse(""),
+        articleType = searchableDraft.articleType,
+        supportedLanguages = searchableDraft.supportedLanguages,
+        notes = searchableDraft.notes
+      )
+    }
+
     def hitAsLearningPathSummary(hitString: String, language: String): LearningPathSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableLearningPath = read[SearchableLearningPath](hitString)
@@ -355,7 +384,6 @@ trait SearchConverterService {
         supportedLanguages = supportedLanguages
       )
     }
-
 
     def learningpathHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
