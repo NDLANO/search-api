@@ -13,9 +13,9 @@ import org.joda.time.DateTime
 case class Copyright(
                       license: Option[String],
                       origin: Option[String],
-                      creators: Seq[Author],
-                      processors: Seq[Author],
-                      rightsholders: Seq[Author],
+                      creators: List[Author],
+                      processors: List[Author],
+                      rightsholders: List[Author],
                       agreementId: Option[Long],
                       validFrom: Option[DateTime],
                       validTo: Option[DateTime]

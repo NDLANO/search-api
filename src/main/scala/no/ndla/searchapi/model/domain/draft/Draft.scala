@@ -34,7 +34,7 @@ case class Draft(id: Option[Long],
                  updated: DateTime,
                  updatedBy: String,
                  articleType: LearningResourceType.Value,
-                 notes: Seq[String]) extends Content
+                 notes: List[String]) extends Content
 
 object ArticleStatus extends Enumeration {
   val CREATED, IMPORTED, USER_TEST, QUEUED_FOR_PUBLISHING, QUALITY_ASSURED, DRAFT, SKETCH, PUBLISHED = Value

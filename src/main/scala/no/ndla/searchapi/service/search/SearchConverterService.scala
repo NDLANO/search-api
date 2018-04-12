@@ -144,7 +144,58 @@ trait SearchConverterService {
       }
     }
 
-    def asSearchableDraft(draft: Draft, taxonomyBundle: Option[Bundle]): Try[SearchableDraft] = ???
+    def asSearchableDraft(draft: Draft, taxonomyBundle: Option[Bundle]): Try[SearchableDraft] = {
+      val taxonomyForDraft = taxonomyBundle match {
+        case Some(bundle) => getTaxonomyContexts(draft.id.get, "article", bundle)
+        case None =>
+          taxonomyApiClient.getTaxonomyBundle match {
+            case Success(bundle) =>
+              getTaxonomyContexts(draft.id.get, "article", bundle)
+            case Failure(ex) =>
+              logger.error("Could not fetch bundle from taxonomy...")
+              Failure(ex)
+          }
+      }
+
+      taxonomyForDraft match {
+        case Success(contexts) =>
+          val defaultTitle = draft.title.sortBy(title => {
+            ISO639.languagePriority.reverse.indexOf(title.language)
+          }).lastOption
+
+
+          val supportedLanguages = Language.getSupportedLanguages(
+            draft.title, draft.visualElement, draft.introduction, draft.metaDescription, draft.content, draft.tags
+          ).toList
+
+          val authors = (
+            draft.copyright.map(_.creators).toList ++
+            draft.copyright.map(_.processors).toList ++
+            draft.copyright.map(_.rightsholders).toList
+          ).flatten.map(_.name)
+
+          Success(SearchableDraft(
+            id = draft.id.get,
+            title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
+            content = SearchableLanguageValues(draft.content.map(article => LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+            visualElement = SearchableLanguageValues(draft.visualElement.map(visual => LanguageValue(visual.language, visual.resource))),
+            introduction = SearchableLanguageValues(draft.introduction.map(intro => LanguageValue(intro.language, intro.introduction))),
+            metaDescription = SearchableLanguageValues(draft.metaDescription.map(meta => LanguageValue(meta.language, meta.content))),
+            tags = SearchableLanguageList(draft.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+            lastUpdated = draft.updated,
+            license = draft.copyright.flatMap(_.license),
+            authors = authors,
+            articleType = draft.articleType.toString,
+            metaImage = SearchableLanguageValues(draft.metaImage.map(image => LanguageValue(image.language, image.imageId))),
+            defaultTitle = defaultTitle.map(t => t.title),
+            supportedLanguages = supportedLanguages,
+            notes = draft.notes,
+            contexts = contexts
+          ))
+        case Failure(ex) => Failure(ex)
+      }
+
+    }
 
     def asLearningPathApiLicense(license: String): api.learningpath.License = {
       getLicense(license) match {
@@ -466,7 +517,7 @@ trait SearchConverterService {
       getTypeAndSubtypesWithParent(resourceType, List.empty)
     }
 
-    private def getResourceTaxonomyContexts(resource: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getResourceTaxonomyContexts(resource: Resource, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -528,7 +579,7 @@ trait SearchConverterService {
       )
     }
 
-    private def getTopicTaxonomyContexts(topic: Resource, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getTopicTaxonomyContexts(topic: Resource, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -570,8 +621,8 @@ trait SearchConverterService {
           Failure(ElasticIndexingException(msg))
         case (resources, topics) =>
 
-          val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, taxonomyType, bundle))
-          val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, taxonomyType, bundle))
+          val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
+          val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
 
           val all = resourceContexts ++ topicContexts
 
