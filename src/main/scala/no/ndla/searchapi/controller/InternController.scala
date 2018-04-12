@@ -33,64 +33,71 @@ trait InternController {
   class InternController extends NdlaController {
 
     protected implicit override val jsonFormats: Formats = DefaultFormats
-    implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
+    implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(SearchApiProperties.SearchIndexes.size))
 
-    private def resolveResultFuture(indexResults: Future[(Try[ReindexResult], Try[ReindexResult])]): ActionResult = {
-      Await.result(indexResults, Duration(10, TimeUnit.MINUTES)) match {
-        case (Success(articleResult), Success(learningPathResult)) =>
-          val arIndexTime = math.max(articleResult.millisUsed, 0)
-          val lpIndexTime = math.max(learningPathResult.millisUsed, 0)
+    private def resolveResultFutures(indexResults: List[Future[(String, Try[ReindexResult])]]): ActionResult = {
 
-          val result = s"Completed indexing of ${articleResult.totalIndexed} articles in $arIndexTime ms, and ${learningPathResult.totalIndexed} learningpaths in $lpIndexTime ms."
-          logger.info(result)
-          Ok(result)
-        case (Failure(articleFail), _) =>
-          logger.warn(s"Failed to index articles: ${articleFail.getMessage}", articleFail)
-          InternalServerError(articleFail.getMessage)
-        case (_, Failure(learningPathFail)) =>
-          logger.warn(s"Failed to index learningpaths: ${learningPathFail.getMessage}", learningPathFail)
-          InternalServerError(learningPathFail.getMessage)
+      val futureIndexed = Future.sequence(indexResults)
+      val completedIndexed = Await.result(futureIndexed, Duration(10, TimeUnit.MINUTES))
+
+      completedIndexed.collect{case (name, Failure(ex)) => (name, ex)} match {
+        case Nil =>
+          val successful = completedIndexed.collect{case (name, Success(r)) => (name, r)}
+
+          val indexResults = successful.map({
+            case (name: String, reindexResult: ReindexResult) =>
+            s"${reindexResult.totalIndexed} $name in ${reindexResult.millisUsed} ms"
+          }).mkString(", and ")
+          val resultString = s"Completed indexing of $indexResults"
+
+          logger.info(resultString)
+          Ok(resultString)
+        case failures =>
+
+          val failedIndexResults = failures.map({
+            case (name: String, failure: Throwable) =>
+              logger.error(s"Failed to index $name: ${failure.getMessage}.", failure)
+              s"$name: ${failure.getMessage}"
+          }).mkString(", and ")
+
+          InternalServerError(failedIndexResults)
       }
     }
 
     post("/index/article") {
       val requestInfo = getRequestInfo
-      val indexResults = for {
-        articleIndex <- Future {
-          requestInfo.setRequestInfo()
-          articleIndexService.indexDocuments
-        }
-      } yield (articleIndex, Success(ReindexResult(0,0)))
+      val articleIndex = Future {
+        requestInfo.setRequestInfo()
+        ("articles", articleIndexService.indexDocuments)
+      }
 
-      resolveResultFuture(indexResults)
+      resolveResultFutures(List(articleIndex))
     }
 
     post("/index/learningpath") {
       val requestInfo = getRequestInfo
-      val indexResults = for {
-        learningPathIndex <- Future {
-          requestInfo.setRequestInfo()
-          learningPathIndexService.indexDocuments
-        }
-      } yield (Success(ReindexResult(0,0)), learningPathIndex)
+      val learningPathIndex = Future {
+        requestInfo.setRequestInfo()
+        ("learningpaths", learningPathIndexService.indexDocuments)
+      }
 
-      resolveResultFuture(indexResults)
+      resolveResultFutures(List(learningPathIndex))
     }
 
     post("/index") {
       val requestInfo = getRequestInfo
-      val indexResults = for {
-        learningPathIndex <- Future {
+      val indexes = List(
+        Future {
           requestInfo.setRequestInfo()
-          learningPathIndexService.indexDocuments
-        }
-        articleIndex <- Future {
+          ("learningpaths", learningPathIndexService.indexDocuments)
+        },
+        Future {
           requestInfo.setRequestInfo()
-          articleIndexService.indexDocuments
+          ("articles", articleIndexService.indexDocuments)
         }
-      } yield (articleIndex, learningPathIndex)
+      )
 
-      resolveResultFuture(indexResults)
+      resolveResultFutures(indexes)
     }
 
     /** Helper class to keep Thread specific request information in futures. */

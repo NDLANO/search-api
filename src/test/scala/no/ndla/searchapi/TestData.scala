@@ -232,6 +232,7 @@ object TestData {
     introduction = List(ArticleIntroduction("Engulsk", "en")),
     metaDescription = List.empty,
     content = List(ArticleContent("<p>Something something <em>english</em> What", "en")),
+    metaImage = List(ArticleMetaImage("442", "en")),
     visualElement = List.empty,
     tags = List(Tag(List("englando"), "en")),
     created = today.minusDays(10),

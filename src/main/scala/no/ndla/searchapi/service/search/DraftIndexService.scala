@@ -55,6 +55,7 @@ trait DraftIndexService {
           textField("notes").fielddata(true),
           getTaxonomyContextMapping
         ) ++
+          generateKeywordLanguageFields("metaImage") ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++

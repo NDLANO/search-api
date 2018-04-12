@@ -417,6 +417,14 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb"))
   }
 
+  test("That meta image are returned when searching") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(language ="en", withIdIn = List(10)))
+
+    search.totalCount should be(1)
+    search.results.head.id should be(10)
+    search.results.head.metaImage should be(Some("http://api-gateway.ndla-local/image-api/raw/id/442"))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

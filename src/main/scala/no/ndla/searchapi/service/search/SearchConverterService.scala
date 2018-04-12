@@ -282,7 +282,9 @@ trait SearchConverterService {
       val introductions = searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
       val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
-      val metaImages = searchableArticle.metaImage.languageValues.map(lv => api.article.ArticleMetaImage(lv.value, lv.language))
+      val metaImages = searchableArticle.metaImage.languageValues.map(lv => {
+        val metaImageUrl = s"${SearchApiProperties.ExternalApiUrls("raw-image")}/${lv.value}"
+        api.article.ArticleMetaImage(metaImageUrl, lv.language)})
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
@@ -292,13 +294,11 @@ trait SearchConverterService {
 
       val url = s"${SearchApiProperties.ExternalApiUrls("article-api")}/${searchableArticle.id}"
 
-      val metaImageUrl = metaImage.map(image => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/${image.id}")
-
       MultiSearchSummary(
         id = searchableArticle.id,
         title = title,
         metaDescription = metaDescription,
-        metaImage = metaImageUrl,
+        metaImage = metaImage.map(_.url),
         url = url,
         contexts = contexts,
         supportedLanguages = supportedLanguages

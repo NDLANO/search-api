@@ -43,7 +43,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
       LanguageValue("en", Seq("Mum", "Car", "Wroom"))
     ))
 
-    val metaImages = SearchableLanguageValues(Seq(LanguageValue("nb", "1")))
+    val metaImages = SearchableLanguageValues(Seq(LanguageValue("nb", "1"), LanguageValue("en", "2")))
 
     val taxonomyContexts = List(
       SearchableTaxonomyContext(

@@ -315,11 +315,9 @@ trait IndexService {
           .fields(subFields))
     }
 
-    protected def generateNestedLanguageFields(fieldName: String, subFields: List[FieldDefinition]): List[FieldDefinition] = {
+    protected def generateKeywordLanguageFields(fieldName: String): List[FieldDefinition] = {
       languageAnalyzers.map(langAnalyzer =>
-        nestedField(s"$fieldName.${langAnalyzer.lang}")
-          .fields(subFields.map(f => f.analyzer(langAnalyzer.analyzer)))
-      )
+        keywordField(s"$fieldName.${langAnalyzer.lang}"))
     }
 
     protected def getTaxonomyContextMapping: NestedFieldDefinition = {
