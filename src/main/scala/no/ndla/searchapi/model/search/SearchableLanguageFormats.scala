@@ -15,6 +15,7 @@ object SearchableLanguageFormats {
       new SearchableArticleSerializer +
       new SearchableTaxonomyContextSerializer +
       new SearchableLearningStepSerializer +
-      new SearchableLearningPathSerializer ++
+      new SearchableLearningPathSerializer +
+      new SearchableDraftSerializer ++
       org.json4s.ext.JodaTimeSerializers.all
 }

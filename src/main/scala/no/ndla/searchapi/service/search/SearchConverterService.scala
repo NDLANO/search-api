@@ -20,6 +20,7 @@ import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getS
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
 import no.ndla.searchapi.model.domain.Language
+import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.taxonomy.{TaxonomyFilter, _}
 import no.ndla.searchapi.model.{api, domain, taxonomy}
@@ -83,7 +84,7 @@ trait SearchConverterService {
               license = articleWithAgreement.copyright.license,
               authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
               articleType = articleWithAgreement.articleType,
-              metaImageId = articleWithAgreement.metaImageId,
+              metaImage = SearchableLanguageValues(articleWithAgreement.metaImage.map(image => LanguageValue(image.language, image.imageId))),
               defaultTitle = defaultTitle.map(t => t.title),
               supportedLanguages = supportedLanguages,
               contexts = contexts
@@ -142,6 +143,8 @@ trait SearchConverterService {
         case Failure(ex) => Failure(ex)
       }
     }
+
+    def asSearchableDraft(draft: Draft, taxonomyBundle: Option[Bundle]): Try[SearchableDraft] = ???
 
     def asLearningPathApiLicense(license: String): api.learningpath.License = {
       getLicense(license) match {
@@ -205,7 +208,6 @@ trait SearchConverterService {
       val introductions = searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
       val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
-
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val visualElement = findByLanguageOrBestEffort(visualElements, language)
@@ -280,14 +282,17 @@ trait SearchConverterService {
       val introductions = searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
       val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
       val visualElements = searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val metaImages = searchableArticle.metaImage.languageValues.map(lv => api.article.ArticleMetaImage(lv.value, lv.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+      val metaImage = findByLanguageOrBestEffort(metaImages, language)
 
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
 
       val url = s"${SearchApiProperties.ExternalApiUrls("article-api")}/${searchableArticle.id}"
-      val metaImageUrl = searchableArticle.metaImageId.map(id => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id")
+
+      val metaImageUrl = metaImage.map(image => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/${image.id}")
 
       MultiSearchSummary(
         id = searchableArticle.id,

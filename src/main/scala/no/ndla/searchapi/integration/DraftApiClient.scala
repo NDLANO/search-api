@@ -29,6 +29,7 @@ trait DraftApiClient {
   class DraftApiClient(val baseUrl: String) extends SearchApiClient {
     override val searchPath = "draft-api/v1/drafts"
     override val name = "articles"
+    override val dumpDomainPath = "intern/dump/article"
 
     def search(
         searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =

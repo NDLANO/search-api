@@ -10,12 +10,12 @@ package no.ndla.searchapi.model.search
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.taxonomy.TaxonomyFilter
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
-import org.json4s.native.Serialization.{read, write}
 import org.json4s.Formats
+import org.json4s.native.Serialization.{read, write}
 
-class SearchableArticleTest extends UnitSuite with TestEnvironment {
+class SearchableDraftTest extends UnitSuite with TestEnvironment {
 
-  test("That serializing a SearchableArticle to json and deserializing back to object does not change content") {
+  test("That serializing a SearchableDraft to json and deserializing back to object does not change content") {
     implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
     val titles = SearchableLanguageValues(Seq(
@@ -66,7 +66,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       )
     )
 
-    val original = SearchableArticle(
+    val original = SearchableDraft(
       id = 100,
       title = titles,
       content = contents,
@@ -75,16 +75,17 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       metaDescription = metaDescriptions,
       tags = tags,
       lastUpdated = TestData.today,
-      license = "by-sa",
+      license = Some("by-sa"),
       authors = List("Jonas", "Papi"),
       articleType = LearningResourceType.Article.toString,
       metaImage = metaImages,
       defaultTitle = Some("Christian Tut"),
       supportedLanguages = List("en", "nb", "nn"),
+      notes = List("Note1", "note2"),
       contexts = taxonomyContexts
     )
     val json = write(original)
-    val deserialized = read[SearchableArticle](json)
+    val deserialized = read[SearchableDraft](json)
 
     deserialized should be(original)
   }

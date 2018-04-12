@@ -41,11 +41,13 @@ object SearchApiProperties extends LazyLogging {
   val RunWithSignedSearchRequests: Boolean = propOrElse("RUN_WITH_SIGNED_SEARCH_REQUESTS", "true").toBoolean
   val SearchIndexes: Map[String, String] = Map(
     "articles" -> propOrElse("ARTICLE_SEARCH_INDEX_NAME", "articles"),
+    "drafts" -> propOrElse("DRAFT_SEARCH_INDEX_NAME", "drafts"),
     "learningpaths" -> propOrElse("LEARNINGPATH_SEARCH_INDEX_NAME", "learningpaths")
   )
 
   val SearchDocuments: Map[String, String] = Map(
     "articles" -> "article",
+    "drafts" -> "draft",
     "learningpaths" -> "learningpath"
   )
 
