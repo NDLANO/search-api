@@ -395,6 +395,72 @@ trait SearchController {
         case Failure(ex) => errorHandler(ex)
       }
     }
+
+    private val multiSearchDraftDoc = (apiOperation[MultiSearchResult]("searchDraftLearningResources")
+    summary "Find draft learning resources"
+    notes "Shows all draft learning resources. You can search too."
+    parameters(
+      asHeaderParam[Option[String]](correlationId),
+      asQueryParam[Option[Int]](pageNo),
+      asQueryParam[Option[Int]](pageSize),
+      asQueryParam[Option[String]](contextTypes),
+      asQueryParam[Option[String]](language),
+      asQueryParam[Option[String]](learningResourceIds),
+      asQueryParam[Option[String]](resourceTypes),
+      asQueryParam[Option[String]](levels),
+      asQueryParam[Option[String]](license),
+      asQueryParam[Option[String]](query),
+      asQueryParam[Option[String]](sort),
+      asQueryParam[Option[Boolean]](fallback),
+      asQueryParam[Option[String]](subjects),
+      asQueryParam[Option[List[String]]](languageFilter)
+    )
+      authorizations "oauth2"
+      responseMessages response500)
+    get("/", operation(multiSearchDraftDoc)) {
+      val page = intOrDefault(this.pageNo.paramName, 1)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
+      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
+      val license = paramOrNone(this.license.paramName)
+      val query = paramOrNone(this.query.paramName)
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+      val subjects = paramAsListOfString(this.subjects.paramName)
+      val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
+
+      val settings = SearchSettings(
+        fallback = fallback,
+        language = language,
+        license = license,
+        page = page,
+        pageSize = pageSize,
+        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
+        withIdIn = idList,
+        taxonomyFilters = taxonomyFilters,
+        subjects = subjects,
+        resourceTypes = resourceTypes,
+        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        supportedLanguages = supportedLanguagesFilter
+      )
+      multiDraftSearch(query, settings)
+    }
+
+    private def multiDraftSearch(query: Option[String], settings: SearchSettings) = {
+      val result = query match {
+        case Some(q) => multiDraftSearchService.matchingQuery(query = q, settings)
+        case None => multiDraftSearchService.all(settings)
+      }
+
+      result match {
+        case Success(searchResult) => searchResult
+        case Failure(ex) => errorHandler(ex)
+      }
+    }
+
   }
 
 }
