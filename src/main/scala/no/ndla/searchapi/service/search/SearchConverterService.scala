@@ -385,6 +385,39 @@ trait SearchConverterService {
       )
     }
 
+    def draftHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
+      implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+      val searchableDraft = read[SearchableDraft](hitString)
+
+      val contexts = searchableDraft.contexts.map(c => searchableContextToApiContext(c, language))
+
+      val titles = searchableDraft.title.languageValues.map(lv => api.Title(lv.value, lv.language))
+      val introductions = searchableDraft.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
+      val metaDescriptions = searchableDraft.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
+      val visualElements = searchableDraft.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val metaImages = searchableDraft.metaImage.languageValues.map(lv => {
+        val metaImageUrl = s"${SearchApiProperties.ExternalApiUrls("raw-image")}/${lv.value}"
+        api.article.ArticleMetaImage(metaImageUrl, lv.language)})
+
+      val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+      val metaImage = findByLanguageOrBestEffort(metaImages, language)
+
+      val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
+
+      val url = s"${SearchApiProperties.ExternalApiUrls("draft-api")}/${searchableDraft.id}"
+
+      MultiSearchSummary(
+        id = searchableDraft.id,
+        title = title,
+        metaDescription = metaDescription,
+        metaImage = metaImage.map(_.url),
+        url = url,
+        contexts = contexts,
+        supportedLanguages = supportedLanguages
+      )
+    }
+
     def learningpathHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableLearningPath = read[SearchableLearningPath](hitString)

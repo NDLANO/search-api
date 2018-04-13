@@ -29,6 +29,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override val multiSearchService = new MultiSearchService
   override val articleIndexService = new ArticleIndexService
+  override val draftIndexService = new DraftIndexService
   override val learningPathIndexService = new LearningPathIndexService
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
@@ -36,10 +37,15 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override def beforeAll: Unit = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
+    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("drafts"))
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("learningpaths"))
 
     val indexedArticles = articlesToIndex.map(article =>
       articleIndexService.indexDocument(article, Some(taxonomyTestBundle))
+    )
+
+    val indexedDrafts = draftsToIndex.map(draft =>
+      draftIndexService.indexDocument(draft, Some(taxonomyTestBundle))
     )
 
     val indexedLearningPaths = learningPathsToIndex.map(lp =>
