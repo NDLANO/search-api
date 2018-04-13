@@ -16,7 +16,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.LearningPathApiClient
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.domain.learningpath.LearningPath
-import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats, SearchableLearningPath}
+import no.ndla.searchapi.model.search.{SearchType, SearchableArticle, SearchableLanguageFormats, SearchableLearningPath}
 import no.ndla.searchapi.model.taxonomy.Bundle
 import org.json4s.native.Serialization.write
 
@@ -30,8 +30,8 @@ trait LearningPathIndexService {
 
   class LearningPathIndexService extends LazyLogging with IndexService[LearningPath, SearchableLearningPath] {
     implicit val formats = SearchableLanguageFormats.JSonFormats
-    override val documentType: String = SearchApiProperties.SearchDocuments("learningpaths")
-    override val searchIndex: String = SearchApiProperties.SearchIndexes("learningpaths")
+    override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
+    override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.LearningPaths)
     override val apiClient: LearningPathApiClient = learningPathApiClient
 
     override def createIndexRequest(domainModel: LearningPath, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {

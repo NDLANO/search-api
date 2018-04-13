@@ -20,7 +20,7 @@ import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{ResultWindowTooLargeException, SearchResult}
 import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.domain.{Language, Sort}
-
+import no.ndla.searchapi.model.search.SearchType
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -34,7 +34,7 @@ trait ArticleSearchService {
   class ArticleSearchService extends LazyLogging with SearchService[ArticleSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
 
-    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes("articles"))
+    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes(SearchType.Articles))
 
     override def hitToApiModel(hit: SearchHit, language: String): ArticleSummary = {
       searchConverterService.hitAsArticleSummary(hit.sourceAsString, language)

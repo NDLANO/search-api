@@ -16,6 +16,7 @@ import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.NdlaE4sClient
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 
 import scala.util.Success
@@ -36,9 +37,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
 
   override def beforeAll: Unit = {
-    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
-    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("drafts"))
-    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("learningpaths"))
+    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
+    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
+    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
     val indexedArticles = articlesToIndex.map(article =>
       articleIndexService.indexDocument(article, Some(taxonomyTestBundle))

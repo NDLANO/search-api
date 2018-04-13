@@ -17,6 +17,7 @@ import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.draft.Draft
+import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.taxonomy.{Bundle, Resource, SubjectTopicConnection, TopicResourceConnection}
 import org.joda.time.DateTime
 
@@ -35,7 +36,7 @@ class DraftSearchServiceTest extends UnitSuite with TestEnvironment {
   override val searchConverterService = new SearchConverterService
 
   override def beforeAll: Unit = {
-    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("drafts"))
+    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
 
     draftsToIndex.zipWithIndex.map{case (draft: Draft, index: Int) =>
       val (

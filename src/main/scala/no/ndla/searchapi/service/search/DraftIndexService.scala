@@ -17,6 +17,7 @@ import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.search.{SearchableDraft, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.Bundle
+import no.ndla.searchapi.model.search.SearchType
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
@@ -29,8 +30,8 @@ trait DraftIndexService {
 
   class DraftIndexService extends LazyLogging with IndexService[Draft, SearchableDraft] {
     implicit val formats = SearchableLanguageFormats.JSonFormats
-    override val documentType: String = SearchApiProperties.SearchDocuments("drafts")
-    override val searchIndex: String = SearchApiProperties.SearchIndexes("drafts")
+    override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.Drafts)
+    override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Drafts)
     override val apiClient: DraftApiClient = draftApiClient
 
     override def createIndexRequest(domainModel: Draft, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {

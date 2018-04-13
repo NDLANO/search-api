@@ -21,7 +21,7 @@ import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.ResultWindowTooLargeException
 import no.ndla.searchapi.model.domain.{Language, Sort}
-import no.ndla.searchapi.model.search.SearchableLearningPath
+import no.ndla.searchapi.model.search.{SearchType, SearchableLearningPath}
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
 import org.json4s.native.Serialization._
@@ -38,7 +38,7 @@ trait LearningPathSearchService {
   val learningPathSearchService: LearningPathSearchService
 
   class LearningPathSearchService extends LazyLogging with SearchService[LearningPathSummary] {
-    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes("learningpaths"))
+    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
     override def hitToApiModel(hit: SearchHit, language: String): LearningPathSummary = {
       searchConverterService.hitAsLearningPathSummary(hit.sourceAsString, language)

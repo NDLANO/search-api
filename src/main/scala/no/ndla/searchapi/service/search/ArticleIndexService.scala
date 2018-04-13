@@ -18,6 +18,7 @@ import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.Bundle
 import org.json4s.native.Serialization.write
+import no.ndla.searchapi.model.search.SearchType
 
 import scala.util.{Failure, Success, Try}
 
@@ -29,8 +30,8 @@ trait ArticleIndexService {
 
   class ArticleIndexService extends LazyLogging with IndexService[Article, SearchableArticle] {
     implicit val formats = SearchableLanguageFormats.JSonFormats
-    override val documentType: String = SearchApiProperties.SearchDocuments("articles")
-    override val searchIndex: String = SearchApiProperties.SearchIndexes("articles")
+    override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.Articles)
+    override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Articles)
     override val apiClient: ArticleApiClient = articleApiClient
 
     override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {

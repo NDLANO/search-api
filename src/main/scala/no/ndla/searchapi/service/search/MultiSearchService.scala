@@ -22,7 +22,7 @@ import no.ndla.searchapi.model.api
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.search.SearchSettings
+import no.ndla.searchapi.model.search.{SearchSettings, SearchType}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
@@ -36,14 +36,14 @@ trait MultiSearchService {
 
   class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
     override val searchIndex: List[String] = List(
-      SearchApiProperties.SearchIndexes("articles"),
-      SearchApiProperties.SearchIndexes("learningpaths")
+      SearchApiProperties.SearchIndexes(SearchType.Articles),
+      SearchApiProperties.SearchIndexes(SearchType.LearningPaths)
     )
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
-      val articleType = SearchApiProperties.SearchDocuments("articles")
-      val draftType = SearchApiProperties.SearchDocuments("drafts")
-      val learningpathType = SearchApiProperties.SearchDocuments("learningpaths")
+      val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
+      val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
+      val learningpathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
       hit.`type` match {
         case `articleType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)

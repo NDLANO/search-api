@@ -17,6 +17,7 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
+import no.ndla.searchapi.model.search.SearchType
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import no.ndla.searchapi.model.taxonomy._
 import org.joda.time.DateTime
@@ -39,7 +40,7 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
   override val searchConverterService = new SearchConverterService
 
   override def beforeAll: Unit = {
-    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("articles"))
+    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
 
     articlesToIndex.zipWithIndex.map{case (article: Article, index: Int) =>
       val (
