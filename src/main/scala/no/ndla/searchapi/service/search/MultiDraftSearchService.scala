@@ -77,7 +77,6 @@ trait MultiDraftSearchService {
       executeSearch(settings, fullQuery)
     }
 
-    // TODO: Consider moving this to SearchService?
     def executeSearch(settings: SearchSettings, baseQuery: BoolQueryDefinition): Try[MultiSearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
@@ -159,7 +158,7 @@ trait MultiDraftSearchService {
 
     private def subjectFilter(subjects: List[String]) = {
       if (subjects.isEmpty) None else Some(
-        boolQuery().must(
+        boolQuery().should(
           subjects.map(subjectId =>
             nestedQuery("contexts").query(
               termQuery(s"contexts.subjectId", subjectId)
@@ -171,7 +170,7 @@ trait MultiDraftSearchService {
 
     private def levelFilter(taxonomyFilters: List[String]) = {
       if (taxonomyFilters.isEmpty) None else Some(
-        boolQuery().must(
+        boolQuery().should(
           taxonomyFilters.map(filterName =>
             nestedQuery("contexts.filters").query(
               boolQuery().should(
@@ -185,7 +184,7 @@ trait MultiDraftSearchService {
 
     private def resourceTypeFilter(resourceTypes: List[String]) = {
       if (resourceTypes.isEmpty) None else Some(
-        boolQuery().must(
+        boolQuery().should(
           resourceTypes.map(resourceTypeId =>
             nestedQuery("contexts").query(
               termQuery(s"contexts.resourceTypeIds", resourceTypeId)

@@ -157,7 +157,7 @@ trait MultiSearchService {
 
     private def subjectFilter(subjects: List[String]) = {
       if (subjects.isEmpty) None else Some(
-        boolQuery().must(
+        boolQuery().should(
           subjects.map(subjectId =>
             nestedQuery("contexts").query(
               termQuery(s"contexts.subjectId", subjectId)
@@ -169,7 +169,7 @@ trait MultiSearchService {
 
     private def levelFilter(taxonomyFilters: List[String]) = {
       if (taxonomyFilters.isEmpty) None else Some(
-        boolQuery().must(
+        boolQuery().should(
           taxonomyFilters.map(filterName =>
             nestedQuery("contexts.filters").query(
               boolQuery().should(
@@ -183,7 +183,7 @@ trait MultiSearchService {
 
     private def resourceTypeFilter(resourceTypes: List[String]) = {
       if (resourceTypes.isEmpty) None else Some(
-        boolQuery().must(
+        boolQuery().should(
           resourceTypes.map(resourceTypeId =>
             nestedQuery("contexts").query(
               termQuery(s"contexts.resourceTypeIds", resourceTypeId)

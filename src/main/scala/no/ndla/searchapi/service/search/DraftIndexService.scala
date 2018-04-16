@@ -52,7 +52,8 @@ trait DraftIndexService {
           keywordField("license"),
           keywordField("defaultTitle"),
           textField("authors").fielddata(true),
-          textField("articleType") analyzer "keyword",
+          keywordField("articleType"),
+          keywordField("supportedLanguages"),
           textField("notes").fielddata(true),
           getTaxonomyContextMapping
         ) ++
