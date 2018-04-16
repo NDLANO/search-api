@@ -58,6 +58,7 @@ trait DraftIndexService {
         ) ++
           generateKeywordLanguageFields("metaImage") ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
+          generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
