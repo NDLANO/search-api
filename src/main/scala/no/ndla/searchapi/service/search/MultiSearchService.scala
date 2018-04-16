@@ -12,14 +12,12 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
-import com.sksamuel.elastic4s.searches.aggs.AbstractAggregation
 import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefinition}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api
-import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException, SearchResult}
+import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.search.{SearchSettings, SearchType}

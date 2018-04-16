@@ -447,8 +447,10 @@ trait SearchConverterService {
     def searchableContextToApiContext(context: SearchableTaxonomyContext, language: String): ApiTaxonomyContext = {
       val subjectName = findByLanguageOrBestEffort(context.subject.languageValues, language).map(_.value).getOrElse("")
       val breadcrumbs = findByLanguageOrBestEffort(context.breadcrumbs.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
+      val resourceTypes = findByLanguageOrBestEffort(context.resourceTypes.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
 
       val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
+
 
       ApiTaxonomyContext(
         id = context.id,
@@ -457,6 +459,7 @@ trait SearchConverterService {
         breadcrumbs = breadcrumbs,
         filters = filters,
         learningResourceType = context.contextType.toString,
+        resourceTypes = resourceTypes,
         language = language
       )
 

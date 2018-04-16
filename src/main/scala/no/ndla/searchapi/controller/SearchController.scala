@@ -418,7 +418,7 @@ trait SearchController {
     )
       authorizations "oauth2"
       responseMessages response500)
-    get("/mdraft/", operation(multiSearchDraftDoc)) { // TODO: Probably move this
+    get("/editorial/", operation(multiSearchDraftDoc)) {
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
