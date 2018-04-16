@@ -25,6 +25,7 @@ object ComponentRegistry
     with DraftIndexService
     with DraftSearchService
     with MultiSearchService
+    with MultiDraftSearchService
     with AudioApiClient
     with ConverterService
     with DraftApiClient
@@ -78,4 +79,5 @@ object ComponentRegistry
   lazy val learningPathSearchService = new LearningPathSearchService
   lazy val draftIndexService = new DraftIndexService
   lazy val draftSearchService = new DraftSearchService
+  lazy val multiDraftSearchService = new MultiDraftSearchService
 }

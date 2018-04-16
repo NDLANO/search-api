@@ -29,7 +29,8 @@ trait MultiDraftSearchService {
   this: Elastic4sClient
     with SearchConverterService
     with SearchService
-    with ArticleIndexService =>
+    with DraftIndexService
+    with LearningPathIndexService =>
   val multiDraftSearchService: MultiDraftSearchService
 
   class MultiDraftSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
@@ -207,8 +208,9 @@ trait MultiDraftSearchService {
 
     override def scheduleIndexDocuments(): Unit = {
       implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
+      // TODO: Make this index both thingies. Also fix execution context so we can do both at same time ^
       val f = Future {
-        articleIndexService.indexDocuments
+        draftIndexService.indexDocuments
       }
 
       f.failed.foreach(t => logger.warn("Unable to create index: " + t.getMessage, t))

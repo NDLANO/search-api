@@ -208,6 +208,7 @@ trait MultiSearchService {
 
     override def scheduleIndexDocuments(): Unit = {
       implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
+      // TODO: Make this index both thingies. Also fix execution context so we can do both at same time ^
       val f = Future {
         articleIndexService.indexDocuments
       }

@@ -221,12 +221,10 @@ trait SearchConverterService {
       */
     def getLanguageFromHit(result: SearchHit): Option[String] = {
       def keyToLanguage(keys: Iterable[String]): Option[String] = {
-        val keyLanguages = keys.toList.flatMap(key => key.split('.').toList match {
-          case _ :: language :: _ => Some(language)
-          case _ => None
-        })
+        val keySplits = keys.toList.flatMap(key => key.split('.'))
+        val languagesInKeys = keySplits.filter(split => ISO639.languagePriority.contains(split))
 
-        keyLanguages.sortBy(lang => {
+        languagesInKeys.sortBy(lang => {
           ISO639.languagePriority.reverse.indexOf(lang)
         }).lastOption
       }

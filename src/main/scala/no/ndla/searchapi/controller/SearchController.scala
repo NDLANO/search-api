@@ -18,7 +18,7 @@ import no.ndla.searchapi.model.api.{Error, GroupSearchResult, GroupSummary, Mult
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.SearchSettings
-import no.ndla.searchapi.service.search.{ArticleSearchService, LearningPathSearchService, MultiSearchService}
+import no.ndla.searchapi.service.search.{ArticleSearchService, LearningPathSearchService, MultiDraftSearchService, MultiSearchService}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport, SwaggerSupportSyntax}
@@ -33,6 +33,7 @@ trait SearchController {
     with SearchClients
     with SearchApiClient
     with MultiSearchService
+    with MultiDraftSearchService
     with ArticleSearchService
     with LearningPathSearchService =>
   val searchController: SearchController
@@ -417,7 +418,7 @@ trait SearchController {
     )
       authorizations "oauth2"
       responseMessages response500)
-    get("/", operation(multiSearchDraftDoc)) {
+    get("/mdraft/", operation(multiSearchDraftDoc)) { // TODO: Probably move this
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
