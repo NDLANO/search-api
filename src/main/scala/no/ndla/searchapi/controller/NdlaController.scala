@@ -10,12 +10,12 @@
 package no.ndla.searchapi.controller
 
 import javax.servlet.http.HttpServletRequest
-
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties.{CorrelationIdHeader, CorrelationIdKey}
 import no.ndla.searchapi.model.api.{Error, ResultWindowTooLargeException, ValidationException, ValidationMessage}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.logging.log4j.ThreadContext
+import org.elasticsearch.index.IndexNotFoundException
 import org.json4s.native.Serialization.read
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
@@ -44,6 +44,7 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
 
   error {
     case rw: ResultWindowTooLargeException => UnprocessableEntity(body=Error(Error.WINDOW_TOO_LARGE, rw.getMessage))
+    case _: IndexNotFoundException => InternalServerError(body=Error.IndexMissingError)
     case t: Throwable => {
       logger.error(Error.GenericError.toString, t)
       InternalServerError(body=Error.GenericError)

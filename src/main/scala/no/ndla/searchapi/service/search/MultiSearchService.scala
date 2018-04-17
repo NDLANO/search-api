@@ -16,9 +16,10 @@ import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefini
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
-import no.ndla.searchapi.model.domain.{Language, ReindexResult}
+import no.ndla.searchapi.model.domain.{Language, ReindexResult, RequestInfo}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.search.{SearchSettings, SearchType}
 
@@ -34,7 +35,7 @@ trait MultiSearchService {
   val multiSearchService: MultiSearchService
 
   class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
-    override val searchIndex = List(articleIndexService, learningPathIndexService)
+    override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
       val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
@@ -83,7 +84,7 @@ trait MultiSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchToExecute = search(searchIndex.map(_.searchIndex))
+        val searchToExecute = search(searchIndex)
           .query(filteredSearch)
           .from(startAt)
           .size(numResults)
@@ -200,6 +201,24 @@ trait MultiSearchService {
             ))
         )
       )
+    }
+
+    override def scheduleIndexDocuments(): Unit = {
+      val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1
+      implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
+      val requestInfo = RequestInfo()
+
+      val articleFuture = Future {
+        requestInfo.setRequestInfo()
+        articleIndexService.indexDocuments
+      }
+      val learningPathFuture = Future {
+        requestInfo.setRequestInfo()
+        learningPathIndexService.indexDocuments
+      }
+
+      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Articles), articleFuture)
+      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.LearningPaths), learningPathFuture)
     }
   }
 

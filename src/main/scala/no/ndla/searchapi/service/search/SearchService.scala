@@ -20,14 +20,14 @@ import no.ndla.searchapi.SearchApiProperties.MaxPageSize
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait SearchService {
   this: Elastic4sClient with IndexService with SearchConverterService with LazyLogging =>
 
   trait SearchService[T] {
-    val searchIndex: List[IndexService[_ <: Content]]
+    val searchIndex: List[String]
 
     /**
       * Returns hit as summary
@@ -89,16 +89,21 @@ trait SearchService {
       (startAt, numResults)
     }
 
-    protected def scheduleIndexDocuments(): Unit = {
-      // TODO: implement this
+    protected def scheduleIndexDocuments(): Unit
+
+    /**
+      * Takes care of logging reindexResults, used in subclasses overriding [[scheduleIndexDocuments]]
+      * @param indexName
+      * @param reindexFuture
+      * @param executor Execution contex for the future
+      */
+    protected def handleScheduledIndexResults(indexName: String, reindexFuture: Future[Try[ReindexResult]])(implicit executor: ExecutionContext): Unit = {
+      reindexFuture.onComplete {
+        case Success(Success(reindexResult: ReindexResult)) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} $indexName in ${reindexResult.millisUsed} ms.")
+        case Success(Failure(ex)) => logger.warn(ex.getMessage, ex)
+        case Failure(ex) => logger.warn(s"Unable to create index '$indexName': " + ex.getMessage, ex)
+      }
     }
-//    protected def handleScheduledIndexResults(reindexFuture: Future[Try[ReindexResult]]): Unit = {
-//      reindexFuture.onComplete {
-//        case Success(Success(reindexResult: ReindexResult)) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} documents in ${reindexResult.millisUsed} ms.")
-//        case Success(Failure(ex)) => logger.warn(ex.getMessage, ex)
-//        case Failure(ex) => logger.warn("Unable to create index: " + ex.getMessage, ex)
-//      }
-//    }
 
     protected def errorHandler[U](failure: Throwable): Failure[U] = {
       failure match {

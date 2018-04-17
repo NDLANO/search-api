@@ -15,12 +15,14 @@ import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{ResultWindowTooLargeException, SearchResult}
 import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, Sort}
 import no.ndla.searchapi.model.search.SearchType
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -34,7 +36,7 @@ trait ArticleSearchService {
   class ArticleSearchService extends LazyLogging with SearchService[ArticleSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
 
-    override val searchIndex = List(articleIndexService)
+    override val searchIndex = List(SearchIndexes(SearchType.Articles))
 
     override def hitToApiModel(hit: SearchHit, language: String): ArticleSummary = {
       searchConverterService.hitAsArticleSummary(hit.sourceAsString, language)
@@ -120,7 +122,7 @@ trait ArticleSearchService {
         Failure(ResultWindowTooLargeException())
       } else {
 
-        val searchToExec = search(searchIndex.map(_.searchIndex))
+        val searchToExec = search(searchIndex)
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
@@ -139,6 +141,19 @@ trait ArticleSearchService {
           case Failure(ex) => errorHandler(ex)
         }
       }
+    }
+
+    override def scheduleIndexDocuments(): Unit = {
+      val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1
+      implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
+      val requestInfo = RequestInfo()
+
+      val articleFuture = Future {
+        requestInfo.setRequestInfo()
+        articleIndexService.indexDocuments
+      }
+
+      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Articles), articleFuture)
     }
 
   }

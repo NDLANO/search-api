@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest
 import no.ndla.network.jwt.JWTExtractor
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.model.domain.ReindexResult
+import no.ndla.searchapi.model.domain.{ReindexResult, RequestInfo}
 import no.ndla.searchapi.service.search.{ArticleIndexService, DraftIndexService, IndexService, LearningPathIndexService}
 import org.apache.logging.log4j.ThreadContext
 import org.json4s.{DefaultFormats, Formats}
@@ -64,7 +64,7 @@ trait InternController {
     }
 
     post("/index/draft") {
-      val requestInfo = getRequestInfo
+      val requestInfo = RequestInfo()
       val draftIndex = Future {
         requestInfo.setRequestInfo()
         ("drafts", draftIndexService.indexDocuments)
@@ -74,7 +74,7 @@ trait InternController {
     }
 
     post("/index/article") {
-      val requestInfo = getRequestInfo
+      val requestInfo = RequestInfo()
       val articleIndex = Future {
         requestInfo.setRequestInfo()
         ("articles", articleIndexService.indexDocuments)
@@ -84,7 +84,7 @@ trait InternController {
     }
 
     post("/index/learningpath") {
-      val requestInfo = getRequestInfo
+      val requestInfo = RequestInfo()
       val learningPathIndex = Future {
         requestInfo.setRequestInfo()
         ("learningpaths", learningPathIndexService.indexDocuments)
@@ -94,7 +94,7 @@ trait InternController {
     }
 
     post("/index") {
-      val requestInfo = getRequestInfo
+      val requestInfo = RequestInfo()
       val indexes = List(
         Future {
           requestInfo.setRequestInfo()
@@ -111,35 +111,6 @@ trait InternController {
       )
 
       resolveResultFutures(indexes)
-    }
-
-    /** Helper class to keep Thread specific request information in futures. */
-    case class RequestInfo(CorrelationId: Option[String],
-                           AuthHeader: Option[String],
-                           UserId: Option[String],
-                           Roles: List[String],
-                           Name: Option[String],
-                           ClientId: Option[String]) {
-      def setRequestInfo(): Unit = {
-        ThreadContext.put(SearchApiProperties.CorrelationIdKey, CorrelationId.getOrElse(""))
-        CorrelationID.set(CorrelationId)
-        AuthUser.setHeader(AuthHeader.getOrElse(""))
-        AuthUser.setId(UserId)
-        AuthUser.setRoles(Roles)
-        AuthUser.setName(Name)
-        AuthUser.setClientId(ClientId)
-      }
-    }
-
-    private def getRequestInfo: RequestInfo = {
-      val correlationId = CorrelationID.get
-      val authHeader = AuthUser.getHeader
-      val userId = AuthUser.get
-      val roles = AuthUser.getRoles
-      val name = AuthUser.getName
-      val clientId = AuthUser.getClientId
-
-      RequestInfo(correlationId, authHeader, userId, roles, name, clientId)
     }
 
   }

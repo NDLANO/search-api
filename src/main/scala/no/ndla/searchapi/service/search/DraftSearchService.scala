@@ -15,10 +15,11 @@ import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.draft.DraftSummary
 import no.ndla.searchapi.model.api.{ResultWindowTooLargeException, SearchResult}
-import no.ndla.searchapi.model.domain.{Language, Sort}
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, Sort}
 import no.ndla.searchapi.model.search.SearchType
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +36,7 @@ trait DraftSearchService {
   class DraftSearchService extends LazyLogging with SearchService[DraftSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
 
-    override val searchIndex = List(draftIndexService)
+    override val searchIndex = List(SearchIndexes(SearchType.Drafts))
 
     override def hitToApiModel(hit: SearchHit, language: String): DraftSummary = {
       searchConverterService.hitAsDraftSummary(hit.sourceAsString, language)
@@ -123,7 +124,7 @@ trait DraftSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchExec = search(searchIndex.map(_.searchIndex))
+        val searchExec = search(searchIndex)
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
@@ -145,5 +146,17 @@ trait DraftSearchService {
       }
     }
 
+    override def scheduleIndexDocuments(): Unit = {
+      val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1
+      implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
+      val requestInfo = RequestInfo()
+
+      val draftFuture = Future {
+        requestInfo.setRequestInfo()
+        draftIndexService.indexDocuments
+      }
+
+      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Drafts), draftFuture)
+    }
   }
 }

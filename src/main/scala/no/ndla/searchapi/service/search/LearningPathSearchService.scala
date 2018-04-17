@@ -10,24 +10,20 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
+import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.ScoreMode
 import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
-import com.sksamuel.elastic4s.searches.sort.{FieldSortDefinition, SortOrder}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.api
+import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.model.api.ResultWindowTooLargeException
-import no.ndla.searchapi.model.domain.{Language, Sort}
-import no.ndla.searchapi.model.search.{SearchType, SearchableLearningPath}
-import org.elasticsearch.ElasticsearchException
-import org.elasticsearch.index.IndexNotFoundException
-import org.json4s.native.Serialization._
+import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, Sort}
+import no.ndla.searchapi.model.search.SearchType
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait LearningPathSearchService {
@@ -38,7 +34,7 @@ trait LearningPathSearchService {
   val learningPathSearchService: LearningPathSearchService
 
   class LearningPathSearchService extends LazyLogging with SearchService[LearningPathSummary] {
-    override val searchIndex = List(learningPathIndexService)
+    override val searchIndex = List(SearchIndexes(SearchType.LearningPaths))
 
     override def hitToApiModel(hit: SearchHit, language: String): LearningPathSummary = {
       searchConverterService.hitAsLearningPathSummary(hit.sourceAsString, language)
@@ -145,7 +141,7 @@ trait LearningPathSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchToExecute = search(searchIndex.map(_.searchIndex))
+        val searchToExecute = search(searchIndex)
             .size(numResults)
             .from(startAt)
             .query(filteredSearch)
@@ -166,6 +162,19 @@ trait LearningPathSearchService {
           case Failure(ex) => errorHandler(ex)
         }
       }
+    }
+
+    override def scheduleIndexDocuments(): Unit = {
+      val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1
+      implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
+      val requestInfo = RequestInfo()
+
+      val learningPathFuture = Future {
+        requestInfo.setRequestInfo()
+        learningPathIndexService.indexDocuments
+      }
+
+      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.LearningPaths), learningPathFuture)
     }
   }
 
