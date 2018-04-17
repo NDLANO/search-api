@@ -38,7 +38,7 @@ trait LearningPathSearchService {
   val learningPathSearchService: LearningPathSearchService
 
   class LearningPathSearchService extends LazyLogging with SearchService[LearningPathSummary] {
-    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
+    override val searchIndex = List(learningPathIndexService)
 
     override def hitToApiModel(hit: SearchHit, language: String): LearningPathSummary = {
       searchConverterService.hitAsLearningPathSummary(hit.sourceAsString, language)
@@ -145,7 +145,7 @@ trait LearningPathSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchToExecute = search(searchIndex)
+        val searchToExecute = search(searchIndex.map(_.searchIndex))
             .size(numResults)
             .from(startAt)
             .query(filteredSearch)
@@ -167,20 +167,6 @@ trait LearningPathSearchService {
         }
       }
     }
-
-    override def scheduleIndexDocuments(): Unit = {
-      implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
-      val f = Future {
-        learningPathIndexService.indexDocuments
-      }
-
-      f.failed.foreach(t => logger.warn("Unable to create index: " + t.getMessage, t))
-      f.foreach {
-        case Success(reindexResult) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} documents in ${reindexResult.millisUsed} ms.")
-        case Failure(ex) => logger.warn(ex.getMessage, ex)
-      }
-    }
-
   }
 
 }

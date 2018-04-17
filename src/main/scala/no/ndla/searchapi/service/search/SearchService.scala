@@ -15,18 +15,19 @@ import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
 import com.sksamuel.elastic4s.searches.sort.{FieldSortDefinition, SortOrder}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.domain.{Language, NdlaSearchException, Sort}
+import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.SearchApiProperties.MaxPageSize
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait SearchService {
-  this: Elastic4sClient with SearchConverterService with LazyLogging =>
+  this: Elastic4sClient with IndexService with SearchConverterService with LazyLogging =>
 
   trait SearchService[T] {
-    val searchIndex: List[String]
+    val searchIndex: List[IndexService[_ <: Content]]
 
     /**
       * Returns hit as summary
@@ -88,7 +89,16 @@ trait SearchService {
       (startAt, numResults)
     }
 
-    protected def scheduleIndexDocuments(): Unit
+    protected def scheduleIndexDocuments(): Unit = {
+      // TODO: implement this
+    }
+//    protected def handleScheduledIndexResults(reindexFuture: Future[Try[ReindexResult]]): Unit = {
+//      reindexFuture.onComplete {
+//        case Success(Success(reindexResult: ReindexResult)) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} documents in ${reindexResult.millisUsed} ms.")
+//        case Success(Failure(ex)) => logger.warn(ex.getMessage, ex)
+//        case Failure(ex) => logger.warn("Unable to create index: " + ex.getMessage, ex)
+//      }
+//    }
 
     protected def errorHandler[U](failure: Throwable): Failure[U] = {
       failure match {

@@ -27,6 +27,7 @@ import org.mockito.Mockito._
 
 import scala.util.Success
 
+
 class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
   val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
   val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
@@ -34,8 +35,8 @@ class ArticleSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override val e4sClient = NdlaE4sClient(localNode.http(true))
 
-  override val articleSearchService = new ArticleSearchService
   override val articleIndexService = new ArticleIndexService
+  override val articleSearchService = new ArticleSearchService
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 

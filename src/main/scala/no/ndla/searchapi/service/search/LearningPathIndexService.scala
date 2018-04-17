@@ -28,7 +28,7 @@ trait LearningPathIndexService {
     with LearningPathApiClient =>
   val learningPathIndexService: LearningPathIndexService
 
-  class LearningPathIndexService extends LazyLogging with IndexService[LearningPath, SearchableLearningPath] {
+  class LearningPathIndexService extends LazyLogging with IndexService[LearningPath] {
     implicit val formats = SearchableLanguageFormats.JSonFormats
     override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.LearningPaths)

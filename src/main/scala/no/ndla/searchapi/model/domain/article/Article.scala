@@ -7,13 +7,9 @@
 
 package no.ndla.searchapi.model.domain.article
 
-import no.ndla.searchapi.model.domain.{Tag, Title}
+import no.ndla.searchapi.model.domain.{Content, Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer
-
-sealed trait Content {
-  def id: Option[Long]
-}
 
 case class Article(id: Option[Long],
                    revision: Option[Int],

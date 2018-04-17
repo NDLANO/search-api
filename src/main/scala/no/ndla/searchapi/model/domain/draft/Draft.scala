@@ -9,14 +9,10 @@ package no.ndla.searchapi.model.domain.draft
 
 import no.ndla.searchapi.model.api.{ValidationException, ValidationMessage}
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.{Tag, Title}
+import no.ndla.searchapi.model.domain.{Content, Tag, Title}
 import org.joda.time.DateTime
 
 import scala.util.{Failure, Success, Try}
-
-sealed trait Content {
-  def id: Option[Long]
-}
 
 case class Draft(id: Option[Long],
                  revision: Option[Int],

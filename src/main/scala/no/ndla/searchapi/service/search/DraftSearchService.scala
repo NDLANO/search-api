@@ -35,7 +35,7 @@ trait DraftSearchService {
   class DraftSearchService extends LazyLogging with SearchService[DraftSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
 
-    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes(SearchType.Drafts))
+    override val searchIndex = List(draftIndexService)
 
     override def hitToApiModel(hit: SearchHit, language: String): DraftSummary = {
       searchConverterService.hitAsDraftSummary(hit.sourceAsString, language)
@@ -123,7 +123,7 @@ trait DraftSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchExec = search(searchIndex)
+        val searchExec = search(searchIndex.map(_.searchIndex))
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
@@ -142,19 +142,6 @@ trait DraftSearchService {
           case Failure(ex) =>
             errorHandler(ex)
         }
-      }
-    }
-
-    override def scheduleIndexDocuments(): Unit = {
-      implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
-      val f = Future {
-        draftIndexService.indexDocuments
-      }
-
-      f.failed.foreach(t => logger.warn("Unable to create index: " + t.getMessage, t))
-      f.foreach {
-        case Success(reindexResult) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} drafts in ${reindexResult.millisUsed} ms.")
-        case Failure(ex) => logger.warn(ex.getMessage, ex)
       }
     }
 

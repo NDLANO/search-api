@@ -21,34 +21,31 @@ import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, Resul
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.search.{SearchSettings, SearchType}
-
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
 
 trait MultiDraftSearchService {
   this: Elastic4sClient
     with SearchConverterService
+    with IndexService
     with SearchService
     with DraftIndexService
     with LearningPathIndexService =>
   val multiDraftSearchService: MultiDraftSearchService
 
   class MultiDraftSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
-    override val searchIndex: List[String] = List(
-      SearchApiProperties.SearchIndexes(SearchType.Drafts),
-      SearchApiProperties.SearchIndexes(SearchType.LearningPaths)
-    )
+
+    override val searchIndex = List(draftIndexService, learningPathIndexService)
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
       val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
       val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
-      val learningpathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
+      val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
       hit.`type` match {
         case `articleType` =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
         case `draftType` =>
           searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
-        case `learningpathType` =>
+        case `learningPathType` =>
           searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
     }
@@ -86,7 +83,7 @@ trait MultiDraftSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-        val searchToExecute = search(searchIndex)
+        val searchToExecute = search(searchIndex.map(_.searchIndex))
           .query(filteredSearch)
           .from(startAt)
           .size(numResults)
@@ -204,21 +201,6 @@ trait MultiDraftSearchService {
         )
       )
     }
-
-    override def scheduleIndexDocuments(): Unit = {
-      implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
-      // TODO: Make this index both thingies. Also fix execution context so we can do both at same time ^
-      val f = Future {
-        draftIndexService.indexDocuments
-      }
-
-      f.failed.foreach(t => logger.warn("Unable to create index: " + t.getMessage, t))
-      f.foreach {
-        case Success(reindexResult) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} documents in ${reindexResult.millisUsed} ms.")
-        case Failure(ex) => logger.warn(ex.getMessage, ex)
-      }
-    }
-
   }
 
 }

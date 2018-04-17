@@ -28,7 +28,7 @@ trait DraftIndexService {
     with DraftApiClient =>
   val draftIndexService: DraftIndexService
 
-  class DraftIndexService extends LazyLogging with IndexService[Draft, SearchableDraft] {
+  class DraftIndexService extends LazyLogging with IndexService[Draft] {
     implicit val formats = SearchableLanguageFormats.JSonFormats
     override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.Drafts)
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Drafts)

@@ -34,7 +34,7 @@ trait ArticleSearchService {
   class ArticleSearchService extends LazyLogging with SearchService[ArticleSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
 
-    override val searchIndex: List[String] = List(SearchApiProperties.SearchIndexes(SearchType.Articles))
+    override val searchIndex = List(articleIndexService)
 
     override def hitToApiModel(hit: SearchHit, language: String): ArticleSummary = {
       searchConverterService.hitAsArticleSummary(hit.sourceAsString, language)
@@ -120,7 +120,7 @@ trait ArticleSearchService {
         Failure(ResultWindowTooLargeException())
       } else {
 
-        val searchToExec = search(searchIndex)
+        val searchToExec = search(searchIndex.map(_.searchIndex))
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
@@ -138,19 +138,6 @@ trait ArticleSearchService {
             ))
           case Failure(ex) => errorHandler(ex)
         }
-      }
-    }
-
-    override def scheduleIndexDocuments(): Unit = {
-      implicit val ec = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor)
-      val f = Future {
-        articleIndexService.indexDocuments
-      }
-
-      f.failed.foreach(t => logger.warn("Unable to create index: " + t.getMessage, t))
-      f.foreach {
-        case Success(reindexResult) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} documents in ${reindexResult.millisUsed} ms.")
-        case Failure(ex) => logger.warn(ex.getMessage, ex)
       }
     }
 

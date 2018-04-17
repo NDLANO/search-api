@@ -28,10 +28,10 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
   override val e4sClient = NdlaE4sClient(localNode.http(true))
 
-  override val multiSearchService = new MultiSearchService
   override val articleIndexService = new ArticleIndexService
   override val draftIndexService = new DraftIndexService
   override val learningPathIndexService = new LearningPathIndexService
+  override val multiSearchService = new MultiSearchService
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
