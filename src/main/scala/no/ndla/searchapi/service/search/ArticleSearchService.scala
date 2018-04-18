@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
@@ -27,10 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait ArticleSearchService {
-  this: Elastic4sClient
-    with SearchConverterService
-    with SearchService
-    with ArticleIndexService =>
+  this: Elastic4sClient with SearchConverterService with SearchService with ArticleIndexService =>
   val articleSearchService: ArticleSearchService
 
   class ArticleSearchService extends LazyLogging with SearchService[ArticleSummary] {
@@ -94,11 +90,12 @@ trait ArticleSearchService {
                       articleTypes: Seq[String],
                       fallback: Boolean): Try[api.SearchResult[ArticleSummary]] = {
 
-      val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
+      val articleTypesFilter =
+        if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
       val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
 
       val licenseFilter = license match {
-        case None => Some(noCopyright)
+        case None      => Some(noCopyright)
         case Some(lic) => Some(termQuery("license", lic))
       }
 
@@ -107,7 +104,7 @@ trait ArticleSearchService {
           (None, "*")
         case lang =>
           fallback match {
-            case true => (None, "*")
+            case true  => (None, "*")
             case false => (Some(existsQuery(s"title.$lang")), lang)
           }
       }
@@ -118,7 +115,8 @@ trait ArticleSearchService {
       val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)
       val requestedResultWindow = pageSize * page
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
-        logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+        logger.info(
+          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
 
@@ -131,13 +129,14 @@ trait ArticleSearchService {
 
         e4sClient.execute(searchToExec) match {
           case Success(response) =>
-            Success(api.SearchResult[ArticleSummary](
-              response.result.totalHits,
-              page,
-              numResults,
-              if (language == "*") Language.AllLanguages else language,
-              getHits(response.result, language, fallback)
-            ))
+            Success(
+              api.SearchResult[ArticleSummary](
+                response.result.totalHits,
+                page,
+                numResults,
+                if (language == "*") Language.AllLanguages else language,
+                getHits(response.result, language, fallback)
+              ))
           case Failure(ex) => errorHandler(ex)
         }
       }

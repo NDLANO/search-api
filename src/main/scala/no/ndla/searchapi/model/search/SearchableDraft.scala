@@ -91,8 +91,7 @@ object LanguagelessSearchableDraft {
       contexts: List[SearchableTaxonomyContext]
   )
 
-  def apply(
-      draft: SearchableDraft): LanguagelessSearchableDraft = {
+  def apply(draft: SearchableDraft): LanguagelessSearchableDraft = {
     LanguagelessSearchableDraft(
       id = draft.id,
       lastUpdated = draft.lastUpdated,

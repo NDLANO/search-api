@@ -27,10 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait LearningPathSearchService {
-  this: Elastic4sClient
-    with SearchConverterService
-    with SearchService
-    with LearningPathIndexService =>
+  this: Elastic4sClient with SearchConverterService with SearchService with LearningPathIndexService =>
   val learningPathSearchService: LearningPathSearchService
 
   class LearningPathSearchService extends LazyLogging with SearchService[LearningPathSummary] {
@@ -81,8 +78,7 @@ trait LearningPathSearchService {
                       sort: Sort.Value,
                       page: Int,
                       pageSize: Int,
-                      fallback: Boolean
-                     ): Try[api.SearchResult[LearningPathSummary]] = {
+                      fallback: Boolean): Try[api.SearchResult[LearningPathSummary]] = {
       val searchLanguage = if (language == Language.AllLanguages || fallback) "*" else language
 
       val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
@@ -98,22 +94,20 @@ trait LearningPathSearchService {
             .should(
               titleSearch,
               descSearch,
-              nestedQuery("learningsteps", stepTitleSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.title")),
-              nestedQuery("learningsteps", stepDescSearch).scoreMode(ScoreMode.Avg).boost(1).inner(innerHits("learningsteps.description")),
+              nestedQuery("learningsteps", stepTitleSearch)
+                .scoreMode(ScoreMode.Avg)
+                .boost(1)
+                .inner(innerHits("learningsteps.title")),
+              nestedQuery("learningsteps", stepDescSearch)
+                .scoreMode(ScoreMode.Avg)
+                .boost(1)
+                .inner(innerHits("learningsteps.description")),
               tagSearch,
               authorSearch
             )
         )
 
-      executeSearch(
-        fullQuery,
-        withIdIn,
-        taggedWith,
-        sort,
-        searchLanguage,
-        page,
-        pageSize,
-        fallback)
+      executeSearch(fullQuery, withIdIn, taggedWith, sort, searchLanguage, page, pageSize, fallback)
     }
 
     def executeSearch(queryBuilder: BoolQueryDefinition,
@@ -123,11 +117,10 @@ trait LearningPathSearchService {
                       language: String,
                       page: Int,
                       pageSize: Int,
-                      fallback: Boolean
-                     ): Try[api.SearchResult[LearningPathSummary]] = {
+                      fallback: Boolean): Try[api.SearchResult[LearningPathSummary]] = {
 
       val tagFilter = taggedWith match {
-        case None => None
+        case None      => None
         case Some(tag) => Some(termQuery(s"tags.$language.raw", tag))
       }
       val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
@@ -138,27 +131,29 @@ trait LearningPathSearchService {
       val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)
       val requestedResultWindow = page * numResults
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
-        logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+        logger.info(
+          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
         val searchToExecute = search(searchIndex)
-            .size(numResults)
-            .from(startAt)
-            .query(filteredSearch)
-            .highlighting(highlight("*"))
-            .sortBy(getSortDefinition(sort, language))
+          .size(numResults)
+          .from(startAt)
+          .query(filteredSearch)
+          .highlighting(highlight("*"))
+          .sortBy(getSortDefinition(sort, language))
 
         val json = e4sClient.httpClient.show(searchToExecute)
 
         e4sClient.execute(searchToExecute) match {
           case Success(response) =>
-            Success(api.SearchResult[LearningPathSummary](
-              response.result.totalHits,
-              page,
-              numResults,
-              if(language == "*") Language.AllLanguages else language,
-              getHits(response.result, language, fallback)
-            ))
+            Success(
+              api.SearchResult[LearningPathSummary](
+                response.result.totalHits,
+                page,
+                numResults,
+                if (language == "*") Language.AllLanguages else language,
+                getHits(response.result, language, fallback)
+              ))
           case Failure(ex) => errorHandler(ex)
         }
       }

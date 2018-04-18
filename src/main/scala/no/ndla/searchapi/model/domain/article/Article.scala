@@ -25,8 +25,8 @@ case class Article(id: Option[Long],
                    created: DateTime,
                    updated: DateTime,
                    updatedBy: String,
-                   articleType: LearningResourceType.Value) extends Content
-
+                   articleType: LearningResourceType.Value)
+    extends Content
 
 object LearningResourceType extends Enumeration {
   val Article = Value("standard")

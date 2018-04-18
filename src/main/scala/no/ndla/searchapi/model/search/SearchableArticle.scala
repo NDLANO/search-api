@@ -54,10 +54,8 @@ class SearchableArticleSerializer
             articleType = (obj \ "articleType").extract[String],
             defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
             metaImage = SearchableLanguageValues("metaImage", obj),
-            supportedLanguages =
-              (obj \ "supportedLanguages").extract[List[String]],
-            contexts =
-              (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
+            supportedLanguages = (obj \ "supportedLanguages").extract[List[String]],
+            contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
       }, {
         case article: SearchableArticle =>
@@ -90,8 +88,7 @@ object LanguagelessSearchableArticle {
       contexts: List[SearchableTaxonomyContext]
   )
 
-  def apply(
-      searchableArticle: SearchableArticle): LanguagelessSearchableArticle = {
+  def apply(searchableArticle: SearchableArticle): LanguagelessSearchableArticle = {
     LanguagelessSearchableArticle(
       id = searchableArticle.id,
       lastUpdated = searchableArticle.lastUpdated,

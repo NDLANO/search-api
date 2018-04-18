@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.model.domain.article
 
 import no.ndla.searchapi.model.domain.LanguageField

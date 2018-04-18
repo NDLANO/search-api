@@ -35,7 +35,6 @@ trait SearchApiClient {
     val searchPath: String
     val dumpDomainPath: String = s"intern/dump/$name"
 
-
     def getChunks[T](implicit mf: Manifest[T]): Stream[Try[Seq[T]]] = {
       getChunk(0, 0) match {
         case Success(initSearch) =>
@@ -66,7 +65,8 @@ trait SearchApiClient {
           logger.info(s"Fetched chunk of ${result.results.size}...")
           Success(result)
         case Failure(ex) =>
-          logger.error(s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$dumpDomainPath'")
+          logger.error(
+            s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$dumpDomainPath'")
           Failure(ex)
       }
     }
@@ -75,28 +75,28 @@ trait SearchApiClient {
 
     def get[T](path: String, params: Map[String, Any], timeout: Int = 5000)(implicit mf: Manifest[T]): Try[T] = {
       implicit val formats: Formats =
-      org.json4s.DefaultFormats +
-        new EnumNameSerializer(LearningPathStatus) +
-        new EnumNameSerializer(LearningPathVerificationStatus) +
-        new EnumNameSerializer(StepType) +
-        new EnumNameSerializer(StepStatus) +
-        new EnumNameSerializer(EmbedType) +
-        new EnumNameSerializer(ArticleStatus) +
-        new EnumNameSerializer(LearningResourceType) ++
+        org.json4s.DefaultFormats +
+          new EnumNameSerializer(LearningPathStatus) +
+          new EnumNameSerializer(LearningPathVerificationStatus) +
+          new EnumNameSerializer(StepType) +
+          new EnumNameSerializer(StepStatus) +
+          new EnumNameSerializer(EmbedType) +
+          new EnumNameSerializer(ArticleStatus) +
+          new EnumNameSerializer(LearningResourceType) ++
           org.json4s.ext.JodaTimeSerializers.all
 
       ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)).timeout(timeout, timeout))
     }
 
-    protected def search[T <: ApiSearchResults](searchParams: SearchParams)(implicit mf: Manifest[T]): Future[Try[T]] = {
-      val queryParams = searchParams.remaindingParams ++ Map(
-        "language" -> searchParams.language,
-        "sort" -> searchParams.sort,
-        "page" -> searchParams.page,
-        "page-size" -> searchParams.pageSize)
+    protected def search[T <: ApiSearchResults](searchParams: SearchParams)(
+        implicit mf: Manifest[T]): Future[Try[T]] = {
+      val queryParams = searchParams.remaindingParams ++ Map("language" -> searchParams.language,
+                                                             "sort" -> searchParams.sort,
+                                                             "page" -> searchParams.page,
+                                                             "page-size" -> searchParams.pageSize)
 
       Future { get(searchPath, queryParams) }.map {
-        case Success(a) => Success(a)
+        case Success(a)  => Success(a)
         case Failure(ex) => Failure(new ApiSearchException(name, ex.getMessage))
       }
     }

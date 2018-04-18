@@ -18,30 +18,32 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
   test("That serializing a SearchableArticle to json and deserializing back to object does not change content") {
     implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-    val titles = SearchableLanguageValues(Seq(
-      LanguageValue("nb", "Christian Tut"),
-      LanguageValue("en", "Christian Honk")))
+    val titles =
+      SearchableLanguageValues(Seq(LanguageValue("nb", "Christian Tut"), LanguageValue("en", "Christian Honk")))
 
-    val contents = SearchableLanguageValues(Seq(
-      LanguageValue("nn", "Eg kjøyrar rundt i min fine bil"),
-      LanguageValue("nb", "Jeg kjører rundt i tutut"),
-      LanguageValue("en", "I'm in my mums car wroomwroom")))
+    val contents = SearchableLanguageValues(
+      Seq(
+        LanguageValue("nn", "Eg kjøyrar rundt i min fine bil"),
+        LanguageValue("nb", "Jeg kjører rundt i tutut"),
+        LanguageValue("en", "I'm in my mums car wroomwroom")
+      ))
 
-    val visualElements = SearchableLanguageValues(Seq(
-      LanguageValue("nn", "image"),
-      LanguageValue("nb", "image")))
+    val visualElements = SearchableLanguageValues(Seq(LanguageValue("nn", "image"), LanguageValue("nb", "image")))
 
-    val introductions = SearchableLanguageValues(Seq(
-      LanguageValue("en", "Wroom wroom")
-    ))
+    val introductions = SearchableLanguageValues(
+      Seq(
+        LanguageValue("en", "Wroom wroom")
+      ))
 
-    val metaDescriptions = SearchableLanguageValues(Seq(
-      LanguageValue("nb", "Mammas bil")
-    ))
+    val metaDescriptions = SearchableLanguageValues(
+      Seq(
+        LanguageValue("nb", "Mammas bil")
+      ))
 
-    val tags = SearchableLanguageList(Seq(
-      LanguageValue("en", Seq("Mum", "Car", "Wroom"))
-    ))
+    val tags = SearchableLanguageList(
+      Seq(
+        LanguageValue("en", Seq("Mum", "Car", "Wroom"))
+      ))
 
     val metaImages = SearchableLanguageValues(Seq(LanguageValue("nb", "1")))
 
@@ -51,16 +53,17 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         subjectId = "urn:subject:1",
         subject = SearchableLanguageValues(Seq(LanguageValue("nb", "Matte"))),
         path = "/subject:3/topic:1/topic:151/resource:101",
-        breadcrumbs = SearchableLanguageList(Seq(
-          LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
-        )),
+        breadcrumbs = SearchableLanguageList(
+          Seq(
+            LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
+          )),
         contextType = LearningResourceType.Article.toString,
-        filters = List(TaxonomyFilter(
-          filterId = "urn:filter:1",
-          name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
-          relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-        )
-        ),
+        filters = List(
+          TaxonomyFilter(
+            filterId = "urn:filter:1",
+            name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
+            relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
+          )),
         resourceTypeIds = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle"),
         resourceTypes = SearchableLanguageList(Seq(LanguageValue("nb", Seq("Fagstoff", "Fagartikkel"))))
       )

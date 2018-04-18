@@ -50,13 +50,11 @@ class SearchableLearningPathSerializer
             lastUpdated = lastUpdated,
             defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
             tags = SearchableLanguageList("tags", obj),
-            learningsteps =
-              (obj \ "learningsteps").extract[List[SearchableLearningStep]],
+            learningsteps = (obj \ "learningsteps").extract[List[SearchableLearningStep]],
             license = (obj \ "license").extract[Copyright],
             isBasedOn = (obj \ "isBasedOn").extract[Option[Long]],
             supportedLanguages = (obj \ "supportedLanguages").extract[List[String]],
-            contexts =
-              (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
+            contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
       }, {
         case lp: SearchableLearningPath =>
@@ -78,22 +76,20 @@ class SearchableLearningPathSerializer
       }))
 
 object LanguagelessSearchableLearningPath {
-  case class LanguagelessSearchableLearningPath(
-      id: Long,
-      coverPhotoUrl: Option[String],
-      duration: Option[Int],
-      status: String,
-      verificationStatus: String,
-      lastUpdated: DateTime,
-      defaultTitle: Option[String],
-      learningsteps: List[SearchableLearningStep],
-      license: Copyright,
-      isBasedOn: Option[Long],
-      supportedLanguages: List[String],
-      contexts: List[SearchableTaxonomyContext])
+  case class LanguagelessSearchableLearningPath(id: Long,
+                                                coverPhotoUrl: Option[String],
+                                                duration: Option[Int],
+                                                status: String,
+                                                verificationStatus: String,
+                                                lastUpdated: DateTime,
+                                                defaultTitle: Option[String],
+                                                learningsteps: List[SearchableLearningStep],
+                                                license: Copyright,
+                                                isBasedOn: Option[Long],
+                                                supportedLanguages: List[String],
+                                                contexts: List[SearchableTaxonomyContext])
 
-  def apply(searchableLearningPath: SearchableLearningPath)
-    : LanguagelessSearchableLearningPath = {
+  def apply(searchableLearningPath: SearchableLearningPath): LanguagelessSearchableLearningPath = {
     LanguagelessSearchableLearningPath(
       searchableLearningPath.id,
       searchableLearningPath.coverPhotoId,

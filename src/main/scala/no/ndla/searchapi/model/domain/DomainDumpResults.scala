@@ -7,7 +7,4 @@
 
 package no.ndla.searchapi.model.domain
 
-case class DomainDumpResults[T](totalCount: Long,
-                                page: Int,
-                                pageSize: Int,
-                                results: Seq[T])
+case class DomainDumpResults[T](totalCount: Long, page: Int, pageSize: Int, results: Seq[T])

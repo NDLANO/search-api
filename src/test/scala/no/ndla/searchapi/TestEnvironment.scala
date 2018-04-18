@@ -20,7 +20,7 @@ import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClie
 import org.scalatest.mockito.MockitoSugar._
 
 trait TestEnvironment
-  extends ArticleApiClient
+    extends ArticleApiClient
     with ArticleIndexService
     with ArticleSearchService
     with MultiSearchService
@@ -62,6 +62,7 @@ trait TestEnvironment
   val imageApiClient = mock[ImageApiClient]
   val audioApiClient = mock[AudioApiClient]
   val articleApiClient = mock[ArticleApiClient]
+
   val SearchClients = Map[String, SearchApiClient](
     "articles" -> draftApiClient,
     "learningpaths" -> learningPathApiClient,

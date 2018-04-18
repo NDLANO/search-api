@@ -30,7 +30,8 @@ case class Draft(id: Option[Long],
                  updated: DateTime,
                  updatedBy: String,
                  articleType: LearningResourceType.Value,
-                 notes: List[String]) extends Content
+                 notes: List[String])
+    extends Content
 
 object ArticleStatus extends Enumeration {
   val CREATED, IMPORTED, USER_TEST, QUEUED_FOR_PUBLISHING, QUALITY_ASSURED, DRAFT, SKETCH, PUBLISHED = Value
@@ -40,7 +41,10 @@ object ArticleStatus extends Enumeration {
       case Some(st) => Success(st)
       case None =>
         val validStatuses = values.map(_.toString).mkString(", ")
-        Failure(new ValidationException(errors=Seq(ValidationMessage("status", s"'$s' is not a valid article status. Must be one of $validStatuses"))))
+        Failure(
+          new ValidationException(
+            errors =
+              Seq(ValidationMessage("status", s"'$s' is not a valid article status. Must be one of $validStatuses"))))
     }
 
   def valueOf(s: String): Option[ArticleStatus.Value] = values.find(_.toString == s.toUpperCase)

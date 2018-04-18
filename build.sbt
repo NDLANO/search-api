@@ -11,7 +11,7 @@ val AwsSdkversion = "1.11.297"
 val ScalaTestVersion = "3.0.1"
 val MockitoVersion = "1.10.19"
 val JacksonVersion = "2.9.5"
-val JsoupVersion =  "1.10.2"
+val JsoupVersion = "1.10.2"
 val Elastic4sVersion = "6.1.4"
 val ElasticsearchVersion = "6.0.1"
 
@@ -29,9 +29,9 @@ lazy val commonSettings = Seq(
   scalaVersion := Scalaversion
 )
 
-lazy val search_api = (project in file(".")).
-  settings(commonSettings: _*).
-  settings(
+lazy val search_api = (project in file("."))
+  .settings(commonSettings: _*)
+  .settings(
     name := "search-api",
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature"),
@@ -46,7 +46,7 @@ lazy val search_api = (project in file(".")).
       "joda-time" % "joda-time" % "2.8.2",
       "org.scalatra" %% "scalatra" % Scalatraversion,
       "org.scalatra" %% "scalatra-json" % Scalatraversion,
-      "org.scalatra" %% "scalatra-swagger"  % Scalatraversion,
+      "org.scalatra" %% "scalatra-swagger" % Scalatraversion,
       "org.scalatra" %% "scalatra-scalatest" % Scalatraversion % "test",
       "org.jsoup" % "jsoup" % "1.11.2",
       "org.elasticsearch" % "elasticsearch" % ElasticsearchVersion,
@@ -58,21 +58,23 @@ lazy val search_api = (project in file(".")).
       "org.apache.lucene" % "lucene-queryparser" % "7.1.0", // Overriding lucene-queryparser used in elasticsearch because of https://snyk.io/vuln/SNYK-JAVA-ORGAPACHELUCENE-31569
       "org.eclipse.jetty" % "jetty-webapp" % Jettyversion % "container;compile",
       "org.eclipse.jetty" % "jetty-plus" % Jettyversion % "container",
-      "org.json4s"   %% "json4s-native" % "3.5.0",
-      "org.json4s"   %% "json4s-ext" % "3.5.0",
+      "org.json4s" %% "json4s-native" % "3.5.0",
+      "org.json4s" %% "json4s-ext" % "3.5.0",
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
       "org.mockito" % "mockito-all" % MockitoVersion % "test"
     )
-  ).enablePlugins(DockerPlugin).enablePlugins(JettyPlugin)
+  )
+  .enablePlugins(DockerPlugin)
+  .enablePlugins(JettyPlugin)
 
 assembly / assemblyJarName := "search-api.jar"
 assembly / mainClass := Some("no.ndla.searchapi.JettyLauncher")
 assembly / assemblyMergeStrategy := {
-  case "mime.types" => MergeStrategy.filterDistinctLines
-  case PathList("org", "joda", "convert", "ToString.class")  => MergeStrategy.first
-  case PathList("org", "joda", "convert", "FromString.class")  => MergeStrategy.first
-  case PathList("org", "joda", "time", "base", "BaseDateTime.class")  => MergeStrategy.first
+  case "mime.types"                                                  => MergeStrategy.filterDistinctLines
+  case PathList("org", "joda", "convert", "ToString.class")          => MergeStrategy.first
+  case PathList("org", "joda", "convert", "FromString.class")        => MergeStrategy.first
+  case PathList("org", "joda", "time", "base", "BaseDateTime.class") => MergeStrategy.first
   case x =>
     val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
@@ -96,7 +98,6 @@ fmt := {
   (Compile / scalafmtSbt).value
 }
 
-
 // Make the docker task depend on the assembly task, which generates a fat JAR file
 docker := (docker dependsOn assembly).value
 
@@ -113,11 +114,12 @@ docker / dockerfile := {
 }
 
 docker / imageNames := Seq(
-  ImageName(
-    namespace = Some(organization.value),
-    repository = name.value,
-    tag = Some(System.getProperty("docker.tag", "SNAPSHOT")))
+  ImageName(namespace = Some(organization.value),
+            repository = name.value,
+            tag = Some(System.getProperty("docker.tag", "SNAPSHOT")))
 )
 
-
-resolvers ++= scala.util.Properties.envOrNone("NDLA_RELEASES").map(repo => "Release Sonatype Nexus Repository Manager" at repo).toSeq
+resolvers ++= scala.util.Properties
+  .envOrNone("NDLA_RELEASES")
+  .map(repo => "Release Sonatype Nexus Repository Manager" at repo)
+  .toSeq

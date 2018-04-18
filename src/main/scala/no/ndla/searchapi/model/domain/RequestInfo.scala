@@ -18,6 +18,7 @@ case class RequestInfo(CorrelationId: Option[String],
                        Roles: List[String],
                        Name: Option[String],
                        ClientId: Option[String]) {
+
   def setRequestInfo(): Unit = {
     ThreadContext.put(SearchApiProperties.CorrelationIdKey, CorrelationId.getOrElse(""))
     CorrelationID.set(CorrelationId)
@@ -30,6 +31,7 @@ case class RequestInfo(CorrelationId: Option[String],
 }
 
 object RequestInfo {
+
   def apply(): RequestInfo = {
     val correlationId = CorrelationID.get
     val authHeader = AuthUser.getHeader
