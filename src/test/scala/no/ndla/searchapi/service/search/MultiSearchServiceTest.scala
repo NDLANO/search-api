@@ -340,29 +340,29 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for subjects works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("Historie"), language="all"))
+    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2"), language="all"))
     search.totalCount should be(6)
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11))
 
-    val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("Historie", "Matte")))
+    val Success(search2) = multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2", "urn:subject:1")))
     search2.totalCount should be(2)
     search2.results.map(_.id) should be(Seq(1, 5))
   }
 
   test("That filtering for resource-types works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagartikkel")))
+    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:academicArticle")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(2, 5))
 
-    val Success(search2) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff")))
+    val Success(search2) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
     search2.totalCount should be(6)
     search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
 
-    val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Fagstoff", "Vurderingsressurs")))
+    val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
     search3.totalCount should be(1)
     search3.results.map(_.id) should be(Seq(7))
 
-    val Success(search4) = multiSearchService.all(searchSettings.copy(resourceTypes = List("Læringssti")))
+    val Success(search4) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:learningpath")))
     search4.totalCount should be(4)
     search4.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }
@@ -415,15 +415,6 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search.totalCount should be(4)
     search.results.map(_.id) should be(Seq(2,3,4,11))
     search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb"))
-  }
-
-  test("That count of resource types is correct") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(language = "nb"))
-
-    search.totalCount should be (13)
-    search.totalCountLearningPaths should be(4)
-    search.totalCountSubjectMaterial should be(6)
-
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

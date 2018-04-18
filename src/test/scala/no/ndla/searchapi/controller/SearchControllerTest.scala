@@ -53,9 +53,17 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   }
 
   test("That / returns 200 ok") {
-    val multiResult = api.MultiSearchResult(0, 0, 0, 0, 1, 10, "nb", Seq.empty)
+    val multiResult = api.MultiSearchResult(0, 1, 10, "nb", Seq.empty)
     when(multiSearchService.all(any[SearchSettings])).thenReturn(Success(multiResult))
     get("/test/") {
+      status should equal (200)
+    }
+  }
+
+  test("That /group/ returns 200 ok") {
+    val multiResult = api.MultiSearchResult(0, 1, 10, "nb", Seq.empty)
+    when(multiSearchService.all(any[SearchSettings])).thenReturn(Success(multiResult))
+    get("/test/group/?resource-types=test") {
       status should equal (200)
     }
   }

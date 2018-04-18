@@ -74,20 +74,7 @@ trait LearningPathIndexService {
           ),
           intField("isBasedOn"),
           keywordField("supportedLanguages"),
-          nestedField("contexts").fields(
-            List(
-              keywordField("id"),
-              keywordField("path"),
-              keywordField("contextType")
-            ) ++
-              generateLanguageSupportedFieldList("resourceTypes", keepRaw = true) ++
-              generateLanguageSupportedFieldList("subject", keepRaw = true) ++
-              generateLanguageSupportedFieldList("breadcrumbs") ++
-              List(nestedField("filters").fields(
-                generateLanguageSupportedFieldList("name", keepRaw = true) ++
-                  generateLanguageSupportedFieldList("relevance")
-              ))
-          )
+          getTaxonomyContextMapping
         ) ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("description") ++

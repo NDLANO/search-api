@@ -15,7 +15,7 @@ import com.sksamuel.elastic4s.alias.AliasActionDefinition
 import com.typesafe.scalalogging.LazyLogging
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexDefinition
-import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition}
+import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedFieldDefinition}
 import no.ndla.network.AuthUser
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
@@ -319,6 +319,28 @@ trait IndexService {
       languageAnalyzers.map(langAnalyzer =>
         nestedField(s"$fieldName.${langAnalyzer.lang}")
           .fields(subFields.map(f => f.analyzer(langAnalyzer.analyzer)))
+      )
+    }
+
+    protected def getTaxonomyContextMapping: NestedFieldDefinition = {
+      nestedField("contexts").fields(
+        List(
+          keywordField("id"),
+          keywordField("path"),
+          keywordField("contextType"),
+          keywordField("subjectId"),
+          keywordField("resourceTypeIds")
+        ) ++
+          generateLanguageSupportedFieldList("resourceTypes", keepRaw = true) ++
+          generateLanguageSupportedFieldList("subject", keepRaw = true) ++
+          generateLanguageSupportedFieldList("breadcrumbs") ++
+          List(
+            nestedField("filters").fields(
+            List(keywordField("filterId")) ++
+              generateLanguageSupportedFieldList("name", keepRaw = true) ++
+              generateLanguageSupportedFieldList("relevance")
+            )
+          )
       )
     }
 
