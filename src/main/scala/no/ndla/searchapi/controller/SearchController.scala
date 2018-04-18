@@ -127,18 +127,14 @@ trait SearchController {
         case None => multiSearchService.all(settings)
       }
 
-      result match {
-        case Success(searchResult) =>
-          Success(GroupSearchResult(
-            totalCount = searchResult.totalCount,
-            resourceType = group,
-            page = searchResult.page,
-            pageSize = searchResult.pageSize,
-            language = searchResult.language,
-            results = searchResult.results.map(r => GroupSummary(id = r.id, title = r.title, url = r.url))
-          ))
-        case Failure(ex) => Failure(ex)
-      }
+      result.map(searchResult => GroupSearchResult(
+        totalCount = searchResult.totalCount,
+        resourceType = group,
+        page = searchResult.page,
+        pageSize = searchResult.pageSize,
+        language = searchResult.language,
+        results = searchResult.results.map(r => GroupSummary(id = r.id, title = r.title, url = r.url))
+      ))
     }
 
     private def groupSearch(query: Option[String], settings: SearchSettings) = {
