@@ -14,6 +14,7 @@ import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.NdlaE4sClient
 import no.ndla.searchapi.model.domain.Sort
 import no.ndla.searchapi.model.domain.learningpath._
+import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 
@@ -30,8 +31,8 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
   override val learningPathIndexService = new LearningPathIndexService
   override val learningPathSearchService: LearningPathSearchService = new LearningPathSearchService
 
-  override def beforeAll() = {
-    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes("learningpaths"))
+  override def beforeAll(): Unit = {
+    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
     learningPathsToIndex.zipWithIndex.foreach{case (lp: LearningPath, index: Int) =>
           val resources = List(Resource(s"urn:resource:$index", lp.title.head.title, Some(s"urn:learningpath:${lp.id.get}"), s"/subject:1/topic:100/resource:$index"))

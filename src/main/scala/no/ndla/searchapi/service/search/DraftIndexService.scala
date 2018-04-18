@@ -10,34 +10,34 @@ package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexDefinition
-import com.sksamuel.elastic4s.mappings._
+import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.ArticleApiClient
-import no.ndla.searchapi.model.domain.article.Article
-import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
+import no.ndla.searchapi.integration.DraftApiClient
+import no.ndla.searchapi.model.domain.draft.Draft
+import no.ndla.searchapi.model.search.{SearchableDraft, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.Bundle
-import org.json4s.native.Serialization.write
 import no.ndla.searchapi.model.search.SearchType
+import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
 
-trait ArticleIndexService {
+trait DraftIndexService {
   this: SearchConverterService
     with IndexService
-    with ArticleApiClient =>
-  val articleIndexService: ArticleIndexService
+    with DraftApiClient =>
+  val draftIndexService: DraftIndexService
 
-  class ArticleIndexService extends LazyLogging with IndexService[Article] {
+  class DraftIndexService extends LazyLogging with IndexService[Draft] {
     implicit val formats = SearchableLanguageFormats.JSonFormats
-    override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.Articles)
-    override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Articles)
-    override val apiClient: ArticleApiClient = articleApiClient
+    override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.Drafts)
+    override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Drafts)
+    override val apiClient: DraftApiClient = draftApiClient
 
-    override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
-      searchConverterService.asSearchableArticle(domainModel, taxonomyBundle) match {
-        case Success(searchableArticle) =>
-          val source = write(searchableArticle)
+    override def createIndexRequest(domainModel: Draft, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
+      searchConverterService.asSearchableDraft(domainModel, taxonomyBundle) match {
+        case Success(searchableDraft) =>
+          val source = write(searchableDraft)
           Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString))
         case Failure(ex) =>
           Failure(ex)
@@ -47,23 +47,22 @@ trait ArticleIndexService {
     def getMapping: MappingDefinition = {
       mapping(documentType).fields(
         List(
-          longField("id"),
-          keywordField("defaultTitle"),
+          intField("id"),
           dateField("lastUpdated"),
           keywordField("license"),
-          textField("authors"),
+          keywordField("defaultTitle"),
+          textField("authors").fielddata(true),
           keywordField("articleType"),
           keywordField("supportedLanguages"),
+          textField("notes").fielddata(true),
           getTaxonomyContextMapping
-        )
-          ++
+        ) ++
           generateKeywordLanguageFields("metaImage") ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
-          generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("tags")
       )
     }

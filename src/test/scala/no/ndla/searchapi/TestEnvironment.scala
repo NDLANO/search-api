@@ -24,6 +24,9 @@ trait TestEnvironment
     with ArticleIndexService
     with ArticleSearchService
     with MultiSearchService
+    with DraftIndexService
+    with DraftSearchService
+    with MultiDraftSearchService
     with AudioApiClient
     with ConverterService
     with DraftApiClient
@@ -74,4 +77,7 @@ trait TestEnvironment
   val articleIndexService = mock[ArticleIndexService]
   val learningPathIndexService = mock[LearningPathIndexService]
   val learningPathSearchService = mock[LearningPathSearchService]
+  val draftIndexService = mock[DraftIndexService]
+  val draftSearchService = mock[DraftSearchService]
+  val multiDraftSearchService = mock[MultiDraftSearchService]
 }

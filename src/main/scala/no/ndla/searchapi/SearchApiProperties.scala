@@ -11,6 +11,7 @@ package no.ndla.searchapi
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.Domains
 import no.ndla.network.secrets.Secrets.readSecrets
+import no.ndla.searchapi.model.search.SearchType
 
 import scala.util.Properties._
 import scala.util.{Failure, Success}
@@ -39,14 +40,17 @@ object SearchApiProperties extends LazyLogging {
   val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-search-api.ndla-local")
   val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
   val RunWithSignedSearchRequests: Boolean = propOrElse("RUN_WITH_SIGNED_SEARCH_REQUESTS", "true").toBoolean
-  val SearchIndexes: Map[String, String] = Map(
-    "articles" -> propOrElse("ARTICLE_SEARCH_INDEX_NAME", "articles"),
-    "learningpaths" -> propOrElse("LEARNINGPATH_SEARCH_INDEX_NAME", "learningpaths")
+
+  val SearchIndexes: Map[SearchType.Value, String] = Map(
+    SearchType.Articles -> propOrElse("ARTICLE_SEARCH_INDEX_NAME", "articles"),
+    SearchType.Drafts -> propOrElse("DRAFT_SEARCH_INDEX_NAME", "drafts"),
+    SearchType.LearningPaths -> propOrElse("LEARNINGPATH_SEARCH_INDEX_NAME", "learningpaths")
   )
 
-  val SearchDocuments: Map[String, String] = Map(
-    "articles" -> "article",
-    "learningpaths" -> "learningpath"
+  val SearchDocuments: Map[SearchType.Value, String] = Map(
+    SearchType.Articles -> "article",
+    SearchType.Drafts -> "draft",
+    SearchType.LearningPaths -> "learningpath"
   )
 
   val DefaultPageSize = 10
@@ -56,11 +60,10 @@ object SearchApiProperties extends LazyLogging {
 
   val ExternalApiUrls: Map[String, String] = Map(
     "article-api" -> s"$Domain/article-api/v2/articles",
+    "draft-api" -> s"$Domain/draft-api/v1/drafts",
     "learningpath-api" -> s"$Domain/learningpath-api/v2/learningpaths",
     "raw-image" -> s"$Domain/image-api/raw/id"
   )
-
-
 
   def booleanProp(key: String) = prop(key).toBoolean
 

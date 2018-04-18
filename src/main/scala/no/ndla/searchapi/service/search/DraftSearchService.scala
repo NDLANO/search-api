@@ -16,30 +16,30 @@ import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.SearchIndexes
-import no.ndla.searchapi.model.api
 import no.ndla.searchapi.integration.Elastic4sClient
+import no.ndla.searchapi.model.api.draft.DraftSummary
 import no.ndla.searchapi.model.api.{ResultWindowTooLargeException, SearchResult}
-import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, Sort}
 import no.ndla.searchapi.model.search.SearchType
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-trait ArticleSearchService {
+trait DraftSearchService {
   this: Elastic4sClient
     with SearchConverterService
     with SearchService
-    with ArticleIndexService =>
-  val articleSearchService: ArticleSearchService
+    with DraftIndexService
+    with SearchConverterService =>
+  val draftSearchService: DraftSearchService
 
-  class ArticleSearchService extends LazyLogging with SearchService[ArticleSummary] {
+  class DraftSearchService extends LazyLogging with SearchService[DraftSummary] {
     private val noCopyright = boolQuery().not(termQuery("license", "copyrighted"))
 
-    override val searchIndex = List(SearchIndexes(SearchType.Articles))
+    override val searchIndex = List(SearchIndexes(SearchType.Drafts))
 
-    override def hitToApiModel(hit: SearchHit, language: String): ArticleSummary = {
-      searchConverterService.hitAsArticleSummary(hit.sourceAsString, language)
+    override def hitToApiModel(hit: SearchHit, language: String): DraftSummary = {
+      searchConverterService.hitAsDraftSummary(hit.sourceAsString, language)
     }
 
     def all(withIdIn: List[Long],
@@ -49,9 +49,8 @@ trait ArticleSearchService {
             pageSize: Int,
             sort: Sort.Value,
             articleTypes: Seq[String],
-            fallback: Boolean): Try[SearchResult[ArticleSummary]] = {
+            fallback: Boolean): Try[SearchResult[DraftSummary]] =
       executeSearch(withIdIn, language, license, sort, page, pageSize, boolQuery(), articleTypes, fallback)
-    }
 
     def matchingQuery(query: String,
                       withIdIn: List[Long],
@@ -61,13 +60,15 @@ trait ArticleSearchService {
                       pageSize: Int,
                       sort: Sort.Value,
                       articleTypes: Seq[String],
-                      fallback: Boolean): Try[SearchResult[ArticleSummary]] = {
-      val language = if (searchLanguage == Language.AllLanguages || fallback) "*" else searchLanguage
+                      fallback: Boolean): Try[SearchResult[DraftSummary]] = {
+
+      val language = if (searchLanguage == Language.AllLanguages) "*" else searchLanguage
       val titleSearch = simpleStringQuery(query).field(s"title.$language", 2)
       val introSearch = simpleStringQuery(query).field(s"introduction.$language", 2)
-      val metaSearch = simpleStringQuery(query).field(s"metaDescription.$language", 1)
       val contentSearch = simpleStringQuery(query).field(s"content.$language", 1)
-      val tagSearch = simpleStringQuery(query).field(s"tags.$language", 1)
+      val tagSearch = simpleStringQuery(query).field(s"tags.$language", 2)
+      val notesSearch = simpleStringQuery(query).field("notes", 1)
+
 
       val fullQuery = boolQuery()
         .must(
@@ -75,13 +76,13 @@ trait ArticleSearchService {
             .should(
               titleSearch,
               introSearch,
-              metaSearch,
               contentSearch,
-              tagSearch
+              tagSearch,
+              notesSearch
             )
         )
 
-      executeSearch(withIdIn, searchLanguage, license, sort, page, pageSize, fullQuery, articleTypes, fallback)
+      executeSearch(withIdIn, language, license, sort, page, pageSize, fullQuery, articleTypes, fallback)
     }
 
     def executeSearch(withIdIn: List[Long],
@@ -92,15 +93,17 @@ trait ArticleSearchService {
                       pageSize: Int,
                       queryBuilder: BoolQueryDefinition,
                       articleTypes: Seq[String],
-                      fallback: Boolean): Try[api.SearchResult[ArticleSummary]] = {
+                      fallback: Boolean): Try[SearchResult[DraftSummary]] = {
 
-      val articleTypesFilter = if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
-      val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
+      val articleTypesFilter =
+        if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
 
       val licenseFilter = license match {
         case None => Some(noCopyright)
         case Some(lic) => Some(termQuery("license", lic))
       }
+
+      val idFilter = if (withIdIn.isEmpty) None else Some(idsQuery(withIdIn))
 
       val (languageFilter, searchLanguage) = language match {
         case "" | Language.AllLanguages =>
@@ -121,24 +124,24 @@ trait ArticleSearchService {
         logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
-
-        val searchToExec = search(searchIndex)
+        val searchExec = search(searchIndex)
           .size(numResults)
           .from(startAt)
           .query(filteredSearch)
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(sort, searchLanguage))
 
-        e4sClient.execute(searchToExec) match {
+        e4sClient.execute(searchExec) match {
           case Success(response) =>
-            Success(api.SearchResult[ArticleSummary](
+            Success(SearchResult[DraftSummary](
               response.result.totalHits,
               page,
               numResults,
-              if (language == "*") Language.AllLanguages else language,
+              if (searchLanguage == "*") Language.AllLanguages else searchLanguage,
               getHits(response.result, language, fallback)
             ))
-          case Failure(ex) => errorHandler(ex)
+          case Failure(ex) =>
+            errorHandler(ex)
         }
       }
     }
@@ -148,14 +151,12 @@ trait ArticleSearchService {
       implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
       val requestInfo = RequestInfo()
 
-      val articleFuture = Future {
+      val draftFuture = Future {
         requestInfo.setRequestInfo()
-        articleIndexService.indexDocuments
+        draftIndexService.indexDocuments
       }
 
-      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Articles), articleFuture)
+      handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Drafts), draftFuture)
     }
-
   }
-
 }

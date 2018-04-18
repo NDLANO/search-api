@@ -16,13 +16,11 @@ import com.typesafe.scalalogging.LazyLogging
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedFieldDefinition}
-import no.ndla.network.AuthUser
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
-import no.ndla.searchapi.model.domain.ReindexResult
+import no.ndla.searchapi.model.domain.{Content, ReindexResult}
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
-import no.ndla.searchapi.model.domain.article.Content
 import no.ndla.searchapi.model.taxonomy.Bundle
 
 import scala.util.{Failure, Success, Try}
@@ -32,7 +30,7 @@ trait IndexService {
     with SearchApiClient
     with TaxonomyApiClient =>
 
-  trait IndexService[D <: AnyRef, T <: AnyRef] extends LazyLogging {
+  trait IndexService[D <: Content] extends LazyLogging {
     val apiClient: SearchApiClient
     val documentType: String
     val searchIndex: String
@@ -315,11 +313,9 @@ trait IndexService {
           .fields(subFields))
     }
 
-    protected def generateNestedLanguageFields(fieldName: String, subFields: List[FieldDefinition]): List[FieldDefinition] = {
+    protected def generateKeywordLanguageFields(fieldName: String): List[FieldDefinition] = {
       languageAnalyzers.map(langAnalyzer =>
-        nestedField(s"$fieldName.${langAnalyzer.lang}")
-          .fields(subFields.map(f => f.analyzer(langAnalyzer.analyzer)))
-      )
+        keywordField(s"$fieldName.${langAnalyzer.lang}"))
     }
 
     protected def getTaxonomyContextMapping: NestedFieldDefinition = {

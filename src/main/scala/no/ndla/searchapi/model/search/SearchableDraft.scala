@@ -12,7 +12,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 import org.json4s.JsonAST.{JField, JObject}
 
-case class SearchableArticle(
+case class SearchableDraft(
     id: Long,
     title: SearchableLanguageValues,
     content: SearchableLanguageValues,
@@ -21,17 +21,18 @@ case class SearchableArticle(
     metaDescription: SearchableLanguageValues,
     tags: SearchableLanguageList,
     lastUpdated: DateTime,
-    license: String,
+    license: Option[String],
     authors: List[String],
     articleType: String,
     metaImage: SearchableLanguageValues,
     defaultTitle: Option[String],
     supportedLanguages: List[String],
+    notes: List[String],
     contexts: List[SearchableTaxonomyContext]
 )
 
-class SearchableArticleSerializer
-    extends CustomSerializer[SearchableArticle](_ =>
+class SearchableDraftSerializer
+    extends CustomSerializer[SearchableDraft](_ =>
       ({
         case obj: JObject =>
           implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
@@ -40,7 +41,7 @@ class SearchableArticleSerializer
           val tz = TimeZone.getDefault
           val lastUpdated = new DateTime(time, DateTimeZone.forID(tz.getID))
 
-          SearchableArticle(
+          SearchableDraft(
             id = (obj \ "id").extract[Long],
             title = SearchableLanguageValues("title", obj),
             content = SearchableLanguageValues("content", obj),
@@ -49,58 +50,59 @@ class SearchableArticleSerializer
             metaDescription = SearchableLanguageValues("metaDescription", obj),
             tags = SearchableLanguageList("tags", obj),
             lastUpdated = lastUpdated,
-            license = (obj \ "license").extract[String],
+            license = (obj \ "license").extract[Option[String]],
             authors = (obj \ "authors").extract[List[String]],
             articleType = (obj \ "articleType").extract[String],
             defaultTitle = (obj \ "defaultTitle").extract[Option[String]],
             metaImage = SearchableLanguageValues("metaImage", obj),
-            supportedLanguages =
-              (obj \ "supportedLanguages").extract[List[String]],
-            contexts =
-              (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
+            supportedLanguages = (obj \ "supportedLanguages").extract[List[String]],
+            notes = (obj \ "notes").extract[List[String]],
+            contexts = (obj \ "contexts").extract[List[SearchableTaxonomyContext]]
           )
       }, {
-        case article: SearchableArticle =>
+        case draft: SearchableDraft =>
           implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
           val languageFields: List[JField] =
             List(
-              article.title.toJsonField("title"),
-              article.content.toJsonField("content"),
-              article.visualElement.toJsonField("visualElement"),
-              article.introduction.toJsonField("introduction"),
-              article.metaDescription.toJsonField("metaDescription"),
-              article.tags.toJsonField("tags"),
-              article.metaImage.toJsonField("metaImage")
+              draft.title.toJsonField("title"),
+              draft.content.toJsonField("content"),
+              draft.visualElement.toJsonField("visualElement"),
+              draft.introduction.toJsonField("introduction"),
+              draft.metaDescription.toJsonField("metaDescription"),
+              draft.tags.toJsonField("tags"),
+              draft.metaImage.toJsonField("metaImage")
             ).flatten
 
-          val partialSearchableArticle = LanguagelessSearchableArticle(article)
-          val partialJObject = Extraction.decompose(partialSearchableArticle)
+          val partialSearchableDraft = LanguagelessSearchableDraft(draft)
+          val partialJObject = Extraction.decompose(partialSearchableDraft)
           partialJObject.merge(JObject(languageFields: _*))
       }))
 
-object LanguagelessSearchableArticle {
-  case class LanguagelessSearchableArticle(
+object LanguagelessSearchableDraft {
+  case class LanguagelessSearchableDraft(
       id: Long,
       lastUpdated: DateTime,
-      license: String,
+      license: Option[String],
       authors: List[String],
       articleType: String,
       defaultTitle: Option[String],
       supportedLanguages: List[String],
+      notes: List[String],
       contexts: List[SearchableTaxonomyContext]
   )
 
   def apply(
-      searchableArticle: SearchableArticle): LanguagelessSearchableArticle = {
-    LanguagelessSearchableArticle(
-      id = searchableArticle.id,
-      lastUpdated = searchableArticle.lastUpdated,
-      license = searchableArticle.license,
-      authors = searchableArticle.authors,
-      articleType = searchableArticle.articleType,
-      defaultTitle = searchableArticle.defaultTitle,
-      supportedLanguages = searchableArticle.supportedLanguages,
-      contexts = searchableArticle.contexts
+      draft: SearchableDraft): LanguagelessSearchableDraft = {
+    LanguagelessSearchableDraft(
+      id = draft.id,
+      lastUpdated = draft.lastUpdated,
+      license = draft.license,
+      authors = draft.authors,
+      articleType = draft.articleType,
+      defaultTitle = draft.defaultTitle,
+      supportedLanguages = draft.supportedLanguages,
+      notes = draft.notes,
+      contexts = draft.contexts
     )
   }
 }
