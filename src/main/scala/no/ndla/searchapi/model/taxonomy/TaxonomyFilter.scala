@@ -14,6 +14,7 @@ import org.json4s.JsonAST.{JObject, JString}
 case class TaxonomyFilter(filterId: String, name: SearchableLanguageValues, relevance: SearchableLanguageValues)
 
 object SearchableContextFilters {
+
   def apply(name: String, jsonObject: JObject): List[TaxonomyFilter] = {
     implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 

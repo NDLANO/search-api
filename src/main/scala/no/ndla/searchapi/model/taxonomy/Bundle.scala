@@ -21,6 +21,7 @@ case class Bundle(
     topicSubtopicConnections: List[TopicSubtopicConnection],
     topics: List[Resource]
 ) {
+
   def getResourceTopics(resource: Resource): List[Resource] = {
     val tc = topicResourceConnections.filter(_.resourceId == resource.id)
     topics.filter(topic => tc.map(_.topicid).contains(topic.id))

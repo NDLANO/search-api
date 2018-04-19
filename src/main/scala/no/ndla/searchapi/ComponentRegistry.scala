@@ -43,8 +43,7 @@ object ComponentRegistry
     with ApiSearchService
     with SearchController
     with InternController
-    with SearchApiClient
-{
+    with SearchApiClient {
   implicit val swagger = new SearchSwagger
 
   lazy val searchController = new SearchController

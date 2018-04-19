@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
@@ -56,7 +55,8 @@ trait MultiDraftSearchService {
     def all(settings: SearchSettings): Try[MultiSearchResult] = executeSearch(settings, boolQuery())
 
     def matchingQuery(query: String, settings: SearchSettings): Try[MultiSearchResult] = {
-      val searchLanguage = if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
+      val searchLanguage =
+        if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
       val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
       val introSearch = simpleStringQuery(query).field(s"introduction.$searchLanguage", 2)
       val metaSearch = simpleStringQuery(query).field(s"metaDescription.$searchLanguage", 1)
@@ -83,7 +83,8 @@ trait MultiDraftSearchService {
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
-        logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+        logger.info(
+          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
         val searchToExecute = search(searchIndex)
@@ -95,14 +96,14 @@ trait MultiDraftSearchService {
 
         e4sClient.execute(searchToExecute) match {
           case Success(response) =>
-
-            Success(MultiSearchResult(
-              totalCount = response.result.totalHits,
-              page = settings.page,
-              pageSize = numResults,
-              language = if (settings.language == "*") Language.AllLanguages else settings.language,
-              results = getHits(response.result, settings.language, settings.fallback)
-            ))
+            Success(
+              MultiSearchResult(
+                totalCount = response.result.totalHits,
+                page = settings.page,
+                pageSize = numResults,
+                language = if (settings.language == "*") Language.AllLanguages else settings.language,
+                results = getHits(response.result, settings.language, settings.fallback)
+              ))
           case Failure(ex) => errorHandler(ex)
         }
       }
@@ -120,7 +121,7 @@ trait MultiDraftSearchService {
           None
         case lang =>
           settings.fallback match {
-            case true => None
+            case true  => None
             case false => Some(existsQuery(s"title.$lang"))
           }
       }
@@ -128,7 +129,7 @@ trait MultiDraftSearchService {
       val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
 
       val licenseFilter = settings.license match {
-        case None => Some(boolQuery().not(termQuery("license", "copyrighted")))
+        case None      => Some(boolQuery().not(termQuery("license", "copyrighted")))
         case Some(lic) => Some(termQuery("license", lic))
       }
 
@@ -137,12 +138,14 @@ trait MultiDraftSearchService {
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
 
-      val supportedLanguageFilter = if (settings.supportedLanguages.isEmpty) None else Some(
-        boolQuery().should(
-          settings.supportedLanguages.map(l =>
-            termQuery("supportedLanguages", l))
-        )
-      )
+      val supportedLanguageFilter =
+        if (settings.supportedLanguages.isEmpty) None
+        else
+          Some(
+            boolQuery().should(
+              settings.supportedLanguages.map(l => termQuery("supportedLanguages", l))
+            )
+          )
 
       List(
         licenseFilter,
@@ -157,52 +160,61 @@ trait MultiDraftSearchService {
     }
 
     private def subjectFilter(subjects: List[String]) = {
-      if (subjects.isEmpty) None else Some(
-        boolQuery().should(
-          subjects.map(subjectId =>
-            nestedQuery("contexts").query(
-              termQuery(s"contexts.subjectId", subjectId)
-            )
+      if (subjects.isEmpty) None
+      else
+        Some(
+          boolQuery().should(
+            subjects.map(
+              subjectId =>
+                nestedQuery("contexts").query(
+                  termQuery(s"contexts.subjectId", subjectId)
+              ))
           )
         )
-      )
     }
 
     private def levelFilter(taxonomyFilters: List[String]) = {
-      if (taxonomyFilters.isEmpty) None else Some(
-        boolQuery().should(
-          taxonomyFilters.map(filterName =>
-            nestedQuery("contexts.filters").query(
-              boolQuery().should(
-                ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
-              )
-            )
+      if (taxonomyFilters.isEmpty) None
+      else
+        Some(
+          boolQuery().should(
+            taxonomyFilters.map(
+              filterName =>
+                nestedQuery("contexts.filters").query(
+                  boolQuery().should(
+                    ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
+                  )
+              ))
           )
         )
-      )
     }
 
     private def resourceTypeFilter(resourceTypes: List[String]) = {
-      if (resourceTypes.isEmpty) None else Some(
-        boolQuery().should(
-          resourceTypes.map(resourceTypeId =>
-            nestedQuery("contexts").query(
-              termQuery(s"contexts.resourceTypeIds", resourceTypeId)
-            )
+      if (resourceTypes.isEmpty) None
+      else
+        Some(
+          boolQuery().should(
+            resourceTypes.map(
+              resourceTypeId =>
+                nestedQuery("contexts").query(
+                  termQuery(s"contexts.resourceTypeIds", resourceTypeId)
+              ))
           )
         )
-      )
     }
 
     private def contextTypeFilter(contextTypes: List[LearningResourceType.Value]) = {
-      if (contextTypes.isEmpty) None else Some(
-        boolQuery().should(
-          contextTypes.map(ct =>
-            nestedQuery("contexts").query(
-              termQuery("contexts.contextType", ct.toString)
-            ))
+      if (contextTypes.isEmpty) None
+      else
+        Some(
+          boolQuery().should(
+            contextTypes.map(
+              ct =>
+                nestedQuery("contexts").query(
+                  termQuery("contexts.contextType", ct.toString)
+              ))
+          )
         )
-      )
     }
 
     override def scheduleIndexDocuments(): Unit = {

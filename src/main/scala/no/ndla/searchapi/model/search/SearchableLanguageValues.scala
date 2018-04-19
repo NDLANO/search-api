@@ -13,22 +13,22 @@ import org.json4s.JsonAST.{JArray, JField, JObject, JString}
 
 object LanguageValue {
 
-  case class LanguageValue[T](language: String, value: T)
-      extends LanguageField[T]
+  case class LanguageValue[T](language: String, value: T) extends LanguageField[T]
 
   def apply[T](lang: String, value: T): LanguageValue[T] =
     LanguageValue(lang, value)
 }
 
 case class SearchableLanguageValues(languageValues: Seq[LV[String]]) {
+
   def toJsonField(name: String): List[JField] =
     languageValues.map(lv => JField(s"$name.${lv.language}", JString(lv.value))).toList
 }
 
 case class SearchableLanguageList(languageValues: Seq[LV[Seq[String]]]) {
+
   def toJsonField(name: String): List[JField] =
-    languageValues.map(lv =>
-      JField(s"$name.${lv.language}", JArray(lv.value.map(JString).toList))).toList
+    languageValues.map(lv => JField(s"$name.${lv.language}", JArray(lv.value.map(JString).toList))).toList
 }
 
 object SearchableLanguageValues {

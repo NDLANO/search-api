@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
@@ -23,9 +22,7 @@ import org.json4s.native.Serialization.write
 import scala.util.{Failure, Success, Try}
 
 trait LearningPathIndexService {
-  this: SearchConverterService
-    with IndexService
-    with LearningPathApiClient =>
+  this: SearchConverterService with IndexService with LearningPathApiClient =>
   val learningPathIndexService: LearningPathIndexService
 
   class LearningPathIndexService extends LazyLogging with IndexService[LearningPath] {
@@ -34,7 +31,9 @@ trait LearningPathIndexService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.LearningPaths)
     override val apiClient: LearningPathApiClient = learningPathApiClient
 
-    override def createIndexRequest(domainModel: LearningPath, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
+    override def createIndexRequest(domainModel: LearningPath,
+                                    indexName: String,
+                                    taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
       searchConverterService.asSearchableLearningPath(domainModel, taxonomyBundle) match {
         case Success(searchableLearningPath) =>
           val source = write(searchableLearningPath)
@@ -65,7 +64,8 @@ trait LearningPathIndexService {
           objectField("copyright").fields(
             objectField("license").fields(
               textField("license"),
-              textField("description"), textField("url")
+              textField("description"),
+              textField("url")
             ),
             nestedField("contributors").fields(
               textField("type"),

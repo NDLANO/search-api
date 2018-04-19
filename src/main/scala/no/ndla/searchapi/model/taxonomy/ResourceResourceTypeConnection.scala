@@ -7,6 +7,4 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class ResourceResourceTypeConnection(resourceId: String,
-                                          resourceTypeId: String,
-                                          id: String)
+case class ResourceResourceTypeConnection(resourceId: String, resourceTypeId: String, id: String)

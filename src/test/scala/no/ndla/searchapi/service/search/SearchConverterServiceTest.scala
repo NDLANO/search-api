@@ -23,35 +23,48 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   override val searchConverterService = new SearchConverterService
   val sampleArticle = TestData.sampleArticleWithPublicDomain.copy()
 
-
   val titles = List(
-    Title("Bokmål tittel", "nb"), Title("Nynorsk tittel", "nn"),
-    Title("English title", "en"), Title("Titre francais", "fr"),
-    Title("Deutsch titel", "de"), Title("Titulo espanol", "es"),
-    Title("Nekonata titolo", "unknown"))
+    Title("Bokmål tittel", "nb"),
+    Title("Nynorsk tittel", "nn"),
+    Title("English title", "en"),
+    Title("Titre francais", "fr"),
+    Title("Deutsch titel", "de"),
+    Title("Titulo espanol", "es"),
+    Title("Nekonata titolo", "unknown")
+  )
 
   val articles = Seq(
-    ArticleContent("Bokmål artikkel", "nb"), ArticleContent("Nynorsk artikkel", "nn"),
-    ArticleContent("English article", "en"), ArticleContent("Francais article", "fr"),
-    ArticleContent("Deutsch Artikel", "de"), ArticleContent("Articulo espanol", "es"),
+    ArticleContent("Bokmål artikkel", "nb"),
+    ArticleContent("Nynorsk artikkel", "nn"),
+    ArticleContent("English article", "en"),
+    ArticleContent("Francais article", "fr"),
+    ArticleContent("Deutsch Artikel", "de"),
+    ArticleContent("Articulo espanol", "es"),
     ArticleContent("Nekonata artikolo", "unknown")
   )
 
   val articleTags = Seq(
-    Tag(Seq("fugl", "fisk"), "nb"), Tag(Seq("fugl", "fisk"), "nn"),
-    Tag(Seq("bird", "fish"), "en"), Tag(Seq("got", "tired"), "fr"),
-    Tag(Seq("of", "translating"), "de"), Tag(Seq("all", "of"), "es"),
+    Tag(Seq("fugl", "fisk"), "nb"),
+    Tag(Seq("fugl", "fisk"), "nn"),
+    Tag(Seq("bird", "fish"), "en"),
+    Tag(Seq("got", "tired"), "fr"),
+    Tag(Seq("of", "translating"), "de"),
+    Tag(Seq("all", "of"), "es"),
     Tag(Seq("the", "words"), "unknown")
   )
 
   override def beforeAll(): Unit = {
-    when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) => invocation.getArgumentAt(0, sampleArticle.getClass()))
+    when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) =>
+      invocation.getArgumentAt(0, sampleArticle.getClass()))
 
-    val resources = List(Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1"))
+    val resources = List(
+      Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1"))
     val topics = List(Resource("urn:topic:10", "Topic1", Some("urn:article:10"), "/subject:1/topic:10"))
-    val topicResourceConnections = List(TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
+    val topicResourceConnections = List(
+      TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
     val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
-    val subjectTopicConnections = List(SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
+    val subjectTopicConnections = List(
+      SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
 
     val emptyBundle = Bundle(
       filters = List.empty,
@@ -71,25 +84,25 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That asSearchableArticle converts titles with correct language") {
-    val article = TestData.sampleArticleWithByNcSa.copy(title=titles)
+    val article = TestData.sampleArticleWithByNcSa.copy(title = titles)
     val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     verifyTitles(searchableArticle)
   }
 
   test("That asSearchable converts articles with correct language") {
-    val article = TestData.sampleArticleWithByNcSa.copy(content=articles)
+    val article = TestData.sampleArticleWithByNcSa.copy(content = articles)
     val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     verifyArticles(searchableArticle)
   }
 
   test("That asSearchable converts tags with correct language") {
-    val article = TestData.sampleArticleWithByNcSa.copy(tags=articleTags)
+    val article = TestData.sampleArticleWithByNcSa.copy(tags = articleTags)
     val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     verifyTags(searchableArticle)
   }
 
   test("That asSearchable converts all fields with correct language") {
-    val article = TestData.sampleArticleWithByNcSa.copy(title=titles, content=articles, tags=articleTags)
+    val article = TestData.sampleArticleWithByNcSa.copy(title = titles, content = articles, tags = articleTags)
     val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
 
     verifyTitles(searchableArticle)
@@ -98,56 +111,76 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That asSearchableArticle converts titles with license from agreement") {
-    val article = TestData.sampleArticleWithByNcSa.copy(title=titles)
-    when(converterService.withAgreementCopyright(any[Article])).thenReturn(article.copy(copyright = article.copyright.copy(license="gnu")))
+    val article = TestData.sampleArticleWithByNcSa.copy(title = titles)
+    when(converterService.withAgreementCopyright(any[Article]))
+      .thenReturn(article.copy(copyright = article.copyright.copy(license = "gnu")))
     val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, None)
     searchableArticle.license should equal("gnu")
   }
 
   test("That resource types are derived correctly") {
-    val Success(searchable2) = searchConverterService.asSearchableArticle(TestData.article2, Some(TestData.taxonomyTestBundle))
-    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
-    val Success(searchable7) = searchConverterService.asSearchableArticle(TestData.article7, Some(TestData.taxonomyTestBundle))
+    val Success(searchable2) =
+      searchConverterService.asSearchableArticle(TestData.article2, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) =
+      searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable7) =
+      searchConverterService.asSearchableArticle(TestData.article7, Some(TestData.taxonomyTestBundle))
 
-    searchable2.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("Fagstoff", "Fagartikkel").sorted))
+    searchable2.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(
+      Seq(Seq("Fagstoff", "Fagartikkel").sorted))
     searchable4.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("Fagstoff")))
-    searchable7.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("SuperNested ResourceType", "Medelevvurdering", "Vurderingsressurs", "Veiledning", "Fagstoff").sorted))
+    searchable7.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(
+      Seq(Seq("SuperNested ResourceType", "Medelevvurdering", "Vurderingsressurs", "Veiledning", "Fagstoff").sorted))
   }
 
   test("That breadcrumbs are derived correctly") {
-    val Success(searchable1) = searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
-    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
-    val Success(searchable6) = searchConverterService.asSearchableArticle(TestData.article6, Some(TestData.taxonomyTestBundle))
+    val Success(searchable1) =
+      searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) =
+      searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable6) =
+      searchConverterService.asSearchableArticle(TestData.article6, Some(TestData.taxonomyTestBundle))
 
     searchable1.contexts.size should be(2)
-    searchable1.contexts.head.breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
-      "Matte",
-      "Baldur har mareritt"
-    )))
+    searchable1.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
+      Seq(
+        Seq(
+          "Matte",
+          "Baldur har mareritt"
+        )))
 
-    searchable1.contexts(1).breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
-      "Historie",
-      "Katter"
-    )))
+    searchable1.contexts(1).breadcrumbs.languageValues.map(_.value) should be(
+      Seq(
+        Seq(
+          "Historie",
+          "Katter"
+        )))
 
     searchable4.contexts.size should be(1)
-    searchable4.contexts.head.breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
-      "Matte",
-      "Baldur har mareritt",
-      "En Baldur har mareritt om Ragnarok"
-    )))
+    searchable4.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
+      Seq(
+        Seq(
+          "Matte",
+          "Baldur har mareritt",
+          "En Baldur har mareritt om Ragnarok"
+        )))
 
     searchable6.contexts.size should be(1)
-    searchable6.contexts.head.breadcrumbs.languageValues.map(_.value) should be (Seq(Seq(
-      "Historie",
-      "Katter"
-    )))
+    searchable6.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
+      Seq(
+        Seq(
+          "Historie",
+          "Katter"
+        )))
   }
 
   test("That subjects are derived correctly from taxonomy") {
-    val Success(searchable1) = searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
-    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
-    val Success(searchable5) = searchConverterService.asSearchableArticle(TestData.article5, Some(TestData.taxonomyTestBundle))
+    val Success(searchable1) =
+      searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) =
+      searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable5) =
+      searchConverterService.asSearchableArticle(TestData.article5, Some(TestData.taxonomyTestBundle))
 
     searchable1.contexts.size should be(2)
     searchable1.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
@@ -162,12 +195,16 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That taxonomy filters are derived correctly") {
-    val Success(searchable1) = searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
-    val Success(searchable4) = searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
-    val Success(searchable5) = searchConverterService.asSearchableArticle(TestData.article5, Some(TestData.taxonomyTestBundle))
+    val Success(searchable1) =
+      searchConverterService.asSearchableArticle(TestData.article1, Some(TestData.taxonomyTestBundle))
+    val Success(searchable4) =
+      searchConverterService.asSearchableArticle(TestData.article4, Some(TestData.taxonomyTestBundle))
+    val Success(searchable5) =
+      searchConverterService.asSearchableArticle(TestData.article5, Some(TestData.taxonomyTestBundle))
 
     searchable1.contexts.size should be(2)
-    searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1"), Seq("VG2"), Seq("VG3")))
+    searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(
+      Seq(Seq("VG1"), Seq("VG2"), Seq("VG3")))
     searchable1.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
 
     searchable4.contexts.size should be(1)

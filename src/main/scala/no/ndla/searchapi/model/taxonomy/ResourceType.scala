@@ -7,6 +7,4 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class ResourceType(id: String,
-                        name: String,
-                        subtypes: Option[List[ResourceType]])
+case class ResourceType(id: String, name: String, subtypes: Option[List[ResourceType]])

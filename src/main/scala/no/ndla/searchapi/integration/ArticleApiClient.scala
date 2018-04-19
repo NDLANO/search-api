@@ -21,7 +21,7 @@ trait ArticleApiClient {
   class ArticleApiClient(val baseUrl: String) extends SearchApiClient {
     override val searchPath = "article-api/v2/articles"
     override val name = "articles"
-    override val dumpDomainPath =  "intern/dump/article"
+    override val dumpDomainPath = "intern/dump/article"
 
     def search(searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =
       search[ArticleApiSearchResults](searchParams)

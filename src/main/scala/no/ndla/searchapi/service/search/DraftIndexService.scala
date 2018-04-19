@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
@@ -23,9 +22,7 @@ import org.json4s.native.Serialization.write
 import scala.util.{Failure, Success, Try}
 
 trait DraftIndexService {
-  this: SearchConverterService
-    with IndexService
-    with DraftApiClient =>
+  this: SearchConverterService with IndexService with DraftApiClient =>
   val draftIndexService: DraftIndexService
 
   class DraftIndexService extends LazyLogging with IndexService[Draft] {
@@ -34,7 +31,9 @@ trait DraftIndexService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Drafts)
     override val apiClient: DraftApiClient = draftApiClient
 
-    override def createIndexRequest(domainModel: Draft, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
+    override def createIndexRequest(domainModel: Draft,
+                                    indexName: String,
+                                    taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
       searchConverterService.asSearchableDraft(domainModel, taxonomyBundle) match {
         case Success(searchableDraft) =>
           val source = write(searchableDraft)

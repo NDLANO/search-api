@@ -11,12 +11,7 @@ import java.util.Date
 
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.model.domain.{
-  ArticleApiSearchResults,
-  Author,
-  SearchParams,
-  article
-}
+import no.ndla.searchapi.model.domain.{ArticleApiSearchResults, Author, SearchParams, article}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -31,8 +26,7 @@ trait DraftApiClient {
     override val name = "articles"
     override val dumpDomainPath = "intern/dump/article"
 
-    def search(
-        searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =
+    def search(searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =
       search[ArticleApiSearchResults](searchParams)
 
     private val draftApiGetAgreementEndpoint =
@@ -43,9 +37,7 @@ trait DraftApiClient {
 
     def getAgreementCopyright(agreementId: Long): Option[article.Copyright] = {
       implicit val formats = org.json4s.DefaultFormats
-      val request: HttpRequest = Http(
-        s"$draftApiGetAgreementEndpoint".replace(":agreement_id",
-                                                 agreementId.toString))
+      val request: HttpRequest = Http(s"$draftApiGetAgreementEndpoint".replace(":agreement_id", agreementId.toString))
       ndlaClient.fetchWithForwardedAuth[Agreement](request).toOption match {
         case Some(a) => Some(a.copyright.toDomainCopyright)
         case _       => None
@@ -62,20 +54,11 @@ trait DraftApiClient {
                             validTo: Option[Date]) {
 
       def toDomainCopyright: article.Copyright = {
-        article.Copyright(license.license,
-                          origin,
-                          creators,
-                          processors,
-                          rightsholders,
-                          agreementId,
-                          validFrom,
-                          validTo)
+        article.Copyright(license.license, origin, creators, processors, rightsholders, agreementId, validFrom, validTo)
       }
     }
 
-    case class License(license: String,
-                       description: Option[String],
-                       url: Option[String])
+    case class License(license: String, description: Option[String], url: Option[String])
 
     case class Agreement(id: Long,
                          title: String,

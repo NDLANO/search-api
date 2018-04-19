@@ -18,15 +18,18 @@ class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with N
 }
 
 object SearchApiInfo {
+
   val apiInfo = ApiInfo(
-  "Search Api",
-  "Documentation for the Search API of NDLA.no",
-  "https://ndla.no",
-  SearchApiProperties.ContactEmail,
-  "GPL v3.0",
-  "http://www.gnu.org/licenses/gpl-3.0.en.html")
+    "Search Api",
+    "Documentation for the Search API of NDLA.no",
+    "https://ndla.no",
+    SearchApiProperties.ContactEmail,
+    "GPL v3.0",
+    "http://www.gnu.org/licenses/gpl-3.0.en.html"
+  )
 }
 
 class SearchSwagger extends Swagger("2.0", "0.8", SearchApiInfo.apiInfo) {
-  addAuthorization(OAuth(List(), List(ImplicitGrant(LoginEndpoint(SearchApiProperties.Auth0LoginEndpoint),"access_token"))))
+  addAuthorization(
+    OAuth(List(), List(ImplicitGrant(LoginEndpoint(SearchApiProperties.Auth0LoginEndpoint), "access_token"))))
 }

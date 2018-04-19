@@ -26,9 +26,7 @@ import no.ndla.searchapi.model.taxonomy.Bundle
 import scala.util.{Failure, Success, Try}
 
 trait IndexService {
-  this: Elastic4sClient
-    with SearchApiClient
-    with TaxonomyApiClient =>
+  this: Elastic4sClient with SearchApiClient with TaxonomyApiClient =>
 
   trait IndexService[D <: Content] extends LazyLogging {
     val apiClient: SearchApiClient
@@ -43,7 +41,7 @@ trait IndexService {
       for {
         _ <- getAliasTarget.map {
           case Some(index) => Success(index)
-          case None => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
+          case None        => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
         }
         request <- createIndexRequest(imported, searchIndex, taxonomyBundle)
         _ <- e4sClient.execute {
@@ -76,12 +74,14 @@ trait IndexService {
         case Success(bundle) =>
           logger.info("Successfully fetched taxonomy...")
           val stream = apiClient.getChunks[D]
-          val chunks = stream.map({
-            case Success(c) =>
-              val numIndexed = indexDocuments(c, indexName, Some(bundle))
-              Success(numIndexed.getOrElse(0), c.size)
-            case Failure(ex) => Failure(ex)
-          }).toList
+          val chunks = stream
+            .map({
+              case Success(c) =>
+                val numIndexed = indexDocuments(c, indexName, Some(bundle))
+                Success(numIndexed.getOrElse(0), c.size)
+              case Failure(ex) => Failure(ex)
+            })
+            .toList
 
           chunks.collect { case Failure(ex) => Failure(ex) } match {
             case Nil =>
@@ -95,8 +95,7 @@ trait IndexService {
                   (totalIndexed + chunkIndexed, totalSize + chunkSize)
               }
 
-              logger.info(
-                s"$count/$totalCount documents were indexed successfully.")
+              logger.info(s"$count/$totalCount documents were indexed successfully.")
               Success(totalCount)
 
             case notEmpty => notEmpty.head
@@ -110,11 +109,10 @@ trait IndexService {
     def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: Option[Bundle]): Try[Int] = {
       if (contents.isEmpty) {
         Success(0)
-      }
-      else {
+      } else {
         val req = contents.map(content => createIndexRequest(content, indexName, taxonomyBundle))
         val indexRequests = req.collect { case Success(indexRequest) => indexRequest }
-        val failedToCreateRequests = req.collect { case Failure(ex) => Failure(ex) }
+        val failedToCreateRequests = req.collect { case Failure(ex)  => Failure(ex) }
 
         if (indexRequests.nonEmpty) {
           val response = e4sClient.execute {
@@ -139,7 +137,7 @@ trait IndexService {
       for {
         _ <- getAliasTarget.map {
           case Some(index) => Success(index)
-          case None => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
+          case None        => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
         }
         deleted <- {
           e4sClient.execute {
@@ -162,7 +160,7 @@ trait IndexService {
         }
 
         response match {
-          case Success(_) => Success(indexName)
+          case Success(_)  => Success(indexName)
           case Failure(ex) => Failure(ex)
         }
       }
@@ -188,9 +186,7 @@ trait IndexService {
           case None =>
             List[AliasActionDefinition](addAlias(searchIndex).on(newIndexName))
           case Some(oldIndex) =>
-            List[AliasActionDefinition](
-              removeAlias(searchIndex).on(oldIndex),
-              addAlias(searchIndex).on(newIndexName))
+            List[AliasActionDefinition](removeAlias(searchIndex).on(oldIndex), addAlias(searchIndex).on(newIndexName))
         }
 
         e4sClient.execute(aliases(actions)) match {
@@ -271,7 +267,7 @@ trait IndexService {
 
       response match {
         case Success(resp) => resp.result.count
-        case Failure(_) => 0
+        case Failure(_)    => 0
       }
     }
 
@@ -282,8 +278,8 @@ trait IndexService {
 
       response match {
         case Success(resp) if resp.status != 404 => Success(true)
-        case Success(_) => Success(false)
-        case Failure(ex) => Failure(ex)
+        case Success(_)                          => Success(false)
+        case Failure(ex)                         => Failure(ex)
       }
     }
 
@@ -297,7 +293,8 @@ trait IndexService {
       *                  Usually used for sorting, aggregations or scripts.
       * @return Sequence of FieldDefinitions for a field.
       */
-    protected def generateLanguageSupportedFieldList(fieldName: String, keepRaw: Boolean = false): List[FieldDefinition] = {
+    protected def generateLanguageSupportedFieldList(fieldName: String,
+                                                     keepRaw: Boolean = false): List[FieldDefinition] = {
       if (keepRaw) {
         generateLanguageFieldWithSubFields(fieldName, List(keywordField("raw")))
       } else {
@@ -305,17 +302,18 @@ trait IndexService {
       }
     }
 
-    private def generateLanguageFieldWithSubFields(fieldName: String, subFields: List[FieldDefinition]): List[FieldDefinition] = {
-      languageAnalyzers.map(langAnalyzer =>
-        textField(s"$fieldName.${langAnalyzer.lang}")
-          .fielddata(false)
-          .analyzer(langAnalyzer.analyzer)
-          .fields(subFields))
+    private def generateLanguageFieldWithSubFields(fieldName: String,
+                                                   subFields: List[FieldDefinition]): List[FieldDefinition] = {
+      languageAnalyzers.map(
+        langAnalyzer =>
+          textField(s"$fieldName.${langAnalyzer.lang}")
+            .fielddata(false)
+            .analyzer(langAnalyzer.analyzer)
+            .fields(subFields))
     }
 
     protected def generateKeywordLanguageFields(fieldName: String): List[FieldDefinition] = {
-      languageAnalyzers.map(langAnalyzer =>
-        keywordField(s"$fieldName.${langAnalyzer.lang}"))
+      languageAnalyzers.map(langAnalyzer => keywordField(s"$fieldName.${langAnalyzer.lang}"))
     }
 
     protected def getTaxonomyContextMapping: NestedFieldDefinition = {
@@ -332,9 +330,9 @@ trait IndexService {
           generateLanguageSupportedFieldList("breadcrumbs") ++
           List(
             nestedField("filters").fields(
-            List(keywordField("filterId")) ++
-              generateLanguageSupportedFieldList("name", keepRaw = true) ++
-              generateLanguageSupportedFieldList("relevance")
+              List(keywordField("filterId")) ++
+                generateLanguageSupportedFieldList("name", keepRaw = true) ++
+                generateLanguageSupportedFieldList("relevance")
             )
           )
       )

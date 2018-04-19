@@ -22,8 +22,7 @@ case class LearningStep(id: Option[Long],
                         `type`: StepType.Value,
                         license: Option[String],
                         showTitle: Boolean = false,
-                        status: StepStatus.Value = StepStatus.ACTIVE) {
-}
+                        status: StepStatus.Value = StepStatus.ACTIVE) {}
 
 object StepStatus extends Enumeration {
 
@@ -36,7 +35,8 @@ object StepStatus extends Enumeration {
   def valueOfOrError(status: String): StepStatus.Value = {
     valueOf(status) match {
       case Some(s) => s
-      case None => throw new ValidationException(errors = List(ValidationMessage("status", s"'$status' is not a valid status.")))
+      case None =>
+        throw new ValidationException(errors = List(ValidationMessage("status", s"'$status' is not a valid status.")))
     }
   }
 
@@ -55,7 +55,8 @@ object StepType extends Enumeration {
   def valueOfOrError(s: String): StepType.Value = {
     valueOf(s) match {
       case Some(stepType) => stepType
-      case None => throw new ValidationException(errors = List(ValidationMessage("type", s"'$s' is not a valid steptype.")))
+      case None =>
+        throw new ValidationException(errors = List(ValidationMessage("type", s"'$s' is not a valid steptype.")))
     }
   }
 

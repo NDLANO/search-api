@@ -23,4 +23,3 @@ case class LearningpathApiSearchResult(id: Long,
                                        tags: LearningPathApiTags,
                                        supportedLanguages: Seq[String],
                                        isBasedOn: Option[Long])
-

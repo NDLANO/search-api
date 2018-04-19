@@ -19,8 +19,7 @@ case class SearchableTaxonomyContext(id: String,
                                      contextType: String,
                                      filters: List[TaxonomyFilter],
                                      resourceTypes: SearchableLanguageList,
-                                     resourceTypeIds: List[String]
-                                    )
+                                     resourceTypeIds: List[String])
 
 class SearchableTaxonomyContextSerializer
     extends CustomSerializer[SearchableTaxonomyContext](_ =>
@@ -52,8 +51,7 @@ class SearchableTaxonomyContextSerializer
           val filters = JArray(context.filters.map(f => {
             val fields: List[JField] =
               JField("filterId", JString(f.filterId)) +:
-              List(f.name.toJsonField("name"),
-                   f.relevance.toJsonField("relevance")).flatten
+                List(f.name.toJsonField("name"), f.relevance.toJsonField("relevance")).flatten
 
             JObject(fields: _*)
           }))
@@ -77,8 +75,7 @@ object LanguagelessSearchableTaxonomyContext {
                                                    contextType: String,
                                                    resourceTypeIds: List[String])
 
-  def apply(searchableTaxonomyContext: SearchableTaxonomyContext)
-    : LanguagelessSearchableTaxonomyContext = {
+  def apply(searchableTaxonomyContext: SearchableTaxonomyContext): LanguagelessSearchableTaxonomyContext = {
     LanguagelessSearchableTaxonomyContext(
       id = searchableTaxonomyContext.id,
       path = searchableTaxonomyContext.path,

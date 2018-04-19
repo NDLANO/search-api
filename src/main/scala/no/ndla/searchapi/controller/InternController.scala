@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.controller
 
 import java.util.concurrent.{Executors, TimeUnit}
@@ -25,39 +24,40 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 trait InternController {
-  this: IndexService
-    with ArticleIndexService
-    with LearningPathIndexService
-    with DraftIndexService =>
+  this: IndexService with ArticleIndexService with LearningPathIndexService with DraftIndexService =>
   val internController: InternController
 
   class InternController extends NdlaController {
-    implicit val ec: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(SearchApiProperties.SearchIndexes.size))
+    implicit val ec: ExecutionContextExecutorService =
+      ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(SearchApiProperties.SearchIndexes.size))
 
     private def resolveResultFutures(indexResults: List[Future[(String, Try[ReindexResult])]]): ActionResult = {
 
       val futureIndexed = Future.sequence(indexResults)
       val completedIndexed = Await.result(futureIndexed, Duration(10, TimeUnit.MINUTES))
 
-      completedIndexed.collect{case (name, Failure(ex)) => (name, ex)} match {
+      completedIndexed.collect { case (name, Failure(ex)) => (name, ex) } match {
         case Nil =>
-          val successful = completedIndexed.collect{case (name, Success(r)) => (name, r)}
+          val successful = completedIndexed.collect { case (name, Success(r)) => (name, r) }
 
-          val indexResults = successful.map({
-            case (name: String, reindexResult: ReindexResult) =>
-            s"${reindexResult.totalIndexed} $name in ${reindexResult.millisUsed} ms"
-          }).mkString(", and ")
+          val indexResults = successful
+            .map({
+              case (name: String, reindexResult: ReindexResult) =>
+                s"${reindexResult.totalIndexed} $name in ${reindexResult.millisUsed} ms"
+            })
+            .mkString(", and ")
           val resultString = s"Completed indexing of $indexResults"
 
           logger.info(resultString)
           Ok(resultString)
         case failures =>
-
-          val failedIndexResults = failures.map({
-            case (name: String, failure: Throwable) =>
-              logger.error(s"Failed to index $name: ${failure.getMessage}.", failure)
-              s"$name: ${failure.getMessage}"
-          }).mkString(", and ")
+          val failedIndexResults = failures
+            .map({
+              case (name: String, failure: Throwable) =>
+                logger.error(s"Failed to index $name: ${failure.getMessage}.", failure)
+                s"$name: ${failure.getMessage}"
+            })
+            .mkString(", and ")
 
           InternalServerError(failedIndexResults)
       }

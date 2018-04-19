@@ -11,7 +11,16 @@ package no.ndla.searchapi
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest._
 
-abstract class UnitSuite extends FunSuite with Matchers with OptionValues with Inside with Inspectors with MockitoSugar with BeforeAndAfterEach with BeforeAndAfterAll with PrivateMethodTester {
+abstract class UnitSuite
+    extends FunSuite
+    with Matchers
+    with OptionValues
+    with Inside
+    with Inspectors
+    with MockitoSugar
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with PrivateMethodTester {
   setEnv("NDLA_ENVIRONMENT", "local")
   setEnv("SEARCH_SERVER", "some-server")
   setEnv("SEARCH_REGION", "some-region")

@@ -17,21 +17,21 @@ class SearchableLearningStepTest extends UnitSuite with TestEnvironment {
   test("That serializing a SearchableLearningStep to json and deserializing back to object does not change content") {
     implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-      val original1 = SearchableLearningStep(
-        stepType = StepType.INTRODUCTION.toString,
-        title = SearchableLanguageValues(Seq(LanguageValue("nb", "Intro Steget"))),
-        description = SearchableLanguageValues(Seq(LanguageValue("nb", "Description for introsteget")))
-      )
-      val original2 = SearchableLearningStep(
-        stepType = StepType.QUIZ.toString,
-        title = SearchableLanguageValues(Seq(LanguageValue("en", "Quiz is fun"))),
-        description = SearchableLanguageValues(Seq(LanguageValue("nb", "Kviss"), LanguageValue("en", "Quizzaroo")))
-      )
-      val original3 = SearchableLearningStep(
-        stepType = StepType.TEXT.toString,
-        title = SearchableLanguageValues(Seq(LanguageValue("en", "TEXTITexTy"))),
-        description = SearchableLanguageValues(Seq(LanguageValue("en", "TextarUøø")))
-      )
+    val original1 = SearchableLearningStep(
+      stepType = StepType.INTRODUCTION.toString,
+      title = SearchableLanguageValues(Seq(LanguageValue("nb", "Intro Steget"))),
+      description = SearchableLanguageValues(Seq(LanguageValue("nb", "Description for introsteget")))
+    )
+    val original2 = SearchableLearningStep(
+      stepType = StepType.QUIZ.toString,
+      title = SearchableLanguageValues(Seq(LanguageValue("en", "Quiz is fun"))),
+      description = SearchableLanguageValues(Seq(LanguageValue("nb", "Kviss"), LanguageValue("en", "Quizzaroo")))
+    )
+    val original3 = SearchableLearningStep(
+      stepType = StepType.TEXT.toString,
+      title = SearchableLanguageValues(Seq(LanguageValue("en", "TEXTITexTy"))),
+      description = SearchableLanguageValues(Seq(LanguageValue("en", "TextarUøø")))
+    )
 
     val json1 = write(original1)
     val json2 = write(original2)

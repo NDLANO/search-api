@@ -34,7 +34,6 @@ class SearchableLearningStepSerializer
               ls.description.toJsonField("description")
             ).flatten
 
-          val allFields = languageFields :+ JField("stepType",
-                                                   JString(ls.stepType))
+          val allFields = languageFields :+ JField("stepType", JString(ls.stepType))
           JObject(allFields: _*)
       }))
