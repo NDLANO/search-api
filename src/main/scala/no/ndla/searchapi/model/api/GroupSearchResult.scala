@@ -20,7 +20,8 @@ case class GroupSearchResult(
     @(ApiModelProperty @field)(description = "The search results") results: Seq[GroupSummary])
 
 @ApiModel(description = "Search result for group search")
-case class GroupSummary(@(ApiModelProperty@field)(description = "The unique id of this resource") id: Long,
-                        @(ApiModelProperty@field)(description = "The title of the resource") title: Title,
-                        @(ApiModelProperty@field)(description = "The url pointing to the resource") url: String,
-                        @(ApiModelProperty@field)(description = "The taxonomy paths for the resource") paths: List[String])
+case class GroupSummary(
+    @(ApiModelProperty @field)(description = "The unique id of this resource") id: Long,
+    @(ApiModelProperty @field)(description = "The title of the resource") title: Title,
+    @(ApiModelProperty @field)(description = "The url pointing to the resource") url: String,
+    @(ApiModelProperty @field)(description = "The taxonomy paths for the resource") paths: List[String])

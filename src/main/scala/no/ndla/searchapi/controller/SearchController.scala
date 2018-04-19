@@ -156,17 +156,19 @@ trait SearchController {
         case None    => multiSearchService.all(settings)
       }
 
-      result.map(searchResult => GroupSearchResult(
-        totalCount = searchResult.totalCount,
-        resourceType = group,
-        page = searchResult.page,
-        pageSize = searchResult.pageSize,
-        language = searchResult.language,
-        results = searchResult.results.map(r => {
-          val paths = r.contexts.map(_.path)
-          GroupSummary(id = r.id, title = r.title, url = r.url, paths = paths)
-        })
-      ))
+      result.map(
+        searchResult =>
+          GroupSearchResult(
+            totalCount = searchResult.totalCount,
+            resourceType = group,
+            page = searchResult.page,
+            pageSize = searchResult.pageSize,
+            language = searchResult.language,
+            results = searchResult.results.map(r => {
+              val paths = r.contexts.map(_.path)
+              GroupSummary(id = r.id, title = r.title, url = r.url, paths = paths)
+            })
+        ))
     }
 
     private def groupSearch(query: Option[String], settings: SearchSettings) = {

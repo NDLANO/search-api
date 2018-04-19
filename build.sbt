@@ -83,8 +83,8 @@ assembly / assemblyMergeStrategy := {
 val checkfmt = taskKey[Boolean]("check for code style errors")
 checkfmt := {
   val noErrorsInMainFiles = (Compile / scalafmtCheck).value
-  val noErrorsInTestFiles = (Test / scalafmtSbtCheck).value
-  val noErrorsInBuildFiles = (Compile / scalafmtCheck).value
+  val noErrorsInTestFiles = (Test / scalafmtCheck).value
+  val noErrorsInBuildFiles = (Compile / scalafmtSbtCheck).value
 
   noErrorsInMainFiles && noErrorsInTestFiles && noErrorsInBuildFiles
 }
