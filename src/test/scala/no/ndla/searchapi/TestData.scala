@@ -17,7 +17,7 @@ import no.ndla.searchapi.model.domain.learningpath.{
   LearningPathStatus,
   LearningPathVerificationStatus
 }
-import no.ndla.searchapi.model.search.SearchSettings
+import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.model.taxonomy._
 import org.joda.time.DateTime
 
@@ -809,6 +809,23 @@ object TestData {
   )
 
   val searchSettings = SearchSettings(
+    fallback = false,
+    language = Language.DefaultLanguage,
+    license = None,
+    page = 1,
+    pageSize = 20,
+    sort = Sort.ByIdAsc,
+    withIdIn = List.empty,
+    taxonomyFilters = List.empty,
+    subjects = List.empty,
+    resourceTypes = List.empty,
+    learningResourceTypes = List.empty,
+    supportedLanguages = List.empty
+  )
+
+  val multiDraftSearchSettings = MultiDraftSearchSettings(
+    query = None,
+    noteQuery = None,
     fallback = false,
     language = Language.DefaultLanguage,
     license = None,

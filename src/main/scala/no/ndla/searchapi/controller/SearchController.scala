@@ -25,7 +25,7 @@ import no.ndla.searchapi.model.api.{
 }
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
-import no.ndla.searchapi.model.search.SearchSettings
+import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.service.search.{
   ArticleSearchService,
   LearningPathSearchService,
@@ -67,6 +67,7 @@ trait SearchController {
 
     private val correlationId = Param("X-Correlation-ID", "User supplied correlation-id. May be omitted.")
     private val query = Param("query", "Return only results with content matching the specified query.")
+    private val noteQuery = Param("note-query", "Return only results with notes matching the specified note-query.")
     private val language = Param("language", "The ISO 639-1 language code describing language.")
     private val license = Param("license", "Return only results with provided license.")
     private val sort = Param(
@@ -446,6 +447,7 @@ trait SearchController {
         asQueryParam[Option[String]](levels),
         asQueryParam[Option[String]](license),
         asQueryParam[Option[String]](query),
+        asQueryParam[Option[String]](noteQuery),
         asQueryParam[Option[String]](sort),
         asQueryParam[Option[Boolean]](fallback),
         asQueryParam[Option[String]](subjects),
@@ -463,12 +465,15 @@ trait SearchController {
       val taxonomyFilters = paramAsListOfString(this.levels.paramName)
       val license = paramOrNone(this.license.paramName)
       val query = paramOrNone(this.query.paramName)
+      val noteQuery = paramOrNone(this.noteQuery.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val subjects = paramAsListOfString(this.subjects.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
 
-      val settings = SearchSettings(
+      val settings = MultiDraftSearchSettings(
+        query = query,
+        noteQuery = noteQuery,
         fallback = fallback,
         language = language,
         license = license,
@@ -482,19 +487,14 @@ trait SearchController {
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter
       )
-      multiDraftSearch(query, settings)
-    }
 
-    private def multiDraftSearch(query: Option[String], settings: SearchSettings) = {
-      val result = query match {
-        case Some(q) => multiDraftSearchService.matchingQuery(query = q, settings)
-        case None    => multiDraftSearchService.all(settings)
-      }
+      val result = multiDraftSearchService.matchingQuery(settings)
 
       result match {
         case Success(searchResult) => searchResult
         case Failure(ex)           => errorHandler(ex)
       }
+
     }
 
   }

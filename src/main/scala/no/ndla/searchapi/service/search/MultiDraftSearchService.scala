@@ -20,7 +20,8 @@ import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
 import no.ndla.searchapi.model.domain.{Language, RequestInfo}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.search.{SearchSettings, SearchType}
+import no.ndla.searchapi.model.search.SearchType
+import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -52,32 +53,41 @@ trait MultiDraftSearchService {
       }
     }
 
-    def all(settings: SearchSettings): Try[MultiSearchResult] = executeSearch(settings, boolQuery())
-
-    def matchingQuery(query: String, settings: SearchSettings): Try[MultiSearchResult] = {
+    def matchingQuery(settings: MultiDraftSearchSettings): Try[MultiSearchResult] = {
       val searchLanguage =
         if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-      val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
-      val introSearch = simpleStringQuery(query).field(s"introduction.$searchLanguage", 2)
-      val metaSearch = simpleStringQuery(query).field(s"metaDescription.$searchLanguage", 1)
-      val contentSearch = simpleStringQuery(query).field(s"content.$searchLanguage", 1)
-      val tagSearch = simpleStringQuery(query).field(s"tags.$searchLanguage", 1)
 
-      val fullQuery = boolQuery()
-        .must(
-          boolQuery()
-            .should(
-              titleSearch,
-              introSearch,
-              metaSearch,
-              contentSearch,
-              tagSearch
-            )
-        )
+      val contentSearch = settings.query.map(q => {
+        val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 2)
+        val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
+        val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
+        val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
+        val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
+
+        boolQuery()
+          .should(
+            titleSearch,
+            introSearch,
+            metaSearch,
+            contentSearch,
+            tagSearch
+          )
+      })
+
+      val noteSearch = settings.noteQuery.map(q => {
+        boolQuery()
+          .should(
+            simpleStringQuery(q).field("notes", 1)
+          )
+      })
+
+      val boolQueries: List[BoolQueryDefinition] = List(contentSearch, noteSearch).flatten
+      val fullQuery = boolQuery().must(boolQueries)
+
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: SearchSettings, baseQuery: BoolQueryDefinition): Try[MultiSearchResult] = {
+    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQueryDefinition): Try[MultiSearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
@@ -115,7 +125,7 @@ trait MultiDraftSearchService {
       * @param settings SearchSettings object.
       * @return List of QueryDefinitions.
       */
-    private def getSearchFilters(settings: SearchSettings): List[QueryDefinition] = {
+    private def getSearchFilters(settings: MultiDraftSearchSettings): List[QueryDefinition] = {
       val languageFilter = settings.language match {
         case "" | Language.AllLanguages =>
           None

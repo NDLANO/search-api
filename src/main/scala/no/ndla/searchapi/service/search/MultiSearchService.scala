@@ -20,7 +20,8 @@ import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
 import no.ndla.searchapi.model.domain.{Language, ReindexResult, RequestInfo}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.search.{SearchSettings, SearchType}
+import no.ndla.searchapi.model.search.SearchType
+import no.ndla.searchapi.model.search.settings.SearchSettings
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
