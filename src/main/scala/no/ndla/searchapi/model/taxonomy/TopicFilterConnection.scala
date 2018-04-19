@@ -7,9 +7,7 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class TopicFilterConnection(topicId: String,
-                                 filterId: String,
-                                 id: String,
-                                 relevanceId: String) extends FilterConnection {
+case class TopicFilterConnection(topicId: String, filterId: String, id: String, relevanceId: String)
+    extends FilterConnection {
   override def objectId: String = topicId
 }

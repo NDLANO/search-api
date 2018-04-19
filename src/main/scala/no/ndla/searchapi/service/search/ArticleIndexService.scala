@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
@@ -23,9 +22,7 @@ import no.ndla.searchapi.model.search.SearchType
 import scala.util.{Failure, Success, Try}
 
 trait ArticleIndexService {
-  this: SearchConverterService
-    with IndexService
-    with ArticleApiClient =>
+  this: SearchConverterService with IndexService with ArticleApiClient =>
   val articleIndexService: ArticleIndexService
 
   class ArticleIndexService extends LazyLogging with IndexService[Article] {
@@ -34,7 +31,9 @@ trait ArticleIndexService {
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Articles)
     override val apiClient: ArticleApiClient = articleApiClient
 
-    override def createIndexRequest(domainModel: Article, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
+    override def createIndexRequest(domainModel: Article,
+                                    indexName: String,
+                                    taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
       searchConverterService.asSearchableArticle(domainModel, taxonomyBundle) match {
         case Success(searchableArticle) =>
           val source = write(searchableArticle)
@@ -57,7 +56,7 @@ trait ArticleIndexService {
           getTaxonomyContextMapping
         )
           ++
-          generateKeywordLanguageFields("metaImage") ++
+            generateKeywordLanguageFields("metaImage") ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("content") ++

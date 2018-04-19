@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
@@ -69,7 +68,6 @@ trait DraftSearchService {
       val tagSearch = simpleStringQuery(query).field(s"tags.$language", 2)
       val notesSearch = simpleStringQuery(query).field("notes", 1)
 
-
       val fullQuery = boolQuery()
         .must(
           boolQuery()
@@ -99,7 +97,7 @@ trait DraftSearchService {
         if (articleTypes.nonEmpty) Some(constantScoreQuery(termsQuery("articleType", articleTypes))) else None
 
       val licenseFilter = license match {
-        case None => Some(noCopyright)
+        case None      => Some(noCopyright)
         case Some(lic) => Some(termQuery("license", lic))
       }
 
@@ -110,7 +108,7 @@ trait DraftSearchService {
           (None, "*")
         case lang =>
           fallback match {
-            case true => (None, "*")
+            case true  => (None, "*")
             case false => (Some(existsQuery(s"title.$lang")), lang)
           }
       }
@@ -121,7 +119,8 @@ trait DraftSearchService {
       val (startAt, numResults) = getStartAtAndNumResults(page, pageSize)
       val requestedResultWindow = pageSize * page
       if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
-        logger.info(s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+        logger.info(
+          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
         val searchExec = search(searchIndex)
@@ -133,13 +132,14 @@ trait DraftSearchService {
 
         e4sClient.execute(searchExec) match {
           case Success(response) =>
-            Success(SearchResult[DraftSummary](
-              response.result.totalHits,
-              page,
-              numResults,
-              if (searchLanguage == "*") Language.AllLanguages else searchLanguage,
-              getHits(response.result, language, fallback)
-            ))
+            Success(
+              SearchResult[DraftSummary](
+                response.result.totalHits,
+                page,
+                numResults,
+                if (searchLanguage == "*") Language.AllLanguages else searchLanguage,
+                getHits(response.result, language, fallback)
+              ))
           case Failure(ex) =>
             errorHandler(ex)
         }

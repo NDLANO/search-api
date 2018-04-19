@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import java.nio.file.{Files, Path}
@@ -35,27 +34,22 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
-
   override def beforeAll: Unit = {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
     draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
-    val indexedArticles = articlesToIndex.map(article =>
-      articleIndexService.indexDocument(article, Some(taxonomyTestBundle))
-    )
+    val indexedArticles =
+      articlesToIndex.map(article => articleIndexService.indexDocument(article, Some(taxonomyTestBundle)))
 
-    val indexedDrafts = draftsToIndex.map(draft =>
-      draftIndexService.indexDocument(draft, Some(taxonomyTestBundle))
-    )
+    val indexedDrafts = draftsToIndex.map(draft => draftIndexService.indexDocument(draft, Some(taxonomyTestBundle)))
 
-    val indexedLearningPaths = learningPathsToIndex.map(lp =>
-      learningPathIndexService.indexDocument(lp, Some(taxonomyTestBundle))
-    )
+    val indexedLearningPaths =
+      learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, Some(taxonomyTestBundle)))
 
     blockUntil(() => {
       articleIndexService.countDocuments == articlesToIndex.size &&
-        learningPathIndexService.countDocuments == learningPathsToIndex.size
+      learningPathIndexService.countDocuments == learningPathsToIndex.size
     })
   }
 
@@ -67,7 +61,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     multiSearchService.getStartAtAndNumResults(0, 1000) should equal((0, SearchApiProperties.MaxPageSize))
   }
 
-  test("That getStartAtAndNumResults returns the correct calculated start at for page and page-size with default page-size") {
+  test(
+    "That getStartAtAndNumResults returns the correct calculated start at for page and page-size with default page-size") {
     val page = 74
     val expectedStartAt = (page - 1) * DefaultPageSize
     multiSearchService.getStartAtAndNumResults(page, DefaultPageSize) should equal((expectedStartAt, DefaultPageSize))
@@ -102,9 +97,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(results) = multiSearchService.all(searchSettings.copy(sort = Sort.ByIdDesc))
     val hits = results.results
     results.totalCount should be(13)
-    hits.head.id should be (11)
-    hits.takeRight(2).head.id should be (1)
-    hits.last.id should be (1)
+    hits.head.id should be(11)
+    hits.takeRight(2).head.id should be(1)
+    hits.last.id should be(1)
   }
 
   test("That all returns all documents ordered by title ascending") {
@@ -189,7 +184,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That search combined with filter by id only returns documents matching the query with one of the given ids") {
-    val Success(results) = multiSearchService.matchingQuery("bil", searchSettings.copy(sort = Sort.ByRelevanceDesc, withIdIn = List(3)))
+    val Success(results) =
+      multiSearchService.matchingQuery("bil", searchSettings.copy(sort = Sort.ByRelevanceDesc, withIdIn = List(3)))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(3)
@@ -220,7 +216,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That search returns superman since license is specified as copyrighted") {
-    val Success(results) = multiSearchService.matchingQuery("supermann", searchSettings.copy(license = Some("copyrighted"), sort = Sort.ByTitleAsc))
+    val Success(results) =
+      multiSearchService.matchingQuery("supermann",
+                                       searchSettings.copy(license = Some("copyrighted"), sort = Sort.ByTitleAsc))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(4)
@@ -229,29 +227,33 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   test("Searching with logical AND only returns results with all terms") {
     val Success(search1) = multiSearchService.matchingQuery("bilde + bil", searchSettings.copy(sort = Sort.ByTitleAsc))
     val hits1 = search1.results
-    hits1.map(_.id) should equal (Seq(1, 3, 5))
+    hits1.map(_.id) should equal(Seq(1, 3, 5))
 
     val Success(search2) = multiSearchService.matchingQuery("batmen + bil", searchSettings.copy(sort = Sort.ByTitleAsc))
     val hits2 = search2.results
-    hits2.map(_.id) should equal (Seq(1))
+    hits2.map(_.id) should equal(Seq(1))
 
-    val Success(search3) = multiSearchService.matchingQuery("bil + bilde + -flaggermusmann", searchSettings.copy(sort = Sort.ByTitleAsc))
+    val Success(search3) =
+      multiSearchService.matchingQuery("bil + bilde + -flaggermusmann", searchSettings.copy(sort = Sort.ByTitleAsc))
     val hits3 = search3.results
-    hits3.map(_.id) should equal (Seq(3, 5))
+    hits3.map(_.id) should equal(Seq(3, 5))
 
-    val Success(search4) = multiSearchService.matchingQuery("bil + -hulken", searchSettings.copy(sort = Sort.ByTitleAsc))
+    val Success(search4) =
+      multiSearchService.matchingQuery("bil + -hulken", searchSettings.copy(sort = Sort.ByTitleAsc))
     val hits4 = search4.results
-    hits4.map(_.id) should equal (Seq(1, 3))
+    hits4.map(_.id) should equal(Seq(1, 3))
   }
 
   test("search in content should be ranked lower than introduction and title") {
-    val Success(search) = multiSearchService.matchingQuery("mareritt+ragnarok", searchSettings.copy(sort = Sort.ByRelevanceDesc))
+    val Success(search) =
+      multiSearchService.matchingQuery("mareritt+ragnarok", searchSettings.copy(sort = Sort.ByRelevanceDesc))
     val hits = search.results
-    hits.map(_.id) should equal (Seq(9, 8))
+    hits.map(_.id) should equal(Seq(9, 8))
   }
 
   test("Search for all languages should return all articles in different languages") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, pageSize = 100, sort = Sort.ByTitleAsc))
+    val Success(search) = multiSearchService.all(
+      searchSettings.copy(language = Language.AllLanguages, pageSize = 100, sort = Sort.ByTitleAsc))
 
     search.totalCount should equal(15)
   }
@@ -282,7 +284,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("Search for all languages should return all languages if copyrighted") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(language = Language.AllLanguages, license = Some("copyrighted"), pageSize = 100, sort = Sort.ByTitleAsc))
+    val Success(search) = multiSearchService.all(
+      searchSettings
+        .copy(language = Language.AllLanguages, license = Some("copyrighted"), pageSize = 100, sort = Sort.ByTitleAsc))
     val hits = search.results
 
     search.totalCount should equal(1)
@@ -290,14 +294,17 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("Searching with query for all languages should return language that matched") {
-    val Success(searchEn) = multiSearchService.matchingQuery("Cats", searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
-    val Success(searchNb) = multiSearchService.matchingQuery("Katter", searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
+    val Success(searchEn) = multiSearchService.matchingQuery(
+      "Cats",
+      searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
+    val Success(searchNb) = multiSearchService.matchingQuery(
+      "Katter",
+      searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
 
     searchEn.totalCount should equal(1)
     searchEn.results.head.id should equal(11)
     searchEn.results.head.title.title should equal("Cats")
     searchEn.results.head.title.language should equal("en")
-
 
     searchNb.totalCount should equal(1)
     searchNb.results.head.id should equal(11)
@@ -306,7 +313,9 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("metadescription is searchable") {
-    val Success(search) = multiSearchService.matchingQuery("hurr dirr", searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
+    val Success(search) = multiSearchService.matchingQuery(
+      "hurr dirr",
+      searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
 
     search.totalCount should equal(1)
     search.results.head.id should equal(11)
@@ -315,7 +324,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That searching with fallback parameter returns article in language priority even if doesnt match on language") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(fallback = true, language = "en", withIdIn = List(9, 10, 11)))
+    val Success(search) =
+      multiSearchService.all(searchSettings.copy(fallback = true, language = "en", withIdIn = List(9, 10, 11)))
 
     search.totalCount should equal(3)
     search.results.head.id should equal(9)
@@ -327,7 +337,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for levels/filters on resources works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(language = "all", taxonomyFilters = List("YF-VG1")))
+    val Success(search) =
+      multiSearchService.all(searchSettings.copy(language = "all", taxonomyFilters = List("YF-VG1")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(6, 7))
 
@@ -337,7 +348,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for multiple levels/filters returns resources from all filters") {
-    val Success(search3) = multiSearchService.all(searchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
+    val Success(search3) =
+      multiSearchService.all(searchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
     search3.totalCount should be(4)
     search3.results.map(_.id) should be(Seq(1, 5, 6, 7))
   }
@@ -349,7 +361,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("That filtering for subjects works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2"), language="all"))
+    val Success(search) =
+      multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2"), language = "all"))
     search.totalCount should be(6)
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11))
   }
@@ -357,81 +370,92 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
   test("That filtering for subjects returns all resources with any of listed subjects") {
     val Success(search) = multiSearchService.all(searchSettings.copy(subjects = List("urn:subject:2", "urn:subject:1")))
     search.totalCount should be(13)
-    search.results.map(_.id) should be(Seq(1,1,2,2,3,3,4,5,6,7,8,9,11))
+    search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11))
   }
 
   test("That filtering for resource-types works as expected") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:academicArticle")))
+    val Success(search) =
+      multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:academicArticle")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(2, 5))
 
-    val Success(search2) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
+    val Success(search2) =
+      multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
     search2.totalCount should be(6)
     search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
 
-    val Success(search3) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:learningpath")))
+    val Success(search3) =
+      multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:learningpath")))
     search3.totalCount should be(4)
     search3.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }
 
   test("That filtering for multiple resource-types returns resources from both") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
+    val Success(search) = multiSearchService.all(
+      searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
     search.totalCount should be(6)
-    search.results.map(_.id) should be(Seq(1,2,3,5,6,7))
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
   }
 
   test("That filtering on learning-resource-type works") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article), language = "all"))
-    val Success(search2) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.TopicArticle), language = "all"))
+    val Success(search) = multiSearchService.all(
+      searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article), language = "all"))
+    val Success(search2) = multiSearchService.all(
+      searchSettings.copy(learningResourceTypes = List(LearningResourceType.TopicArticle), language = "all"))
 
     search.totalCount should be(6)
-    search.results.map(_.id) should be(Seq(1,2,3,5,6,7))
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
 
     search2.totalCount should be(4)
-    search2.results.map(_.id) should be(Seq(8,9,10,11))
+    search2.results.map(_.id) should be(Seq(8, 9, 10, 11))
   }
 
   test("That filtering on multiple context-types returns every type") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle), language = "all"))
+    val Success(search) = multiSearchService.all(
+      searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle),
+                          language = "all"))
 
     search.totalCount should be(10)
-    search.results.map(_.id) should be(Seq(1,2,3,5,6,7,8,9,10,11))
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11))
   }
 
   test("That filtering on learningpath learningresourcetype returns learningpaths") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(learningResourceTypes = List(LearningResourceType.LearningPath), language = "all"))
+    val Success(search) = multiSearchService.all(
+      searchSettings.copy(learningResourceTypes = List(LearningResourceType.LearningPath), language = "all"))
 
     search.totalCount should be(5)
     search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5))
     search.results.map(_.contexts.head.learningResourceType) should be(
-      Seq.fill(5){LearningResourceType.LearningPath.toString}
+      Seq.fill(5) { LearningResourceType.LearningPath.toString }
     )
   }
 
   test("That filtering on supportedLanguages works") {
     val Success(search) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en"), language = "all"))
     search.totalCount should be(6)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 10,11))
+    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 10, 11))
 
-    val Success(search2) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
+    val Success(search2) =
+      multiSearchService.all(searchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
     search2.totalCount should be(15)
-    search2.results.map(_.id) should be(Seq(1,1,2,2,3,3,4,5,5,6,7,8,9,10,11))
+    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11))
 
-    val Success(search3) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("nb"), language = "all"))
+    val Success(search3) =
+      multiSearchService.all(searchSettings.copy(supportedLanguages = List("nb"), language = "all"))
     search3.totalCount should be(13)
-    search3.results.map(_.id) should be(Seq(1,1,2,2,3,3,4,5,6,7,8,9,11))
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11))
   }
 
   test("That filtering on supportedLanguages should still prioritize the selected language") {
     val Success(search) = multiSearchService.all(searchSettings.copy(supportedLanguages = List("en"), language = "nb"))
 
     search.totalCount should be(4)
-    search.results.map(_.id) should be(Seq(2,3,4,11))
+    search.results.map(_.id) should be(Seq(2, 3, 4, 11))
     search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb"))
   }
 
   test("That meta image are returned when searching") {
-    val Success(search) = multiSearchService.all(searchSettings.copy(language ="en", withIdIn = List(10)))
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = "en", withIdIn = List(10)))
 
     search.totalCount should be(1)
     search.results.head.id should be(10)

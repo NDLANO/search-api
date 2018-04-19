@@ -24,25 +24,31 @@ trait Elastic4sClient {
 }
 
 case class NdlaE4sClient(httpClient: HttpClient) {
+
   def execute[T, U](request: T)(implicit exec: HttpExecutable[T, U]): Try[RequestSuccess[U]] = {
-    val response = Await.ready(httpClient.execute {
-      request
-    }, Duration.Inf).value.get
+    val response = Await
+      .ready(httpClient.execute {
+        request
+      }, Duration.Inf)
+      .value
+      .get
 
     response match {
-      case Success(either) => either match {
-        case Right(result) => Success(result)
-        case Left(requestFailure) => Failure(NdlaSearchException(requestFailure))
-      }
+      case Success(either) =>
+        either match {
+          case Right(result)        => Success(result)
+          case Left(requestFailure) => Failure(NdlaSearchException(requestFailure))
+        }
       case Failure(ex) => Failure(ex)
     }
   }
 }
 
 object Elastic4sClientFactory {
+
   def getClient(searchServer: String = SearchApiProperties.SearchServer): NdlaE4sClient = {
     SearchApiProperties.RunWithSignedSearchRequests match {
-      case true => NdlaE4sClient(getSigningClient(searchServer))
+      case true  => NdlaE4sClient(getSigningClient(searchServer))
       case false => NdlaE4sClient(getNonSigningClient(searchServer))
     }
   }
@@ -53,7 +59,8 @@ object Elastic4sClientFactory {
   }
 
   private def getSigningClient(searchServer: String): HttpClient = {
-    val elasticSearchUri = s"elasticsearch://${searchServer.host.getOrElse("localhost")}:${searchServer.port.getOrElse(80)}?ssl=false"
+    val elasticSearchUri =
+      s"elasticsearch://${searchServer.host.getOrElse("localhost")}:${searchServer.port.getOrElse(80)}?ssl=false"
     val awsRegion = Option(Regions.getCurrentRegion).getOrElse(Region.getRegion(Regions.EU_CENTRAL_1)).toString
     setEnv("AWS_DEFAULT_REGION", awsRegion)
 

@@ -37,17 +37,13 @@ trait TaxonomyApiClient {
       get[List[ResourceType]](s"$TaxonomyApiEndpoint/resource-types/")
 
     def getAllTopicResourceConnections: Try[List[TopicResourceConnection]] =
-      get[List[TopicResourceConnection]](
-        s"$TaxonomyApiEndpoint/topic-resources/")
+      get[List[TopicResourceConnection]](s"$TaxonomyApiEndpoint/topic-resources/")
 
     def getAllTopicSubtopicConnections: Try[List[TopicSubtopicConnection]] =
-      get[List[TopicSubtopicConnection]](
-        s"$TaxonomyApiEndpoint/topic-subtopics/")
+      get[List[TopicSubtopicConnection]](s"$TaxonomyApiEndpoint/topic-subtopics/")
 
-    def getAllResourceResourceTypeConnections
-      : Try[List[ResourceResourceTypeConnection]] =
-      get[List[ResourceResourceTypeConnection]](
-        s"$TaxonomyApiEndpoint/resource-resourcetypes/")
+    def getAllResourceResourceTypeConnections: Try[List[ResourceResourceTypeConnection]] =
+      get[List[ResourceResourceTypeConnection]](s"$TaxonomyApiEndpoint/resource-resourcetypes/")
 
     def getAllSubjectTopicConnections: Try[List[SubjectTopicConnection]] =
       get[List[SubjectTopicConnection]](s"$TaxonomyApiEndpoint/subject-topics/")
@@ -59,8 +55,7 @@ trait TaxonomyApiClient {
       get[List[Filter]](s"$TaxonomyApiEndpoint/filters/")
 
     def getAllResourceFilterConnections: Try[List[ResourceFilterConnection]] =
-      get[List[ResourceFilterConnection]](
-        s"$TaxonomyApiEndpoint/resource-filters/")
+      get[List[ResourceFilterConnection]](s"$TaxonomyApiEndpoint/resource-filters/")
 
     def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
       get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/")
@@ -100,9 +95,8 @@ trait TaxonomyApiClient {
       } yield bundle
     }
 
-    private def get[A](url: String, params: (String, String)*)(
-        implicit mf: Manifest[A]): Try[A] = {
-      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(20000,20000).params(params))
+    private def get[A](url: String, params: (String, String)*)(implicit mf: Manifest[A]): Try[A] = {
+      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(20000, 20000).params(params))
     }
   }
 }

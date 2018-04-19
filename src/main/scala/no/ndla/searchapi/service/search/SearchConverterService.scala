@@ -33,9 +33,7 @@ import org.jsoup.Jsoup
 import scala.util.{Failure, Success, Try}
 
 trait SearchConverterService {
-  this: DraftApiClient
-    with TaxonomyApiClient
-    with ConverterService =>
+  this: DraftApiClient with TaxonomyApiClient with ConverterService =>
   val searchConverterService: SearchConverterService
 
   class SearchConverterService extends LazyLogging {
@@ -67,29 +65,48 @@ trait SearchConverterService {
           } else {
             val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
-            val defaultTitle = articleWithAgreement.title.sortBy(title => {
-              ISO639.languagePriority.reverse.indexOf(title.language)
-            }).lastOption
+            val defaultTitle = articleWithAgreement.title
+              .sortBy(title => {
+                ISO639.languagePriority.reverse.indexOf(title.language)
+              })
+              .lastOption
 
-            val supportedLanguages = Language.getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags).toList
+            val supportedLanguages = Language
+              .getSupportedLanguages(ai.title,
+                                     ai.visualElement,
+                                     ai.introduction,
+                                     ai.metaDescription,
+                                     ai.content,
+                                     ai.tags)
+              .toList
 
-            Success(SearchableArticle(
-              id = articleWithAgreement.id.get,
-              title = SearchableLanguageValues(articleWithAgreement.title.map(title => LanguageValue(title.language, title.title))),
-              visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual => LanguageValue(visual.language, visual.resource))),
-              introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro => LanguageValue(intro.language, intro.introduction))),
-              metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta => LanguageValue(meta.language, meta.content))),
-              content = SearchableLanguageValues(articleWithAgreement.content.map(article => LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
-              tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-              lastUpdated = articleWithAgreement.updated,
-              license = articleWithAgreement.copyright.license,
-              authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
-              articleType = articleWithAgreement.articleType.toString,
-              metaImage = SearchableLanguageValues(articleWithAgreement.metaImage.map(image => LanguageValue(image.language, image.imageId))),
-              defaultTitle = defaultTitle.map(t => t.title),
-              supportedLanguages = supportedLanguages,
-              contexts = contexts
-            ))
+            Success(
+              SearchableArticle(
+                id = articleWithAgreement.id.get,
+                title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
+                  LanguageValue(title.language, title.title))),
+                visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual =>
+                  LanguageValue(visual.language, visual.resource))),
+                introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro =>
+                  LanguageValue(intro.language, intro.introduction))),
+                metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta =>
+                  LanguageValue(meta.language, meta.content))),
+                content = SearchableLanguageValues(articleWithAgreement.content.map(article =>
+                  LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+                tags = SearchableLanguageList(articleWithAgreement.tags.map(tag =>
+                  LanguageValue(tag.language, tag.tags))),
+                lastUpdated = articleWithAgreement.updated,
+                license = articleWithAgreement.copyright.license,
+                authors =
+                  (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(
+                    _.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
+                articleType = articleWithAgreement.articleType.toString,
+                metaImage = SearchableLanguageValues(articleWithAgreement.metaImage.map(image =>
+                  LanguageValue(image.language, image.imageId))),
+                defaultTitle = defaultTitle.map(t => t.title),
+                supportedLanguages = supportedLanguages,
+                contexts = contexts
+              ))
           }
         case Failure(ex) => Failure(ex)
       }
@@ -116,30 +133,31 @@ trait SearchConverterService {
           if (contexts.isEmpty) {
             Failure(ElasticIndexingException(s"No taxonomy found for learningpath with id '${lp.id.getOrElse(-1)}'"))
           } else {
-            val defaultTitle = lp.title.sortBy(title =>
-              ISO639.languagePriority.reverse.indexOf(title.language)
-            ).lastOption
+            val defaultTitle =
+              lp.title.sortBy(title => ISO639.languagePriority.reverse.indexOf(title.language)).lastOption
 
-            val license = api.learningpath.Copyright(asLearningPathApiLicense(lp.copyright.license),
+            val license = api.learningpath.Copyright(
+              asLearningPathApiLicense(lp.copyright.license),
               lp.copyright.contributors.map(c => api.learningpath.Author(c.`type`, c.name)))
 
-            Success(SearchableLearningPath(
-              id = lp.id.get,
-              title = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.title),
-              description = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.description),
-              coverPhotoId = lp.coverPhotoId,
-              duration = lp.duration,
-              status = lp.status.toString,
-              verificationStatus = lp.verificationStatus.toString,
-              lastUpdated = lp.lastUpdated,
-              defaultTitle = defaultTitle.map(_.title),
-              tags = SearchableLanguageList(lp.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-              learningsteps = lp.learningsteps.map(asSearchableLearningStep),
-              license = license,
-              isBasedOn = lp.isBasedOn,
-              supportedLanguages = supportedLanguages,
-              contexts = contexts
-            ))
+            Success(
+              SearchableLearningPath(
+                id = lp.id.get,
+                title = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.title),
+                description = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.description),
+                coverPhotoId = lp.coverPhotoId,
+                duration = lp.duration,
+                status = lp.status.toString,
+                verificationStatus = lp.verificationStatus.toString,
+                lastUpdated = lp.lastUpdated,
+                defaultTitle = defaultTitle.map(_.title),
+                tags = SearchableLanguageList(lp.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+                learningsteps = lp.learningsteps.map(asSearchableLearningStep),
+                license = license,
+                isBasedOn = lp.isBasedOn,
+                supportedLanguages = supportedLanguages,
+                contexts = contexts
+              ))
           }
         case Failure(ex) => Failure(ex)
       }
@@ -160,39 +178,53 @@ trait SearchConverterService {
 
       taxonomyForDraft match {
         case Success(contexts) =>
-          val defaultTitle = draft.title.sortBy(title => {
-            ISO639.languagePriority.reverse.indexOf(title.language)
-          }).lastOption
+          val defaultTitle = draft.title
+            .sortBy(title => {
+              ISO639.languagePriority.reverse.indexOf(title.language)
+            })
+            .lastOption
 
-
-          val supportedLanguages = Language.getSupportedLanguages(
-            draft.title, draft.visualElement, draft.introduction, draft.metaDescription, draft.content, draft.tags
-          ).toList
+          val supportedLanguages = Language
+            .getSupportedLanguages(
+              draft.title,
+              draft.visualElement,
+              draft.introduction,
+              draft.metaDescription,
+              draft.content,
+              draft.tags
+            )
+            .toList
 
           val authors = (
             draft.copyright.map(_.creators).toList ++
-            draft.copyright.map(_.processors).toList ++
-            draft.copyright.map(_.rightsholders).toList
+              draft.copyright.map(_.processors).toList ++
+              draft.copyright.map(_.rightsholders).toList
           ).flatten.map(_.name)
 
-          Success(SearchableDraft(
-            id = draft.id.get,
-            title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
-            content = SearchableLanguageValues(draft.content.map(article => LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
-            visualElement = SearchableLanguageValues(draft.visualElement.map(visual => LanguageValue(visual.language, visual.resource))),
-            introduction = SearchableLanguageValues(draft.introduction.map(intro => LanguageValue(intro.language, intro.introduction))),
-            metaDescription = SearchableLanguageValues(draft.metaDescription.map(meta => LanguageValue(meta.language, meta.content))),
-            tags = SearchableLanguageList(draft.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-            lastUpdated = draft.updated,
-            license = draft.copyright.flatMap(_.license),
-            authors = authors,
-            articleType = draft.articleType.toString,
-            metaImage = SearchableLanguageValues(draft.metaImage.map(image => LanguageValue(image.language, image.imageId))),
-            defaultTitle = defaultTitle.map(t => t.title),
-            supportedLanguages = supportedLanguages,
-            notes = draft.notes,
-            contexts = contexts
-          ))
+          Success(
+            SearchableDraft(
+              id = draft.id.get,
+              title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
+              content = SearchableLanguageValues(draft.content.map(article =>
+                LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+              visualElement = SearchableLanguageValues(draft.visualElement.map(visual =>
+                LanguageValue(visual.language, visual.resource))),
+              introduction = SearchableLanguageValues(draft.introduction.map(intro =>
+                LanguageValue(intro.language, intro.introduction))),
+              metaDescription = SearchableLanguageValues(draft.metaDescription.map(meta =>
+                LanguageValue(meta.language, meta.content))),
+              tags = SearchableLanguageList(draft.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+              lastUpdated = draft.updated,
+              license = draft.copyright.flatMap(_.license),
+              authors = authors,
+              articleType = draft.articleType.toString,
+              metaImage = SearchableLanguageValues(draft.metaImage.map(image =>
+                LanguageValue(image.language, image.imageId))),
+              defaultTitle = defaultTitle.map(t => t.title),
+              supportedLanguages = supportedLanguages,
+              notes = draft.notes,
+              contexts = contexts
+            ))
         case Failure(ex) => Failure(ex)
       }
 
@@ -201,16 +233,18 @@ trait SearchConverterService {
     def asLearningPathApiLicense(license: String): api.learningpath.License = {
       getLicense(license) match {
         case Some(l) => api.learningpath.License(l.license, Option(l.description), l.url)
-        case None => api.learningpath.License(license, Some("Invalid license"), None)
+        case None    => api.learningpath.License(license, Some("Invalid license"), None)
       }
     }
 
     def asSearchableLearningStep(learningStep: LearningStep): SearchableLearningStep = {
-      val nonHtmlDescriptions = learningStep.description.map(desc => domain.learningpath.Description(Jsoup.parseBodyFragment(desc.description).text(), desc.language))
+      val nonHtmlDescriptions = learningStep.description.map(desc =>
+        domain.learningpath.Description(Jsoup.parseBodyFragment(desc.description).text(), desc.language))
       SearchableLearningStep(
         learningStep.`type`.toString,
         SearchableLanguageValues.fieldsToSearchableLanguageValues(learningStep.title),
-        SearchableLanguageValues.fieldsToSearchableLanguageValues(nonHtmlDescriptions))
+        SearchableLanguageValues.fieldsToSearchableLanguageValues(nonHtmlDescriptions)
+      )
     }
 
     /**
@@ -224,9 +258,11 @@ trait SearchConverterService {
         val keySplits = keys.toList.flatMap(key => key.split('.'))
         val languagesInKeys = keySplits.filter(split => ISO639.languagePriority.contains(split))
 
-        languagesInKeys.sortBy(lang => {
-          ISO639.languagePriority.reverse.indexOf(lang)
-        }).lastOption
+        languagesInKeys
+          .sortBy(lang => {
+            ISO639.languagePriority.reverse.indexOf(lang)
+          })
+          .lastOption
       }
 
       val highlightKeys: Option[Map[String, _]] = Option(result.highlight)
@@ -255,9 +291,12 @@ trait SearchConverterService {
       val searchableArticle = read[SearchableArticle](hitString)
 
       val titles = searchableArticle.title.languageValues.map(lv => api.Title(lv.value, lv.language))
-      val introductions = searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
-      val visualElements = searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val introductions =
+        searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
+      val metaDescriptions =
+        searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
+      val visualElements =
+        searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val visualElement = findByLanguageOrBestEffort(visualElements, language)
@@ -285,8 +324,10 @@ trait SearchConverterService {
       val searchableDraft = read[SearchableDraft](hitString)
 
       val titles = searchableDraft.title.languageValues.map(lv => api.Title(lv.value, lv.language))
-      val visualElements = searchableDraft.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
-      val introductions = searchableDraft.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
+      val visualElements =
+        searchableDraft.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val introductions =
+        searchableDraft.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val visualElement = findByLanguageOrBestEffort(visualElements, language)
@@ -312,15 +353,20 @@ trait SearchConverterService {
       val searchableLearningPath = read[SearchableLearningPath](hitString)
 
       val titles = searchableLearningPath.title.languageValues.map(lv => api.Title(lv.value, lv.language))
-      val descriptions = searchableLearningPath.description.languageValues.map(lv => api.learningpath.Description(lv.value, lv.language))
+      val descriptions =
+        searchableLearningPath.description.languageValues.map(lv => api.learningpath.Description(lv.value, lv.language))
       val introductionStep = searchableLearningPath.learningsteps.find(_.stepType == StepType.INTRODUCTION.toString)
       val introductions = asApiLearningPathIntroduction(introductionStep)
-      val tags = searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
+      val tags =
+        searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val description = findByLanguageOrBestEffort(descriptions, language).getOrElse(api.learningpath.Description("", Language.UnknownLanguage))
-      val introduction = findByLanguageOrBestEffort(introductions, language).getOrElse(api.learningpath.Introduction("", Language.UnknownLanguage))
-      val tag = findByLanguageOrBestEffort(tags, language).getOrElse(api.learningpath.LearningPathTags(Seq.empty, Language.UnknownLanguage))
+      val description = findByLanguageOrBestEffort(descriptions, language).getOrElse(
+        api.learningpath.Description("", Language.UnknownLanguage))
+      val introduction = findByLanguageOrBestEffort(introductions, language).getOrElse(
+        api.learningpath.Introduction("", Language.UnknownLanguage))
+      val tag = findByLanguageOrBestEffort(tags, language).getOrElse(
+        api.learningpath.LearningPathTags(Seq.empty, Language.UnknownLanguage))
 
       val url = s"${SearchApiProperties.ExternalApiUrls("learningpath-api")}/${searchableLearningPath.id}"
 
@@ -342,10 +388,11 @@ trait SearchConverterService {
 
     }
 
-    def asApiLearningPathIntroduction(learningStep: Option[SearchableLearningStep]): List[api.learningpath.Introduction] = {
+    def asApiLearningPathIntroduction(
+        learningStep: Option[SearchableLearningStep]): List[api.learningpath.Introduction] = {
       learningStep.map(_.description) match {
         case Some(desc) => desc.languageValues.map(lv => api.learningpath.Introduction(lv.value, lv.language)).toList
-        case None => List.empty
+        case None       => List.empty
       }
     }
 
@@ -355,17 +402,21 @@ trait SearchConverterService {
 
       val contexts = searchableArticle.contexts.map(c => searchableContextToApiContext(c, language))
 
-
       val titles = searchableArticle.title.languageValues.map(lv => api.Title(lv.value, lv.language))
-      val introductions = searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
-      val metaDescriptions = searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
-      val visualElements = searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val introductions =
+        searchableArticle.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
+      val metaDescriptions =
+        searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
+      val visualElements =
+        searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
       val metaImages = searchableArticle.metaImage.languageValues.map(lv => {
         val metaImageUrl = s"${SearchApiProperties.ExternalApiUrls("raw-image")}/${lv.value}"
-        api.article.ArticleMetaImage(metaImageUrl, lv.language)})
+        api.article.ArticleMetaImage(metaImageUrl, lv.language)
+      })
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(
+        api.MetaDescription("", Language.UnknownLanguage))
       val metaImage = findByLanguageOrBestEffort(metaImages, language)
 
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
@@ -390,15 +441,20 @@ trait SearchConverterService {
       val contexts = searchableDraft.contexts.map(c => searchableContextToApiContext(c, language))
 
       val titles = searchableDraft.title.languageValues.map(lv => api.Title(lv.value, lv.language))
-      val introductions = searchableDraft.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
-      val metaDescriptions = searchableDraft.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
-      val visualElements = searchableDraft.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val introductions =
+        searchableDraft.introduction.languageValues.map(lv => api.article.ArticleIntroduction(lv.value, lv.language))
+      val metaDescriptions =
+        searchableDraft.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
+      val visualElements =
+        searchableDraft.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
       val metaImages = searchableDraft.metaImage.languageValues.map(lv => {
         val metaImageUrl = s"${SearchApiProperties.ExternalApiUrls("raw-image")}/${lv.value}"
-        api.article.ArticleMetaImage(metaImageUrl, lv.language)})
+        api.article.ArticleMetaImage(metaImageUrl, lv.language)
+      })
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(
+        api.MetaDescription("", Language.UnknownLanguage))
       val metaImage = findByLanguageOrBestEffort(metaImages, language)
 
       val supportedLanguages = getSupportedLanguages(titles, visualElements, introductions, metaDescriptions)
@@ -423,15 +479,19 @@ trait SearchConverterService {
       val contexts = searchableLearningPath.contexts.map(c => searchableContextToApiContext(c, language))
 
       val titles = searchableLearningPath.title.languageValues.map(lv => api.Title(lv.value, lv.language))
-      val metaDescriptions = searchableLearningPath.description.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
-      val tags = searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
+      val metaDescriptions =
+        searchableLearningPath.description.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
+      val tags =
+        searchableLearningPath.tags.languageValues.map(lv => api.learningpath.LearningPathTags(lv.value, lv.language))
 
       val supportedLanguages = getSupportedLanguages(titles, metaDescriptions, tags)
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
-      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(api.MetaDescription("", Language.UnknownLanguage))
+      val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language).getOrElse(
+        api.MetaDescription("", Language.UnknownLanguage))
       val url = s"${SearchApiProperties.ExternalApiUrls("learningpath-api")}/${searchableLearningPath.id}"
-      val metaImageUrl = searchableLearningPath.coverPhotoId.map(id => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id")
+      val metaImageUrl =
+        searchableLearningPath.coverPhotoId.map(id => s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id")
 
       MultiSearchSummary(
         id = searchableLearningPath.id,
@@ -446,11 +506,16 @@ trait SearchConverterService {
 
     def searchableContextToApiContext(context: SearchableTaxonomyContext, language: String): ApiTaxonomyContext = {
       val subjectName = findByLanguageOrBestEffort(context.subject.languageValues, language).map(_.value).getOrElse("")
-      val breadcrumbs = findByLanguageOrBestEffort(context.breadcrumbs.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
-      val resourceTypes = findByLanguageOrBestEffort(context.resourceTypes.languageValues, language).map(_.value).getOrElse(Seq.empty).toList
+      val breadcrumbs = findByLanguageOrBestEffort(context.breadcrumbs.languageValues, language)
+        .map(_.value)
+        .getOrElse(Seq.empty)
+        .toList
+      val resourceTypes = findByLanguageOrBestEffort(context.resourceTypes.languageValues, language)
+        .map(_.value)
+        .getOrElse(Seq.empty)
+        .toList
 
       val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
-
 
       ApiTaxonomyContext(
         id = context.id,
@@ -479,7 +544,7 @@ trait SearchConverterService {
       val split = contentUri.split(':')
       split match {
         case Array(_, cType: String, cId: String) => id.toString == cId && cType == `type`
-        case _ => false
+        case _                                    => false
       }
     }
 
@@ -514,26 +579,30 @@ trait SearchConverterService {
       * @param objectFilterConnections [[ResourceFilterConnection]]'s or [[TopicFilterConnection]]'s
       * @return
       */
-    private def getFilters(resource: Resource, subject: Resource, bundle: Bundle, objectFilterConnections: List[FilterConnection]): List[TaxonomyFilter] = {
+    private def getFilters(resource: Resource,
+                           subject: Resource,
+                           bundle: Bundle,
+                           objectFilterConnections: List[FilterConnection]): List[TaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
       val filterConnections = objectFilterConnections
         .filter(_.objectId == resource.id)
         .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
 
-      val connectedFilters = filterConnections.map(fc =>
-        (bundle.filters.find(_.id == fc.filterId), fc)
-      )
+      val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
 
       connectedFilters.flatMap({
         case (Some(filter), filterConnection) =>
           val relevanceName = bundle.relevances
-            .find(r => r.id == filterConnection.relevanceId).map(_.name).getOrElse("")
+            .find(r => r.id == filterConnection.relevanceId)
+            .map(_.name)
+            .getOrElse("")
 
-          Some(taxonomy.TaxonomyFilter(
-            filterId = filter.id ,
-            name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
-            relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
-          ))
+          Some(
+            taxonomy.TaxonomyFilter(
+              filterId = filter.id,
+              name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
+              relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
+            ))
         case _ => None
       })
     }
@@ -545,15 +614,14 @@ trait SearchConverterService {
       * @return List of parents including resourceType.
       */
     def getResourceTypeParents(resourceType: ResourceType, allTypes: List[ResourceType]): List[ResourceType] = {
-      def allTypesWithParents(allTypes: List[ResourceType], parents: List[ResourceType]): List[(ResourceType, List[ResourceType])] = {
+      def allTypesWithParents(allTypes: List[ResourceType],
+                              parents: List[ResourceType]): List[(ResourceType, List[ResourceType])] = {
         allTypes.flatMap(resourceType => {
-          val thisLevelWithParents = allTypes.map(resourceType =>
-            (resourceType, parents)
-          )
+          val thisLevelWithParents = allTypes.map(resourceType => (resourceType, parents))
 
           val nextLevelWithParents = resourceType.subtypes match {
             case Some(subtypes) => allTypesWithParents(subtypes, parents :+ resourceType)
-            case None => List.empty
+            case None           => List.empty
           }
           nextLevelWithParents ++ thisLevelWithParents
         })
@@ -567,19 +635,19 @@ trait SearchConverterService {
       * @return Flattened list of resourceType with subtypes.
       */
     private def getTypeAndSubtypes(resourceType: ResourceType): List[ResourceType] = {
-      def getTypeAndSubtypesWithParent(resourceType: ResourceType, parents: List[ResourceType] = List.empty): List[ResourceType] = {
+      def getTypeAndSubtypesWithParent(resourceType: ResourceType,
+                                       parents: List[ResourceType] = List.empty): List[ResourceType] = {
         resourceType.subtypes match {
           case None => (parents :+ resourceType).distinct
           case Some(subtypes) =>
-            subtypes.flatMap(x =>
-              getTypeAndSubtypesWithParent(x, parents :+ resourceType)
-            )
+            subtypes.flatMap(x => getTypeAndSubtypesWithParent(x, parents :+ resourceType))
         }
       }
       getTypeAndSubtypesWithParent(resourceType, List.empty)
     }
 
-    private def getResourceTaxonomyContexts(resource: Resource, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getResourceTaxonomyContexts(resource: Resource,
+                                            bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -591,7 +659,8 @@ trait SearchConverterService {
       val resourceTypes = allResourceTypes.filter(r => resourceTypeConnections.map(_.resourceTypeId).contains(r.id))
 
       // Include parents of resourceTypes if they exist
-      val subParents = resourceTypes.flatMap(rt => getResourceTypeParents(rt, bundle.resourceTypes)).filterNot(resourceTypes.contains)
+      val subParents =
+        resourceTypes.flatMap(rt => getResourceTypeParents(rt, bundle.resourceTypes)).filterNot(resourceTypes.contains)
       val resourceTypesWithParents = (resourceTypes ++ subParents).distinct
 
       getContextType(resource.id, resource.contentUri) match {
@@ -605,7 +674,13 @@ trait SearchConverterService {
                 val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(resource.id, pathIds, subject, contextType, contextFilters, resourceTypesWithParents, bundle)
+                getSearchableTaxonomyContext(resource.id,
+                                             pathIds,
+                                             subject,
+                                             contextType,
+                                             contextFilters,
+                                             resourceTypesWithParents,
+                                             bundle)
               })
           })
           Success(contexts.flatten)
@@ -623,9 +698,12 @@ trait SearchConverterService {
 
       val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
-      val resourceTypesLanguageValues = SearchableLanguageList(Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
+      val resourceTypesLanguageValues = SearchableLanguageList(
+        Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
       val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
-      val breadcrumbList = Seq(LanguageValue(Language.DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
+      val breadcrumbList = Seq(LanguageValue(
+        Language.DefaultLanguage,
+        getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
       val breadcrumbs = SearchableLanguageList(breadcrumbList)
 
       SearchableTaxonomyContext(
@@ -657,7 +735,13 @@ trait SearchConverterService {
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
                 val pathIds = (topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(topic.id, pathIds, subject, contextType, contextFilters, List.empty, bundle)
+                getSearchableTaxonomyContext(topic.id,
+                                             pathIds,
+                                             subject,
+                                             contextType,
+                                             contextFilters,
+                                             List.empty,
+                                             bundle)
               })
           })
           Success(contexts.flatten)
@@ -675,23 +759,24 @@ trait SearchConverterService {
       * @param bundle       All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    private[service] def getTaxonomyContexts(id: Long, taxonomyType: String, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
+    private[service] def getTaxonomyContexts(id: Long,
+                                             taxonomyType: String,
+                                             bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
           val msg = s"$taxonomyType $id could not be found in taxonomy."
           logger.error(msg)
           Failure(ElasticIndexingException(msg))
         case (resources, topics) =>
-
           val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
           val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
 
           val all = resourceContexts ++ topicContexts
 
-          val successful = all.collect{case Success(c) => c}
-          val failed = all.collect{case Failure(e) => Failure(e)}
+          val successful = all.collect { case Success(c) => c }
+          val failed = all.collect { case Failure(e)     => Failure(e) }
 
-          if(failed.nonEmpty) {
+          if (failed.nonEmpty) {
             failed.head
           } else {
             Success(successful.flatten)
@@ -700,15 +785,21 @@ trait SearchConverterService {
     }
 
     private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: Bundle, taxonomyType: String) = {
-      val resources = bundle.resources.filter(resource => resource.contentUri match {
-        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
-        case None => false
-      }).distinct
+      val resources = bundle.resources
+        .filter(resource =>
+          resource.contentUri match {
+            case Some(contentUri) => compareId(contentUri, id, taxonomyType)
+            case None             => false
+        })
+        .distinct
 
-      val topics = bundle.topics.filter(topic => topic.contentUri match {
-        case Some(contentUri) => compareId(contentUri, id, taxonomyType)
-        case None => false
-      }).distinct
+      val topics = bundle.topics
+        .filter(topic =>
+          topic.contentUri match {
+            case Some(contentUri) => compareId(contentUri, id, taxonomyType)
+            case None             => false
+        })
+        .distinct
 
       (resources, topics)
     }

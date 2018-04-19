@@ -7,7 +7,4 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class Resource(id: String,
-                    name: String,
-                    contentUri: Option[String],
-                    path: String)
+case class Resource(id: String, name: String, contentUri: Option[String], path: String)

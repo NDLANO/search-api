@@ -55,7 +55,7 @@ class IndexServiceTest extends UnitSuite with TestEnvironment {
     searchIndexService.cleanupIndexes(testIndexPrefix)
   }
 
-  override def afterAll: Unit =  {
+  override def afterAll: Unit = {
     localNode.stop(true)
   }
 }

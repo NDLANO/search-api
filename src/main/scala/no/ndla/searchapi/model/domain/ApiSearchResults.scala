@@ -20,22 +20,26 @@ case class ArticleApiSearchResults(totalCount: Long,
                                    page: Int,
                                    pageSize: Int,
                                    language: String,
-                                   results: Seq[ArticleApiSearchResult]) extends ApiSearchResults
+                                   results: Seq[ArticleApiSearchResult])
+    extends ApiSearchResults
 
 case class ImageApiSearchResults(totalCount: Long,
                                  page: Int,
                                  pageSize: Int,
                                  language: String,
-                                 results: Seq[ImageApiSearchResult]) extends ApiSearchResults
+                                 results: Seq[ImageApiSearchResult])
+    extends ApiSearchResults
 
 case class LearningpathApiSearchResults(totalCount: Long,
                                         page: Int,
                                         pageSize: Int,
                                         language: String,
-                                        results: Seq[LearningpathApiSearchResult]) extends ApiSearchResults
+                                        results: Seq[LearningpathApiSearchResult])
+    extends ApiSearchResults
 
 case class AudioApiSearchResults(totalCount: Long,
                                  page: Int,
                                  pageSize: Int,
                                  language: String,
-                                 results: Seq[AudioApiSearchResult]) extends ApiSearchResults
+                                 results: Seq[AudioApiSearchResult])
+    extends ApiSearchResults

@@ -5,7 +5,6 @@
  * See LICENSE
  */
 
-
 package no.ndla.searchapi.service.search
 
 import java.lang.Math.max
@@ -57,28 +56,28 @@ trait SearchService {
     def getSortDefinition(sort: Sort.Value, language: String): FieldSortDefinition = {
       val sortLanguage = language match {
         case Language.NoLanguage => Language.DefaultLanguage
-        case _ => language
+        case _                   => language
       }
 
       sort match {
         case (Sort.ByTitleAsc) =>
           language match {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.ASC).missing("_last")
-            case _ => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.ASC).missing("_last")
+            case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.ASC).missing("_last")
           }
         case (Sort.ByTitleDesc) =>
           language match {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.DESC).missing("_last")
-            case _ => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.DESC).missing("_last")
+            case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.DESC).missing("_last")
           }
-        case (Sort.ByDurationAsc) => fieldSort("duration").order(SortOrder.ASC).missing("_last")
-        case (Sort.ByDurationDesc) => fieldSort("duration").order(SortOrder.DESC).missing("_last")
-        case (Sort.ByRelevanceAsc) => fieldSort("_score").order(SortOrder.ASC)
-        case (Sort.ByRelevanceDesc) => fieldSort("_score").order(SortOrder.DESC)
-        case (Sort.ByLastUpdatedAsc) => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
+        case (Sort.ByDurationAsc)     => fieldSort("duration").order(SortOrder.ASC).missing("_last")
+        case (Sort.ByDurationDesc)    => fieldSort("duration").order(SortOrder.DESC).missing("_last")
+        case (Sort.ByRelevanceAsc)    => fieldSort("_score").order(SortOrder.ASC)
+        case (Sort.ByRelevanceDesc)   => fieldSort("_score").order(SortOrder.DESC)
+        case (Sort.ByLastUpdatedAsc)  => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
         case (Sort.ByLastUpdatedDesc) => fieldSort("lastUpdated").order(SortOrder.DESC).missing("_last")
-        case (Sort.ByIdAsc) => fieldSort("id").order(SortOrder.ASC).missing("_last")
-        case (Sort.ByIdDesc) => fieldSort("id").order(SortOrder.DESC).missing("_last")
+        case (Sort.ByIdAsc)           => fieldSort("id").order(SortOrder.ASC).missing("_last")
+        case (Sort.ByIdDesc)          => fieldSort("id").order(SortOrder.DESC).missing("_last")
       }
     }
 
@@ -97,11 +96,14 @@ trait SearchService {
       * @param reindexFuture
       * @param executor Execution contex for the future
       */
-    protected def handleScheduledIndexResults(indexName: String, reindexFuture: Future[Try[ReindexResult]])(implicit executor: ExecutionContext): Unit = {
+    protected def handleScheduledIndexResults(indexName: String, reindexFuture: Future[Try[ReindexResult]])(
+        implicit executor: ExecutionContext): Unit = {
       reindexFuture.onComplete {
-        case Success(Success(reindexResult: ReindexResult)) => logger.info(s"Completed indexing of ${reindexResult.totalIndexed} $indexName in ${reindexResult.millisUsed} ms.")
+        case Success(Success(reindexResult: ReindexResult)) =>
+          logger.info(
+            s"Completed indexing of ${reindexResult.totalIndexed} $indexName in ${reindexResult.millisUsed} ms.")
         case Success(Failure(ex)) => logger.warn(ex.getMessage, ex)
-        case Failure(ex) => logger.warn(s"Unable to create index '$indexName': " + ex.getMessage, ex)
+        case Failure(ex)          => logger.warn(s"Unable to create index '$indexName': " + ex.getMessage, ex)
       }
     }
 
@@ -116,7 +118,9 @@ trait SearchService {
               Failure(new IndexNotFoundException(msg))
             case _ =>
               logger.error(e.getMessage)
-              Failure(new ElasticsearchException(s"Unable to execute search in ${e.rf.error.index.getOrElse("")}", e.getMessage))
+              Failure(
+                new ElasticsearchException(s"Unable to execute search in ${e.rf.error.index.getOrElse("")}",
+                                           e.getMessage))
           }
         case t: Throwable => Failure(t)
       }

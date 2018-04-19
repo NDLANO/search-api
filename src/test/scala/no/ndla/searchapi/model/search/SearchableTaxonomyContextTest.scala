@@ -24,16 +24,17 @@ class SearchableTaxonomyContextTest extends UnitSuite with TestEnvironment {
         subjectId = "urn:subject:1",
         subject = SearchableLanguageValues(Seq(LanguageValue("nb", "Matte"))),
         path = "/subject:3/topic:1/topic:151/resource:101",
-        breadcrumbs = SearchableLanguageList(Seq(
-          LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
-        )),
+        breadcrumbs = SearchableLanguageList(
+          Seq(
+            LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
+          )),
         contextType = LearningResourceType.Article.toString,
-        filters = List(TaxonomyFilter(
-          filterId = "urn:filter:1",
-          name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
-          relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-        )
-        ),
+        filters = List(
+          TaxonomyFilter(
+            filterId = "urn:filter:1",
+            name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
+            relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
+          )),
         resourceTypeIds = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle"),
         resourceTypes = SearchableLanguageList(Seq(LanguageValue("nb", Seq("Fagstoff", "Fagartikkel"))))
       )

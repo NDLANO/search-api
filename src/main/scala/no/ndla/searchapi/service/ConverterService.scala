@@ -23,48 +23,58 @@ trait ConverterService {
   val converterService: ConverterService
 
   class ConverterService {
+
     def searchResultToApiModel(searchResults: ApiSearchResults): api.SearchResults = {
       searchResults match {
-        case a: ArticleApiSearchResults => articleSearchResultsToApi(a)
+        case a: ArticleApiSearchResults      => articleSearchResultsToApi(a)
         case l: LearningpathApiSearchResults => learningpathSearchResultsToApi(l)
-        case i: ImageApiSearchResults => imageSearchResultsToApi(i)
-        case a: AudioApiSearchResults => audioSearchResultsToApi(a)
+        case i: ImageApiSearchResults        => imageSearchResultsToApi(i)
+        case a: AudioApiSearchResults        => audioSearchResultsToApi(a)
       }
     }
 
     private def articleSearchResultsToApi(articles: ArticleApiSearchResults): api.ArticleResults = {
       api.ArticleResults("articles",
-        articles.language,
-        articles.totalCount,
-        articles.page,
-        articles.pageSize,
-        articles.results.map(articleSearchResultToApi))
+                         articles.language,
+                         articles.totalCount,
+                         articles.page,
+                         articles.pageSize,
+                         articles.results.map(articleSearchResultToApi))
     }
 
     private def articleSearchResultToApi(article: ArticleApiSearchResult): api.ArticleResult = {
-      api.ArticleResult(article.id, article.title.title, article.introduction.map(_.introduction), article.articleType, article.supportedLanguages)
+      api.ArticleResult(article.id,
+                        article.title.title,
+                        article.introduction.map(_.introduction),
+                        article.articleType,
+                        article.supportedLanguages)
     }
 
     private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults): api.LearningpathResults = {
-      api.LearningpathResults("learningpaths",
+      api.LearningpathResults(
+        "learningpaths",
         learningpaths.language,
         learningpaths.totalCount,
         learningpaths.page,
         learningpaths.pageSize,
-        learningpaths.results.map(learningpathSearchResultToApi))
+        learningpaths.results.map(learningpathSearchResultToApi)
+      )
     }
 
     private def learningpathSearchResultToApi(learningpath: LearningpathApiSearchResult): api.LearningpathResult = {
-      api.LearningpathResult(learningpath.id, learningpath.title.title, learningpath.introduction.introduction, learningpath.supportedLanguages)
+      api.LearningpathResult(learningpath.id,
+                             learningpath.title.title,
+                             learningpath.introduction.introduction,
+                             learningpath.supportedLanguages)
     }
 
     private def imageSearchResultsToApi(images: ImageApiSearchResults): api.ImageResults = {
       api.ImageResults("images",
-        images.language,
-        images.totalCount,
-        images.page,
-        images.pageSize,
-        images.results.map(imageSearchResultToApi))
+                       images.language,
+                       images.totalCount,
+                       images.page,
+                       images.pageSize,
+                       images.results.map(imageSearchResultToApi))
     }
 
     private def imageSearchResultToApi(image: ImageApiSearchResult): api.ImageResult = {
@@ -74,16 +84,21 @@ trait ConverterService {
       val previewUrl = image.previewUrl.withHost(host).withScheme(scheme)
       val metaUrl = image.metaUrl.withHost(host).withScheme(scheme)
 
-      api.ImageResult(image.id.toLong, image.title.title, image.altText.alttext, previewUrl, metaUrl, image.supportedLanguages)
+      api.ImageResult(image.id.toLong,
+                      image.title.title,
+                      image.altText.alttext,
+                      previewUrl,
+                      metaUrl,
+                      image.supportedLanguages)
     }
 
     private def audioSearchResultsToApi(audios: AudioApiSearchResults): api.AudioResults = {
       api.AudioResults("audios",
-        audios.language,
-        audios.totalCount,
-        audios.page,
-        audios.pageSize,
-        audios.results.map(audioSearchResultToApi))
+                       audios.language,
+                       audios.totalCount,
+                       audios.page,
+                       audios.pageSize,
+                       audios.results.map(audioSearchResultToApi))
     }
 
     private def audioSearchResultToApi(audio: AudioApiSearchResult): api.AudioResult = {
@@ -102,19 +117,19 @@ trait ConverterService {
     }
 
     def withAgreementCopyright(article: Article): Article = {
-      val agreementCopyright = article.copyright.agreementId.flatMap(aid =>
-        draftApiClient.getAgreementCopyright(aid)
-      ).getOrElse(article.copyright)
+      val agreementCopyright = article.copyright.agreementId
+        .flatMap(aid => draftApiClient.getAgreementCopyright(aid))
+        .getOrElse(article.copyright)
 
-      article.copy(copyright = article.copyright.copy(
-        license = agreementCopyright.license,
-        creators = agreementCopyright.creators,
-        rightsholders = agreementCopyright.rightsholders,
-        validFrom = agreementCopyright.validFrom,
-        validTo = agreementCopyright.validTo
-      ))
+      article.copy(
+        copyright = article.copyright.copy(
+          license = agreementCopyright.license,
+          creators = agreementCopyright.creators,
+          rightsholders = agreementCopyright.rightsholders,
+          validFrom = agreementCopyright.validFrom,
+          validTo = agreementCopyright.validTo
+        ))
     }
-
 
   }
 }

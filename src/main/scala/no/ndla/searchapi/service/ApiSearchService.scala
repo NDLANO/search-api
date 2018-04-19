@@ -26,13 +26,15 @@ trait ApiSearchService {
   val searchService: ApiSearchService
 
   class ApiSearchService {
+
     def search(searchParams: SearchParams, apisToSearchIn: Set[SearchApiClient]): Seq[SearchResults] = {
       val searchResults = apisToSearchIn.map(_.search(searchParams)).toSeq
-      searchResults.map(searchResult => Await.result(searchResult, 5 seconds))
+      searchResults
+        .map(searchResult => Await.result(searchResult, 5 seconds))
         .map {
-          case Success(s) => converterService.searchResultToApiModel(s)
+          case Success(s)                      => converterService.searchResultToApiModel(s)
           case Failure(ex: ApiSearchException) => api.SearchError(ex.apiName, ex.getMessage)
-          case Failure(ex) => api.SearchError("unknown", ex.getMessage)
+          case Failure(ex)                     => api.SearchError("unknown", ex.getMessage)
         }
     }
 
