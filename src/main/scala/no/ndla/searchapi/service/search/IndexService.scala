@@ -322,10 +322,8 @@ trait IndexService {
           keywordField("id"),
           keywordField("path"),
           keywordField("contextType"),
-          keywordField("subjectId"),
-          keywordField("resourceTypeIds")
+          keywordField("subjectId")
         ) ++
-          generateLanguageSupportedFieldList("resourceTypes", keepRaw = true) ++
           generateLanguageSupportedFieldList("subject", keepRaw = true) ++
           generateLanguageSupportedFieldList("breadcrumbs") ++
           List(
@@ -334,7 +332,12 @@ trait IndexService {
                 generateLanguageSupportedFieldList("name", keepRaw = true) ++
                 generateLanguageSupportedFieldList("relevance")
             )
-          )
+          ) ++
+          List(
+            nestedField("resourceTypes").fields(
+              List(keywordField("id")) ++
+                generateLanguageSupportedFieldList("name", keepRaw = true)
+            ))
       )
     }
 

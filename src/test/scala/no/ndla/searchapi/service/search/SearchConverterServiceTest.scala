@@ -126,11 +126,17 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     val Success(searchable7) =
       searchConverterService.asSearchableArticle(TestData.article7, Some(TestData.taxonomyTestBundle))
 
-    searchable2.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(
-      Seq(Seq("Fagstoff", "Fagartikkel").sorted))
-    searchable4.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(Seq(Seq("Fagstoff")))
-    searchable7.contexts.head.resourceTypes.languageValues.map(_.value.sorted) should be(
-      Seq(Seq("SuperNested ResourceType", "Medelevvurdering", "Vurderingsressurs", "Veiledning", "Fagstoff").sorted))
+    searchable2.contexts.head.resourceTypes.map(_.id).sorted should be(
+      Seq("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle").sorted)
+    searchable4.contexts.head.resourceTypes.map(_.id).sorted should be(Seq("urn:resourcetype:subjectMaterial").sorted)
+    searchable7.contexts.head.resourceTypes.map(_.id).sorted should be(
+      Seq(
+        "urn:resourcetype:nested",
+        "urn:resourcetype:peerEvaluation",
+        "urn:resourcetype:reviewResource",
+        "urn:resourcetype:guidance",
+        "urn:resourcetype:subjectMaterial"
+      ).sorted)
   }
 
   test("That breadcrumbs are derived correctly") {

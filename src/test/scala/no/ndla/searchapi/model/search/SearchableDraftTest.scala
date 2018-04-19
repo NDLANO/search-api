@@ -8,8 +8,8 @@
 package no.ndla.searchapi.model.search
 
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.taxonomy.TaxonomyFilter
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.TestData._
 import org.json4s.Formats
 import org.json4s.native.Serialization.{read, write}
 
@@ -47,28 +47,6 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
 
     val metaImages = SearchableLanguageValues(Seq(LanguageValue("nb", "1"), LanguageValue("en", "2")))
 
-    val taxonomyContexts = List(
-      SearchableTaxonomyContext(
-        id = "urn:resource:101",
-        subjectId = "urn:subject:1",
-        subject = SearchableLanguageValues(Seq(LanguageValue("nb", "Matte"))),
-        path = "/subject:3/topic:1/topic:151/resource:101",
-        breadcrumbs = SearchableLanguageList(
-          Seq(
-            LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
-          )),
-        contextType = LearningResourceType.Article.toString,
-        filters = List(
-          TaxonomyFilter(
-            filterId = "urn:filter:1",
-            name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
-            relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-          )),
-        resourceTypeIds = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle"),
-        resourceTypes = SearchableLanguageList(Seq(LanguageValue("nb", Seq("Fagstoff", "Fagartikkel"))))
-      )
-    )
-
     val original = SearchableDraft(
       id = 100,
       title = titles,
@@ -85,7 +63,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
       defaultTitle = Some("Christian Tut"),
       supportedLanguages = List("en", "nb", "nn"),
       notes = List("Note1", "note2"),
-      contexts = taxonomyContexts
+      contexts = searchableTaxonomyContexts
     )
     val json = write(original)
     val deserialized = read[SearchableDraft](json)
