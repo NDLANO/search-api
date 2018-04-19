@@ -19,7 +19,8 @@ case class ApiTaxonomyContext(
     @(ApiModelProperty @field)(description = "Breadcrumbs of path to the resource in this context") breadcrumbs: List[
       String],
     @(ApiModelProperty @field)(description = "Filters connected to this object and subject") filters: List[
-      ContextFilter],
+      TaxonomyContextFilter],
     @(ApiModelProperty @field)(description = "Type in this context.") learningResourceType: String,
-    @(ApiModelProperty @field)(description = "Resource-types of this context.") resourceTypes: List[String],
+    @(ApiModelProperty @field)(description = "Resource-types of this context.") resourceTypes: List[
+      TaxonomyResourceType],
     @(ApiModelProperty @field)(description = "Language for this context") language: String)

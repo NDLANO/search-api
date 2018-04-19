@@ -17,6 +17,7 @@ import no.ndla.searchapi.model.domain.learningpath.{
   LearningPathStatus,
   LearningPathVerificationStatus
 }
+import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.model.taxonomy._
 import org.joda.time.DateTime
@@ -838,5 +839,33 @@ object TestData {
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty
+  )
+
+  val searchableResourceTypes = List(
+    SearchableTaxonomyResourceType("urn:resourcetype:subjectMaterial",
+                                   SearchableLanguageValues(Seq(LanguageValue("nb", "Fagstoff")))),
+    SearchableTaxonomyResourceType("urn:resourcetype:academicArticle",
+                                   SearchableLanguageValues(Seq(LanguageValue("nb", "Fagartikkel"))))
+  )
+
+  val searchableTaxonomyContexts = List(
+    SearchableTaxonomyContext(
+      id = "urn:resource:101",
+      subjectId = "urn:subject:1",
+      subject = SearchableLanguageValues(Seq(LanguageValue("nb", "Matte"))),
+      path = "/subject:3/topic:1/topic:151/resource:101",
+      breadcrumbs = SearchableLanguageList(
+        Seq(
+          LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
+        )),
+      contextType = LearningResourceType.Article.toString,
+      filters = List(
+        SearchableTaxonomyFilter(
+          filterId = "urn:filter:1",
+          name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
+          relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
+        )),
+      resourceTypes = searchableResourceTypes
+    )
   )
 }

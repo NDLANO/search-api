@@ -22,9 +22,9 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.draft.Draft
-import no.ndla.searchapi.model.search._
-import no.ndla.searchapi.model.taxonomy.{TaxonomyFilter, _}
-import no.ndla.searchapi.model.{api, domain, taxonomy}
+import no.ndla.searchapi.model.search.{settings, _}
+import no.ndla.searchapi.model.taxonomy._
+import no.ndla.searchapi.model.{api, domain, search, taxonomy}
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
 import org.json4s.native.Serialization.read
@@ -510,10 +510,12 @@ trait SearchConverterService {
         .map(_.value)
         .getOrElse(Seq.empty)
         .toList
-      val resourceTypes = findByLanguageOrBestEffort(context.resourceTypes.languageValues, language)
-        .map(_.value)
-        .getOrElse(Seq.empty)
-        .toList
+
+      val resourceTypes = context.resourceTypes.map(rt => {
+        val name = findByLanguageOrBestEffort(rt.name.languageValues, language)
+          .getOrElse(LanguageValue(Language.UnknownLanguage, ""))
+        TaxonomyResourceType(id = rt.id, name = name.value, language = name.language)
+      })
 
       val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
 
@@ -530,11 +532,11 @@ trait SearchConverterService {
 
     }
 
-    def taxonomyFilterToApiFilter(filter: taxonomy.TaxonomyFilter, language: String): api.ContextFilter = {
+    def taxonomyFilterToApiFilter(filter: SearchableTaxonomyFilter, language: String): api.TaxonomyContextFilter = {
       val name = findByLanguageOrBestEffort(filter.name.languageValues, language).map(_.value).getOrElse("")
       val relevance = findByLanguageOrBestEffort(filter.relevance.languageValues, language).map(_.value).getOrElse("")
 
-      api.ContextFilter(
+      api.TaxonomyContextFilter(
         name,
         relevance
       )
@@ -582,7 +584,7 @@ trait SearchConverterService {
     private def getFilters(resource: Resource,
                            subject: Resource,
                            bundle: Bundle,
-                           objectFilterConnections: List[FilterConnection]): List[TaxonomyFilter] = {
+                           objectFilterConnections: List[FilterConnection]): List[SearchableTaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
       val filterConnections = objectFilterConnections
         .filter(_.objectId == resource.id)
@@ -598,7 +600,7 @@ trait SearchConverterService {
             .getOrElse("")
 
           Some(
-            taxonomy.TaxonomyFilter(
+            search.SearchableTaxonomyFilter(
               filterId = filter.id,
               name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
               relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
@@ -692,14 +694,19 @@ trait SearchConverterService {
                                              pathIds: List[String],
                                              subject: Resource,
                                              contextType: LearningResourceType.Value,
-                                             contextFilters: List[TaxonomyFilter],
+                                             contextFilters: List[SearchableTaxonomyFilter],
                                              resourceTypes: List[ResourceType],
-                                             bundle: Bundle) = {
+                                             bundle: Bundle): SearchableTaxonomyContext = {
 
       val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
-      val resourceTypesLanguageValues = SearchableLanguageList(
-        Seq(LanguageValue(Language.DefaultLanguage, resourceTypes.map(_.name)))) // TODO: Get translations
+      val searchableResourceTypes = resourceTypes.map(
+        rt =>
+          SearchableTaxonomyResourceType(
+            id = rt.id,
+            name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, rt.name))) // TODO: Get translations
+        ))
+
       val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
       val breadcrumbList = Seq(LanguageValue(
         Language.DefaultLanguage,
@@ -714,8 +721,7 @@ trait SearchConverterService {
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
         filters = contextFilters,
-        resourceTypes = resourceTypesLanguageValues,
-        resourceTypeIds = resourceTypes.map(_.id)
+        resourceTypes = searchableResourceTypes
       )
     }
 

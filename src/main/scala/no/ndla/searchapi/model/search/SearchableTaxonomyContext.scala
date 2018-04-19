@@ -7,8 +7,7 @@
 
 package no.ndla.searchapi.model.search
 
-import no.ndla.searchapi.model.taxonomy.{SearchableContextFilters, TaxonomyFilter}
-import org.json4s.{CustomSerializer, DefaultFormats, Extraction}
+import org.json4s.{CustomSerializer, DefaultFormats, Extraction, Formats}
 import org.json4s.JsonAST.{JArray, JField, JObject, JString}
 
 case class SearchableTaxonomyContext(id: String,
@@ -17,15 +16,14 @@ case class SearchableTaxonomyContext(id: String,
                                      path: String,
                                      breadcrumbs: SearchableLanguageList,
                                      contextType: String,
-                                     filters: List[TaxonomyFilter],
-                                     resourceTypes: SearchableLanguageList,
-                                     resourceTypeIds: List[String])
+                                     filters: List[SearchableTaxonomyFilter],
+                                     resourceTypes: List[SearchableTaxonomyResourceType])
 
 class SearchableTaxonomyContextSerializer
     extends CustomSerializer[SearchableTaxonomyContext](_ =>
       ({
         case obj: JObject =>
-          implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
           SearchableTaxonomyContext(
             id = (obj \ "id").extract[String],
@@ -34,37 +32,22 @@ class SearchableTaxonomyContextSerializer
             path = (obj \ "path").extract[String],
             breadcrumbs = SearchableLanguageList("breadcrumbs", obj),
             contextType = (obj \ "contextType").extract[String],
-            filters = SearchableContextFilters("filters", obj),
-            resourceTypes = SearchableLanguageList("resourceTypes", obj),
-            resourceTypeIds = (obj \ "resourceTypeIds").extract[List[String]]
+            filters = (obj \ "filters").extract[List[SearchableTaxonomyFilter]],
+            resourceTypes = (obj \ "resourceTypes").extract[List[SearchableTaxonomyResourceType]]
           )
       }, {
         case context: SearchableTaxonomyContext =>
-          implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
           val languageFields: List[JField] =
             List(
               context.breadcrumbs.toJsonField("breadcrumbs"),
-              context.resourceTypes.toJsonField("resourceTypes"),
               context.subject.toJsonField("subject")
             ).flatten
-
-          val filters = JArray(context.filters.map(f => {
-            val fields: List[JField] =
-              JField("filterId", JString(f.filterId)) +:
-                List(f.name.toJsonField("name"), f.relevance.toJsonField("relevance")).flatten
-
-            JObject(fields: _*)
-          }))
-
-          val languageObject = JObject(
-            ("filters", filters)
-              +: languageFields
-          )
 
           val partialSearchableContext =
             LanguagelessSearchableTaxonomyContext(context)
           val partialJObject = Extraction.decompose(partialSearchableContext)
-          partialJObject.merge(languageObject)
+          partialJObject.merge(JObject(languageFields: _*))
       }))
 
 object LanguagelessSearchableTaxonomyContext {
@@ -73,7 +56,8 @@ object LanguagelessSearchableTaxonomyContext {
                                                    path: String,
                                                    subjectId: String,
                                                    contextType: String,
-                                                   resourceTypeIds: List[String])
+                                                   filters: List[SearchableTaxonomyFilter],
+                                                   resourceTypes: List[SearchableTaxonomyResourceType])
 
   def apply(searchableTaxonomyContext: SearchableTaxonomyContext): LanguagelessSearchableTaxonomyContext = {
     LanguagelessSearchableTaxonomyContext(
@@ -81,7 +65,8 @@ object LanguagelessSearchableTaxonomyContext {
       path = searchableTaxonomyContext.path,
       subjectId = searchableTaxonomyContext.subjectId,
       contextType = searchableTaxonomyContext.contextType,
-      resourceTypeIds = searchableTaxonomyContext.resourceTypeIds
+      filters = searchableTaxonomyContext.filters,
+      resourceTypes = searchableTaxonomyContext.resourceTypes
     )
   }
 }

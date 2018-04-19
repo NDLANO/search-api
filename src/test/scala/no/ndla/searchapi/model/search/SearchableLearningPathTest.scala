@@ -10,8 +10,8 @@ package no.ndla.searchapi.model.search
 import no.ndla.searchapi.model.api.learningpath.{Author, Copyright, License}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.learningpath.{LearningPathStatus, LearningPathVerificationStatus, StepType}
-import no.ndla.searchapi.model.taxonomy.TaxonomyFilter
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.TestData._
 import org.json4s.Formats
 import org.json4s.native.Serialization.{read, write}
 
@@ -34,28 +34,6 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
       Seq(
         LanguageValue("en", Seq("Mum", "Car", "Wroom"))
       ))
-
-    val taxonomyContexts = List(
-      SearchableTaxonomyContext(
-        id = "urn:resource:101",
-        subjectId = "urn:subject:1",
-        subject = SearchableLanguageValues(Seq(LanguageValue("nb", "Matte"))),
-        path = "/subject:3/topic:1/topic:151/resource:101",
-        breadcrumbs = SearchableLanguageList(
-          Seq(
-            LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
-          )),
-        contextType = LearningResourceType.Article.toString,
-        filters = List(
-          TaxonomyFilter(
-            filterId = "urn:filter:1",
-            name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
-            relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-          )),
-        resourceTypeIds = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle"),
-        resourceTypes = SearchableLanguageList(Seq(LanguageValue("nb", Seq("Fagstoff", "Fagartikkel"))))
-      )
-    )
 
     val learningsteps = List(
       SearchableLearningStep(
@@ -92,7 +70,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
                           Seq(Author("Supplier", "Jonas"), Author("Originator", "Kakemonsteret"))),
       isBasedOn = Some(1001),
       supportedLanguages = List("nb", "en", "nn"),
-      contexts = taxonomyContexts
+      contexts = searchableTaxonomyContexts
     )
 
     val json = write(original)
