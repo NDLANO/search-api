@@ -164,7 +164,10 @@ trait SearchController {
             page = searchResult.page,
             pageSize = searchResult.pageSize,
             language = searchResult.language,
-            results = searchResult.results.map(r => GroupSummary(id = r.id, title = r.title, url = r.url))
+            results = searchResult.results.map(r => {
+              val paths = r.contexts.map(_.path)
+              GroupSummary(id = r.id, title = r.title, url = r.url, paths = paths)
+            })
         ))
     }
 
