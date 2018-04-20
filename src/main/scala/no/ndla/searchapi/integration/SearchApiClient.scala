@@ -35,7 +35,7 @@ trait SearchApiClient {
     val searchPath: String
     val dumpDomainPath: String = s"intern/dump/$name"
 
-    def getChunks[T](implicit mf: Manifest[T]): Stream[Try[Seq[T]]] = {
+    def getChunks[T](implicit mf: Manifest[T]): Iterator[Try[Seq[T]]] = {
       getChunk(0, 0) match {
         case Success(initSearch) =>
           val dbCount = initSearch.totalCount
@@ -43,14 +43,14 @@ trait SearchApiClient {
           val numPages = ceil(dbCount.toDouble / pageSize.toDouble).toInt
           val pages = Seq.range(1, numPages + 1)
 
-          val stream: Stream[Try[Seq[T]]] = pages.toStream.map(p => {
+          val iterator: Iterator[Try[Seq[T]]] = pages.toIterator.map(p => {
             getChunk[T](p, pageSize).map(_.results)
           })
 
-          stream
+          iterator
         case Failure(ex) =>
           logger.error(s"Could not fetch initial chunk from $baseUrl/$dumpDomainPath")
-          Stream(Failure(ex))
+          Iterator(Failure(ex))
       }
     }
 
