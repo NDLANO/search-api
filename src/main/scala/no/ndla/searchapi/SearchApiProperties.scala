@@ -55,7 +55,7 @@ object SearchApiProperties extends LazyLogging {
 
   val DefaultPageSize = 10
   val MaxPageSize = 100
-  val IndexBulkSize = 2000
+  val IndexBulkSize = 1000
   val ElasticSearchIndexMaxResultWindow = 10000
 
   val ExternalApiUrls: Map[String, String] = Map(
