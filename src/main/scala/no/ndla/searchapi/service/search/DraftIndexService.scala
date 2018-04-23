@@ -53,7 +53,7 @@ trait DraftIndexService {
           textField("authors").fielddata(true),
           keywordField("articleType"),
           keywordField("supportedLanguages"),
-          textField("notes").fielddata(true),
+          textField("notes"),
           getTaxonomyContextMapping
         ) ++
           generateKeywordLanguageFields("metaImage") ++

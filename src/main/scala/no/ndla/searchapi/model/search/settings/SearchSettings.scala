@@ -5,7 +5,7 @@
  * See LICENSE
  */
 
-package no.ndla.searchapi.model.search
+package no.ndla.searchapi.model.search.settings
 
 import no.ndla.searchapi.model.domain.Sort
 import no.ndla.searchapi.model.domain.article.LearningResourceType
