@@ -195,8 +195,8 @@ trait MultiSearchService {
           boolQuery().should(
             resourceTypes.map(
               resourceTypeId =>
-                nestedQuery("contexts").query(
-                  termQuery(s"contexts.resourceTypeIds", resourceTypeId)
+                nestedQuery("contexts.resourceTypes").query(
+                  termQuery(s"contexts.resourceTypes.id", resourceTypeId)
               ))
           )
         )
