@@ -15,4 +15,3 @@ case class SearchableTaxonomyContext(id: String,
                                      contextType: String,
                                      filters: List[SearchableTaxonomyFilter],
                                      resourceTypes: List[SearchableTaxonomyResourceType])
-

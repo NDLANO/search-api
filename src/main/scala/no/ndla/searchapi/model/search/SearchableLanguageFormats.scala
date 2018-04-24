@@ -13,54 +13,60 @@ import java.util.TimeZone
 import org.json4s.JsonAST.{JField, JObject, JString}
 import org.json4s.{CustomSerializer, DefaultFormats, Extraction, Formats}
 
-class SearchableLanguageValuesSerializer extends CustomSerializer[SearchableLanguageValues](_ => ({
-  case obj: JObject =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+class SearchableLanguageValuesSerializer
+    extends CustomSerializer[SearchableLanguageValues](_ =>
+      ({
+        case obj: JObject =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-    val langs = obj.values.keys.flatMap(l => {
-      (obj \ l).extract[Option[String]].map(o =>
-        LanguageValue(l, o)
-      )
-    }).toSeq
+          val langs = obj.values.keys
+            .flatMap(l => {
+              (obj \ l).extract[Option[String]].map(o => LanguageValue(l, o))
+            })
+            .toSeq
 
-    SearchableLanguageValues(langs)
-}, {
-  case searchableLanguageValues: SearchableLanguageValues =>
-    val langValues = searchableLanguageValues.languageValues.map(lv => {
-      JField(lv.language, JString(lv.value))
-    })
-    JObject(langValues: _*)
-}))
+          SearchableLanguageValues(langs)
+      }, {
+        case searchableLanguageValues: SearchableLanguageValues =>
+          val langValues = searchableLanguageValues.languageValues.map(lv => {
+            JField(lv.language, JString(lv.value))
+          })
+          JObject(langValues: _*)
+      }))
 
-class SearchableLanguageListSerializer extends CustomSerializer[SearchableLanguageList](_ => ({
-  case obj: JObject =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+class SearchableLanguageListSerializer
+    extends CustomSerializer[SearchableLanguageList](_ =>
+      ({
+        case obj: JObject =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
 
-    val langs = obj.values.keys.flatMap(l => {
-      (obj \ l).extract[Option[Seq[String]]].map(o =>
-        LanguageValue(l, o)
-      )
-    }).toSeq
+          val langs = obj.values.keys
+            .flatMap(l => {
+              (obj \ l).extract[Option[Seq[String]]].map(o => LanguageValue(l, o))
+            })
+            .toSeq
 
-    SearchableLanguageList(langs)
-}, {
-  case searchableLanguageList: SearchableLanguageList =>
-    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-    val langValues = searchableLanguageList.languageValues.map(lv => {
-      val tags = Extraction.decompose(lv.value)
-      JField(lv.language, tags)
-    })
-    JObject(langValues: _*)
+          SearchableLanguageList(langs)
+      }, {
+        case searchableLanguageList: SearchableLanguageList =>
+          implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+          val langValues = searchableLanguageList.languageValues.map(lv => {
+            val tags = Extraction.decompose(lv.value)
+            JField(lv.language, tags)
+          })
+          JObject(langValues: _*)
 
-}))
+      }))
 
 object SearchableLanguageFormats {
-val defaultFormats: DefaultFormats = new DefaultFormats{
-  override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
-  dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"))
-}
+
+  val defaultFormats: DefaultFormats = new DefaultFormats {
+    override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"))
+  }
+
   val JSonFormats: Formats =
-      defaultFormats +
+    defaultFormats +
       new SearchableLanguageValuesSerializer +
       new SearchableLanguageListSerializer ++
       org.json4s.ext.JodaTimeSerializers.all

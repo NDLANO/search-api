@@ -8,4 +8,3 @@
 package no.ndla.searchapi.model.search
 
 case class SearchableTaxonomyResourceType(id: String, name: SearchableLanguageValues)
-
