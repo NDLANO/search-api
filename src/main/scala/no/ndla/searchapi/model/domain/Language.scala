@@ -9,8 +9,6 @@ package no.ndla.searchapi.model.domain
 
 import com.sksamuel.elastic4s.analyzers._
 import no.ndla.mapping.ISO639
-import no.ndla.searchapi.model.search.LanguageValue.LanguageValue
-
 import scala.annotation.tailrec
 
 object Language {
