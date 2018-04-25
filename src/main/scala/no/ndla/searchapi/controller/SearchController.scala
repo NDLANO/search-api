@@ -90,6 +90,8 @@ trait SearchController {
       Param("levels", "A comma separated list of levels the learning resources should be filtered by.")
     private val subjects =
       Param("subjects", "A comma separated list of subjects the learning resources should be filtered by.")
+    private val topics =
+      Param("topics", "A comma separated list of parent topics the learning resources should be filtered by.")
     private val contextTypes =
       Param("context-types", "A comma separated list of context-types the learning resources should be filtered by.")
     private val groupTypes =
@@ -469,6 +471,7 @@ trait SearchController {
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val subjects = paramAsListOfString(this.subjects.paramName)
+      val topics = paramAsListOfString(this.topics.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
 
       val settings = MultiDraftSearchSettings(
@@ -483,6 +486,7 @@ trait SearchController {
         withIdIn = idList,
         taxonomyFilters = taxonomyFilters,
         subjects = subjects,
+        topics = topics,
         resourceTypes = resourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter

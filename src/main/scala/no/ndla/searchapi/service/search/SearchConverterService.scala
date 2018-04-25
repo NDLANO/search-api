@@ -713,6 +713,8 @@ trait SearchConverterService {
         getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
       val breadcrumbs = SearchableLanguageList(breadcrumbList)
 
+      val parentTopics = getAllParentTopicIds(taxonomyId, bundle)
+
       SearchableTaxonomyContext(
         id = taxonomyId,
         subjectId = subject.id,
@@ -721,8 +723,24 @@ trait SearchConverterService {
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
         filters = contextFilters,
-        resourceTypes = searchableResourceTypes
+        resourceTypes = searchableResourceTypes,
+        parentTopicIds = parentTopics
       )
+    }
+
+    private def getAllParentTopicIds(id: String, bundle: Bundle): List[String] = {
+      val topicResourceConnections = bundle.topicResourceConnections.filter(_.resourceId == id)
+      val topicSubtopicConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == id)
+
+      val directlyConnectedResourceTopics =
+        bundle.topics.filter(t => topicResourceConnections.map(_.topicid).contains(t.id))
+      val directlyConnectedTopicTopics =
+        bundle.topics.filter(t => topicSubtopicConnections.map(_.topicid).contains(t.id))
+
+      val allConnectedTopics = (directlyConnectedResourceTopics ++ directlyConnectedTopicTopics)
+        .map(topic => getParentTopicsAndPaths(topic, bundle, List.empty))
+
+      allConnectedTopics.flatMap(topic => topic.map(_._1)).map(_.id)
     }
 
     private def getTopicTaxonomyContexts(topic: Resource, bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {

@@ -14,4 +14,5 @@ case class SearchableTaxonomyContext(id: String,
                                      breadcrumbs: SearchableLanguageList,
                                      contextType: String,
                                      filters: List[SearchableTaxonomyFilter],
-                                     resourceTypes: List[SearchableTaxonomyResourceType])
+                                     resourceTypes: List[SearchableTaxonomyResourceType],
+                                     parentTopicIds: List[String])
