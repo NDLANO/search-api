@@ -21,6 +21,7 @@ case class MultiDraftSearchSettings(query: Option[String],
                                     withIdIn: List[Long],
                                     taxonomyFilters: List[String],
                                     subjects: List[String],
+                                    topics: List[String],
                                     resourceTypes: List[String],
                                     learningResourceTypes: List[LearningResourceType.Value],
                                     supportedLanguages: List[String])

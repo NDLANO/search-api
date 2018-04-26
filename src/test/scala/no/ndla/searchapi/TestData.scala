@@ -836,6 +836,7 @@ object TestData {
     withIdIn = List.empty,
     taxonomyFilters = List.empty,
     subjects = List.empty,
+    topics = List.empty,
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty
@@ -865,7 +866,8 @@ object TestData {
           name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
         )),
-      resourceTypes = searchableResourceTypes
+      resourceTypes = searchableResourceTypes,
+      parentTopicIds = List("urn:topic:1")
     )
   )
 }

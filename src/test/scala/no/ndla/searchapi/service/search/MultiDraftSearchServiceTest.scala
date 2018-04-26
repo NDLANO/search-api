@@ -497,6 +497,15 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     search2.totalCount should be(0)
   }
 
+  test("That filtering for topics returns every child learningResource") {
+    val Success(search) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(topics = List("urn:topic:1")))
+
+    search.totalCount should be(6)
+
+    search.results.map(_.id) should be(Seq(1, 1, 2, 2, 4, 9))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

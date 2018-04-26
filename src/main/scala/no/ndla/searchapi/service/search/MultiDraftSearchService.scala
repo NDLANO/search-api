@@ -147,6 +147,7 @@ trait MultiDraftSearchService {
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
+      val taxonomyTopicFilter = topicFilter(settings.topics)
 
       val supportedLanguageFilter =
         if (settings.supportedLanguages.isEmpty) None
@@ -163,6 +164,7 @@ trait MultiDraftSearchService {
         languageFilter,
         taxonomyFilterFilter,
         taxonomySubjectFilter,
+        taxonomyTopicFilter,
         taxonomyResourceTypesFilter,
         taxonomyContextFilter,
         supportedLanguageFilter
@@ -178,6 +180,20 @@ trait MultiDraftSearchService {
               subjectId =>
                 nestedQuery("contexts").query(
                   termQuery(s"contexts.subjectId", subjectId)
+              ))
+          )
+        )
+    }
+
+    private def topicFilter(topics: List[String]) = {
+      if (topics.isEmpty) None
+      else
+        Some(
+          boolQuery().should(
+            topics.map(
+              topicId =>
+                nestedQuery("contexts").query(
+                  termQuery(s"contexts.parentTopicIds", topicId)
               ))
           )
         )
