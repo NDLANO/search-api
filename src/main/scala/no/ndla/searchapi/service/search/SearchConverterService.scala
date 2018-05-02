@@ -126,7 +126,7 @@ trait SearchConverterService {
           }
       }
 
-      val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description, lp.tags).toList
+      val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description).toList
 
       taxonomyForLearningPath match {
         case Success(contexts) =>
