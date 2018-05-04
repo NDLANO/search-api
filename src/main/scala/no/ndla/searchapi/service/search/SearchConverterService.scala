@@ -176,57 +176,53 @@ trait SearchConverterService {
           }
       }
 
-      taxonomyForDraft match {
-        case Success(contexts) =>
-          val defaultTitle = draft.title
-            .sortBy(title => {
-              ISO639.languagePriority.reverse.indexOf(title.language)
-            })
-            .lastOption
+      val defaultTitle = draft.title
+        .sortBy(title => {
+          ISO639.languagePriority.reverse.indexOf(title.language)
+        })
+        .lastOption
 
-          val supportedLanguages = Language
-            .getSupportedLanguages(
-              draft.title,
-              draft.visualElement,
-              draft.introduction,
-              draft.metaDescription,
-              draft.content,
-              draft.tags
-            )
-            .toList
+      val supportedLanguages = Language
+        .getSupportedLanguages(
+          draft.title,
+          draft.visualElement,
+          draft.introduction,
+          draft.metaDescription,
+          draft.content,
+          draft.tags
+        )
+        .toList
 
-          val authors = (
-            draft.copyright.map(_.creators).toList ++
-              draft.copyright.map(_.processors).toList ++
-              draft.copyright.map(_.rightsholders).toList
-          ).flatten.map(_.name)
+      val authors = (
+        draft.copyright.map(_.creators).toList ++
+          draft.copyright.map(_.processors).toList ++
+          draft.copyright.map(_.rightsholders).toList
+      ).flatten.map(_.name)
 
-          Success(
-            SearchableDraft(
-              id = draft.id.get,
-              title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
-              content = SearchableLanguageValues(draft.content.map(article =>
-                LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
-              visualElement = SearchableLanguageValues(draft.visualElement.map(visual =>
-                LanguageValue(visual.language, visual.resource))),
-              introduction = SearchableLanguageValues(draft.introduction.map(intro =>
-                LanguageValue(intro.language, intro.introduction))),
-              metaDescription = SearchableLanguageValues(draft.metaDescription.map(meta =>
-                LanguageValue(meta.language, meta.content))),
-              tags = SearchableLanguageList(draft.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-              lastUpdated = draft.updated,
-              license = draft.copyright.flatMap(_.license),
-              authors = authors,
-              articleType = draft.articleType.toString,
-              metaImage = SearchableLanguageValues(draft.metaImage.map(image =>
-                LanguageValue(image.language, image.imageId))),
-              defaultTitle = defaultTitle.map(t => t.title),
-              supportedLanguages = supportedLanguages,
-              notes = draft.notes,
-              contexts = contexts
-            ))
-        case Failure(ex) => Failure(ex)
-      }
+      Success(
+        SearchableDraft(
+          id = draft.id.get,
+          title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
+          content = SearchableLanguageValues(draft.content.map(article =>
+            LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+          visualElement = SearchableLanguageValues(draft.visualElement.map(visual =>
+            LanguageValue(visual.language, visual.resource))),
+          introduction = SearchableLanguageValues(draft.introduction.map(intro =>
+            LanguageValue(intro.language, intro.introduction))),
+          metaDescription = SearchableLanguageValues(draft.metaDescription.map(meta =>
+            LanguageValue(meta.language, meta.content))),
+          tags = SearchableLanguageList(draft.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+          lastUpdated = draft.updated,
+          license = draft.copyright.flatMap(_.license),
+          authors = authors,
+          articleType = draft.articleType.toString,
+          metaImage = SearchableLanguageValues(draft.metaImage.map(image =>
+            LanguageValue(image.language, image.imageId))),
+          defaultTitle = defaultTitle.map(t => t.title),
+          supportedLanguages = supportedLanguages,
+          notes = draft.notes,
+          contexts = taxonomyForDraft.getOrElse(List.empty)
+        ))
 
     }
 
