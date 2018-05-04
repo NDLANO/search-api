@@ -19,8 +19,10 @@ import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.taxonomy.{Bundle, Resource, SubjectTopicConnection, TopicResourceConnection}
 import org.joda.time.DateTime
+import org.mockito.Mockito._
+import org.mockito.Matchers._
 
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 class DraftSearchServiceTest extends UnitSuite with TestEnvironment {
   val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
@@ -37,64 +39,9 @@ class DraftSearchServiceTest extends UnitSuite with TestEnvironment {
   override def beforeAll: Unit = {
     draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
 
-    draftsToIndex.zipWithIndex.map {
-      case (draft: Draft, index: Int) =>
-        val (
-          resources,
-          topics,
-          topicResourceConnections,
-          subjects,
-          subjectTopicConnections
-        ) = draft.articleType match {
-          case LearningResourceType.Article =>
-            val resources = List(
-              Resource(s"urn:resource:$index",
-                       draft.title.head.title,
-                       Some(s"urn:article:${draft.id.get}"),
-                       s"/subject:1/topic:100/resource:$index"))
-            val topics = List(Resource("urn:topic:100", "Topic1", Some("urn:article:100"), "/subject:1/topic:100"))
-            val topicResourceConnections = List(
-              TopicResourceConnection("urn:topic:100", s"urn:resource:$index", "urn:topic-resource:abc123", true, 1))
-            val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
-            val subjectTopicConnections =
-              List(SubjectTopicConnection("urn:subject:1", "urn:topic:100", "urn:subject-topic:8180abc", true, 1))
-
-            (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
-          case LearningResourceType.TopicArticle =>
-            val resources = List()
-            val topicResourceConnections = List()
-            val topics = List(
-              Resource(s"urn:topic:$index",
-                       draft.title.head.title,
-                       Some(s"urn:article:${draft.id.get}"),
-                       s"/subject:1/topic:$index"))
-            val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
-            val subjectTopicConnections =
-              List(SubjectTopicConnection("urn:subject:1", s"urn:topic:$index", "urn:subject-topic:8180abc", true, 1))
-
-            (resources, topics, topicResourceConnections, subjects, subjectTopicConnections)
-          case _ =>
-            (List.empty, List.empty, List.empty, List.empty, List.empty)
-        }
-
-        val generatedBundle = Bundle(
-          filters = List.empty,
-          relevances = List.empty,
-          resourceFilterConnections = List.empty,
-          resourceResourceTypeConnections = List.empty,
-          resourceTypes = List.empty,
-          resources = resources,
-          subjectTopicConnections = subjectTopicConnections,
-          subjects = subjects,
-          topicFilterConnections = List.empty,
-          topicResourceConnections = topicResourceConnections,
-          topicSubtopicConnections = List.empty,
-          topics = topics
-        )
-
-        draftIndexService.indexDocument(draft, Some(generatedBundle))
-
-    }
+    when(taxonomyApiClient.getTaxonomyBundle)
+      .thenReturn(Failure(new RuntimeException("We dont need any taxonomy for this")))
+    draftsToIndex.map(d => draftIndexService.indexDocument(d))
 
     blockUntil(() => draftIndexService.countDocuments == 11)
   }
