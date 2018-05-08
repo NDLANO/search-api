@@ -94,6 +94,8 @@ trait InternController {
     }
 
     post("/index") {
+      val runInBackground = booleanOrDefault("run-in-background", default = false)
+
       val requestInfo = RequestInfo()
       val indexes = List(
         Future {
@@ -109,8 +111,11 @@ trait InternController {
           ("drafts", draftIndexService.indexDocuments)
         }
       )
-
-      resolveResultFutures(indexes)
+      if (runInBackground) {
+        Accepted("Starting indexing process...")
+      } else {
+        resolveResultFutures(indexes)
+      }
     }
 
   }
