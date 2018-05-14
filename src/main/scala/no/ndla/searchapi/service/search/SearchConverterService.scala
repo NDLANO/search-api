@@ -784,9 +784,7 @@ trait SearchConverterService {
                                              bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
         case (Nil, Nil) =>
-          val msg = s"$taxonomyType $id could not be found in taxonomy."
-          logger.warn(msg)
-          Failure(ElasticIndexingException(msg))
+          Failure(ElasticIndexingException(s"$taxonomyType $id could not be found in taxonomy."))
         case (resources, topics) =>
           val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
           val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
