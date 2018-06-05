@@ -148,6 +148,7 @@ trait SearchConverterService {
           license = license,
           isBasedOn = lp.isBasedOn,
           supportedLanguages = supportedLanguages,
+          authors = lp.copyright.contributors.map(_.name).toList,
           contexts = taxonomyForLearningPath.getOrElse(List.empty)
         ))
     }

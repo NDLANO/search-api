@@ -24,4 +24,5 @@ case class SearchableLearningPath(id: Long,
                                   license: Copyright,
                                   isBasedOn: Option[Long],
                                   supportedLanguages: List[String],
+                                  authors: List[String],
                                   contexts: List[SearchableTaxonomyContext])

@@ -70,6 +70,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
                           Seq(Author("Supplier", "Jonas"), Author("Originator", "Kakemonsteret"))),
       isBasedOn = Some(1001),
       supportedLanguages = List("nb", "en", "nn"),
+      authors = List("Yap"),
       contexts = searchableTaxonomyContexts
     )
 

@@ -61,6 +61,7 @@ trait MultiSearchService {
       val metaSearch = simpleStringQuery(query).field(s"metaDescription.$searchLanguage", 1)
       val contentSearch = simpleStringQuery(query).field(s"content.$searchLanguage", 1)
       val tagSearch = simpleStringQuery(query).field(s"tags.$searchLanguage", 1)
+      val authorSearch = simpleStringQuery(query).field("authors", 1)
 
       val fullQuery = boolQuery()
         .must(
@@ -70,7 +71,8 @@ trait MultiSearchService {
               introSearch,
               metaSearch,
               contentSearch,
-              tagSearch
+              tagSearch,
+              authorSearch
             )
         )
       executeSearch(settings, fullQuery)

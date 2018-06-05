@@ -63,6 +63,7 @@ trait MultiDraftSearchService {
         val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
         val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
         val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
+        val authorSearch = simpleStringQuery(q).field("authors", 1)
 
         boolQuery()
           .should(
@@ -70,7 +71,8 @@ trait MultiDraftSearchService {
             introSearch,
             metaSearch,
             contentSearch,
-            tagSearch
+            tagSearch,
+            authorSearch
           )
       })
 
