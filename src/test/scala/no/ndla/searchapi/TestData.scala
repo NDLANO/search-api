@@ -571,6 +571,7 @@ object TestData {
   val DonaldId = 3
   val UnrelatedId = 4
   val EnglandoId = 5
+  val KekId = 6
 
   val learningPath1 = DefaultLearningPath.copy(
     id = Some(PenguinId),
@@ -617,12 +618,22 @@ object TestData {
     tags = List()
   )
 
+  val learningPath6 = DefaultLearningPath.copy(
+    id = Some(KekId),
+    title = List(Title("Kek", "en")),
+    description = List(Description("This is kek", "en")),
+    duration = Some(5),
+    lastUpdated = today.minusDays(7),
+    tags = List()
+  )
+
   val learningPathsToIndex: List[LearningPath] = List(
     learningPath1,
     learningPath2,
     learningPath3,
     learningPath4,
-    learningPath5
+    learningPath5,
+    learningPath6
   )
 
   val subjects = List(

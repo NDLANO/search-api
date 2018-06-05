@@ -53,7 +53,7 @@ trait LearningPathIndexService {
           textField("verificationStatus"),
           dateField("lastUpdated"),
           keywordField("defaultTitle"),
-          textField("author"),
+          textField("authors"),
           nestedField("learningsteps").fields(
             List(
               textField("stepType")

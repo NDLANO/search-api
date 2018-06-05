@@ -65,7 +65,7 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
         learningPathIndexService.indexDocument(lp, Some(generatedBundle))
     }
 
-    blockUntil(() => learningPathIndexService.countDocuments == 5)
+    blockUntil(() => learningPathIndexService.countDocuments == learningPathsToIndex.size)
   }
 
   override def afterAll(): Unit = {
@@ -125,12 +125,13 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
       learningPathSearchService.all(List.empty, None, "all", Sort.ByIdAsc, 1, 10, fallback = false)
     val hits = searchResult.results
 
-    searchResult.totalCount should be(5)
+    searchResult.totalCount should be(6)
     hits(0).id should be(PenguinId)
     hits(1).id should be(BatmanId)
     hits(2).id should be(DonaldId)
     hits(3).id should be(UnrelatedId)
     hits(4).id should be(EnglandoId)
+    hits(5).id should be(KekId)
   }
 
   test("That order by durationDesc orders search result by duration descending") {
@@ -383,14 +384,16 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search) =
       learningPathSearchService.all(List.empty, None, "all", Sort.ByTitleAsc, 1, 10, fallback = false)
 
-    search.totalCount should be(5)
+    search.totalCount should be(6)
     search.results(0).id should be(BatmanId)
     search.results(1).id should be(DonaldId)
     search.results(2).id should be(EnglandoId)
     search.results(2).title.language should be("en")
-    search.results(3).id should be(PenguinId)
-    search.results(4).id should be(UnrelatedId)
-    search.results(4).title.language should be("nb")
+    search.results(3).id should be(KekId)
+    search.results(3).title.language should be("en")
+    search.results(4).id should be(PenguinId)
+    search.results(5).id should be(UnrelatedId)
+    search.results(5).title.language should be("nb")
   }
 
   test("that supportedLanguages are sorted correctly") {
@@ -408,10 +411,11 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
   test("That fallback returns best language first") {
     val Success(search) = learningPathSearchService.all(List.empty, None, "nb", Sort.ByIdAsc, 1, 10, fallback = true)
 
-    search.totalCount should be(5)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5))
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 6))
     search.results(3).title.language should be("nb")
     search.results(4).title.language should be("en")
+    search.results(5).title.language should be("en")
   }
 
   def blockUntil(predicate: () => Boolean) = {

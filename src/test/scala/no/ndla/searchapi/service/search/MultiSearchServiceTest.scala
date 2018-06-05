@@ -462,6 +462,12 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search.results.head.metaImage should be(Some("http://api-gateway.ndla-local/image-api/raw/id/442"))
   }
 
+  test("That learningpaths without taxonomy are not returned") {
+    val Success(search) = multiSearchService.all(searchSettings.copy(language = "en", withIdIn = List(6)))
+
+    search.totalCount should be(0)
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

@@ -146,6 +146,8 @@ trait MultiSearchService {
             )
           )
 
+      val hasTaxonomyFilter = Some(nestedQuery("contexts").query(existsQuery("contexts")))
+
       List(
         licenseFilter,
         idFilter,
@@ -154,7 +156,8 @@ trait MultiSearchService {
         taxonomySubjectFilter,
         taxonomyResourceTypesFilter,
         taxonomyContextFilter,
-        supportedLanguageFilter
+        supportedLanguageFilter,
+        hasTaxonomyFilter
       ).flatten
     }
 
