@@ -50,7 +50,7 @@ trait DraftIndexService {
           dateField("lastUpdated"),
           keywordField("license"),
           keywordField("defaultTitle"),
-          textField("authors").fielddata(true),
+          textField("authors"),
           keywordField("articleType"),
           keywordField("supportedLanguages"),
           textField("notes"),

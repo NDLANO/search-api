@@ -200,7 +200,8 @@ object TestData {
     visualElement = List.empty,
     tags = List(Tag(List("fugl"), "nb")),
     created = today.minusDays(4),
-    updated = today.minusDays(3)
+    updated = today.minusDays(3),
+    copyright = byNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet")))
   )
 
   val article2 = TestData.sampleArticleWithPublicDomain.copy(
@@ -212,7 +213,9 @@ object TestData {
     visualElement = List.empty,
     tags = List(Tag(List("fugl"), "nb")),
     created = today.minusDays(4),
-    updated = today.minusDays(2)
+    updated = today.minusDays(2),
+    copyright = publicDomainCopyright.copy(creators = List(Author("Forfatter", "Pjolter")),
+                                           processors = List(Author("Editorial", "Svims")))
   )
 
   val article3 = TestData.sampleArticleWithPublicDomain.copy(
@@ -399,7 +402,8 @@ object TestData {
       ArticleContent("Bilde av en <strong>bil</strong> flaggermusmann som vifter med vingene <em>bil</em>.", "nb")),
     tags = List(Tag(List("fugl"), "nb")),
     created = today.minusDays(4),
-    updated = today.minusDays(3)
+    updated = today.minusDays(3),
+    copyright = Some(draftByNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet"))))
   )
 
   val draft2 = TestData.sampleDraftWithPublicDomain.copy(
@@ -411,7 +415,10 @@ object TestData {
     content = List(ArticleContent("<p>Bilde av en</p><p> en <em>pingvin</em> som vagger borover en gate</p>", "nb")),
     tags = List(Tag(List("fugl"), "nb")),
     created = today.minusDays(4),
-    updated = today.minusDays(2)
+    updated = today.minusDays(2),
+    copyright = Some(
+      draftPublicDomainCopyright.copy(creators = List(Author("Forfatter", "Pjolter")),
+                                      processors = List(Author("Editorial", "Svims"))))
   )
 
   val draft3 = TestData.sampleDraftWithPublicDomain.copy(
@@ -571,6 +578,7 @@ object TestData {
   val DonaldId = 3
   val UnrelatedId = 4
   val EnglandoId = 5
+  val KekId = 6
 
   val learningPath1 = DefaultLearningPath.copy(
     id = Some(PenguinId),
@@ -614,6 +622,16 @@ object TestData {
     description = List(Description("This is a englando learningpath", "en")),
     duration = Some(5),
     lastUpdated = today.minusDays(6),
+    tags = List(),
+    copyright = copyright.copy(contributors = List(Author("Writer", "Svims")))
+  )
+
+  val learningPath6 = DefaultLearningPath.copy(
+    id = Some(KekId),
+    title = List(Title("Kek", "en")),
+    description = List(Description("This is kek", "en")),
+    duration = Some(5),
+    lastUpdated = today.minusDays(7),
     tags = List()
   )
 
@@ -622,7 +640,8 @@ object TestData {
     learningPath2,
     learningPath3,
     learningPath4,
-    learningPath5
+    learningPath5,
+    learningPath6
   )
 
   val subjects = List(

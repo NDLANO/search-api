@@ -127,40 +127,30 @@ trait SearchConverterService {
       }
 
       val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description).toList
+      val defaultTitle = lp.title.sortBy(title => ISO639.languagePriority.reverse.indexOf(title.language)).lastOption
+      val license = api.learningpath.Copyright(
+        asLearningPathApiLicense(lp.copyright.license),
+        lp.copyright.contributors.map(c => api.learningpath.Author(c.`type`, c.name)))
 
-      taxonomyForLearningPath match {
-        case Success(contexts) =>
-          if (contexts.isEmpty) {
-            Failure(ElasticIndexingException(s"No taxonomy found for learningpath with id '${lp.id.getOrElse(-1)}'"))
-          } else {
-            val defaultTitle =
-              lp.title.sortBy(title => ISO639.languagePriority.reverse.indexOf(title.language)).lastOption
-
-            val license = api.learningpath.Copyright(
-              asLearningPathApiLicense(lp.copyright.license),
-              lp.copyright.contributors.map(c => api.learningpath.Author(c.`type`, c.name)))
-
-            Success(
-              SearchableLearningPath(
-                id = lp.id.get,
-                title = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.title),
-                description = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.description),
-                coverPhotoId = lp.coverPhotoId,
-                duration = lp.duration,
-                status = lp.status.toString,
-                verificationStatus = lp.verificationStatus.toString,
-                lastUpdated = lp.lastUpdated,
-                defaultTitle = defaultTitle.map(_.title),
-                tags = SearchableLanguageList(lp.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-                learningsteps = lp.learningsteps.map(asSearchableLearningStep),
-                license = license,
-                isBasedOn = lp.isBasedOn,
-                supportedLanguages = supportedLanguages,
-                contexts = contexts
-              ))
-          }
-        case Failure(ex) => Failure(ex)
-      }
+      Success(
+        SearchableLearningPath(
+          id = lp.id.get,
+          title = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.title),
+          description = SearchableLanguageValues.fieldsToSearchableLanguageValues(lp.description),
+          coverPhotoId = lp.coverPhotoId,
+          duration = lp.duration,
+          status = lp.status.toString,
+          verificationStatus = lp.verificationStatus.toString,
+          lastUpdated = lp.lastUpdated,
+          defaultTitle = defaultTitle.map(_.title),
+          tags = SearchableLanguageList(lp.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+          learningsteps = lp.learningsteps.map(asSearchableLearningStep),
+          license = license,
+          isBasedOn = lp.isBasedOn,
+          supportedLanguages = supportedLanguages,
+          authors = lp.copyright.contributors.map(_.name).toList,
+          contexts = taxonomyForLearningPath.getOrElse(List.empty)
+        ))
     }
 
     def asSearchableDraft(draft: Draft, taxonomyBundle: Option[Bundle]): Try[SearchableDraft] = {
