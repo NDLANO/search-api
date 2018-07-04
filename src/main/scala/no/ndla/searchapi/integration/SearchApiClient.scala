@@ -62,7 +62,7 @@ trait SearchApiClient {
 
       get[DomainDumpResults[T]](dumpDomainPath, params, timeout = 20000) match {
         case Success(result) =>
-          logger.info(s"Fetched chunk of ${result.results.size}...")
+          logger.info(s"Fetched chunk of ${result.results.size} $name...")
           Success(result)
         case Failure(ex) =>
           logger.error(

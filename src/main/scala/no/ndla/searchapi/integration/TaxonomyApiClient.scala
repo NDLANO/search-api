@@ -22,7 +22,7 @@ trait TaxonomyApiClient {
 
   class TaxonomyApiClient extends LazyLogging {
     implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
-    private val TaxonomyApiEndpoint = s"http://$ApiGatewayUrl/taxonomy/v1"
+    private val TaxonomyApiEndpoint = s"$ApiGatewayUrl/taxonomy/v1"
 
     def getAllResources: Try[List[Resource]] =
       get[List[Resource]](s"$TaxonomyApiEndpoint/resources/").map(_.distinct)
