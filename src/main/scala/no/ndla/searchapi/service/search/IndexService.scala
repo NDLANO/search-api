@@ -122,7 +122,7 @@ trait IndexService {
           response match {
             case Success(r) =>
               val numFailed = r.result.failures.size + failedToCreateRequests.size
-              logger.info(s"Indexed ${contents.size} documents. No of failed items: $numFailed")
+              logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
               Success(contents.size - numFailed)
             case Failure(ex) => Failure(ex)
           }

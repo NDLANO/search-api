@@ -121,7 +121,13 @@ trait SearchController {
         asQueryParam[Option[Int]](pageNo),
         asQueryParam[Option[Int]](pageSize),
         asQueryParam[Option[String]](language),
-        asQueryParam[Option[Boolean]](fallback)
+        asQueryParam[Option[Boolean]](fallback),
+        asQueryParam[Option[String]](subjects),
+        asQueryParam[Option[String]](sort),
+        asQueryParam[Option[String]](learningResourceIds),
+        asQueryParam[Option[String]](levels),
+        asQueryParam[Option[String]](contextTypes),
+        asQueryParam[Option[String]](languageFilter)
     )
       authorizations "oauth2"
       responseMessages response500)
@@ -132,6 +138,14 @@ trait SearchController {
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
       val query = paramOrNone(this.query.paramName)
+      val subjects = paramAsListOfString(this.subjects.paramName)
+      val sort = Sort
+        .valueOf(paramOrDefault(this.sort.paramName, ""))
+        .getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
+      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -139,13 +153,13 @@ trait SearchController {
         license = None,
         page = page,
         pageSize = pageSize,
-        sort = if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc,
-        withIdIn = List.empty,
-        taxonomyFilters = List.empty,
-        subjects = List.empty,
+        sort = sort,
+        withIdIn = idList,
+        taxonomyFilters = taxonomyFilters,
+        subjects = subjects,
         resourceTypes = List.empty,
-        learningResourceTypes = List.empty,
-        supportedLanguages = List.empty
+        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        supportedLanguages = supportedLanguagesFilter
       )
 
       groupSearch(query, settings.copy(resourceTypes = resourceTypes))
