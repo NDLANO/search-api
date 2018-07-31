@@ -10,6 +10,7 @@ package no.ndla.searchapi.model.search
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
+import no.ndla.searchapi.model.domain.article.ArticleMetaImage
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.Formats
 
@@ -45,7 +46,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("Mum", "Car", "Wroom"))
       ))
 
-    val metaImages = SearchableLanguageValues(Seq(LanguageValue("nb", "1")))
+    val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
     val original = SearchableArticle(
       id = 100,

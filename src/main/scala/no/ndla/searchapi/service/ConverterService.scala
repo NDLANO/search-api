@@ -109,13 +109,6 @@ trait ConverterService {
       api.AudioResult(audio.id, audio.title.title, url, audio.supportedLanguages)
     }
 
-    def domainModelToApiModel[T <: LanguageField[U], U](domainModel: LanguageField[U], apply: (U, String) => T): T = {
-      apply(
-        domainModel.value,
-        domainModel.language
-      )
-    }
-
     def withAgreementCopyright(article: Article): Article = {
       val agreementCopyright = article.copyright.agreementId
         .flatMap(aid => draftApiClient.getAgreementCopyright(aid))

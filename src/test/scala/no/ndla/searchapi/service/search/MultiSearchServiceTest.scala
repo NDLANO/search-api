@@ -13,6 +13,7 @@ import com.sksamuel.elastic4s.embedded.LocalNode
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.NdlaE4sClient
+import no.ndla.searchapi.model.api.MetaImage
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
@@ -459,7 +460,8 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
 
     search.totalCount should be(1)
     search.results.head.id should be(10)
-    search.results.head.metaImage should be(Some("http://api-gateway.ndla-local/image-api/raw/id/442"))
+    search.results.head.metaImage should be(
+      Some(MetaImage("http://api-gateway.ndla-local/image-api/raw/id/442", "alt", "en")))
   }
 
   test("That learningpaths without taxonomy are not returned") {

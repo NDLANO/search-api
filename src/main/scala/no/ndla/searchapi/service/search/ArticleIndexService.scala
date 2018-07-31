@@ -53,11 +53,15 @@ trait ArticleIndexService {
           textField("authors"),
           keywordField("articleType"),
           keywordField("supportedLanguages"),
-          getTaxonomyContextMapping
+          getTaxonomyContextMapping,
+          nestedField("metaImage").fields(
+            keywordField("imageId"),
+            keywordField("altText"),
+            keywordField("language")
+          )
         )
           ++
-            generateKeywordLanguageFields("metaImage") ++
-          generateLanguageSupportedFieldList("title", keepRaw = true) ++
+            generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++

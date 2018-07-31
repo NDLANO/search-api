@@ -54,9 +54,13 @@ trait DraftIndexService {
           keywordField("articleType"),
           keywordField("supportedLanguages"),
           textField("notes"),
-          getTaxonomyContextMapping
+          getTaxonomyContextMapping,
+          nestedField("metaImage").fields(
+            keywordField("imageId"),
+            keywordField("altText"),
+            keywordField("language")
+          )
         ) ++
-          generateKeywordLanguageFields("metaImage") ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("content") ++

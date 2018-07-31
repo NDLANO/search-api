@@ -7,6 +7,4 @@
 
 package no.ndla.searchapi.model.domain
 
-case class Tag(tags: Seq[String], language: String) extends LanguageField[Seq[String]] {
-  override def value: Seq[String] = tags
-}
+case class Tag(tags: Seq[String], language: String) extends LanguageField
