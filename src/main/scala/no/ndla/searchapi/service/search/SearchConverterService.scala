@@ -281,11 +281,14 @@ trait SearchConverterService {
         searchableArticle.metaDescription.languageValues.map(lv => api.MetaDescription(lv.value, lv.language))
       val visualElements =
         searchableArticle.visualElement.languageValues.map(lv => api.article.VisualElement(lv.value, lv.language))
+      val metaImages =
+        searchableArticle.metaImage.map(im => api.article.ArticleMetaImage(im.imageId, im.altText, im.language))
 
       val title = findByLanguageOrBestEffort(titles, language).getOrElse(api.Title("", Language.UnknownLanguage))
       val visualElement = findByLanguageOrBestEffort(visualElements, language)
       val introduction = findByLanguageOrBestEffort(introductions, language)
       val metaDescription = findByLanguageOrBestEffort(metaDescriptions, language)
+      val metaImage = findByLanguageOrBestEffort(metaImages, language)
 
       val url = s"${SearchApiProperties.ExternalApiUrls("article-api")}/${searchableArticle.id}"
 
@@ -295,6 +298,7 @@ trait SearchConverterService {
         visualElement,
         introduction,
         metaDescription,
+        metaImage,
         url,
         searchableArticle.license,
         searchableArticle.articleType,

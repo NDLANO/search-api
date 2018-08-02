@@ -21,6 +21,7 @@ case class ArticleSummary(
       ArticleIntroduction],
     @(ApiModelProperty @field)(description = "A metaDescription for the article") metaDescription: Option[
       MetaDescription],
+    @(ApiModelProperty @field)(description = "A meta image for the article") metaImage: Option[ArticleMetaImage],
     @(ApiModelProperty @field)(
       description = "The full url to where the complete information about the article can be found") url: String,
     @(ApiModelProperty @field)(description = "Describes the license of the article") license: String,
