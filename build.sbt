@@ -2,7 +2,7 @@ import java.util.Properties
 import sbt._
 import Keys._
 
-val Scalaversion = "2.12.2"
+val Scalaversion = "2.12.6"
 val Scalatraversion = "2.5.1"
 val ScalaLoggingVersion = "3.5.0"
 val Log4JVersion = "2.11.0"
@@ -70,15 +70,6 @@ lazy val search_api = (project in file("."))
 
 assembly / assemblyJarName := "search-api.jar"
 assembly / mainClass := Some("no.ndla.searchapi.JettyLauncher")
-assembly / assemblyMergeStrategy := {
-  case "mime.types"                                                  => MergeStrategy.filterDistinctLines
-  case PathList("org", "joda", "convert", "ToString.class")          => MergeStrategy.first
-  case PathList("org", "joda", "convert", "FromString.class")        => MergeStrategy.first
-  case PathList("org", "joda", "time", "base", "BaseDateTime.class") => MergeStrategy.first
-  case x =>
-    val oldStrategy = (assembly / assemblyMergeStrategy).value
-    oldStrategy(x)
-}
 
 val checkfmt = taskKey[Boolean]("check for code style errors")
 checkfmt := {

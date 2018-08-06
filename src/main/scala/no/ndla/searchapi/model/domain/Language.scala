@@ -31,7 +31,7 @@ object Language {
 
   val supportedLanguages = languageAnalyzers.map(_.lang)
 
-  def findByLanguageOrBestEffort[P <: LanguageField[_]](sequence: Seq[P], language: String): Option[P] = {
+  def findByLanguageOrBestEffort[P <: LanguageField](sequence: Seq[P], language: String): Option[P] = {
     sequence
       .find(_.language == language)
       .orElse(sequence.sortBy(lf => ISO639.languagePriority.reverse.indexOf(lf.language)).lastOption)
@@ -44,7 +44,7 @@ object Language {
     }
   }
 
-  def getSupportedLanguages(sequences: Seq[WithLanguage]*): Seq[String] = {
+  def getSupportedLanguages(sequences: Seq[LanguageField]*): Seq[String] = {
     sequences.flatMap(_.map(_.language)).distinct.sortBy { lang =>
       ISO639.languagePriority.indexOf(lang)
     }
@@ -58,12 +58,8 @@ object Language {
       supportedLanguages.head
   }
 
-  def findByLanguage[T](sequence: Seq[LanguageField[T]], lang: String): Option[LanguageField[T]] = {
+  def findByLanguage[T](sequence: Seq[LanguageField], lang: String): Option[LanguageField] = {
     sequence.find(_.language == lang)
-  }
-
-  def findValueByLanguage[T](sequence: Seq[LanguageField[T]], lang: String): Option[T] = {
-    findByLanguage(sequence, lang).map(_.value)
   }
 }
 

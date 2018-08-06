@@ -19,6 +19,4 @@ case class VisualElement(
       "Html containing the visual element. May contain any legal html element, including the embed-tag") visualElement: String,
     @(ApiModelProperty @field)(description =
       "The ISO 639-1 language code describing which article translation this visual element belongs to") language: String)
-    extends LanguageField[String] {
-  override def value: String = visualElement
-}
+    extends LanguageField

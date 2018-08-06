@@ -10,9 +10,7 @@ package no.ndla.searchapi.model.domain.learningpath
 import no.ndla.searchapi.model.api.{ValidationException, ValidationMessage}
 import no.ndla.searchapi.model.domain.LanguageField
 
-case class EmbedUrl(url: String, language: String, embedType: EmbedType.Value) extends LanguageField[String] {
-  override def value: String = url
-}
+case class EmbedUrl(url: String, language: String, embedType: EmbedType.Value) extends LanguageField
 
 object EmbedType extends Enumeration {
 

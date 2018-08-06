@@ -18,4 +18,4 @@ case class Introduction(@(ApiModelProperty @field)(description =
                           "The introduction to the learningpath. Basic HTML allowed") introduction: String,
                         @(ApiModelProperty @field)(description =
                           "ISO 639-1 code that represents the language used in introduction") language: String)
-    extends LanguageField[String] { override def value: String = introduction }
+    extends LanguageField
