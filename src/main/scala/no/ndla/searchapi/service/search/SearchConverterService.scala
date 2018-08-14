@@ -479,8 +479,13 @@ trait SearchConverterService {
         api.MetaDescription("", Language.UnknownLanguage))
       val url = s"${SearchApiProperties.ExternalApiUrls("learningpath-api")}/${searchableLearningPath.id}"
       val metaImage =
-        searchableLearningPath.coverPhotoId.map(id =>
-          api.MetaImage(id, "", s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id"))
+        searchableLearningPath.coverPhotoId.map(
+          id =>
+            api.MetaImage(
+              url = s"${SearchApiProperties.ExternalApiUrls("raw-image")}/$id",
+              alt = "",
+              language = language
+          ))
 
       MultiSearchSummary(
         id = searchableLearningPath.id,
