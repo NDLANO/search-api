@@ -142,8 +142,6 @@ trait LearningPathSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(sort, language))
 
-        val json = e4sClient.httpClient.show(searchToExecute)
-
         e4sClient.execute(searchToExecute) match {
           case Success(response) =>
             Success(
