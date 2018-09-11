@@ -60,6 +60,10 @@ lazy val search_api = (project in file("."))
       "org.eclipse.jetty" % "jetty-plus" % Jettyversion % "container",
       "org.json4s" %% "json4s-native" % "3.5.0",
       "org.json4s" %% "json4s-ext" % "3.5.0",
+      "log4j" % "log4j" % "1.2.16",
+      "net.bull.javamelody" % "javamelody-core" % "1.73.1",
+      "org.jrobin" % "jrobin" % "1.5.9",
+      "com.amazonaws" % "aws-java-sdk-cloudwatch" % AwsSdkversion,
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
       "org.mockito" % "mockito-all" % MockitoVersion % "test"
@@ -98,7 +102,7 @@ docker / dockerfile := {
 
   new Dockerfile {
     from("openjdk:8-jre-alpine")
-
+    run("apk", "--no-cache", "add", "ttf-dejavu")
     add(artifact, artifactTargetPath)
     entryPoint("java", "-Dorg.scalatra.environment=production", "-Xmx512M", "-jar", artifactTargetPath)
   }
