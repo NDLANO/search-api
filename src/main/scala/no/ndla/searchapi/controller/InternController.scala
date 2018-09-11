@@ -13,10 +13,17 @@ import javax.servlet.http.HttpServletRequest
 import no.ndla.network.jwt.JWTExtractor
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.model.api.InvalidIndexBodyException
+import no.ndla.searchapi.model.domain.article.{Article, LearningResourceType}
+import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Draft}
+import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{ReindexResult, RequestInfo}
+import no.ndla.searchapi.model.search.SearchableLanguageFormats
 import no.ndla.searchapi.service.search.{ArticleIndexService, DraftIndexService, IndexService, LearningPathIndexService}
 import org.apache.logging.log4j.ThreadContext
+import org.json4s.ext.EnumNameSerializer
 import org.json4s.{DefaultFormats, Formats}
+import org.json4s.native.Serialization.read
 import org.scalatra._
 
 import scala.concurrent._
@@ -60,6 +67,42 @@ trait InternController {
             .mkString(", and ")
 
           InternalServerError(failedIndexResults)
+      }
+    }
+
+    delete("/:type/:id") {
+      val indexType = params("type")
+      val documentId = long("id")
+
+      indexType match {
+        case articleIndexService.documentType      => articleIndexService.deleteDocument(documentId)
+        case draftIndexService.documentType        => draftIndexService.deleteDocument(documentId)
+        case learningPathIndexService.documentType => learningPathIndexService.deleteDocument(documentId)
+      }
+    }
+
+    private def parseBody[T](body: String)(implicit mf: Manifest[T]): Try[T] = {
+      Try(parse(body).camelizeKeys.extract[T])
+        .recoverWith { case _ => Failure(InvalidIndexBodyException()) }
+    }
+
+    post("/:type/") {
+      val indexType = params("type")
+
+      val indexedTry = indexType match {
+        case articleIndexService.documentType =>
+          parseBody[Article](request.body).flatMap(a => articleIndexService.indexDocument(a))
+        case draftIndexService.documentType =>
+          parseBody[Draft](request.body).flatMap(d => draftIndexService.indexDocument(d))
+        case learningPathIndexService.documentType =>
+          parseBody[LearningPath](request.body).flatMap(l => learningPathIndexService.indexDocument(l))
+      }
+
+      indexedTry match {
+        case Success(doc) => Created(doc)
+        case Failure(ex) =>
+          logger.error("Could not index document...", ex)
+          errorHandler(ex)
       }
     }
 
