@@ -37,6 +37,7 @@ object Error {
   val VALIDATION = "VALIDATION"
   val WINDOW_TOO_LARGE = "RESULT_WINDOW_TOO_LARGE"
   val INDEX_MISSING = "INDEX_MISSING"
+  val INVALID_BODY = "INVALID_BODY"
 
   val GENERIC_DESCRIPTION =
     s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
@@ -48,8 +49,12 @@ object Error {
   val INDEX_MISSING_DESCRIPTION =
     s"Ooops. Our search index is not available at the moment, but we are trying to recreate it. Please try again in a few minutes. Feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
 
+  val INVALID_BODY_DESCRIPTION =
+    "Unable to index the requested document because body was invalid."
+
   val GenericError = Error(GENERIC, GENERIC_DESCRIPTION)
   val IndexMissingError = Error(INDEX_MISSING, INDEX_MISSING_DESCRIPTION)
+  val InvalidBody = Error(INVALID_BODY, INVALID_BODY_DESCRIPTION)
 }
 
 class ValidationException(message: String = "Validation Error", val errors: Seq[ValidationMessage])
@@ -59,3 +64,4 @@ case class ResultWindowTooLargeException(message: String = Error.WINDOW_TOO_LARG
     extends RuntimeException(message)
 case class ElasticIndexingException(message: String) extends RuntimeException(message)
 case class AccessDeniedException(message: String) extends RuntimeException(message)
+case class InvalidIndexBodyException(message: String = Error.INVALID_BODY_DESCRIPTION) extends RuntimeException(message)
