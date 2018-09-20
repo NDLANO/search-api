@@ -72,7 +72,6 @@ trait IndexService {
     def sendToElastic(indexName: String)(implicit mf: Manifest[D]): Try[Int] = {
       taxonomyApiClient.getTaxonomyBundle match {
         case Success(bundle) =>
-          logger.info("Successfully fetched taxonomy...")
           val stream = apiClient.getChunks[D]
           val chunks = stream
             .map({

@@ -10,7 +10,7 @@ package no.ndla.searchapi
 import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Draft}
+import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.domain.learningpath.{
   Description,
   LearningPath,
@@ -372,7 +372,6 @@ object TestData {
   val sampleDraftWithPublicDomain = Draft(
     Option(1),
     Option(1),
-    ArticleStatus.ValueSet(ArticleStatus.DRAFT),
     Seq(Title("test", "en")),
     Seq(ArticleContent("<section><div>test</div></section>", "en")),
     Some(draftPublicDomainCopyright),

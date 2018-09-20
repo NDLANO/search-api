@@ -8,6 +8,7 @@
 
 package no.ndla.searchapi.controller
 
+import com.typesafe.scalalogging.LazyLogging
 import javax.servlet.http.HttpServletRequest
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties.{CorrelationIdHeader, CorrelationIdKey}
@@ -18,17 +19,13 @@ import no.ndla.searchapi.model.api.{
   ValidationException,
   ValidationMessage
 }
-import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
-import no.ndla.searchapi.model.search.SearchableLanguageFormats
 import org.apache.logging.log4j.ThreadContext
 import org.elasticsearch.index.IndexNotFoundException
-import org.json4s.ParserUtil.ParseException
+import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization.read
-import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.json.NativeJsonSupport
 
@@ -42,7 +39,6 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
       new EnumNameSerializer(StepType) +
       new EnumNameSerializer(StepStatus) +
       new EnumNameSerializer(EmbedType) +
-      new EnumNameSerializer(ArticleStatus) +
       new EnumNameSerializer(LearningResourceType) ++
       org.json4s.ext.JodaTimeSerializers.all
 

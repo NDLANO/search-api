@@ -9,21 +9,13 @@ package no.ndla.searchapi.controller
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import javax.servlet.http.HttpServletRequest
-import no.ndla.network.jwt.JWTExtractor
-import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.api.InvalidIndexBodyException
-import no.ndla.searchapi.model.domain.article.{Article, LearningResourceType}
-import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Draft}
+import no.ndla.searchapi.model.domain.article.Article
+import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{ReindexResult, RequestInfo}
-import no.ndla.searchapi.model.search.SearchableLanguageFormats
 import no.ndla.searchapi.service.search.{ArticleIndexService, DraftIndexService, IndexService, LearningPathIndexService}
-import org.apache.logging.log4j.ThreadContext
-import org.json4s.ext.EnumNameSerializer
-import org.json4s.{DefaultFormats, Formats}
-import org.json4s.native.Serialization.read
 import org.scalatra._
 
 import scala.concurrent._

@@ -12,7 +12,7 @@ import com.sksamuel.elastic4s.indexes.IndexDefinition
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.DraftApiClient
+import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyApiClient}
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.search.{SearchableDraft, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.Bundle
@@ -22,7 +22,7 @@ import org.json4s.native.Serialization.write
 import scala.util.{Failure, Success, Try}
 
 trait DraftIndexService {
-  this: SearchConverterService with IndexService with DraftApiClient =>
+  this: SearchConverterService with IndexService with DraftApiClient with TaxonomyApiClient =>
   val draftIndexService: DraftIndexService
 
   class DraftIndexService extends LazyLogging with IndexService[Draft] {
