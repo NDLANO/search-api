@@ -7,24 +7,22 @@
 
 package no.ndla.searchapi.integration
 
-import no.ndla.network.NdlaClient
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.api.ApiSearchException
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, SearchParams}
+import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
-import org.json4s.{DefaultFormats, Formats}
+import scalaj.http.Http
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-import scalaj.http.Http
-
 import scala.math.ceil
+import scala.util.{Failure, Success, Try}
 
 trait SearchApiClient {
   this: NdlaClient with LazyLogging =>
@@ -81,7 +79,6 @@ trait SearchApiClient {
           new EnumNameSerializer(StepType) +
           new EnumNameSerializer(StepStatus) +
           new EnumNameSerializer(EmbedType) +
-          new EnumNameSerializer(ArticleStatus) +
           new EnumNameSerializer(LearningResourceType) ++
           org.json4s.ext.JodaTimeSerializers.all
 
