@@ -47,7 +47,7 @@ trait SearchApiClient {
 
           iterator
         case Failure(ex) =>
-          logger.error(s"Could not fetch initial chunk from $baseUrl/$dumpDomainPath")
+          logger.error(s"Could not fetch initial chunk from http://$baseUrl/$dumpDomainPath")
           Iterator(Failure(ex))
       }
     }
@@ -64,7 +64,7 @@ trait SearchApiClient {
           Success(result)
         case Failure(ex) =>
           logger.error(
-            s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$dumpDomainPath'")
+            s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from 'http://$baseUrl/$dumpDomainPath'")
           Failure(ex)
       }
     }
@@ -82,7 +82,8 @@ trait SearchApiClient {
           new EnumNameSerializer(LearningResourceType) ++
           org.json4s.ext.JodaTimeSerializers.all
 
-      ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)).timeout(timeout, timeout))
+      ndlaClient.fetchWithForwardedAuth[T](
+        Http((baseUrl / path).withScheme("http").addParams(params.toList)).timeout(timeout, timeout))
     }
 
     protected def search[T <: ApiSearchResults](searchParams: SearchParams)(

@@ -30,7 +30,7 @@ trait DraftApiClient {
       search[ArticleApiSearchResults](searchParams)
 
     private val draftApiGetAgreementEndpoint =
-      s"http://${SearchApiProperties.DraftApiUrl}/draft-api/v1/agreements/:agreement_id"
+      s"http://${SearchApiProperties.DraftApiHost}/draft-api/v1/agreements/:agreement_id"
 
     def agreementExists(agreementId: Long): Boolean =
       getAgreementCopyright(agreementId).nonEmpty

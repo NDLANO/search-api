@@ -8,7 +8,7 @@
 package no.ndla.searchapi.integration
 
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
+import no.ndla.searchapi.SearchApiProperties.ApiGatewayHost
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.model.taxonomy._
 import org.json4s.DefaultFormats
@@ -22,7 +22,7 @@ trait TaxonomyApiClient {
 
   class TaxonomyApiClient extends LazyLogging {
     implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
-    private val TaxonomyApiEndpoint = s"$ApiGatewayUrl/taxonomy/v1"
+    private val TaxonomyApiEndpoint = s"http://$ApiGatewayHost/taxonomy/v1"
 
     def getAllResources: Try[List[Resource]] =
       get[List[Resource]](s"$TaxonomyApiEndpoint/resources/").map(_.distinct)

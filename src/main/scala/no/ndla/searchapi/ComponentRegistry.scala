@@ -56,11 +56,11 @@ object ComponentRegistry
 
   lazy val taxonomyApiClient = new TaxonomyApiClient
 
-  lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
-  lazy val learningPathApiClient = new LearningPathApiClient(LearningpathApiUrl)
-  lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
-  lazy val audioApiClient = new AudioApiClient(AudioApiUrl)
-  lazy val articleApiClient = new ArticleApiClient(ArticleApiUrl)
+  lazy val draftApiClient = new DraftApiClient(DraftApiHost)
+  lazy val learningPathApiClient = new LearningPathApiClient(LearningpathApiHost)
+  lazy val imageApiClient = new ImageApiClient(ImageApiHost)
+  lazy val audioApiClient = new AudioApiClient(AudioApiHost)
+  lazy val articleApiClient = new ArticleApiClient(ArticleApiHost)
   lazy val SearchClients = Map[String, SearchApiClient](
     draftApiClient.name -> draftApiClient,
     learningPathApiClient.name -> learningPathApiClient,
