@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
-import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
+import com.sksamuel.elastic4s.searches.queries.BoolQuery
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.SearchIndexes
@@ -89,7 +89,7 @@ trait DraftSearchService {
                       sort: Sort.Value,
                       page: Int,
                       pageSize: Int,
-                      queryBuilder: BoolQueryDefinition,
+                      queryBuilder: BoolQuery,
                       articleTypes: Seq[String],
                       fallback: Boolean): Try[SearchResult[DraftSummary]] = {
 

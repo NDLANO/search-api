@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.integration
 
-import com.netaporter.uri.dsl._
+import io.lemonlabs.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties

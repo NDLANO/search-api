@@ -12,7 +12,7 @@ import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.api
 import no.ndla.searchapi.SearchApiProperties.Domain
 import no.ndla.network.ApplicationUrl
-import com.netaporter.uri.dsl._
+import io.lemonlabs.uri.dsl._
 import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model
 import no.ndla.searchapi.model.api.MetaDescription
@@ -78,8 +78,8 @@ trait ConverterService {
     }
 
     private def imageSearchResultToApi(image: ImageApiSearchResult): api.ImageResult = {
-      val scheme = ApplicationUrl.get.scheme.getOrElse("https://")
-      val host = ApplicationUrl.get.host.getOrElse(Domain)
+      val scheme = ApplicationUrl.get.schemeOption.getOrElse("https://")
+      val host = ApplicationUrl.get.hostOption.map(_.toString).getOrElse(Domain)
 
       val previewUrl = image.previewUrl.withHost(host).withScheme(scheme)
       val metaUrl = image.metaUrl.withHost(host).withScheme(scheme)
@@ -102,8 +102,8 @@ trait ConverterService {
     }
 
     private def audioSearchResultToApi(audio: AudioApiSearchResult): api.AudioResult = {
-      val scheme = ApplicationUrl.get.scheme.getOrElse("https://")
-      val host = ApplicationUrl.get.host.getOrElse(Domain)
+      val scheme = ApplicationUrl.get.schemeOption.getOrElse("https://")
+      val host = ApplicationUrl.get.hostOption.map(_.toString).getOrElse(Domain)
 
       val url = audio.url.withHost(host).withScheme(scheme)
       api.AudioResult(audio.id, audio.title.title, url, audio.supportedLanguages)

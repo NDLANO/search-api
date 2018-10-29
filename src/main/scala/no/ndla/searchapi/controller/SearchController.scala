@@ -113,7 +113,7 @@ trait SearchController {
 
     private val groupSearchDoc = (apiOperation[Seq[GroupSearchResult]]("groupSearch")
       summary "Search across multiple groups of learning resources"
-      notes "Search across multiple groups of learning resources"
+      description "Search across multiple groups of learning resources"
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[String]](query),
@@ -213,7 +213,7 @@ trait SearchController {
     private val draftSearchDoc =
       (apiOperation[Seq[SearchResults]]("searchAPIs")
         summary "search across APIs"
-        notes "search across APIs"
+        description "search across APIs"
         parameters (
           asHeaderParam[Option[String]](correlationId),
           asQueryParam[Option[String]](query),
@@ -287,7 +287,7 @@ trait SearchController {
     private val articleSearchDoc =
       (apiOperation[SearchResult[ArticleSummary]]("getAllArticles")
         summary "Find articles"
-        notes "Shows all articles. You can search it too."
+        description "Shows all articles. You can search it too."
         parameters (
           asHeaderParam[Option[String]](correlationId),
           asQueryParam[Option[String]](query),
@@ -357,7 +357,7 @@ trait SearchController {
 
     private val learningPathSearchDoc = (apiOperation[SearchResult[LearningPathSummary]]("getLearningpaths")
       summary "Find learningpaths"
-      notes "Shows all learningpaths. You can search too."
+      description "Shows all learningpaths. You can search too."
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[String]](query),
@@ -386,7 +386,7 @@ trait SearchController {
 
     private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
       summary "Find learning resources"
-      notes "Shows all learning resources. You can search too."
+      description "Shows all learning resources. You can search too."
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[Int]](pageNo),
@@ -451,7 +451,7 @@ trait SearchController {
 
     private val multiSearchDraftDoc = (apiOperation[MultiSearchResult]("searchDraftLearningResources")
       summary "Find draft learning resources"
-      notes "Shows all draft learning resources. You can search too."
+      description "Shows all draft learning resources. You can search too."
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[Int]](pageNo),

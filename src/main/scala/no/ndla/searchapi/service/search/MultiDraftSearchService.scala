@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
-import com.sksamuel.elastic4s.searches.queries.{BoolQueryDefinition, QueryDefinition}
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
@@ -83,13 +83,13 @@ trait MultiDraftSearchService {
           )
       })
 
-      val boolQueries: List[BoolQueryDefinition] = List(contentSearch, noteSearch).flatten
+      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQueryDefinition): Try[MultiSearchResult] = {
+    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[MultiSearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
@@ -127,7 +127,7 @@ trait MultiDraftSearchService {
       * @param settings SearchSettings object.
       * @return List of QueryDefinitions.
       */
-    private def getSearchFilters(settings: MultiDraftSearchSettings): List[QueryDefinition] = {
+    private def getSearchFilters(settings: MultiDraftSearchSettings): List[Query] = {
       val languageFilter = settings.language match {
         case "" | Language.AllLanguages =>
           None

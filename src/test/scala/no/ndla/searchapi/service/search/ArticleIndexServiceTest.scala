@@ -23,7 +23,7 @@ class ArticleIndexServiceTest extends UnitSuite with TestEnvironment {
   val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
   val localNode = LocalNode(localNodeSettings)
 
-  override val e4sClient = NdlaE4sClient(localNode.http(true))
+  override val e4sClient = NdlaE4sClient(localNode.client(true))
   override val articleIndexService = new ArticleIndexService
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService

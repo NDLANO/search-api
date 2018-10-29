@@ -17,7 +17,7 @@ import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.search.settings.SearchSettings
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.mockito.Mockito._
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 
 import scala.util.Success
 

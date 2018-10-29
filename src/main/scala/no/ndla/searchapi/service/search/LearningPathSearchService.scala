@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.ScoreMode
-import com.sksamuel.elastic4s.searches.queries.BoolQueryDefinition
+import com.sksamuel.elastic4s.searches.queries.BoolQuery
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
@@ -110,7 +110,7 @@ trait LearningPathSearchService {
       executeSearch(fullQuery, withIdIn, taggedWith, sort, searchLanguage, page, pageSize, fallback)
     }
 
-    def executeSearch(queryBuilder: BoolQueryDefinition,
+    def executeSearch(queryBuilder: BoolQuery,
                       withIdIn: List[Long],
                       taggedWith: Option[String],
                       sort: Sort.Value,

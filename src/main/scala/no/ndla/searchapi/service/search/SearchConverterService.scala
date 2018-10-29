@@ -216,7 +216,7 @@ trait SearchConverterService {
 
     def asLearningPathApiLicense(license: String): api.learningpath.License = {
       getLicense(license) match {
-        case Some(l) => api.learningpath.License(l.license, Option(l.description), l.url)
+        case Some(l) => api.learningpath.License(l.license.toString, Option(l.description), l.url)
         case None    => api.learningpath.License(license, Some("Invalid license"), None)
       }
     }

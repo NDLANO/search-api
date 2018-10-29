@@ -25,7 +25,7 @@ class LearningPathSearchServiceTest extends UnitSuite with TestEnvironment {
   val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
   val localNode = LocalNode(localNodeSettings)
 
-  override val e4sClient = NdlaE4sClient(localNode.http(true))
+  override val e4sClient = NdlaE4sClient(localNode.client(true))
 
   override val searchConverterService: SearchConverterService = new SearchConverterService
   override val learningPathIndexService = new LearningPathIndexService
