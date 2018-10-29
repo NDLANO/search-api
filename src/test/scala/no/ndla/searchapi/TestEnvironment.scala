@@ -22,10 +22,8 @@ import org.scalatest.mockito.MockitoSugar._
 trait TestEnvironment
     extends ArticleApiClient
     with ArticleIndexService
-    with ArticleSearchService
     with MultiSearchService
     with DraftIndexService
-    with DraftSearchService
     with MultiDraftSearchService
     with AudioApiClient
     with ConverterService
@@ -44,7 +42,6 @@ trait TestEnvironment
     with ApiSearchService
     with SearchController
     with LearningPathIndexService
-    with LearningPathSearchService
     with InternController
     with SearchApiClient {
   val searchController = mock[SearchController]
@@ -73,12 +70,9 @@ trait TestEnvironment
   val searchService = mock[ApiSearchService]
   val converterService = mock[ConverterService]
   val searchConverterService = mock[SearchConverterService]
-  val articleSearchService = mock[ArticleSearchService]
   val multiSearchService = mock[MultiSearchService]
   val articleIndexService = mock[ArticleIndexService]
   val learningPathIndexService = mock[LearningPathIndexService]
-  val learningPathSearchService = mock[LearningPathSearchService]
   val draftIndexService = mock[DraftIndexService]
-  val draftSearchService = mock[DraftSearchService]
   val multiDraftSearchService = mock[MultiDraftSearchService]
 }

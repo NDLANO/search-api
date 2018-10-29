@@ -215,6 +215,7 @@ trait SearchConverterService {
     }
 
     def asLearningPathApiLicense(license: String): api.learningpath.License = {
+      // TODO: Check if doing l.license.toString does what we want. Otherwise update this with License.Value i guess :)
       getLicense(license) match {
         case Some(l) => api.learningpath.License(l.license.toString, Option(l.description), l.url)
         case None    => api.learningpath.License(license, Some("Invalid license"), None)
