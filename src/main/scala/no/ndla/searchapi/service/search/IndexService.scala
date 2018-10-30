@@ -11,11 +11,11 @@ package no.ndla.searchapi.service.search
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import com.sksamuel.elastic4s.alias.AliasActionDefinition
+import com.sksamuel.elastic4s.alias.AliasAction
 import com.typesafe.scalalogging.LazyLogging
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.indexes.IndexDefinition
-import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedFieldDefinition}
+import com.sksamuel.elastic4s.indexes.IndexRequest
+import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
@@ -35,7 +35,7 @@ trait IndexService {
 
     def getMapping: MappingDefinition
 
-    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexDefinition]
+    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexRequest]
 
     def indexDocument(imported: D, taxonomyBundle: Option[Bundle] = None): Try[D] = {
       for {
@@ -183,9 +183,9 @@ trait IndexService {
       } else {
         val actions = oldIndexName match {
           case None =>
-            List[AliasActionDefinition](addAlias(searchIndex).on(newIndexName))
+            List[AliasAction](addAlias(searchIndex).on(newIndexName))
           case Some(oldIndex) =>
-            List[AliasActionDefinition](removeAlias(searchIndex).on(oldIndex), addAlias(searchIndex).on(newIndexName))
+            List[AliasAction](removeAlias(searchIndex).on(oldIndex), addAlias(searchIndex).on(newIndexName))
         }
 
         e4sClient.execute(aliases(actions)) match {
@@ -315,7 +315,7 @@ trait IndexService {
       languageAnalyzers.map(langAnalyzer => keywordField(s"$fieldName.${langAnalyzer.lang}"))
     }
 
-    protected def getTaxonomyContextMapping: NestedFieldDefinition = {
+    protected def getTaxonomyContextMapping: NestedField = {
       nestedField("contexts").fields(
         List(
           keywordField("id"),

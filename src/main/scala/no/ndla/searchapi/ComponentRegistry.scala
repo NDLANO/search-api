@@ -19,11 +19,8 @@ import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClie
 object ComponentRegistry
     extends ArticleApiClient
     with ArticleIndexService
-    with ArticleSearchService
     with LearningPathIndexService
-    with LearningPathSearchService
     with DraftIndexService
-    with DraftSearchService
     with MultiSearchService
     with MultiDraftSearchService
     with AudioApiClient
@@ -71,12 +68,9 @@ object ComponentRegistry
   lazy val searchService = new ApiSearchService
   lazy val converterService = new ConverterService
   lazy val searchConverterService = new SearchConverterService
-  lazy val articleSearchService = new ArticleSearchService
   lazy val multiSearchService = new MultiSearchService
   lazy val articleIndexService = new ArticleIndexService
   lazy val learningPathIndexService = new LearningPathIndexService
-  lazy val learningPathSearchService = new LearningPathSearchService
   lazy val draftIndexService = new DraftIndexService
-  lazy val draftSearchService = new DraftSearchService
   lazy val multiDraftSearchService = new MultiDraftSearchService
 }

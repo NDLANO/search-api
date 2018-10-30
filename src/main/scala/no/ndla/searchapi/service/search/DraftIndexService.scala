@@ -8,7 +8,7 @@
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.indexes.IndexDefinition
+import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
@@ -33,7 +33,7 @@ trait DraftIndexService {
 
     override def createIndexRequest(domainModel: Draft,
                                     indexName: String,
-                                    taxonomyBundle: Option[Bundle]): Try[IndexDefinition] = {
+                                    taxonomyBundle: Option[Bundle]): Try[IndexRequest] = {
       searchConverterService.asSearchableDraft(domainModel, taxonomyBundle) match {
         case Success(searchableDraft) =>
           val source = write(searchableDraft)

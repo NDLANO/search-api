@@ -12,26 +12,18 @@ import java.util.concurrent.{Executors, TimeUnit}
 
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.SearchApiClient
-import no.ndla.searchapi.model.api.article.ArticleSummary
-import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.api.{
   Error,
   GroupSearchResult,
   GroupSummary,
   MultiSearchResult,
-  SearchResult,
   SearchResults,
   ValidationError
 }
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
-import no.ndla.searchapi.service.search.{
-  ArticleSearchService,
-  LearningPathSearchService,
-  MultiDraftSearchService,
-  MultiSearchService
-}
+import no.ndla.searchapi.service.search.{MultiDraftSearchService, MultiSearchService}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport, SwaggerSupportSyntax}
@@ -42,13 +34,7 @@ import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorServic
 import scala.util.{Failure, Success, Try}
 
 trait SearchController {
-  this: ApiSearchService
-    with SearchClients
-    with SearchApiClient
-    with MultiSearchService
-    with MultiDraftSearchService
-    with ArticleSearchService
-    with LearningPathSearchService =>
+  this: ApiSearchService with SearchClients with SearchApiClient with MultiSearchService with MultiDraftSearchService =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -100,8 +86,6 @@ trait SearchController {
       "language-filter",
       "A comma separated list of ISO 639-1 language codes that the learning resource can be available in.")
 
-    private val tag = Param("tag", "Return only Learningpaths that are tagged with this exact tag.")
-
     private def asQueryParam[T: Manifest: NotNothing](param: Param) =
       queryParam[T](param.paramName).description(param.description)
 
@@ -113,7 +97,7 @@ trait SearchController {
 
     private val groupSearchDoc = (apiOperation[Seq[GroupSearchResult]]("groupSearch")
       summary "Search across multiple groups of learning resources"
-      notes "Search across multiple groups of learning resources"
+      description "Search across multiple groups of learning resources"
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[String]](query),
@@ -213,7 +197,7 @@ trait SearchController {
     private val draftSearchDoc =
       (apiOperation[Seq[SearchResults]]("searchAPIs")
         summary "search across APIs"
-        notes "search across APIs"
+        description "search across APIs"
         parameters (
           asHeaderParam[Option[String]](correlationId),
           asQueryParam[Option[String]](query),
@@ -242,151 +226,9 @@ trait SearchController {
       searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), apisToSearch)
     }
 
-    private def articleSearch(query: Option[String],
-                              sort: Option[Sort.Value],
-                              language: String,
-                              license: Option[String],
-                              page: Int,
-                              pageSize: Int,
-                              idList: List[Long],
-                              articleTypesFilter: Seq[String],
-                              fallback: Boolean) = {
-      val result = query match {
-        case Some(q) =>
-          articleSearchService.matchingQuery(
-            query = q,
-            withIdIn = idList,
-            searchLanguage = language,
-            license = license,
-            page = page,
-            pageSize = if (idList.isEmpty) pageSize else idList.size,
-            sort = sort.getOrElse(Sort.ByRelevanceDesc),
-            if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
-            fallback = fallback
-          )
-
-        case None =>
-          articleSearchService.all(
-            withIdIn = idList,
-            language = language,
-            license = license,
-            page = page,
-            pageSize = if (idList.isEmpty) pageSize else idList.size,
-            sort = sort.getOrElse(Sort.ByIdAsc),
-            if (articleTypesFilter.isEmpty) LearningResourceType.all else articleTypesFilter,
-            fallback = fallback
-          )
-      }
-
-      result match {
-        case Success(searchResult) => searchResult
-        case Failure(ex)           => errorHandler(ex)
-      }
-    }
-
-    private val articleSearchDoc =
-      (apiOperation[SearchResult[ArticleSummary]]("getAllArticles")
-        summary "Find articles"
-        notes "Shows all articles. You can search it too."
-        parameters (
-          asHeaderParam[Option[String]](correlationId),
-          asQueryParam[Option[String]](query),
-          asQueryParam[Option[String]](sort),
-          asQueryParam[Option[String]](language),
-          asQueryParam[Option[String]](license),
-          asQueryParam[Option[Int]](pageSize),
-          asQueryParam[Option[Int]](pageNo),
-          asQueryParam[Option[String]](learningResourceIds),
-          asQueryParam[Option[String]](contextTypes),
-          asQueryParam[Option[Boolean]](fallback)
-      )
-        authorizations "oauth2"
-        responseMessages response500)
-    get("/article/", operation(articleSearchDoc)) {
-      val query = paramOrNone(this.query.paramName)
-      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
-      val license = paramOrNone(this.license.paramName)
-      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
-      val page = intOrDefault(this.pageNo.paramName, 1)
-      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
-      val articleTypesFilter = paramAsListOfString(this.contextTypes.paramName)
-      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
-
-      articleSearch(query, sort, language, license, page, pageSize, idList, articleTypesFilter, fallback)
-    }
-
-    private def learningPathSearch(query: Option[String],
-                                   withIdIn: List[Long],
-                                   taggedWith: Option[String],
-                                   sort: Option[Sort.Value],
-                                   language: String,
-                                   page: Int,
-                                   pageSize: Int,
-                                   fallback: Boolean) = {
-
-      val result = query match {
-        case Some(q) =>
-          learningPathSearchService.matchingQuery(
-            query = q,
-            withIdIn = withIdIn,
-            taggedWith = taggedWith,
-            language = language,
-            sort = sort.getOrElse(Sort.ByRelevanceDesc),
-            page = page,
-            pageSize = pageSize,
-            fallback = fallback
-          )
-        case None =>
-          learningPathSearchService.all(
-            withIdIn = withIdIn,
-            taggedWith = taggedWith,
-            language = language,
-            sort = sort.getOrElse(Sort.ByTitleAsc),
-            page = page,
-            pageSize = pageSize,
-            fallback = fallback
-          )
-      }
-
-      result match {
-        case Success(searchResult) => searchResult
-        case Failure(ex)           => errorHandler(ex)
-      }
-    }
-
-    private val learningPathSearchDoc = (apiOperation[SearchResult[LearningPathSummary]]("getLearningpaths")
-      summary "Find learningpaths"
-      notes "Shows all learningpaths. You can search too."
-      parameters (
-        asHeaderParam[Option[String]](correlationId),
-        asQueryParam[Option[String]](query),
-        asQueryParam[Option[String]](sort),
-        asQueryParam[Option[String]](language),
-        asQueryParam[Option[Int]](pageSize),
-        asQueryParam[Option[Int]](pageNo),
-        asQueryParam[Option[Long]](learningResourceIds),
-        asQueryParam[Option[Boolean]](fallback),
-        asQueryParam[Option[String]](tag)
-    )
-      authorizations "oauth2"
-      responseMessages response500)
-    get("/learningpath/", operation(learningPathSearchDoc)) {
-      val query = paramOrNone(this.query.paramName)
-      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
-      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
-      val page = intOrDefault(this.pageNo.paramName, 1)
-      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
-      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
-      val taggedWith = paramOrNone(this.tag.paramName)
-
-      learningPathSearch(query, idList, taggedWith, sort, language, page, pageSize, fallback)
-    }
-
     private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
       summary "Find learning resources"
-      notes "Shows all learning resources. You can search too."
+      description "Shows all learning resources. You can search too."
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[Int]](pageNo),
@@ -451,7 +293,7 @@ trait SearchController {
 
     private val multiSearchDraftDoc = (apiOperation[MultiSearchResult]("searchDraftLearningResources")
       summary "Find draft learning resources"
-      notes "Shows all draft learning resources. You can search too."
+      description "Shows all draft learning resources. You can search too."
       parameters (
         asHeaderParam[Option[String]](correlationId),
         asQueryParam[Option[Int]](pageNo),

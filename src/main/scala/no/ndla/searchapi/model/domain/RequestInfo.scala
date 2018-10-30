@@ -23,10 +23,10 @@ case class RequestInfo(CorrelationId: Option[String],
     ThreadContext.put(SearchApiProperties.CorrelationIdKey, CorrelationId.getOrElse(""))
     CorrelationID.set(CorrelationId)
     AuthUser.setHeader(AuthHeader.getOrElse(""))
-    AuthUser.setId(UserId)
+    UserId.foreach(AuthUser.setId)
     AuthUser.setRoles(Roles)
-    AuthUser.setName(Name)
-    AuthUser.setClientId(ClientId)
+    Name.foreach(AuthUser.setName)
+    ClientId.foreach(AuthUser.setClientId)
   }
 }
 
