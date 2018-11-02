@@ -50,27 +50,33 @@ trait IndexService {
       } yield imported
     }
 
-    def indexDocuments(implicit mf: Manifest[D]): Try[ReindexResult] = synchronized {
-      val start = System.currentTimeMillis()
-      createIndexWithGeneratedName.flatMap(indexName => {
-        val operations = for {
-          numIndexed <- sendToElastic(indexName)
-          aliasTarget <- getAliasTarget
-          _ <- updateAliasTarget(aliasTarget, indexName)
-        } yield numIndexed
+    def indexDocuments(taxonomyBundle: Option[Bundle] = None)(implicit mf: Manifest[D]): Try[ReindexResult] =
+      synchronized {
+        val start = System.currentTimeMillis()
+        createIndexWithGeneratedName.flatMap(indexName => {
+          val operations = for {
+            numIndexed <- sendToElastic(indexName, taxonomyBundle)
+            aliasTarget <- getAliasTarget
+            _ <- updateAliasTarget(aliasTarget, indexName)
+          } yield numIndexed
 
-        operations match {
-          case Failure(f) =>
-            deleteIndexWithName(Some(indexName))
-            Failure(f)
-          case Success(totalIndexed) =>
-            Success(ReindexResult(totalIndexed, System.currentTimeMillis() - start))
-        }
-      })
-    }
+          operations match {
+            case Failure(f) =>
+              deleteIndexWithName(Some(indexName))
+              Failure(f)
+            case Success(totalIndexed) =>
+              Success(ReindexResult(totalIndexed, System.currentTimeMillis() - start))
+          }
+        })
+      }
 
-    def sendToElastic(indexName: String)(implicit mf: Manifest[D]): Try[Int] = {
-      taxonomyApiClient.getTaxonomyBundle match {
+    def sendToElastic(indexName: String, taxonomyBundle: Option[Bundle])(implicit mf: Manifest[D]): Try[Int] = {
+      val taxBundle = taxonomyBundle match {
+        case Some(bundle) => Success(bundle)
+        case _            => taxonomyApiClient.getTaxonomyBundle
+      }
+
+      taxBundle match {
         case Success(bundle) =>
           val stream = apiClient.getChunks[D]
           val chunks = stream

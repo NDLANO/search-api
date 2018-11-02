@@ -252,11 +252,11 @@ trait MultiDraftSearchService {
 
       val draftFuture = Future {
         requestInfo.setRequestInfo()
-        draftIndexService.indexDocuments
+        draftIndexService.indexDocuments()
       }
       val learningPathFuture = Future {
         requestInfo.setRequestInfo()
-        learningPathIndexService.indexDocuments
+        learningPathIndexService.indexDocuments()
       }
 
       handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Drafts), draftFuture)

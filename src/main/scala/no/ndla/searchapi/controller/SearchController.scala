@@ -8,7 +8,8 @@
 
 package no.ndla.searchapi.controller
 
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit.SECONDS
 
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.SearchApiClient
@@ -181,7 +182,7 @@ trait SearchController {
           Future { searchInGroup(query, group, settings.copy(resourceTypes = List(group))) })
 
         val futureSearches = Future.sequence(searches)
-        val completedSearches = Await.result(futureSearches, Duration(10, TimeUnit.SECONDS))
+        val completedSearches = Await.result(futureSearches, Duration(10, SECONDS))
 
         val failedSearches = completedSearches.collect { case Failure(ex) => ex }
         if (failedSearches.nonEmpty) {

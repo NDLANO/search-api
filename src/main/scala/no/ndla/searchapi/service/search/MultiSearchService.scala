@@ -228,11 +228,11 @@ trait MultiSearchService {
 
       val articleFuture = Future {
         requestInfo.setRequestInfo()
-        articleIndexService.indexDocuments
+        articleIndexService.indexDocuments()
       }
       val learningPathFuture = Future {
         requestInfo.setRequestInfo()
-        learningPathIndexService.indexDocuments
+        learningPathIndexService.indexDocuments()
       }
 
       handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Articles), articleFuture)

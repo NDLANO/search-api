@@ -10,6 +10,7 @@ package no.ndla.searchapi.controller
 import java.util.concurrent.{Executors, TimeUnit}
 
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.integration.TaxonomyApiClient
 import no.ndla.searchapi.model.api.InvalidIndexBodyException
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.domain.draft.Draft
@@ -23,7 +24,11 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 trait InternController {
-  this: IndexService with ArticleIndexService with LearningPathIndexService with DraftIndexService =>
+  this: IndexService
+    with ArticleIndexService
+    with LearningPathIndexService
+    with DraftIndexService
+    with TaxonomyApiClient =>
   val internController: InternController
 
   class InternController extends NdlaController {
@@ -102,7 +107,7 @@ trait InternController {
       val requestInfo = RequestInfo()
       val draftIndex = Future {
         requestInfo.setRequestInfo()
-        ("drafts", draftIndexService.indexDocuments)
+        ("drafts", draftIndexService.indexDocuments())
       }
 
       resolveResultFutures(List(draftIndex))
@@ -112,7 +117,7 @@ trait InternController {
       val requestInfo = RequestInfo()
       val articleIndex = Future {
         requestInfo.setRequestInfo()
-        ("articles", articleIndexService.indexDocuments)
+        ("articles", articleIndexService.indexDocuments())
       }
 
       resolveResultFutures(List(articleIndex))
@@ -122,7 +127,7 @@ trait InternController {
       val requestInfo = RequestInfo()
       val learningPathIndex = Future {
         requestInfo.setRequestInfo()
-        ("learningpaths", learningPathIndexService.indexDocuments)
+        ("learningpaths", learningPathIndexService.indexDocuments())
       }
 
       resolveResultFutures(List(learningPathIndex))
@@ -130,20 +135,21 @@ trait InternController {
 
     post("/index") {
       val runInBackground = booleanOrDefault("run-in-background", default = false)
-
+      val bundle = taxonomyApiClient.getTaxonomyBundle.toOption
       val requestInfo = RequestInfo()
+
       val indexes = List(
         Future {
           requestInfo.setRequestInfo()
-          ("learningpaths", learningPathIndexService.indexDocuments)
+          ("learningpaths", learningPathIndexService.indexDocuments(bundle))
         },
         Future {
           requestInfo.setRequestInfo()
-          ("articles", articleIndexService.indexDocuments)
+          ("articles", articleIndexService.indexDocuments(bundle))
         },
         Future {
           requestInfo.setRequestInfo()
-          ("drafts", draftIndexService.indexDocuments)
+          ("drafts", draftIndexService.indexDocuments(bundle))
         }
       )
       if (runInBackground) {
