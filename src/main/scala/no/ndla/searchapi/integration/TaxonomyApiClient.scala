@@ -7,14 +7,20 @@
 
 package no.ndla.searchapi.integration
 
+import java.util.concurrent.Executors
+
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
 import no.ndla.network.NdlaClient
+import no.ndla.searchapi.model.domain.RequestInfo
 import no.ndla.searchapi.model.taxonomy._
 import org.json4s.DefaultFormats
 
 import scala.util.Try
 import scalaj.http.Http
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
 trait TaxonomyApiClient {
   this: NdlaClient =>
@@ -62,37 +68,45 @@ trait TaxonomyApiClient {
 
     def getTaxonomyBundle: Try[Bundle] = {
       logger.info("Fetching taxonomy in bulk...")
-      for {
-        filters <- getAllFilters
-        relevances <- getAllRelevances
-        resourceFilterConnections <- getAllResourceFilterConnections
-        resourceResourceTypeConnections <- getAllResourceResourceTypeConnections
-        resourceTypes <- getAllResourceTypes
-        resources <- getAllResources
-        subjectTopicConnections <- getAllSubjectTopicConnections
-        subjects <- getAllSubjects
-        topicFilterConnections <- getAllTopicFilterConnections
-        topicResourceConnections <- getAllTopicResourceConnections
-        topicSubtopicConnections <- getAllTopicSubtopicConnections
-        topics <- getAllTopics
+      val startFetch = System.currentTimeMillis()
+      implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(12))
 
-        bundle <- Try(
-          Bundle(
-            filters,
-            relevances,
-            resourceFilterConnections,
-            resourceResourceTypeConnections,
-            resourceTypes,
-            resources,
-            subjectTopicConnections,
-            subjects,
-            topicFilterConnections,
-            topicResourceConnections,
-            topicSubtopicConnections,
-            topics
-          ))
+      val requestInfo = RequestInfo()
 
-      } yield bundle
+      /** Calls function in separate thread and converts Try to Future */
+      def tryToFuture[T](x: () => Try[T]) = Future { requestInfo.setRequestInfo(); x() }.flatMap(Future.fromTry)
+
+      val filters = tryToFuture(getAllFilters _)
+      val relevances = tryToFuture(getAllRelevances _)
+      val resourceFilterConnections = tryToFuture(getAllResourceFilterConnections _)
+      val resourceResourceTypeConnections = tryToFuture(getAllResourceResourceTypeConnections _)
+      val resourceTypes = tryToFuture(getAllResourceTypes _)
+      val resources = tryToFuture(getAllResources _)
+      val subjectTopicConnections = tryToFuture(getAllSubjectTopicConnections _)
+      val subjects = tryToFuture(getAllSubjects _)
+      val topicFilterConnections = tryToFuture(getAllTopicFilterConnections _)
+      val topicResourceConnections = tryToFuture(getAllTopicResourceConnections _)
+      val topicSubtopicConnections = tryToFuture(getAllTopicSubtopicConnections _)
+      val topics = tryToFuture(getAllTopics _)
+
+      val x = for {
+        f1 <- filters
+        f2 <- relevances
+        f3 <- resourceFilterConnections
+        f4 <- resourceResourceTypeConnections
+        f5 <- resourceTypes
+        f6 <- resources
+        f7 <- subjectTopicConnections
+        f8 <- subjects
+        f9 <- topicFilterConnections
+        f10 <- topicResourceConnections
+        f11 <- topicSubtopicConnections
+        f12 <- topics
+      } yield Bundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12)
+
+      val t = Try(Await.result(x, Duration(60, "seconds")))
+      logger.info(s"Fetched taxonomy in ${System.currentTimeMillis() - startFetch}ms...")
+      t
     }
 
     private def get[A](url: String, params: (String, String)*)(implicit mf: Manifest[A]): Try[A] = {
