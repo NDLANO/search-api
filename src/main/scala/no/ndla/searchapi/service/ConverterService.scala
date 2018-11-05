@@ -8,8 +8,7 @@
 package no.ndla.searchapi.service
 
 import no.ndla.searchapi.model.domain._
-import no.ndla.searchapi.model.domain
-import no.ndla.searchapi.model.api
+import no.ndla.searchapi.model.{api, domain}
 import no.ndla.searchapi.SearchApiProperties.Domain
 import no.ndla.network.ApplicationUrl
 import io.lemonlabs.uri.dsl._
@@ -84,12 +83,14 @@ trait ConverterService {
       val previewUrl = image.previewUrl.withHost(host).withScheme(scheme)
       val metaUrl = image.metaUrl.withHost(host).withScheme(scheme)
 
-      api.ImageResult(image.id.toLong,
-                      image.title.title,
-                      image.altText.alttext,
-                      previewUrl,
-                      metaUrl,
-                      image.supportedLanguages)
+      api.ImageResult(
+        image.id.toLong,
+        api.Title(image.title.title, image.title.language),
+        api.ImageAltText(image.altText.alttext, image.altText.language),
+        previewUrl,
+        metaUrl,
+        image.supportedLanguages
+      )
     }
 
     private def audioSearchResultsToApi(audios: AudioApiSearchResults): api.AudioResults = {
