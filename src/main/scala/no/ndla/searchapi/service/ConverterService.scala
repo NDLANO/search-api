@@ -14,7 +14,8 @@ import no.ndla.network.ApplicationUrl
 import io.lemonlabs.uri.dsl._
 import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model
-import no.ndla.searchapi.model.api.MetaDescription
+import no.ndla.searchapi.model.api.{LearningPathIntroduction, MetaDescription}
+import no.ndla.searchapi.model.api.article.ArticleIntroduction
 import no.ndla.searchapi.model.domain.article.Article
 
 trait ConverterService {
@@ -42,11 +43,13 @@ trait ConverterService {
     }
 
     private def articleSearchResultToApi(article: ArticleApiSearchResult): api.ArticleResult = {
-      api.ArticleResult(article.id,
-                        article.title.title,
-                        article.introduction.map(_.introduction),
-                        article.articleType,
-                        article.supportedLanguages)
+      api.ArticleResult(
+        article.id,
+        api.Title(article.title.title, article.title.language),
+        article.introduction.map(i => ArticleIntroduction(i.introduction, i.language)),
+        article.articleType,
+        article.supportedLanguages
+      )
     }
 
     private def learningpathSearchResultsToApi(learningpaths: LearningpathApiSearchResults): api.LearningpathResults = {
@@ -61,10 +64,12 @@ trait ConverterService {
     }
 
     private def learningpathSearchResultToApi(learningpath: LearningpathApiSearchResult): api.LearningpathResult = {
-      api.LearningpathResult(learningpath.id,
-                             learningpath.title.title,
-                             learningpath.introduction.introduction,
-                             learningpath.supportedLanguages)
+      api.LearningpathResult(
+        learningpath.id,
+        api.Title(learningpath.title.title, learningpath.title.language),
+        LearningPathIntroduction(learningpath.introduction.introduction, learningpath.introduction.language),
+        learningpath.supportedLanguages
+      )
     }
 
     private def imageSearchResultsToApi(images: ImageApiSearchResults): api.ImageResults = {
@@ -107,7 +112,7 @@ trait ConverterService {
       val host = ApplicationUrl.get.hostOption.map(_.toString).getOrElse(Domain)
 
       val url = audio.url.withHost(host).withScheme(scheme)
-      api.AudioResult(audio.id, audio.title.title, url, audio.supportedLanguages)
+      api.AudioResult(audio.id, api.Title(audio.title.title, audio.title.language), url, audio.supportedLanguages)
     }
 
     def withAgreementCopyright(article: Article): Article = {

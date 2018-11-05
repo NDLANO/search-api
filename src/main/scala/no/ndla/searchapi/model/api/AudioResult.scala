@@ -15,6 +15,6 @@ import scala.annotation.meta.field
 @ApiModel(description = "Search result for audio api")
 case class AudioResult(
     @(ApiModelProperty @field)(description = "The unique id of this audio") id: Long,
-    @(ApiModelProperty @field)(description = "The title of this audio") title: String,
+    @(ApiModelProperty @field)(description = "The title of this audio") title: Title,
     @(ApiModelProperty @field)(description = "A direct link to the audio") url: String,
     @(ApiModelProperty @field)(description = "List of supported languages") supportedLanguages: Seq[String])
