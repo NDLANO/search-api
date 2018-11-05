@@ -135,27 +135,30 @@ trait InternController {
 
     post("/index") {
       val runInBackground = booleanOrDefault("run-in-background", default = false)
-      val bundle = taxonomyApiClient.getTaxonomyBundle.toOption
-      val requestInfo = RequestInfo()
+      taxonomyApiClient.getTaxonomyBundle match {
+        case Success(bundle) =>
+          val requestInfo = RequestInfo()
 
-      val indexes = List(
-        Future {
-          requestInfo.setRequestInfo()
-          ("learningpaths", learningPathIndexService.indexDocuments(bundle))
-        },
-        Future {
-          requestInfo.setRequestInfo()
-          ("articles", articleIndexService.indexDocuments(bundle))
-        },
-        Future {
-          requestInfo.setRequestInfo()
-          ("drafts", draftIndexService.indexDocuments(bundle))
-        }
-      )
-      if (runInBackground) {
-        Accepted("Starting indexing process...")
-      } else {
-        resolveResultFutures(indexes)
+          val indexes = List(
+            Future {
+              requestInfo.setRequestInfo()
+              ("learningpaths", learningPathIndexService.indexDocuments(Some(bundle)))
+            },
+            Future {
+              requestInfo.setRequestInfo()
+              ("articles", articleIndexService.indexDocuments(Some(bundle)))
+            },
+            Future {
+              requestInfo.setRequestInfo()
+              ("drafts", draftIndexService.indexDocuments(Some(bundle)))
+            }
+          )
+          if (runInBackground) {
+            Accepted("Starting indexing process...")
+          } else {
+            resolveResultFutures(indexes)
+          }
+        case Failure(ex) => errorHandler(ex)
       }
     }
 
