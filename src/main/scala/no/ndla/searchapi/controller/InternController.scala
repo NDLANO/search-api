@@ -142,15 +142,15 @@ trait InternController {
           val indexes = List(
             Future {
               requestInfo.setRequestInfo()
-              ("learningpaths", learningPathIndexService.indexDocuments(Some(bundle)))
+              ("learningpaths", learningPathIndexService.indexDocuments(bundle))
             },
             Future {
               requestInfo.setRequestInfo()
-              ("articles", articleIndexService.indexDocuments(Some(bundle)))
+              ("articles", articleIndexService.indexDocuments(bundle))
             },
             Future {
               requestInfo.setRequestInfo()
-              ("drafts", draftIndexService.indexDocuments(Some(bundle)))
+              ("drafts", draftIndexService.indexDocuments(bundle))
             }
           )
           if (runInBackground) {

@@ -33,7 +33,7 @@ trait ArticleIndexService {
 
     override def createIndexRequest(domainModel: Article,
                                     indexName: String,
-                                    taxonomyBundle: Option[Bundle]): Try[IndexRequest] = {
+                                    taxonomyBundle: Bundle): Try[IndexRequest] = {
       searchConverterService.asSearchableArticle(domainModel, taxonomyBundle) match {
         case Success(searchableArticle) =>
           val source = write(searchableArticle)
