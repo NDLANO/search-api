@@ -69,25 +69,24 @@ trait IndexService {
       }
     }
 
-    def indexDocuments(taxonomyBundle: Bundle)(implicit mf: Manifest[D]): Try[ReindexResult] =
-      synchronized {
-        val start = System.currentTimeMillis()
-        createIndexWithGeneratedName.flatMap(indexName => {
-          val operations = for {
-            numIndexed <- sendToElastic(indexName, taxonomyBundle)
-            aliasTarget <- getAliasTarget
-            _ <- updateAliasTarget(aliasTarget, indexName)
-          } yield numIndexed
+    def indexDocuments(taxonomyBundle: Bundle)(implicit mf: Manifest[D]): Try[ReindexResult] = {
+      val start = System.currentTimeMillis()
+      createIndexWithGeneratedName.flatMap(indexName => {
+        val operations = for {
+          numIndexed <- sendToElastic(indexName, taxonomyBundle)
+          aliasTarget <- getAliasTarget
+          _ <- updateAliasTarget(aliasTarget, indexName)
+        } yield numIndexed
 
-          operations match {
-            case Failure(f) =>
-              deleteIndexWithName(Some(indexName))
-              Failure(f)
-            case Success(totalIndexed) =>
-              Success(ReindexResult(totalIndexed, System.currentTimeMillis() - start))
-          }
-        })
-      }
+        operations match {
+          case Failure(f) =>
+            deleteIndexWithName(Some(indexName))
+            Failure(f)
+          case Success(totalIndexed) =>
+            Success(ReindexResult(totalIndexed, System.currentTimeMillis() - start))
+        }
+      })
+    }
 
     def sendToElastic(indexName: String, taxonomyBundle: Bundle)(implicit mf: Manifest[D]): Try[Int] = {
       val stream = apiClient.getChunks[D]
@@ -191,7 +190,7 @@ trait IndexService {
       }
     }
 
-    def updateAliasTarget(oldIndexName: Option[String], newIndexName: String): Try[Any] = {
+    def updateAliasTarget(oldIndexName: Option[String], newIndexName: String): Try[Any] = synchronized {
       if (!indexWithNameExists(newIndexName).getOrElse(false)) {
         Failure(new IllegalArgumentException(s"No such index: $newIndexName"))
       } else {
