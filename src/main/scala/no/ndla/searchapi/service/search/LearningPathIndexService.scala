@@ -32,7 +32,7 @@ trait LearningPathIndexService {
 
     override def createIndexRequest(domainModel: LearningPath,
                                     indexName: String,
-                                    taxonomyBundle: Option[Bundle]): Try[IndexRequest] = {
+                                    taxonomyBundle: Bundle): Try[IndexRequest] = {
       searchConverterService.asSearchableLearningPath(domainModel, taxonomyBundle) match {
         case Success(searchableLearningPath) =>
           val source = write(searchableLearningPath)

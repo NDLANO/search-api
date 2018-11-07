@@ -41,12 +41,12 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
     val indexedArticles =
-      articlesToIndex.map(article => articleIndexService.indexDocument(article, Some(taxonomyTestBundle)))
+      articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle))
 
-    val indexedDrafts = draftsToIndex.map(draft => draftIndexService.indexDocument(draft, Some(taxonomyTestBundle)))
+    val indexedDrafts = draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle))
 
     val indexedLearningPaths =
-      learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, Some(taxonomyTestBundle)))
+      learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle))
 
     blockUntil(() => {
       articleIndexService.countDocuments == articlesToIndex.size &&

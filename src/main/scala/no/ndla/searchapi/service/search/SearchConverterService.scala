@@ -45,20 +45,8 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
-    def asSearchableArticle(ai: Article, taxonomyBundle: Option[Bundle]): Try[SearchableArticle] = {
-      val taxonomyForArticle = taxonomyBundle match {
-        case Some(bundle) => getTaxonomyContexts(ai.id.get, "article", bundle)
-        case None =>
-          taxonomyApiClient.getTaxonomyBundle match {
-            case Success(bundle) =>
-              getTaxonomyContexts(ai.id.get, "article", bundle)
-            case Failure(ex) =>
-              logger.error("Could not fetch bundle from taxonomy...")
-              Failure(ex)
-          }
-      }
-
-      taxonomyForArticle match {
+    def asSearchableArticle(ai: Article, taxonomyBundle: Bundle): Try[SearchableArticle] = {
+      getTaxonomyContexts(ai.id.get, "article", taxonomyBundle) match {
         case Success(contexts) =>
           if (contexts.isEmpty) {
             Failure(ElasticIndexingException(s"No taxonomy found for article with id '${ai.id.getOrElse(-1)}'"))
@@ -112,18 +100,8 @@ trait SearchConverterService {
 
     }
 
-    def asSearchableLearningPath(lp: LearningPath, taxonomyBundle: Option[Bundle]): Try[SearchableLearningPath] = {
-      val taxonomyForLearningPath = taxonomyBundle match {
-        case Some(bundle) => getTaxonomyContexts(lp.id.get, "learningpath", bundle)
-        case None =>
-          taxonomyApiClient.getTaxonomyBundle match {
-            case Success(bundle) =>
-              getTaxonomyContexts(lp.id.get, "learningpath", bundle)
-            case Failure(ex) =>
-              logger.error("Could not fetch bundle from taxonomy...")
-              Failure(ex)
-          }
-      }
+    def asSearchableLearningPath(lp: LearningPath, taxonomyBundle: Bundle): Try[SearchableLearningPath] = {
+      val taxonomyForLearningPath = getTaxonomyContexts(lp.id.get, "learningpath", taxonomyBundle)
 
       val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description).toList
       val defaultTitle = lp.title.sortBy(title => ISO639.languagePriority.reverse.indexOf(title.language)).lastOption
@@ -152,18 +130,8 @@ trait SearchConverterService {
         ))
     }
 
-    def asSearchableDraft(draft: Draft, taxonomyBundle: Option[Bundle]): Try[SearchableDraft] = {
-      val taxonomyForDraft = taxonomyBundle match {
-        case Some(bundle) => getTaxonomyContexts(draft.id.get, "article", bundle)
-        case None =>
-          taxonomyApiClient.getTaxonomyBundle match {
-            case Success(bundle) =>
-              getTaxonomyContexts(draft.id.get, "article", bundle)
-            case Failure(ex) =>
-              logger.error("Could not fetch bundle from taxonomy...")
-              Failure(ex)
-          }
-      }
+    def asSearchableDraft(draft: Draft, taxonomyBundle: Bundle): Try[SearchableDraft] = {
+      val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle)
 
       val defaultTitle = draft.title
         .sortBy(title => {
@@ -605,6 +573,7 @@ trait SearchConverterService {
 
     /**
       * Returns every parent of resourceType.
+      *
       * @param resourceType ResourceType to derive parents for.
       * @param allTypes All resourceTypes to derive parents from.
       * @return List of parents including resourceType.
@@ -627,6 +596,7 @@ trait SearchConverterService {
 
     /**
       * Returns a flattened list of resourceType with its subtypes
+      *
       * @param resourceType A resource with subtypes
       * @return Flattened list of resourceType with subtypes.
       */

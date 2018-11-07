@@ -35,9 +35,19 @@ trait IndexService {
 
     def getMapping: MappingDefinition
 
-    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Option[Bundle]): Try[IndexRequest]
+    def createIndexRequest(domainModel: D, indexName: String, taxonomyBundle: Bundle): Try[IndexRequest]
 
-    def indexDocument(imported: D, taxonomyBundle: Option[Bundle] = None): Try[D] = {
+    def indexDocument(imported: D): Try[D] = {
+      taxonomyApiClient.getTaxonomyBundle match {
+        case Success(bundle) => indexDocument(imported, bundle)
+        case Failure(ex) =>
+          logger.error(
+            s"Taxonomy could not be fetched when indexing $documentType ${imported.id.map(id => s"with id: '$id'").getOrElse("")}")
+          Failure(ex)
+      }
+    }
+
+    def indexDocument(imported: D, taxonomyBundle: Bundle): Try[D] = {
       for {
         _ <- getAliasTarget.map {
           case Some(index) => Success(index)
@@ -50,11 +60,20 @@ trait IndexService {
       } yield imported
     }
 
-    def indexDocuments(implicit mf: Manifest[D]): Try[ReindexResult] = synchronized {
+    def indexDocuments()(implicit mf: Manifest[D]): Try[ReindexResult] = {
+      taxonomyApiClient.getTaxonomyBundle match {
+        case Success(bundle) => indexDocuments(bundle)
+        case Failure(ex) =>
+          logger.error(s"Taxonomy could not be fetched when reindexing all $documentType")
+          Failure(ex)
+      }
+    }
+
+    def indexDocuments(taxonomyBundle: Bundle)(implicit mf: Manifest[D]): Try[ReindexResult] = {
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
         val operations = for {
-          numIndexed <- sendToElastic(indexName)
+          numIndexed <- sendToElastic(indexName, taxonomyBundle)
           aliasTarget <- getAliasTarget
           _ <- updateAliasTarget(aliasTarget, indexName)
         } yield numIndexed
@@ -69,43 +88,37 @@ trait IndexService {
       })
     }
 
-    def sendToElastic(indexName: String)(implicit mf: Manifest[D]): Try[Int] = {
-      taxonomyApiClient.getTaxonomyBundle match {
-        case Success(bundle) =>
-          val stream = apiClient.getChunks[D]
-          val chunks = stream
-            .map({
-              case Success(c) =>
-                val numIndexed = indexDocuments(c, indexName, Some(bundle))
-                Success(numIndexed.getOrElse(0), c.size)
-              case Failure(ex) => Failure(ex)
-            })
-            .toList
+    def sendToElastic(indexName: String, taxonomyBundle: Bundle)(implicit mf: Manifest[D]): Try[Int] = {
+      val stream = apiClient.getChunks[D]
+      val chunks = stream
+        .map({
+          case Success(c) =>
+            val numIndexed = indexDocuments(c, indexName, taxonomyBundle)
+            Success(numIndexed.getOrElse(0), c.size)
+          case Failure(ex) => Failure(ex)
+        })
+        .toList
 
-          chunks.collect { case Failure(ex) => Failure(ex) } match {
-            case Nil =>
-              val successfulChunks = chunks.collect {
-                case Success((chunkIndexed, chunkSize)) =>
-                  (chunkIndexed, chunkSize)
-              }
-
-              val (count, totalCount) = successfulChunks.foldLeft((0, 0)) {
-                case ((totalIndexed, totalSize), (chunkIndexed, chunkSize)) =>
-                  (totalIndexed + chunkIndexed, totalSize + chunkSize)
-              }
-
-              logger.info(s"$count/$totalCount documents were indexed successfully.")
-              Success(totalCount)
-
-            case notEmpty => notEmpty.head
+      chunks.collect { case Failure(ex) => Failure(ex) } match {
+        case Nil =>
+          val successfulChunks = chunks.collect {
+            case Success((chunkIndexed, chunkSize)) =>
+              (chunkIndexed, chunkSize)
           }
-        case Failure(ex) =>
-          logger.error("Could not fetch taxonomy for indexing...", ex)
-          Failure(ex)
+
+          val (count, totalCount) = successfulChunks.foldLeft((0, 0)) {
+            case ((totalIndexed, totalSize), (chunkIndexed, chunkSize)) =>
+              (totalIndexed + chunkIndexed, totalSize + chunkSize)
+          }
+
+          logger.info(s"$count/$totalCount documents were indexed successfully.")
+          Success(totalCount)
+
+        case notEmpty => notEmpty.head
       }
     }
 
-    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: Option[Bundle]): Try[Int] = {
+    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: Bundle): Try[Int] = {
       if (contents.isEmpty) {
         Success(0)
       } else {
@@ -177,7 +190,7 @@ trait IndexService {
       }
     }
 
-    def updateAliasTarget(oldIndexName: Option[String], newIndexName: String): Try[Any] = {
+    def updateAliasTarget(oldIndexName: Option[String], newIndexName: String): Try[Any] = synchronized {
       if (!indexWithNameExists(newIndexName).getOrElse(false)) {
         Failure(new IllegalArgumentException(s"No such index: $newIndexName"))
       } else {
