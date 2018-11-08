@@ -38,6 +38,7 @@ object Error {
   val WINDOW_TOO_LARGE = "RESULT_WINDOW_TOO_LARGE"
   val INDEX_MISSING = "INDEX_MISSING"
   val INVALID_BODY = "INVALID_BODY"
+  val TAXONOMY_FAILURE = "TAXONOMY_FAILURE"
 
   val GENERIC_DESCRIPTION =
     s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
@@ -65,3 +66,4 @@ case class ResultWindowTooLargeException(message: String = Error.WINDOW_TOO_LARG
 case class ElasticIndexingException(message: String) extends RuntimeException(message)
 case class AccessDeniedException(message: String) extends RuntimeException(message)
 case class InvalidIndexBodyException(message: String = Error.INVALID_BODY_DESCRIPTION) extends RuntimeException(message)
+case class TaxonomyException(message: String) extends RuntimeException(message)
