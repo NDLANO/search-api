@@ -16,6 +16,7 @@ import no.ndla.searchapi.model.api.{
   Error,
   InvalidIndexBodyException,
   ResultWindowTooLargeException,
+  TaxonomyException,
   ValidationException,
   ValidationMessage
 }
@@ -65,6 +66,7 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
     case rw: ResultWindowTooLargeException => UnprocessableEntity(body = Error(Error.WINDOW_TOO_LARGE, rw.getMessage))
     case _: IndexNotFoundException         => InternalServerError(body = Error.IndexMissingError)
     case _: InvalidIndexBodyException      => BadRequest(body = Error.InvalidBody)
+    case te: TaxonomyException             => InternalServerError(body = Error(Error.TAXONOMY_FAILURE, te.getMessage))
     case t: Throwable =>
       logger.error(Error.GenericError.toString, t)
       InternalServerError(body = Error.GenericError)

@@ -10,17 +10,17 @@ package no.ndla.searchapi.integration
 import java.util.concurrent.Executors
 
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
 import no.ndla.network.NdlaClient
+import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
+import no.ndla.searchapi.model.api.TaxonomyException
 import no.ndla.searchapi.model.domain.RequestInfo
 import no.ndla.searchapi.model.taxonomy._
 import org.json4s.DefaultFormats
-
-import scala.util.Try
 import scalaj.http.Http
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.util.{Failure, Success, Try}
 
 trait TaxonomyApiClient {
   this: NdlaClient =>
@@ -104,9 +104,14 @@ trait TaxonomyApiClient {
         f12 <- topics
       } yield Bundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12)
 
-      val t = Try(Await.result(x, Duration(60, "seconds")))
-      logger.info(s"Fetched taxonomy in ${System.currentTimeMillis() - startFetch}ms...")
-      t
+      Try(Await.result(x, Duration(60, "seconds"))) match {
+        case Success(bundle) =>
+          logger.info(s"Fetched taxonomy in ${System.currentTimeMillis() - startFetch}ms...")
+          Success(bundle)
+        case Failure(ex) =>
+          logger.error(s"Could not fetch taxonomy bundle (${ex.getMessage})", ex)
+          Failure(TaxonomyException("Could not fetch taxonomy bundle..."))
+      }
     }
 
     private def get[A](url: String, params: (String, String)*)(implicit mf: Manifest[A]): Try[A] = {
