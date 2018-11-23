@@ -9,20 +9,18 @@
 package no.ndla.searchapi
 
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.network.Domains
-import no.ndla.network.secrets.Secrets.readSecrets
+import no.ndla.network.{AuthUser, Domains}
 import no.ndla.searchapi.model.search.SearchType
 
 import scala.util.Properties._
-import scala.util.{Failure, Success}
 
 object SearchApiProperties extends LazyLogging {
+  val Environment = propOrElse("NDLA_ENVIRONMENT", "local")
   val ApplicationName = "search-api"
-  val Auth0LoginEndpoint = "https://ndla.eu.auth0.com/authorize"
+  val Auth0LoginEndpoint = s"https://${AuthUser.getAuth0HostForEnv(Environment)}/authorize"
 
   val ApplicationPort: Int = propOrElse("APPLICATION_PORT", "80").toInt
   val ContactEmail = "christergundersen@ndla.no"
-  val Environment = propOrElse("NDLA_ENVIRONMENT", "local")
 
   val DefaultLanguage = "nb"
 
