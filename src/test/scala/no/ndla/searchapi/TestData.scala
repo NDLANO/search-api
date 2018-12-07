@@ -334,6 +334,19 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
+  val article12: Article = TestData.sampleArticleWithPublicDomain.copy(
+    id = Option(12),
+    title = List(Title("Ekstrastoff", "nb")),
+    introduction = List(ArticleIntroduction("Ekstra", "nb")),
+    metaDescription = List(MetaDescription("", "nb")),
+    content = List(ArticleContent("", "nb")),
+    visualElement = List.empty,
+    tags = List(Tag(List(""), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.Article
+  )
+
   val articlesToIndex: Seq[Article] = List(
     article1,
     article2,
@@ -345,7 +358,8 @@ object TestData {
     article8,
     article9,
     article10,
-    article11
+    article11,
+    article12
   )
 
   val draftPublicDomainCopyright =
@@ -537,6 +551,19 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
+  val draft12: Draft = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(12),
+    title = List(Title("Ekstrastoff", "nb")),
+    introduction = List(ArticleIntroduction("Ekstra", "nb")),
+    metaDescription = List(MetaDescription("", "nb")),
+    content = List(ArticleContent("", "nb")),
+    visualElement = List.empty,
+    tags = List(Tag(List(""), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.Article
+  )
+
   val draftsToIndex: List[Draft] = List(
     draft1,
     draft2,
@@ -548,7 +575,8 @@ object TestData {
     draft8,
     draft9,
     draft10,
-    draft11
+    draft11,
+    draft12
   )
 
   val paul = Author("author", "Truly Weird Rand Paul")
@@ -672,6 +700,11 @@ object TestData {
     ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:11", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:7", "urn:filter:4", "urn:resource-filter:12", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:13", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:13", "urn:filter:5", "urn:resource-filter:14", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:13",
+                             "urn:filter:1",
+                             "urn:resource-filter:15",
+                             "urn:relevance:supplementary"),
   )
 
   val relevances = List(
@@ -755,7 +788,11 @@ object TestData {
     Resource("urn:resource:12",
              learningPath5.title.head.title,
              Some(s"urn:learningpath:${learningPath5.id.get}"),
-             s"/subject:2/topic:4/resource:5")
+             s"/subject:2/topic:4/resource:5"),
+    Resource("urn:resource:13",
+             article12.title.head.title,
+             Some(s"urn:article:${article12.id.get}"),
+             s"/subject:2/topic:4/resource:13")
   )
 
   val topics = List(
@@ -788,7 +825,9 @@ object TestData {
     TopicResourceConnection("urn:topic:1", "urn:resource:9", "urn:topic-resource:11", primary = true, 1),
     TopicResourceConnection("urn:topic:3", "urn:resource:10", "urn:topic-resource:12", primary = true, 1),
     TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1)
+    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1),
+    TopicResourceConnection("urn:topic:1", "urn:resource:13", "urn:topic-resource:15", primary = true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1)
   )
 
   val topicSubtopicConnections = List(
@@ -810,6 +849,9 @@ object TestData {
     ResourceResourceTypeConnection("urn:resource:10", "urn:resourcetype:learningpath", "urn:resource-resourcetype:12"),
     ResourceResourceTypeConnection("urn:resource:11", "urn:resourcetype:learningpath", "urn:resource-resourcetype:13"),
     ResourceResourceTypeConnection("urn:resource:12", "urn:resourcetype:learningpath", "urn:resource-resourcetype:14"),
+    ResourceResourceTypeConnection("urn:resource:13",
+                                   "urn:resourcetype:subjectMaterial",
+                                   "urn:resource-resourcetype:15"),
   )
 
   val taxonomyTestBundle = Bundle(
