@@ -521,6 +521,22 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     search2.results.map(_.id) should be(Seq(2, 5))
   }
 
+  test("That filtering by relevance id makes sense (with and without subject/filter)") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:core")))
+    search1.results.map(_.id) should be(Seq(1, 5, 6, 7))
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:supplementary")))
+    search2.results.map(_.id) should be(Seq(1, 3))
+
+    val Success(search3) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:supplementary", "urn:relevance:core")))
+    search3.results.map(_.id) should be(Seq(1, 3, 5, 6, 7))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

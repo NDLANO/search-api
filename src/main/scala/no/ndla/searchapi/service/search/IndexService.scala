@@ -185,7 +185,7 @@ trait IndexService {
 
       response match {
         case Success(results) =>
-          Success(results.result.mappings.headOption.map((t) => t._1.name))
+          Success(results.result.mappings.headOption.map(t => t._1.name))
         case Failure(ex) => Failure(ex)
       }
     }
@@ -341,7 +341,10 @@ trait IndexService {
           generateLanguageSupportedFieldList("breadcrumbs") ++
           List(
             nestedField("filters").fields(
-              List(keywordField("filterId")) ++
+              List(
+                keywordField("filterId"),
+                keywordField("relevanceId")
+              ) ++
                 generateLanguageSupportedFieldList("name", keepRaw = true) ++
                 generateLanguageSupportedFieldList("relevance")
             )
