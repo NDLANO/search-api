@@ -343,6 +343,7 @@ trait IndexService {
             nestedField("filters").fields(
               List(
                 keywordField("filterId"),
+                keywordField("subjectId"),
                 keywordField("relevanceId")
               ) ++
                 generateLanguageSupportedFieldList("name", keepRaw = true) ++

@@ -138,7 +138,7 @@ trait MultiSearchService {
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
-      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds)
+      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects)
 
       val supportedLanguageFilter =
         if (settings.supportedLanguages.isEmpty) None
@@ -165,7 +165,7 @@ trait MultiSearchService {
       ).flatten
     }
 
-    private def relevanceFilter(relevanceIds: List[String]) =
+    private def relevanceFilter(relevanceIds: List[String], subjectIds: List[String]) =
       if (relevanceIds.isEmpty) None
       else
         Some(
@@ -173,7 +173,10 @@ trait MultiSearchService {
             relevanceIds.map(
               relevanceId =>
                 nestedQuery("contexts.filters").query(
-                  termQuery("contexts.filters.relevanceId", relevanceId)
+                  boolQuery().must(
+                    termQuery("contexts.filters.relevanceId", relevanceId),
+                    boolQuery().should(subjectIds.map(sId => termQuery("contexts.filters.subjectId", sId)))
+                  )
               )
             )
           ))

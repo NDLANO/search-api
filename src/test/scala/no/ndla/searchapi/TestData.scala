@@ -927,6 +927,7 @@ object TestData {
           filterId = "urn:filter:1",
           name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
           relevanceId = "urn:relevance:core",
+          subjectId = "urn:subject:1",
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
         )),
       resourceTypes = searchableResourceTypes,

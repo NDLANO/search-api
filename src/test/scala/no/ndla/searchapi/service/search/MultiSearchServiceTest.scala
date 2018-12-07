@@ -503,7 +503,7 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
                           relevanceIds = List("urn:relevance:core"),
                           subjects = List("urn:subject:1")))
 
-    search1.results.map(_.id) should be(1, 5)
+    search1.results.map(_.id) should be(Seq(1, 5))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {
