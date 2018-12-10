@@ -566,7 +566,6 @@ trait SearchConverterService {
             search.SearchableTaxonomyFilter(
               filterId = filter.id,
               name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
-              subjectId = subject.id,
               relevanceId = filterConnection.relevanceId,
               relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
             ))

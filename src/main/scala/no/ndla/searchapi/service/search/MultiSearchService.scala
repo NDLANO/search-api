@@ -172,10 +172,10 @@ trait MultiSearchService {
           boolQuery().should(
             relevanceIds.map(
               relevanceId =>
-                nestedQuery("contexts.filters").query(
+                nestedQuery("contexts").query(
                   boolQuery().must(
-                    termQuery("contexts.filters.relevanceId", relevanceId),
-                    boolQuery().should(subjectIds.map(sId => termQuery("contexts.filters.subjectId", sId)))
+                    nestedQuery("contexts.filters").query(termQuery("contexts.filters.relevanceId", relevanceId)),
+                    boolQuery().should(subjectIds.map(sId => termQuery("contexts.subjectId", sId)))
                   )
               )
             )
