@@ -48,7 +48,6 @@ trait SearchConverterService {
     def asSearchableArticle(ai: Article, taxonomyBundle: Bundle): Try[SearchableArticle] = {
       getTaxonomyContexts(ai.id.get, "article", taxonomyBundle) match {
         case Success(contexts) =>
-          // TODO: Check here whether article 4 has filter with urn:relevance:core
           if (contexts.isEmpty) {
             Failure(ElasticIndexingException(s"No taxonomy found for article with id '${ai.id.getOrElse(-1)}'"))
           } else {
