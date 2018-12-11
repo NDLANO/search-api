@@ -24,4 +24,5 @@ case class MultiDraftSearchSettings(query: Option[String],
                                     topics: List[String],
                                     resourceTypes: List[String],
                                     learningResourceTypes: List[LearningResourceType.Value],
-                                    supportedLanguages: List[String])
+                                    supportedLanguages: List[String],
+                                    relevanceIds: List[String])

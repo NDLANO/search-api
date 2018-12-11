@@ -52,71 +52,90 @@ trait SearchController {
     val response404 = ResponseMessage(404, "Not found", Some("Error"))
     val response500 = ResponseMessage(500, "Unknown error", Some("Error"))
 
-    private val correlationId = Param("X-Correlation-ID", "User supplied correlation-id. May be omitted.")
-    private val query = Param("query", "Return only results with content matching the specified query.")
-    private val noteQuery = Param("note-query", "Return only results with notes matching the specified note-query.")
-    private val language = Param("language", "The ISO 639-1 language code describing language.")
-    private val license = Param("license", "Return only results with provided license.")
-    private val sort = Param(
+    private val correlationId =
+      Param[Option[String]]("X-Correlation-ID", "User supplied correlation-id. May be omitted.")
+    private val query = Param[Option[String]]("query", "Return only results with content matching the specified query.")
+    private val noteQuery =
+      Param[Option[String]]("note-query", "Return only results with notes matching the specified note-query.")
+    private val language = Param[Option[String]]("language", "The ISO 639-1 language code describing language.")
+    private val license = Param[Option[String]]("license", "Return only results with provided license.")
+    private val sort = Param[Option[String]](
       "sort",
-      """The sorting used on results.
-             The following are supported: relevance, -relevance, title, -title, lastUpdated, -lastUpdated, id, -id.
+      s"""The sorting used on results.
+             The following are supported: ${Sort.values.mkString(", ")}.
              Default is by -relevance (desc) when query is set, and id (asc) when query is empty.""".stripMargin
     )
-    private val pageNo = Param("page", "The page number of the search hits to display.")
-    private val pageSize = Param("page-size", "The number of search hits to display for each page.")
-    private val resourceTypes = Param(
+    private val pageNo = Param[Option[Int]]("page", "The page number of the search hits to display.")
+    private val pageSize = Param[Option[Int]]("page-size", "The number of search hits to display for each page.")
+    private val resourceTypes = Param[Option[Seq[String]]](
       "resource-types",
       "Return only learning resources of specific type(s). To provide multiple types, separate by comma (,).")
-    private val learningResourceIds = Param(
+    private val learningResourceIds = Param[Option[Seq[String]]](
       "ids",
       "Return only learning resources that have one of the provided ids. To provide multiple ids, separate by comma (,).")
-    private val apiTypes = Param("types", "A comma separated list of types to search in. f.ex articles,images")
-    private val fallback = Param("fallback", "Fallback to existing language if language is specified.")
+    private val apiTypes =
+      Param[Option[Seq[String]]]("types", "A comma separated list of types to search in. f.ex articles,images")
+    private val fallback = Param[Option[Boolean]]("fallback", "Fallback to existing language if language is specified.")
     private val levels =
-      Param("levels", "A comma separated list of levels the learning resources should be filtered by.")
+      Param[Option[Seq[String]]]("levels",
+                                 "A comma separated list of levels the learning resources should be filtered by.")
     private val subjects =
-      Param("subjects", "A comma separated list of subjects the learning resources should be filtered by.")
+      Param[Option[Seq[String]]]("subjects",
+                                 "A comma separated list of subjects the learning resources should be filtered by.")
     private val topics =
-      Param("topics", "A comma separated list of parent topics the learning resources should be filtered by.")
+      Param[Option[Seq[String]]](
+        "topics",
+        "A comma separated list of parent topics the learning resources should be filtered by.")
     private val contextTypes =
-      Param("context-types", "A comma separated list of context-types the learning resources should be filtered by.")
+      Param[Option[Seq[String]]](
+        "context-types",
+        "A comma separated list of context-types the learning resources should be filtered by.")
     private val groupTypes =
-      Param("resource-types", "A comma separated list of resource-types the learning resources should be grouped by.")
-    private val languageFilter = Param(
+      Param[Option[Seq[String]]](
+        "resource-types",
+        "A comma separated list of resource-types the learning resources should be grouped by.")
+    private val languageFilter = Param[Option[Seq[String]]](
       "language-filter",
       "A comma separated list of ISO 639-1 language codes that the learning resource can be available in.")
+    private val relevanceFilter = Param[Option[Seq[String]]](
+      "relevance",
+      "A comma separated list of relevances. Since relevances are connected to levels (filters), this filter will only be applied if a levels filter is applied."
+    )
 
-    private def asQueryParam[T: Manifest: NotNothing](param: Param) =
+    private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
 
-    private def asHeaderParam[T: Manifest: NotNothing](param: Param) =
+    private def asHeaderParam[T: Manifest: NotNothing](param: Param[T]) =
       headerParam[T](param.paramName).description(param.description)
 
-    private def asPathParam[T: Manifest: NotNothing](param: Param) =
+    private def asPathParam[T: Manifest: NotNothing](param: Param[T]) =
       pathParam[T](param.paramName).description(param.description)
 
-    private val groupSearchDoc = (apiOperation[Seq[GroupSearchResult]]("groupSearch")
-      summary "Search across multiple groups of learning resources"
-      description "Search across multiple groups of learning resources"
-      parameters (
-        asHeaderParam[Option[String]](correlationId),
-        asQueryParam[Option[String]](query),
-        asQueryParam[Option[String]](groupTypes),
-        asQueryParam[Option[Int]](pageNo),
-        asQueryParam[Option[Int]](pageSize),
-        asQueryParam[Option[String]](language),
-        asQueryParam[Option[Boolean]](fallback),
-        asQueryParam[Option[String]](subjects),
-        asQueryParam[Option[String]](sort),
-        asQueryParam[Option[String]](learningResourceIds),
-        asQueryParam[Option[String]](levels),
-        asQueryParam[Option[String]](contextTypes),
-        asQueryParam[Option[String]](languageFilter)
-    )
-      authorizations "oauth2"
-      responseMessages response500)
-    get("/group/", operation(groupSearchDoc)) {
+    get(
+      "/group/",
+      operation(
+        apiOperation[Seq[GroupSearchResult]]("groupSearch")
+          summary "Search across multiple groups of learning resources"
+          description "Search across multiple groups of learning resources"
+          parameters (
+            asHeaderParam(correlationId),
+            asQueryParam(query),
+            asQueryParam(groupTypes),
+            asQueryParam(pageNo),
+            asQueryParam(pageSize),
+            asQueryParam(language),
+            asQueryParam(fallback),
+            asQueryParam(subjects),
+            asQueryParam(sort),
+            asQueryParam(learningResourceIds),
+            asQueryParam(levels),
+            asQueryParam(contextTypes),
+            asQueryParam(languageFilter),
+            asQueryParam(relevanceFilter)
+        )
+          authorizations "oauth2"
+          responseMessages response500)
+    ) {
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val resourceTypes = paramAsListOfString(this.groupTypes.paramName)
@@ -131,6 +150,7 @@ trait SearchController {
       val taxonomyFilters = paramAsListOfString(this.levels.paramName)
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
+      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -144,7 +164,8 @@ trait SearchController {
         subjects = subjects,
         resourceTypes = List.empty,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter
+        supportedLanguages = supportedLanguagesFilter,
+        relevanceIds = relevances
       )
 
       groupSearch(query, settings.copy(resourceTypes = resourceTypes))
@@ -195,21 +216,23 @@ trait SearchController {
       }
     }
 
-    private val draftSearchDoc =
-      (apiOperation[Seq[SearchResults]]("searchAPIs")
-        summary "search across APIs"
-        description "search across APIs"
-        parameters (
-          asHeaderParam[Option[String]](correlationId),
-          asQueryParam[Option[String]](query),
-          asQueryParam[Option[String]](language),
-          asQueryParam[Option[Int]](pageNo),
-          asQueryParam[Option[Int]](pageSize),
-          asQueryParam[Option[String]](apiTypes)
-      )
-        authorizations "oauth2"
-        responseMessages response500)
-    get("/draft/", operation(draftSearchDoc)) {
+    get(
+      "/draft/",
+      operation(
+        apiOperation[Seq[SearchResults]]("searchAPIs")
+          summary "search across APIs"
+          description "search across APIs"
+          parameters (
+            asHeaderParam(correlationId),
+            asQueryParam(query),
+            asQueryParam(language),
+            asQueryParam(pageNo),
+            asQueryParam(pageSize),
+            asQueryParam(apiTypes)
+        )
+          authorizations "oauth2"
+          responseMessages response500)
+    ) {
       val language = paramOrDefault(this.language.paramName, "nb")
       val sort = Sort.ByRelevanceDesc
       val page = intOrDefault(this.pageNo.paramName, 1)
@@ -227,28 +250,32 @@ trait SearchController {
       searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), apisToSearch)
     }
 
-    private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
-      summary "Find learning resources"
-      description "Shows all learning resources. You can search too."
-      parameters (
-        asHeaderParam[Option[String]](correlationId),
-        asQueryParam[Option[Int]](pageNo),
-        asQueryParam[Option[Int]](pageSize),
-        asQueryParam[Option[String]](contextTypes),
-        asQueryParam[Option[String]](language),
-        asQueryParam[Option[String]](learningResourceIds),
-        asQueryParam[Option[String]](resourceTypes),
-        asQueryParam[Option[String]](levels),
-        asQueryParam[Option[String]](license),
-        asQueryParam[Option[String]](query),
-        asQueryParam[Option[String]](sort),
-        asQueryParam[Option[Boolean]](fallback),
-        asQueryParam[Option[String]](subjects),
-        asQueryParam[Option[List[String]]](languageFilter)
-    )
-      authorizations "oauth2"
-      responseMessages response500)
-    get("/", operation(multiSearchDoc)) {
+    get(
+      "/",
+      operation(
+        apiOperation[MultiSearchResult]("searchLearningResources")
+          summary "Find learning resources"
+          description "Shows all learning resources. You can search too."
+          parameters (
+            asHeaderParam(correlationId),
+            asQueryParam(pageNo),
+            asQueryParam(pageSize),
+            asQueryParam(contextTypes),
+            asQueryParam(language),
+            asQueryParam(learningResourceIds),
+            asQueryParam(resourceTypes),
+            asQueryParam(levels),
+            asQueryParam(license),
+            asQueryParam(query),
+            asQueryParam(sort),
+            asQueryParam(fallback),
+            asQueryParam(subjects),
+            asQueryParam(languageFilter),
+            asQueryParam(relevanceFilter)
+        )
+          authorizations "oauth2"
+          responseMessages response500)
+    ) {
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
@@ -262,6 +289,7 @@ trait SearchController {
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
       val subjects = paramAsListOfString(this.subjects.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
+      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
 
       val settings = SearchSettings(
         fallback = fallback,
@@ -275,7 +303,8 @@ trait SearchController {
         subjects = subjects,
         resourceTypes = resourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter
+        supportedLanguages = supportedLanguagesFilter,
+        relevanceIds = relevances
       )
       multiSearch(query, settings)
     }
@@ -292,29 +321,33 @@ trait SearchController {
       }
     }
 
-    private val multiSearchDraftDoc = (apiOperation[MultiSearchResult]("searchDraftLearningResources")
-      summary "Find draft learning resources"
-      description "Shows all draft learning resources. You can search too."
-      parameters (
-        asHeaderParam[Option[String]](correlationId),
-        asQueryParam[Option[Int]](pageNo),
-        asQueryParam[Option[Int]](pageSize),
-        asQueryParam[Option[String]](contextTypes),
-        asQueryParam[Option[String]](language),
-        asQueryParam[Option[String]](learningResourceIds),
-        asQueryParam[Option[String]](resourceTypes),
-        asQueryParam[Option[String]](levels),
-        asQueryParam[Option[String]](license),
-        asQueryParam[Option[String]](query),
-        asQueryParam[Option[String]](noteQuery),
-        asQueryParam[Option[String]](sort),
-        asQueryParam[Option[Boolean]](fallback),
-        asQueryParam[Option[String]](subjects),
-        asQueryParam[Option[List[String]]](languageFilter)
-    )
-      authorizations "oauth2"
-      responseMessages response500)
-    get("/editorial/", operation(multiSearchDraftDoc)) {
+    get(
+      "/editorial/",
+      operation(
+        apiOperation[MultiSearchResult]("searchDraftLearningResources")
+          summary "Find draft learning resources"
+          description "Shows all draft learning resources. You can search too."
+          parameters (
+            asHeaderParam(correlationId),
+            asQueryParam(pageNo),
+            asQueryParam(pageSize),
+            asQueryParam(contextTypes),
+            asQueryParam(language),
+            asQueryParam(learningResourceIds),
+            asQueryParam(resourceTypes),
+            asQueryParam(levels),
+            asQueryParam(license),
+            asQueryParam(query),
+            asQueryParam(noteQuery),
+            asQueryParam(sort),
+            asQueryParam(fallback),
+            asQueryParam(subjects),
+            asQueryParam(languageFilter),
+            asQueryParam(relevanceFilter)
+        )
+          authorizations "oauth2"
+          responseMessages response500)
+    ) {
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
@@ -330,6 +363,7 @@ trait SearchController {
       val subjects = paramAsListOfString(this.subjects.paramName)
       val topics = paramAsListOfString(this.topics.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
+      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
 
       val settings = MultiDraftSearchSettings(
         query = query,
@@ -346,7 +380,8 @@ trait SearchController {
         topics = topics,
         resourceTypes = resourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter
+        supportedLanguages = supportedLanguagesFilter,
+        relevanceIds = relevances
       )
 
       val result = multiDraftSearchService.matchingQuery(settings)
