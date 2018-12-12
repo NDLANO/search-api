@@ -99,7 +99,9 @@ trait SearchController {
       "A comma separated list of ISO 639-1 language codes that the learning resource can be available in.")
     private val relevanceFilter = Param[Option[Seq[String]]](
       "relevance",
-      "A comma separated list of relevances. Since relevances are connected to levels (filters), this filter will only be applied if a levels filter is applied."
+      """A comma separated list of relevances the learning resources should be filtered by.
+        |If subjects are specified the learning resource must have specified relevances in relation to a specified subject.
+        |If levels are specified the learning resource must have specified relevances in relation to a specified level.""".stripMargin
     )
 
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
