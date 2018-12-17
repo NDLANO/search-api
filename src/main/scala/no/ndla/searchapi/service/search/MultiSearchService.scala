@@ -13,17 +13,15 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
-import no.ndla.searchapi.model.domain.{Language, ReindexResult, RequestInfo}
-import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.{Language, RequestInfo}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.SearchSettings
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
 trait MultiSearchService {
@@ -34,7 +32,7 @@ trait MultiSearchService {
     with LearningPathIndexService =>
   val multiSearchService: MultiSearchService
 
-  class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
+  class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
     override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
@@ -121,10 +119,7 @@ trait MultiSearchService {
         case "" | Language.AllLanguages =>
           None
         case lang =>
-          settings.fallback match {
-            case true  => None
-            case false => Some(existsQuery(s"title.$lang"))
-          }
+          if (settings.fallback) None else Some(existsQuery(s"title.$lang"))
       }
 
       val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
@@ -138,7 +133,7 @@ trait MultiSearchService {
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
-      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects)
+      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects, settings.taxonomyFilters)
 
       val supportedLanguageFilter =
         if (settings.supportedLanguages.isEmpty) None
@@ -165,83 +160,10 @@ trait MultiSearchService {
       ).flatten
     }
 
-    private def relevanceFilter(relevanceIds: List[String], subjectIds: List[String]) =
-      if (relevanceIds.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            relevanceIds.map(
-              relevanceId =>
-                nestedQuery("contexts").query(
-                  boolQuery().must(
-                    nestedQuery("contexts.filters").query(termQuery("contexts.filters.relevanceId", relevanceId)),
-                    boolQuery().should(subjectIds.map(sId => termQuery("contexts.subjectId", sId)))
-                  )
-              )
-            )
-          ))
-
-    private def subjectFilter(subjects: List[String]) = {
-      if (subjects.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            subjects.map(
-              subjectId =>
-                nestedQuery("contexts").query(
-                  termQuery(s"contexts.subjectId", subjectId)
-              ))
-          )
-        )
-    }
-
-    private def levelFilter(taxonomyFilters: List[String]) = {
-      if (taxonomyFilters.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            taxonomyFilters.map(
-              filterName =>
-                nestedQuery("contexts.filters").query(
-                  boolQuery().should(
-                    ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
-                  )
-              ))
-          )
-        )
-    }
-
-    private def resourceTypeFilter(resourceTypes: List[String]) = {
-      if (resourceTypes.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            resourceTypes.map(
-              resourceTypeId =>
-                nestedQuery("contexts.resourceTypes").query(
-                  termQuery(s"contexts.resourceTypes.id", resourceTypeId)
-              ))
-          )
-        )
-    }
-
-    private def contextTypeFilter(contextTypes: List[LearningResourceType.Value]) = {
-      if (contextTypes.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            contextTypes.map(
-              ct =>
-                nestedQuery("contexts").query(
-                  termQuery("contexts.contextType", ct.toString)
-              ))
-          )
-        )
-    }
-
     override def scheduleIndexDocuments(): Unit = {
       val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1
-      implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
+      implicit val ec: ExecutionContextExecutor =
+        ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
       val requestInfo = RequestInfo()
 
       val articleFuture = Future {

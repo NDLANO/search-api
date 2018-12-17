@@ -705,6 +705,7 @@ object TestData {
                              "urn:filter:1",
                              "urn:resource-filter:15",
                              "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:7", "urn:resource-filter:16", "urn:relevance:core")
   )
 
   val relevances = List(

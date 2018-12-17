@@ -212,7 +212,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
     searchable1.contexts.size should be(2)
     searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(
-      Seq(Seq("VG1"), Seq("VG2"), Seq("VG3")))
+      Seq(Seq("VG1"), Seq("VG2"), Seq("VG3"), Seq("Tysk 2")))
     searchable1.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
 
     searchable4.contexts.size should be(1)

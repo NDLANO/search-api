@@ -375,8 +375,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("Tysk 2")))
-    search.totalCount should be(1)
-    search.results.map(_.id) should be(Seq(3))
+    search.totalCount should be(2)
+    search.results.map(_.id) should be(Seq(1, 3))
   }
 
   test("That filtering for subjects works as expected") {
@@ -556,6 +556,15 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
                                     subjects = List("urn:subject:1")))
 
     search1.results.map(_.id) should be(Seq(1, 5))
+  }
+
+  test("That filtering by relevance and levels only returns for relevances in filtered levels") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:supplementary"),
+                                    taxonomyFilters = List("Tysk 2")))
+
+    search.results.map(_.id) should be(Seq(3))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {
