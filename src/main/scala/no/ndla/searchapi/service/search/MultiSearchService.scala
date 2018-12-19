@@ -10,14 +10,13 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.SearchIndexes
+import no.ndla.searchapi.SearchApiProperties.{ElasticSearchIndexMaxResultWindow, ElasticSearchScrollKeepAlive, SearchIndexes}
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
-import no.ndla.searchapi.model.domain.{Language, RequestInfo}
+import no.ndla.searchapi.model.api.{MultiSearchResult, ResultWindowTooLargeException}
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.SearchSettings
 
@@ -32,26 +31,12 @@ trait MultiSearchService {
     with LearningPathIndexService =>
   val multiSearchService: MultiSearchService
 
-  class MultiSearchService extends LazyLogging with SearchService[MultiSearchSummary] with TaxonomyFiltering {
+  class MultiSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
-    override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
-      val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
-      val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
-      val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
-      hit.`type` match {
-        case `articleType` =>
-          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        case `draftType` =>
-          searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
-        case `learningPathType` =>
-          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
-      }
-    }
+    def all(settings: SearchSettings): Try[SearchResult] = executeSearch(settings, boolQuery())
 
-    def all(settings: SearchSettings): Try[MultiSearchResult] = executeSearch(settings, boolQuery())
-
-    def matchingQuery(query: String, settings: SearchSettings): Try[MultiSearchResult] = {
+    def matchingQuery(query: String, settings: SearchSettings): Try[SearchResult] = {
       val searchLanguage =
         if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
       val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
@@ -76,16 +61,17 @@ trait MultiSearchService {
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: SearchSettings, baseQuery: BoolQuery): Try[MultiSearchResult] = {
+    def executeSearch(settings: SearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
-      if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
+      if (requestedResultWindow > ElasticSearchIndexMaxResultWindow) {
         logger.info(
-          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+          s"Max supported results are $ElasticSearchIndexMaxResultWindow, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
+
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
           .from(startAt)
@@ -93,17 +79,22 @@ trait MultiSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
-        e4sClient.execute(searchToExecute) match {
+        // Only add scroll param if it is first page
+        val searchWithScroll =
+          if (startAt != 0) { searchToExecute } else { searchToExecute.scroll(ElasticSearchScrollKeepAlive) }
+
+        e4sClient.execute(searchWithScroll) match {
           case Success(response) =>
             Success(
-              MultiSearchResult(
+              SearchResult(
                 totalCount = response.result.totalHits,
-                page = settings.page,
+                page = Some(settings.page),
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
-                results = getHits(response.result, settings.language, settings.fallback)
+                results = getHits(response.result, settings.language, settings.fallback),
+                scrollId = response.result.scrollId
               ))
-          case Failure(ex) => errorHandler(ex)
+          case Failure(ex) => Failure(ex)
         }
       }
     }

@@ -158,12 +158,12 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val hits1 = page1.results
     val hits2 = page2.results
     page1.totalCount should be(expected.size)
-    page1.page should be(1)
+    page1.page.get should be(1)
     hits1.size should be(2)
     hits1.head.id should be(1)
     hits1.last.id should be(1)
     page2.totalCount should be(expected.size)
-    page2.page should be(2)
+    page2.page.get should be(2)
     hits2.size should be(2)
     hits2.head.id should be(2)
     hits2.last.id should be(2)

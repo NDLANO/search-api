@@ -790,6 +790,16 @@ trait SearchConverterService {
 
       (resources, topics)
     }
+
+    def toApiMultiSearchResult(searchResult: domain.SearchResult): MultiSearchResult =
+      api.MultiSearchResult(
+        searchResult.totalCount,
+        searchResult.page,
+        searchResult.pageSize,
+        searchResult.language,
+        searchResult.results,
+      )
+
   }
 
 }

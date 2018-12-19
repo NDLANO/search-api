@@ -20,6 +20,7 @@ import no.ndla.searchapi.model.api.{
   ValidationException,
   ValidationMessage
 }
+import no.ndla.searchapi.model.domain.NdlaSearchException
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.learningpath._
 import org.apache.logging.log4j.ThreadContext
@@ -67,6 +68,10 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
     case _: IndexNotFoundException         => InternalServerError(body = Error.IndexMissingError)
     case _: InvalidIndexBodyException      => BadRequest(body = Error.InvalidBody)
     case te: TaxonomyException             => InternalServerError(body = Error(Error.TAXONOMY_FAILURE, te.getMessage))
+    case nse: NdlaSearchException
+        if nse.rf.error.rootCause.exists(x =>
+          x.`type` == "search_context_missing_exception" || x.reason == "Cannot parse scroll id") =>
+      BadRequest(body = Error.InvalidSearchContext)
     case t: Throwable =>
       logger.error(Error.GenericError.toString, t)
       InternalServerError(body = Error.GenericError)

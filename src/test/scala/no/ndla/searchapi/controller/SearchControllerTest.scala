@@ -11,6 +11,7 @@ package no.ndla.searchapi.controller
 import no.ndla.searchapi.model.domain.{SearchParams, Sort}
 import no.ndla.searchapi.{SearchSwagger, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.model.api
+import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.search.settings.SearchSettings
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.mockito.Mockito._
@@ -32,7 +33,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   }
 
   test("That / returns 200 ok") {
-    val multiResult = api.MultiSearchResult(0, 1, 10, "nb", Seq.empty)
+    val multiResult = domain.SearchResult(0, Some(1), 10, "nb", Seq.empty)
     when(multiSearchService.all(any[SearchSettings])).thenReturn(Success(multiResult))
     get("/test/") {
       status should equal(200)
@@ -40,7 +41,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   }
 
   test("That /group/ returns 200 ok") {
-    val multiResult = api.MultiSearchResult(0, 1, 10, "nb", Seq.empty)
+    val multiResult = domain.SearchResult(0, Some(1), 10, "nb", Seq.empty)
     when(multiSearchService.all(any[SearchSettings])).thenReturn(Success(multiResult))
     get("/test/group/?resource-types=test") {
       status should equal(200)

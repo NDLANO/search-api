@@ -13,9 +13,12 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.domain._
-import no.ndla.searchapi.SearchApiProperties.MaxPageSize
+import no.ndla.searchapi.SearchApiProperties.{MaxPageSize, ElasticSearchScrollKeepAlive}
+import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary}
+import no.ndla.searchapi.model.search.SearchType
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
 
@@ -25,18 +28,31 @@ import scala.util.{Failure, Success, Try}
 trait SearchService {
   this: Elastic4sClient with IndexService with SearchConverterService with LazyLogging =>
 
-  trait SearchService[T] {
+  trait SearchService {
     val searchIndex: List[String]
 
     /**
       * Returns hit as summary
+      *
       * @param hit as json string
       * @param language language as ISO639 code
       * @return api-model summary of hit
       */
-    def hitToApiModel(hit: SearchHit, language: String): T
+    def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
+      val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
+      val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
+      val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
+      hit.`type` match {
+        case `articleType` =>
+          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
+        case `draftType` =>
+          searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
+        case `learningPathType` =>
+          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+      }
+    }
 
-    def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[T] = {
+    def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[MultiSearchSummary] = {
       response.totalHits match {
         case count if count > 0 =>
           val resultArray = response.hits.hits
@@ -53,6 +69,25 @@ trait SearchService {
       }
     }
 
+    def scroll(scrollId: String, language: String, fallback: Boolean): Try[SearchResult] = {
+      // TODO: Test to see whether highlighting works when scrolling
+      e4sClient
+        .execute {
+          searchScroll(scrollId, ElasticSearchScrollKeepAlive)
+        }
+        .map(response => {
+          val hits = getHits(response.result, language, fallback)
+          SearchResult(
+            totalCount = response.result.totalHits,
+            page = if (scrollId != response.result.scrollId.getOrElse("-1")) { Some(8008) } else { None }, // TODO: Ikke returner noe her er du snill
+            pageSize = response.result.hits.hits.length,
+            language = if (language == "*") Language.AllLanguages else language,
+            results = hits,
+            scrollId = response.result.scrollId
+          )
+        })
+    }
+
     def getSortDefinition(sort: Sort.Value, language: String): FieldSort = {
       val sortLanguage = language match {
         case Language.NoLanguage => Language.DefaultLanguage
@@ -60,24 +95,24 @@ trait SearchService {
       }
 
       sort match {
-        case (Sort.ByTitleAsc) =>
+        case Sort.ByTitleAsc =>
           language match {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.ASC).missing("_last")
             case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.ASC).missing("_last")
           }
-        case (Sort.ByTitleDesc) =>
+        case Sort.ByTitleDesc =>
           language match {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.DESC).missing("_last")
             case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.DESC).missing("_last")
           }
-        case (Sort.ByDurationAsc)     => fieldSort("duration").order(SortOrder.ASC).missing("_last")
-        case (Sort.ByDurationDesc)    => fieldSort("duration").order(SortOrder.DESC).missing("_last")
-        case (Sort.ByRelevanceAsc)    => fieldSort("_score").order(SortOrder.ASC)
-        case (Sort.ByRelevanceDesc)   => fieldSort("_score").order(SortOrder.DESC)
-        case (Sort.ByLastUpdatedAsc)  => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
-        case (Sort.ByLastUpdatedDesc) => fieldSort("lastUpdated").order(SortOrder.DESC).missing("_last")
-        case (Sort.ByIdAsc)           => fieldSort("id").order(SortOrder.ASC).missing("_last")
-        case (Sort.ByIdDesc)          => fieldSort("id").order(SortOrder.DESC).missing("_last")
+        case Sort.ByDurationAsc     => fieldSort("duration").order(SortOrder.ASC).missing("_last")
+        case Sort.ByDurationDesc    => fieldSort("duration").order(SortOrder.DESC).missing("_last")
+        case Sort.ByRelevanceAsc    => fieldSort("_score").order(SortOrder.ASC)
+        case Sort.ByRelevanceDesc   => fieldSort("_score").order(SortOrder.DESC)
+        case Sort.ByLastUpdatedAsc  => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
+        case Sort.ByLastUpdatedDesc => fieldSort("lastUpdated").order(SortOrder.DESC).missing("_last")
+        case Sort.ByIdAsc           => fieldSort("id").order(SortOrder.ASC).missing("_last")
+        case Sort.ByIdDesc          => fieldSort("id").order(SortOrder.DESC).missing("_last")
       }
     }
 
@@ -92,9 +127,10 @@ trait SearchService {
 
     /**
       * Takes care of logging reindexResults, used in subclasses overriding [[scheduleIndexDocuments]]
-      * @param indexName
-      * @param reindexFuture
-      * @param executor Execution contex for the future
+      *
+      * @param indexName Name of index to use for logging
+      * @param reindexFuture Reindexing future to handle
+      * @param executor Execution context for the future
       */
     protected def handleScheduledIndexResults(indexName: String, reindexFuture: Future[Try[ReindexResult]])(
         implicit executor: ExecutionContext): Unit = {
