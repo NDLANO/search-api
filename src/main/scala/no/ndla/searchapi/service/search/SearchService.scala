@@ -70,7 +70,6 @@ trait SearchService {
     }
 
     def scroll(scrollId: String, language: String, fallback: Boolean): Try[SearchResult] = {
-      // TODO: Test to see whether highlighting works when scrolling
       e4sClient
         .execute {
           searchScroll(scrollId, ElasticSearchScrollKeepAlive)
