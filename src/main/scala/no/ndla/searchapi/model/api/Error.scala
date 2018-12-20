@@ -45,7 +45,7 @@ object Error {
     s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
   val VALIDATION_DESCRIPTION = "Validation Error"
 
-  val WINDOW_TOO_LARGE_DESCRIPTION =
+  val WINDOW_TOO_LARGE_DESCRIPTION = // TODO: How to scroll
     s"The result window is too large. Fetching pages above ${SearchApiProperties.ElasticSearchIndexMaxResultWindow} results are unsupported."
 
   val INDEX_MISSING_DESCRIPTION =
@@ -54,7 +54,8 @@ object Error {
   val INVALID_BODY_DESCRIPTION =
     "Unable to index the requested document because body was invalid."
 
-  val INVALID_SEARCH_CONTEXT_DESCRIPTION = "The search-context specified was not expected. Please create one by searching from page 1."
+  val INVALID_SEARCH_CONTEXT_DESCRIPTION =
+    "The search-context specified was not expected. Please create one by searching from page 1."
 
   val GenericError = Error(GENERIC, GENERIC_DESCRIPTION)
   val IndexMissingError = Error(INDEX_MISSING, INDEX_MISSING_DESCRIPTION)

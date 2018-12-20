@@ -871,6 +871,7 @@ object TestData {
   )
 
   val searchSettings = SearchSettings(
+    query = None,
     fallback = false,
     language = Language.DefaultLanguage,
     license = None,

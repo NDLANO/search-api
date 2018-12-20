@@ -79,7 +79,7 @@ trait SearchService {
           val hits = getHits(response.result, language, fallback)
           SearchResult(
             totalCount = response.result.totalHits,
-            page = if (scrollId != response.result.scrollId.getOrElse("-1")) { Some(8008) } else { None }, // TODO: Ikke returner noe her er du snill
+            page = None,
             pageSize = response.result.hits.hits.length,
             language = if (language == "*") Language.AllLanguages else language,
             results = hits,

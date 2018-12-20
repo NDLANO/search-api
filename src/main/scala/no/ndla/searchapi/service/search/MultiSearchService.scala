@@ -13,7 +13,11 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.{ElasticSearchIndexMaxResultWindow, ElasticSearchScrollKeepAlive, SearchIndexes}
+import no.ndla.searchapi.SearchApiProperties.{
+  ElasticSearchIndexMaxResultWindow,
+  ElasticSearchScrollKeepAlive,
+  SearchIndexes
+}
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{MultiSearchResult, ResultWindowTooLargeException}
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
@@ -34,30 +38,33 @@ trait MultiSearchService {
   class MultiSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
-    def all(settings: SearchSettings): Try[SearchResult] = executeSearch(settings, boolQuery())
+    def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
+      val fullQuery = settings.query match {
+        case Some(q) =>
+          val searchLanguage =
+            if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
+          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 2)
+          val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
+          val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
+          val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
+          val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
+          val authorSearch = simpleStringQuery(q).field("authors", 1)
 
-    def matchingQuery(query: String, settings: SearchSettings): Try[SearchResult] = {
-      val searchLanguage =
-        if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-      val titleSearch = simpleStringQuery(query).field(s"title.$searchLanguage", 2)
-      val introSearch = simpleStringQuery(query).field(s"introduction.$searchLanguage", 2)
-      val metaSearch = simpleStringQuery(query).field(s"metaDescription.$searchLanguage", 1)
-      val contentSearch = simpleStringQuery(query).field(s"content.$searchLanguage", 1)
-      val tagSearch = simpleStringQuery(query).field(s"tags.$searchLanguage", 1)
-      val authorSearch = simpleStringQuery(query).field("authors", 1)
-
-      val fullQuery = boolQuery()
-        .must(
           boolQuery()
-            .should(
-              titleSearch,
-              introSearch,
-              metaSearch,
-              contentSearch,
-              tagSearch,
-              authorSearch
+            .must(
+              boolQuery()
+                .should(
+                  titleSearch,
+                  introSearch,
+                  metaSearch,
+                  contentSearch,
+                  tagSearch,
+                  authorSearch
+                )
             )
-        )
+        case None =>
+          boolQuery()
+      }
       executeSearch(settings, fullQuery)
     }
 
