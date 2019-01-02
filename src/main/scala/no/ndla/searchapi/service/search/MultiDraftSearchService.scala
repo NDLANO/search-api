@@ -14,10 +14,14 @@ import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.SearchIndexes
+import no.ndla.searchapi.SearchApiProperties.{
+  SearchIndexes,
+  ElasticSearchScrollKeepAlive,
+  ElasticSearchIndexMaxResultWindow
+}
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
-import no.ndla.searchapi.model.domain.{Language, RequestInfo}
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.MultiDraftSearchSettings
 
@@ -33,25 +37,11 @@ trait MultiDraftSearchService {
     with LearningPathIndexService =>
   val multiDraftSearchService: MultiDraftSearchService
 
-  class MultiDraftSearchService extends LazyLogging with SearchService[MultiSearchSummary] with TaxonomyFiltering {
+  class MultiDraftSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
 
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
 
-    override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
-      val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
-      val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
-      val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
-      hit.`type` match {
-        case `articleType` =>
-          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        case `draftType` =>
-          searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
-        case `learningPathType` =>
-          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
-      }
-    }
-
-    def matchingQuery(settings: MultiDraftSearchSettings): Try[MultiSearchResult] = {
+    def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
       val searchLanguage =
         if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
 
@@ -87,14 +77,14 @@ trait MultiDraftSearchService {
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[MultiSearchResult] = {
+    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
-      if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
+      if (requestedResultWindow > ElasticSearchIndexMaxResultWindow) {
         logger.info(
-          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+          s"Max supported results are $ElasticSearchIndexMaxResultWindow, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
         val searchToExecute = search(searchIndex)
@@ -104,17 +94,22 @@ trait MultiDraftSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
-        e4sClient.execute(searchToExecute) match {
+        // Only add scroll param if it is first page
+        val searchWithScroll =
+          if (startAt != 0) { searchToExecute } else { searchToExecute.scroll(ElasticSearchScrollKeepAlive) }
+
+        e4sClient.execute(searchWithScroll) match {
           case Success(response) =>
             Success(
-              MultiSearchResult(
+              SearchResult(
                 totalCount = response.result.totalHits,
-                page = settings.page,
+                page = Some(settings.page),
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
-                results = getHits(response.result, settings.language, settings.fallback)
+                results = getHits(response.result, settings.language, settings.fallback),
+                scrollId = response.result.scrollId
               ))
-          case Failure(ex) => errorHandler(ex)
+          case Failure(ex) => Failure(ex)
         }
       }
     }

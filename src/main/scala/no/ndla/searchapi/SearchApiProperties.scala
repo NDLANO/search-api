@@ -56,6 +56,7 @@ object SearchApiProperties extends LazyLogging {
   val MaxPageSize = 100
   val IndexBulkSize = 1000
   val ElasticSearchIndexMaxResultWindow = 10000
+  val ElasticSearchScrollKeepAlive = "10s"
 
   val ExternalApiUrls: Map[String, String] = Map(
     "article-api" -> s"$Domain/article-api/v2/articles",

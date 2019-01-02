@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.{ElasticSearchIndexMaxResultWindow, ElasticSearchScrollKeepAlive}
 import no.ndla.searchapi.integration.SearchApiClient
 import no.ndla.searchapi.model.api.{
   Error,
@@ -24,18 +25,31 @@ import no.ndla.searchapi.model.api.{
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
-import no.ndla.searchapi.service.search.{MultiDraftSearchService, MultiSearchService}
+import no.ndla.searchapi.service.search.{
+  MultiDraftSearchService,
+  MultiSearchService,
+  SearchConverterService,
+  SearchService
+}
 import no.ndla.searchapi.service.{ApiSearchService, SearchClients}
 import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport, SwaggerSupportSyntax}
+import org.scalatra.Ok
+import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport}
 import org.scalatra.util.NotNothing
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
 trait SearchController {
-  this: ApiSearchService with SearchClients with SearchApiClient with MultiSearchService with MultiDraftSearchService =>
+  this: ApiSearchService
+    with SearchClients
+    with SearchApiClient
+    with MultiSearchService
+    with SearchConverterService
+    with SearchService
+    with MultiDraftSearchService =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -104,6 +118,16 @@ trait SearchController {
         |If levels are specified the learning resource must have specified relevances in relation to a specified level.""".stripMargin
     )
 
+    private val scrollId = Param[Option[String]](
+      "search-context",
+      s"""A search context retrieved from the response header of a previous search.
+        |If search-context is specified, all other query parameters, except '${this.language.paramName}' and '${this.fallback.paramName}' are ignored
+        |For the rest of the parameters the original search of the search-context is used.
+        |The search context may change between scrolls. Always use the most recent one (The context if unused dies after $ElasticSearchScrollKeepAlive).
+        |Used to enable scrolling past $ElasticSearchIndexMaxResultWindow results.
+      """.stripMargin
+    )
+
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
 
@@ -155,6 +179,7 @@ trait SearchController {
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
 
       val settings = SearchSettings(
+        query = query,
         fallback = fallback,
         language = language,
         license = None,
@@ -176,24 +201,22 @@ trait SearchController {
     private def searchInGroup(query: Option[String],
                               group: String,
                               settings: SearchSettings): Try[GroupSearchResult] = {
-      val result = query match {
-        case Some(q) => multiSearchService.matchingQuery(query = q, settings)
-        case None    => multiSearchService.all(settings)
-      }
 
-      result.map(
-        searchResult =>
-          GroupSearchResult(
-            totalCount = searchResult.totalCount,
-            resourceType = group,
-            page = searchResult.page,
-            pageSize = searchResult.pageSize,
-            language = searchResult.language,
-            results = searchResult.results.map(r => {
-              val paths = r.contexts.map(_.path)
-              GroupSummary(id = r.id, title = r.title, url = r.url, paths = paths)
-            })
-        ))
+      multiSearchService
+        .matchingQuery(settings)
+        .map(
+          searchResult =>
+            GroupSearchResult(
+              totalCount = searchResult.totalCount,
+              resourceType = group,
+              page = searchResult.page.getOrElse(1),
+              pageSize = searchResult.pageSize,
+              language = searchResult.language,
+              results = searchResult.results.map(r => {
+                val paths = r.contexts.map(_.path)
+                GroupSummary(id = r.id, title = r.title, url = r.url, paths = paths)
+              })
+          ))
     }
 
     private def groupSearch(query: Option[String], settings: SearchSettings) = {
@@ -252,6 +275,106 @@ trait SearchController {
       searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), apisToSearch)
     }
 
+    private def getSearchSettingsFromRequest = {
+      val query = paramOrNone(this.query.paramName)
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+      val page = intOrDefault(this.pageNo.paramName, 1)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
+      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
+      val license = paramOrNone(this.license.paramName)
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
+      val subjects = paramAsListOfString(this.subjects.paramName)
+      val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
+      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
+
+      SearchSettings(
+        query = query,
+        fallback = fallback,
+        language = language,
+        license = license,
+        page = page,
+        pageSize = pageSize,
+        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
+        withIdIn = idList,
+        taxonomyFilters = taxonomyFilters,
+        subjects = subjects,
+        resourceTypes = resourceTypes,
+        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        supportedLanguages = supportedLanguagesFilter,
+        relevanceIds = relevances
+      )
+    }
+
+    private def getDraftSearchSettingsFromRequest = {
+      val page = intOrDefault(this.pageNo.paramName, 1)
+      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
+      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
+      val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
+      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
+      val license = paramOrNone(this.license.paramName)
+      val query = paramOrNone(this.query.paramName)
+      val noteQuery = paramOrNone(this.noteQuery.paramName)
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+      val subjects = paramAsListOfString(this.subjects.paramName)
+      val topics = paramAsListOfString(this.topics.paramName)
+      val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
+      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
+
+      MultiDraftSearchSettings(
+        query = query,
+        noteQuery = noteQuery,
+        fallback = fallback,
+        language = language,
+        license = license,
+        page = page,
+        pageSize = pageSize,
+        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
+        withIdIn = idList,
+        taxonomyFilters = taxonomyFilters,
+        subjects = subjects,
+        topics = topics,
+        resourceTypes = resourceTypes,
+        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+        supportedLanguages = supportedLanguagesFilter,
+        relevanceIds = relevances
+      )
+    }
+
+    /**
+      * Does a scroll with @scroller specified in the first parameter list
+      * If no scrollId is specified execute the function @orFunction in the second parameter list.
+      *
+      * @param scroller SearchService to scroll with
+      * @param orFunction Funciton to execute if no scrollId in parameters (Usually searching)
+      * @tparam T SearchService
+      * @return A Try with scroll result, or the return of the orFunction (Usually a try with a search result).
+      */
+    private def scrollWithOr[T <: SearchService](scroller: T)(orFunction: => Any): Any = {
+
+      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
+      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
+
+      paramOrNone(this.scrollId.paramName) match {
+        case Some(scroll) =>
+          scroller.scroll(scroll, language, fallback) match {
+            case Success(scrollResult) =>
+              Ok(searchConverterService.toApiMultiSearchResult(scrollResult),
+                 headers = scrollIdToHeader(scrollResult.scrollId))
+            case Failure(ex) => errorHandler(ex)
+          }
+        case None => orFunction
+      }
+    }
+
+    private def scrollIdToHeader(id: Option[String]) = id.map(i => this.scrollId.paramName -> i).toList.toMap
+
     get(
       "/",
       operation(
@@ -273,53 +396,19 @@ trait SearchController {
             asQueryParam(fallback),
             asQueryParam(subjects),
             asQueryParam(languageFilter),
-            asQueryParam(relevanceFilter)
+            asQueryParam(relevanceFilter),
+            asQueryParam(scrollId)
         )
           authorizations "oauth2"
           responseMessages response500)
     ) {
-      val page = intOrDefault(this.pageNo.paramName, 1)
-      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
-      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
-      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
-      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
-      val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
-      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
-      val license = paramOrNone(this.license.paramName)
-      val query = paramOrNone(this.query.paramName)
-      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
-      val subjects = paramAsListOfString(this.subjects.paramName)
-      val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
-      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
-
-      val settings = SearchSettings(
-        fallback = fallback,
-        language = language,
-        license = license,
-        page = page,
-        pageSize = pageSize,
-        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
-        withIdIn = idList,
-        taxonomyFilters = taxonomyFilters,
-        subjects = subjects,
-        resourceTypes = resourceTypes,
-        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances
-      )
-      multiSearch(query, settings)
-    }
-
-    private def multiSearch(query: Option[String], settings: SearchSettings) = {
-      val result = query match {
-        case Some(q) => multiSearchService.matchingQuery(query = q, settings)
-        case None    => multiSearchService.all(settings)
-      }
-
-      result match {
-        case Success(searchResult) => searchResult
-        case Failure(ex)           => errorHandler(ex)
+      scrollWithOr(multiSearchService) {
+        multiSearchService.matchingQuery(getSearchSettingsFromRequest) match {
+          case Success(searchResult) =>
+            Ok(searchConverterService.toApiMultiSearchResult(searchResult), scrollIdToHeader(searchResult.scrollId))
+          case Failure(ex) =>
+            errorHandler(ex)
+        }
       }
     }
 
@@ -345,52 +434,19 @@ trait SearchController {
             asQueryParam(fallback),
             asQueryParam(subjects),
             asQueryParam(languageFilter),
-            asQueryParam(relevanceFilter)
+            asQueryParam(relevanceFilter),
+            asQueryParam(scrollId)
         )
           authorizations "oauth2"
           responseMessages response500)
     ) {
-      val page = intOrDefault(this.pageNo.paramName, 1)
-      val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
-      val contextTypes = paramAsListOfString(this.contextTypes.paramName)
-      val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
-      val idList = paramAsListOfLong(this.learningResourceIds.paramName)
-      val resourceTypes = paramAsListOfString(this.resourceTypes.paramName)
-      val taxonomyFilters = paramAsListOfString(this.levels.paramName)
-      val license = paramOrNone(this.license.paramName)
-      val query = paramOrNone(this.query.paramName)
-      val noteQuery = paramOrNone(this.noteQuery.paramName)
-      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, ""))
-      val fallback = booleanOrDefault(this.fallback.paramName, default = false)
-      val subjects = paramAsListOfString(this.subjects.paramName)
-      val topics = paramAsListOfString(this.topics.paramName)
-      val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
-      val relevances = paramAsListOfString(this.relevanceFilter.paramName)
-
-      val settings = MultiDraftSearchSettings(
-        query = query,
-        noteQuery = noteQuery,
-        fallback = fallback,
-        language = language,
-        license = license,
-        page = page,
-        pageSize = pageSize,
-        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
-        withIdIn = idList,
-        taxonomyFilters = taxonomyFilters,
-        subjects = subjects,
-        topics = topics,
-        resourceTypes = resourceTypes,
-        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances
-      )
-
-      val result = multiDraftSearchService.matchingQuery(settings)
-
-      result match {
-        case Success(searchResult) => searchResult
-        case Failure(ex)           => errorHandler(ex)
+      scrollWithOr(multiDraftSearchService) {
+        multiDraftSearchService.matchingQuery(getDraftSearchSettingsFromRequest) match {
+          case Success(searchResult) =>
+            Ok(searchConverterService.toApiMultiSearchResult(searchResult), scrollIdToHeader(searchResult.scrollId))
+          case Failure(ex) =>
+            errorHandler(ex)
+        }
       }
 
     }

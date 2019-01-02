@@ -158,12 +158,12 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val hits1 = page1.results
     val hits2 = page2.results
     page1.totalCount should be(expected.size)
-    page1.page should be(1)
+    page1.page.get should be(1)
     hits1.size should be(2)
     hits1.head.id should be(1)
     hits1.last.id should be(1)
     page2.totalCount should be(expected.size)
-    page2.page should be(2)
+    page2.page.get should be(2)
     hits2.size should be(2)
     hits2.head.id should be(2)
     hits2.last.id should be(2)
@@ -565,6 +565,37 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
                                     taxonomyFilters = List("Tysk 2")))
 
     search.results.map(_.id) should be(Seq(3))
+  }
+
+  test("That scrolling works as expected") {
+    val pageSize = 2
+    val ids = idsForLang("all").sorted.sliding(pageSize, pageSize).toList
+
+    val Success(initialSearch) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = pageSize))
+
+    val Success(scroll1) = multiDraftSearchService.scroll(initialSearch.scrollId.get, "all", fallback = true)
+    val Success(scroll2) = multiDraftSearchService.scroll(scroll1.scrollId.get, "all", fallback = true)
+    val Success(scroll3) = multiDraftSearchService.scroll(scroll2.scrollId.get, "all", fallback = true)
+    val Success(scroll4) = multiDraftSearchService.scroll(scroll3.scrollId.get, "all", fallback = true)
+    val Success(scroll5) = multiDraftSearchService.scroll(scroll4.scrollId.get, "all", fallback = true)
+    val Success(scroll6) = multiDraftSearchService.scroll(scroll5.scrollId.get, "all", fallback = true)
+    val Success(scroll7) = multiDraftSearchService.scroll(scroll6.scrollId.get, "all", fallback = true)
+    val Success(scroll8) = multiDraftSearchService.scroll(scroll7.scrollId.get, "all", fallback = true)
+    val Success(scroll9) = multiDraftSearchService.scroll(scroll8.scrollId.get, "all", fallback = true)
+    val Success(scroll10) = multiDraftSearchService.scroll(scroll9.scrollId.get, "all", fallback = true)
+
+    initialSearch.results.map(_.id) should be(ids.head)
+    scroll1.results.map(_.id) should be(ids(1))
+    scroll2.results.map(_.id) should be(ids(2))
+    scroll3.results.map(_.id) should be(ids(3))
+    scroll4.results.map(_.id) should be(ids(4))
+    scroll5.results.map(_.id) should be(ids(5))
+    scroll6.results.map(_.id) should be(ids(6))
+    scroll7.results.map(_.id) should be(ids(7))
+    scroll8.results.map(_.id) should be(ids(8))
+    scroll9.results.map(_.id) should be(List.empty)
+    scroll10.results.map(_.id) should be(List.empty)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {
