@@ -45,8 +45,8 @@ object Error {
     s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
   val VALIDATION_DESCRIPTION = "Validation Error"
 
-  val WINDOW_TOO_LARGE_DESCRIPTION = // TODO: How to scroll
-    s"The result window is too large. Fetching pages above ${SearchApiProperties.ElasticSearchIndexMaxResultWindow} results are unsupported."
+  val WINDOW_TOO_LARGE_DESCRIPTION =
+    s"The result window is too large. Fetching pages above ${SearchApiProperties.ElasticSearchIndexMaxResultWindow} results requires scrolling, see query-parameter 'search-context'."
 
   val INDEX_MISSING_DESCRIPTION =
     s"Ooops. Our search index is not available at the moment, but we are trying to recreate it. Please try again in a few minutes. Feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
