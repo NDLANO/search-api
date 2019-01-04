@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.{DefaultPageSize, MaxPageSize}
 import no.ndla.searchapi.integration.SearchApiClient
 import no.ndla.searchapi.model.api.{
   Error,
@@ -59,19 +60,21 @@ trait SearchController {
     private val license = Param("license", "Return only results with provided license.")
     private val sort = Param(
       "sort",
-      """The sorting used on results.
-             The following are supported: relevance, -relevance, title, -title, lastUpdated, -lastUpdated, id, -id.
+      s"""The sorting used on results.
+             The following are supported: ${Sort.values.mkString(", ")}.
              Default is by -relevance (desc) when query is set, and id (asc) when query is empty.""".stripMargin
     )
     private val pageNo = Param("page", "The page number of the search hits to display.")
-    private val pageSize = Param("page-size", "The number of search hits to display for each page.")
+    private val pageSize = Param(
+      "page-size",
+      s"The number of search hits to display for each page. Defaults to $DefaultPageSize and max is $MaxPageSize.")
     private val resourceTypes = Param(
       "resource-types",
       "Return only learning resources of specific type(s). To provide multiple types, separate by comma (,).")
     private val learningResourceIds = Param(
       "ids",
       "Return only learning resources that have one of the provided ids. To provide multiple ids, separate by comma (,).")
-    private val apiTypes = Param("types", "A comma separated list of types to search in. f.ex articles,images")
+    private val apiTypes = Param("types", "A comma separated list of types to search in. f.ex articles,images.")
     private val fallback = Param("fallback", "Fallback to existing language if language is specified.")
     private val levels =
       Param("levels", "A comma separated list of levels the learning resources should be filtered by.")
@@ -114,7 +117,6 @@ trait SearchController {
         asQueryParam[Option[String]](contextTypes),
         asQueryParam[Option[String]](languageFilter)
     )
-      authorizations "oauth2"
       responseMessages response500)
     get("/group/", operation(groupSearchDoc)) {
       val page = intOrDefault(this.pageNo.paramName, 1)
@@ -197,8 +199,8 @@ trait SearchController {
 
     private val draftSearchDoc =
       (apiOperation[Seq[SearchResults]]("searchAPIs")
-        summary "search across APIs"
-        description "search across APIs"
+        summary "Search across APIs."
+        description "Search across APIs."
         parameters (
           asHeaderParam[Option[String]](correlationId),
           asQueryParam[Option[String]](query),
@@ -207,7 +209,6 @@ trait SearchController {
           asQueryParam[Option[Int]](pageSize),
           asQueryParam[Option[String]](apiTypes)
       )
-        authorizations "oauth2"
         responseMessages response500)
     get("/draft/", operation(draftSearchDoc)) {
       val language = paramOrDefault(this.language.paramName, "nb")
@@ -228,7 +229,7 @@ trait SearchController {
     }
 
     private val multiSearchDoc = (apiOperation[MultiSearchResult]("searchLearningResources")
-      summary "Find learning resources"
+      summary "Find learning resources."
       description "Shows all learning resources. You can search too."
       parameters (
         asHeaderParam[Option[String]](correlationId),
