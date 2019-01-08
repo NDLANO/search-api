@@ -190,7 +190,7 @@ object TestData {
   val sampleArticleWithByNcSa: Article = sampleArticleWithPublicDomain.copy(copyright = byNcSaCopyright)
   val sampleArticleWithCopyrighted: Article = sampleArticleWithPublicDomain.copy(copyright = copyrighted)
 
-  val article1 = TestData.sampleArticleWithByNcSa.copy(
+  val article1: Article = TestData.sampleArticleWithByNcSa.copy(
     id = Option(1),
     title = List(Title("Batmen er på vift med en bil", "nb")),
     introduction = List(ArticleIntroduction("Batmen", "nb")),
@@ -204,7 +204,7 @@ object TestData {
     copyright = byNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet")))
   )
 
-  val article2 = TestData.sampleArticleWithPublicDomain.copy(
+  val article2: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(2),
     title = List(Title("Pingvinen er ute og går", "nb")),
     introduction = List(ArticleIntroduction("Pingvinen", "nb")),
@@ -218,7 +218,7 @@ object TestData {
                                            processors = List(Author("Editorial", "Svims")))
   )
 
-  val article3 = TestData.sampleArticleWithPublicDomain.copy(
+  val article3: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(3),
     title = List(Title("Donald Duck kjører bil", "nb")),
     introduction = List(ArticleIntroduction("Donald Duck", "nb")),
@@ -230,7 +230,7 @@ object TestData {
     updated = today.minusDays(1)
   )
 
-  val article4 = TestData.sampleArticleWithCopyrighted.copy(
+  val article4: Article = TestData.sampleArticleWithCopyrighted.copy(
     id = Option(4),
     title = List(Title("Superman er ute og flyr", "nb")),
     introduction = List(ArticleIntroduction("Superman", "nb")),
@@ -243,7 +243,7 @@ object TestData {
     updated = today
   )
 
-  val article5 = TestData.sampleArticleWithPublicDomain.copy(
+  val article5: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(5),
     title = List(Title("Hulken løfter biler", "nb")),
     introduction = List(ArticleIntroduction("Hulken", "nb")),
@@ -255,7 +255,7 @@ object TestData {
     updated = today.minusDays(35)
   )
 
-  val article6 = TestData.sampleArticleWithPublicDomain.copy(
+  val article6: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(6),
     title = List(Title("Loke og Tor prøver å fange midgaardsormen", "nb")),
     introduction = List(ArticleIntroduction("Loke og Tor", "nb")),
@@ -269,7 +269,7 @@ object TestData {
     updated = today.minusDays(25)
   )
 
-  val article7 = TestData.sampleArticleWithPublicDomain.copy(
+  val article7: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(7),
     title = List(Title("Yggdrasil livets tre", "nb")),
     introduction = List(ArticleIntroduction("Yggdrasil", "nb")),
@@ -281,7 +281,7 @@ object TestData {
     updated = today.minusDays(15)
   )
 
-  val article8 = TestData.sampleArticleWithPublicDomain.copy(
+  val article8: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(8),
     title = List(Title("Baldur har mareritt", "nb")),
     introduction = List(ArticleIntroduction("Baldur", "nb")),
@@ -294,7 +294,7 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
-  val article9 = TestData.sampleArticleWithPublicDomain.copy(
+  val article9: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(9),
     title = List(Title("En Baldur har mareritt om Ragnarok", "nb")),
     introduction = List(ArticleIntroduction("Baldur", "nb")),
@@ -307,7 +307,7 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
-  val article10 = TestData.sampleArticleWithPublicDomain.copy(
+  val article10: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(10),
     title = List(Title("This article is in english", "en")),
     introduction = List(ArticleIntroduction("Engulsk", "en")),
@@ -321,7 +321,7 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
-  val article11 = TestData.sampleArticleWithPublicDomain.copy(
+  val article11: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
     title = List(Title("Katter", "nb"), Title("Cats", "en")),
     introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
@@ -332,6 +332,19 @@ object TestData {
     created = today.minusDays(10),
     updated = today.minusDays(5),
     articleType = LearningResourceType.TopicArticle
+  )
+
+  val article12: Article = TestData.sampleArticleWithPublicDomain.copy(
+    id = Option(12),
+    title = List(Title("Ekstrastoff", "nb")),
+    introduction = List(ArticleIntroduction("Ekstra", "nb")),
+    metaDescription = List(MetaDescription("", "nb")),
+    content = List(ArticleContent("", "nb")),
+    visualElement = List.empty,
+    tags = List(Tag(List(""), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.Article
   )
 
   val articlesToIndex: Seq[Article] = List(
@@ -345,7 +358,8 @@ object TestData {
     article8,
     article9,
     article10,
-    article11
+    article11,
+    article12
   )
 
   val draftPublicDomainCopyright =
@@ -391,7 +405,7 @@ object TestData {
   val sampleDraftWithByNcSa: Draft = sampleDraftWithPublicDomain.copy(copyright = Some(draftByNcSaCopyright))
   val sampleDraftWithCopyrighted: Draft = sampleDraftWithPublicDomain.copy(copyright = Some(draftCopyrighted))
 
-  val draft1 = TestData.sampleDraftWithByNcSa.copy(
+  val draft1: Draft = TestData.sampleDraftWithByNcSa.copy(
     id = Option(1),
     title = List(Title("Batmen er på vift med en bil", "nb")),
     introduction = List(ArticleIntroduction("Batmen", "nb")),
@@ -405,7 +419,7 @@ object TestData {
     copyright = Some(draftByNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet"))))
   )
 
-  val draft2 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft2: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(2),
     title = List(Title("Pingvinen er ute og går", "nb")),
     introduction = List(ArticleIntroduction("Pingvinen", "nb")),
@@ -420,7 +434,7 @@ object TestData {
                                       processors = List(Author("Editorial", "Svims"))))
   )
 
-  val draft3 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft3: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(3),
     title = List(Title("Donald Duck kjører bil", "nb")),
     introduction = List(ArticleIntroduction("Donald Duck", "nb")),
@@ -432,7 +446,7 @@ object TestData {
     updated = today.minusDays(1)
   )
 
-  val draft4 = TestData.sampleDraftWithCopyrighted.copy(
+  val draft4: Draft = TestData.sampleDraftWithCopyrighted.copy(
     id = Option(4),
     title = List(Title("Superman er ute og flyr", "nb")),
     introduction = List(ArticleIntroduction("Superman", "nb")),
@@ -445,7 +459,7 @@ object TestData {
     updated = today
   )
 
-  val draft5 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft5: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(5),
     title = List(Title("Hulken løfter biler", "nb")),
     introduction = List(ArticleIntroduction("Hulken", "nb")),
@@ -458,7 +472,7 @@ object TestData {
     notes = List("kakemonster")
   )
 
-  val draft6 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(6),
     title = List(Title("Loke og Tor prøver å fange midgaardsormen", "nb")),
     introduction = List(ArticleIntroduction("Loke og Tor", "nb")),
@@ -472,7 +486,7 @@ object TestData {
     updated = today.minusDays(25)
   )
 
-  val draft7 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft7: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(7),
     title = List(Title("Yggdrasil livets tre", "nb")),
     introduction = List(ArticleIntroduction("Yggdrasil", "nb")),
@@ -484,7 +498,7 @@ object TestData {
     updated = today.minusDays(15)
   )
 
-  val draft8 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft8: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(8),
     title = List(Title("Baldur har mareritt", "nb")),
     introduction = List(ArticleIntroduction("Baldur", "nb")),
@@ -497,7 +511,7 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
-  val draft9 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft9: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(9),
     title = List(Title("Baldur har mareritt om Ragnarok", "nb")),
     introduction = List(ArticleIntroduction("Baldur", "nb")),
@@ -510,7 +524,7 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
-  val draft10 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft10: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(10),
     title = List(Title("This article is in english", "en")),
     introduction = List(ArticleIntroduction("Engulsk", "en")),
@@ -524,7 +538,7 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
-  val draft11 = TestData.sampleDraftWithPublicDomain.copy(
+  val draft11: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(11),
     title = List(Title("Katter", "nb"), Title("Cats", "en")),
     introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
@@ -535,6 +549,19 @@ object TestData {
     created = today.minusDays(10),
     updated = today.minusDays(5),
     articleType = LearningResourceType.TopicArticle
+  )
+
+  val draft12: Draft = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(12),
+    title = List(Title("Ekstrastoff", "nb")),
+    introduction = List(ArticleIntroduction("Ekstra", "nb")),
+    metaDescription = List(MetaDescription("", "nb")),
+    content = List(ArticleContent("", "nb")),
+    visualElement = List.empty,
+    tags = List(Tag(List(""), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.Article
   )
 
   val draftsToIndex: List[Draft] = List(
@@ -548,7 +575,8 @@ object TestData {
     draft8,
     draft9,
     draft10,
-    draft11
+    draft11,
+    draft12
   )
 
   val paul = Author("author", "Truly Weird Rand Paul")
@@ -579,7 +607,7 @@ object TestData {
   val EnglandoId = 5
   val KekId = 6
 
-  val learningPath1 = DefaultLearningPath.copy(
+  val learningPath1: LearningPath = DefaultLearningPath.copy(
     id = Some(PenguinId),
     title = List(Title("Pingvinen er en kjeltring", "nb")),
     description = List(Description("Dette handler om fugler", "nb")),
@@ -588,7 +616,7 @@ object TestData {
     tags = List(Tag(List("superhelt", "kanikkefly"), "nb"))
   )
 
-  val learningPath2 = DefaultLearningPath.copy(
+  val learningPath2: LearningPath = DefaultLearningPath.copy(
     id = Some(BatmanId),
     title = List(Title("Batman er en tøff og morsom helt", "nb"), Title("Batman is a tough guy", "en")),
     description = List(Description("Dette handler om flaggermus, som kan ligne litt på en fugl", "nb")),
@@ -597,7 +625,7 @@ object TestData {
     tags = List(Tag(Seq("superhelt", "kanfly"), "nb"))
   )
 
-  val learningPath3 = DefaultLearningPath.copy(
+  val learningPath3: LearningPath = DefaultLearningPath.copy(
     id = Some(DonaldId),
     title = List(Title("Donald er en tøff, rar og morsom and", "nb"), Title("Donald is a weird duck", "en")),
     description = List(Description("Dette handler om en and, som også minner om både flaggermus og fugler.", "nb")),
@@ -606,7 +634,7 @@ object TestData {
     tags = List(Tag(Seq("disney", "kanfly"), "nb"))
   )
 
-  val learningPath4 = DefaultLearningPath.copy(
+  val learningPath4: LearningPath = DefaultLearningPath.copy(
     id = Some(UnrelatedId),
     title = List(Title("Unrelated", "en"), Title("Urelatert", "nb")),
     description = List(Description("This is unrelated", "en"), Description("Dette er en urelatert", "nb")),
@@ -615,7 +643,7 @@ object TestData {
     tags = List()
   )
 
-  val learningPath5 = DefaultLearningPath.copy(
+  val learningPath5: LearningPath = DefaultLearningPath.copy(
     id = Some(EnglandoId),
     title = List(Title("Englando", "en")),
     description = List(Description("This is a englando learningpath", "en")),
@@ -625,7 +653,7 @@ object TestData {
     copyright = copyright.copy(contributors = List(Author("Writer", "Svims")))
   )
 
-  val learningPath6 = DefaultLearningPath.copy(
+  val learningPath6: LearningPath = DefaultLearningPath.copy(
     id = Some(KekId),
     title = List(Title("Kek", "en")),
     description = List(Description("This is kek", "en")),
@@ -672,6 +700,12 @@ object TestData {
     ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:11", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:7", "urn:filter:4", "urn:resource-filter:12", "urn:relevance:core"),
     ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:13", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:13", "urn:filter:5", "urn:resource-filter:14", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:13",
+                             "urn:filter:1",
+                             "urn:resource-filter:15",
+                             "urn:relevance:supplementary"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:7", "urn:resource-filter:16", "urn:relevance:core")
   )
 
   val relevances = List(
@@ -755,7 +789,11 @@ object TestData {
     Resource("urn:resource:12",
              learningPath5.title.head.title,
              Some(s"urn:learningpath:${learningPath5.id.get}"),
-             s"/subject:2/topic:4/resource:5")
+             s"/subject:2/topic:4/resource:5"),
+    Resource("urn:resource:13",
+             article12.title.head.title,
+             Some(s"urn:article:${article12.id.get}"),
+             s"/subject:2/topic:4/resource:13")
   )
 
   val topics = List(
@@ -788,7 +826,9 @@ object TestData {
     TopicResourceConnection("urn:topic:1", "urn:resource:9", "urn:topic-resource:11", primary = true, 1),
     TopicResourceConnection("urn:topic:3", "urn:resource:10", "urn:topic-resource:12", primary = true, 1),
     TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1)
+    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1),
+    TopicResourceConnection("urn:topic:1", "urn:resource:13", "urn:topic-resource:15", primary = true, 1),
+    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1)
   )
 
   val topicSubtopicConnections = List(
@@ -810,6 +850,9 @@ object TestData {
     ResourceResourceTypeConnection("urn:resource:10", "urn:resourcetype:learningpath", "urn:resource-resourcetype:12"),
     ResourceResourceTypeConnection("urn:resource:11", "urn:resourcetype:learningpath", "urn:resource-resourcetype:13"),
     ResourceResourceTypeConnection("urn:resource:12", "urn:resourcetype:learningpath", "urn:resource-resourcetype:14"),
+    ResourceResourceTypeConnection("urn:resource:13",
+                                   "urn:resourcetype:subjectMaterial",
+                                   "urn:resource-resourcetype:15"),
   )
 
   val taxonomyTestBundle = Bundle(
@@ -828,6 +871,7 @@ object TestData {
   )
 
   val searchSettings = SearchSettings(
+    query = None,
     fallback = false,
     language = Language.DefaultLanguage,
     license = None,
@@ -839,7 +883,8 @@ object TestData {
     subjects = List.empty,
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
-    supportedLanguages = List.empty
+    supportedLanguages = List.empty,
+    relevanceIds = List.empty
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
@@ -857,7 +902,8 @@ object TestData {
     topics = List.empty,
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
-    supportedLanguages = List.empty
+    supportedLanguages = List.empty,
+    relevanceIds = List.empty
   )
 
   val searchableResourceTypes = List(
@@ -882,6 +928,7 @@ object TestData {
         SearchableTaxonomyFilter(
           filterId = "urn:filter:1",
           name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
+          relevanceId = "urn:relevance:core",
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
         )),
       resourceTypes = searchableResourceTypes,

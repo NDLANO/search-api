@@ -13,17 +13,19 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.mapping.ISO639
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.{
+  SearchIndexes,
+  ElasticSearchScrollKeepAlive,
+  ElasticSearchIndexMaxResultWindow
+}
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.SearchApiProperties.SearchIndexes
 import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
-import no.ndla.searchapi.model.domain.{Language, RequestInfo}
-import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
-import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
+import no.ndla.searchapi.model.search.settings.MultiDraftSearchSettings
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
 trait MultiDraftSearchService {
@@ -35,25 +37,11 @@ trait MultiDraftSearchService {
     with LearningPathIndexService =>
   val multiDraftSearchService: MultiDraftSearchService
 
-  class MultiDraftSearchService extends LazyLogging with SearchService[MultiSearchSummary] {
+  class MultiDraftSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
 
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
 
-    override def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
-      val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
-      val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
-      val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
-      hit.`type` match {
-        case `articleType` =>
-          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        case `draftType` =>
-          searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
-        case `learningPathType` =>
-          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
-      }
-    }
-
-    def matchingQuery(settings: MultiDraftSearchSettings): Try[MultiSearchResult] = {
+    def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
       val searchLanguage =
         if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
 
@@ -89,14 +77,14 @@ trait MultiDraftSearchService {
       executeSearch(settings, fullQuery)
     }
 
-    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[MultiSearchResult] = {
+    def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
       val requestedResultWindow = settings.pageSize * settings.page
-      if (requestedResultWindow > SearchApiProperties.ElasticSearchIndexMaxResultWindow) {
+      if (requestedResultWindow > ElasticSearchIndexMaxResultWindow) {
         logger.info(
-          s"Max supported results are ${SearchApiProperties.ElasticSearchIndexMaxResultWindow}, user requested $requestedResultWindow")
+          s"Max supported results are $ElasticSearchIndexMaxResultWindow, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
         val searchToExecute = search(searchIndex)
@@ -106,17 +94,22 @@ trait MultiDraftSearchService {
           .highlighting(highlight("*"))
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
-        e4sClient.execute(searchToExecute) match {
+        // Only add scroll param if it is first page
+        val searchWithScroll =
+          if (startAt != 0) { searchToExecute } else { searchToExecute.scroll(ElasticSearchScrollKeepAlive) }
+
+        e4sClient.execute(searchWithScroll) match {
           case Success(response) =>
             Success(
-              MultiSearchResult(
+              SearchResult(
                 totalCount = response.result.totalHits,
-                page = settings.page,
+                page = Some(settings.page),
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
-                results = getHits(response.result, settings.language, settings.fallback)
+                results = getHits(response.result, settings.language, settings.fallback),
+                scrollId = response.result.scrollId
               ))
-          case Failure(ex) => errorHandler(ex)
+          case Failure(ex) => Failure(ex)
         }
       }
     }
@@ -132,10 +125,7 @@ trait MultiDraftSearchService {
         case "" | Language.AllLanguages =>
           None
         case lang =>
-          settings.fallback match {
-            case true  => None
-            case false => Some(existsQuery(s"title.$lang"))
-          }
+          if (settings.fallback) None else Some(existsQuery(s"title.$lang"))
       }
 
       val idFilter = if (settings.withIdIn.isEmpty) None else Some(idsQuery(settings.withIdIn))
@@ -150,6 +140,7 @@ trait MultiDraftSearchService {
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
       val taxonomyTopicFilter = topicFilter(settings.topics)
+      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects, settings.taxonomyFilters)
 
       val supportedLanguageFilter =
         if (settings.supportedLanguages.isEmpty) None
@@ -169,85 +160,15 @@ trait MultiDraftSearchService {
         taxonomyTopicFilter,
         taxonomyResourceTypesFilter,
         taxonomyContextFilter,
-        supportedLanguageFilter
+        supportedLanguageFilter,
+        taxonomyRelevanceFilter
       ).flatten
-    }
-
-    private def subjectFilter(subjects: List[String]) = {
-      if (subjects.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            subjects.map(
-              subjectId =>
-                nestedQuery("contexts").query(
-                  termQuery(s"contexts.subjectId", subjectId)
-              ))
-          )
-        )
-    }
-
-    private def topicFilter(topics: List[String]) = {
-      if (topics.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            topics.map(
-              topicId =>
-                nestedQuery("contexts").query(
-                  termQuery(s"contexts.parentTopicIds", topicId)
-              ))
-          )
-        )
-    }
-
-    private def levelFilter(taxonomyFilters: List[String]) = {
-      if (taxonomyFilters.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            taxonomyFilters.map(
-              filterName =>
-                nestedQuery("contexts.filters").query(
-                  boolQuery().should(
-                    ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
-                  )
-              ))
-          )
-        )
-    }
-
-    private def resourceTypeFilter(resourceTypes: List[String]) = {
-      if (resourceTypes.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            resourceTypes.map(
-              resourceTypeId =>
-                nestedQuery("contexts.resourceTypes").query(
-                  termQuery(s"contexts.resourceTypes.id", resourceTypeId)
-              ))
-          )
-        )
-    }
-
-    private def contextTypeFilter(contextTypes: List[LearningResourceType.Value]) = {
-      if (contextTypes.isEmpty) None
-      else
-        Some(
-          boolQuery().should(
-            contextTypes.map(
-              ct =>
-                nestedQuery("contexts").query(
-                  termQuery("contexts.contextType", ct.toString)
-              ))
-          )
-        )
     }
 
     override def scheduleIndexDocuments(): Unit = {
       val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1
-      implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
+      implicit val ec: ExecutionContextExecutor =
+        ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threadPoolSize))
       val requestInfo = RequestInfo()
 
       val draftFuture = Future {

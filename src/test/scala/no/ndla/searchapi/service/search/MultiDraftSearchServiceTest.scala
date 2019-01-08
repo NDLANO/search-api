@@ -15,6 +15,8 @@ import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.NdlaE4sClient
 import no.ndla.searchapi.model.api.MetaImage
 import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.domain.draft.Draft
+import no.ndla.searchapi.model.domain.learningpath.LearningPath
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
@@ -54,6 +56,29 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     })
   }
 
+  private def expectedAllPublicDrafts(language: String) = {
+    val x = if (language == "all") { draftsToIndex } else {
+      draftsToIndex.filter(_.title.map(_.language).contains(language))
+    }
+    x.filter(!_.copyright.flatMap(_.license).contains("copyrighted"))
+  }
+
+  private def expectedAllPublicLearningPaths(language: String) = {
+    val x = if (language == "all") { learningPathsToIndex } else {
+      learningPathsToIndex.filter(_.title.map(_.language).contains(language))
+    }
+    x.filter(_.copyright.license != "copyrighted")
+  }
+
+  private def idsForLang(language: String) =
+    expectedAllPublicDrafts(language).map(_.id.get) ++
+      expectedAllPublicLearningPaths(language).map(_.id.get)
+
+  private def titlesForLang(language: String) = {
+    expectedAllPublicDrafts(language).map(_.title.find(_.language == language || language == "all").get.title) ++
+      expectedAllPublicLearningPaths(language).map(_.title.find(_.language == language || language == "all").get.title)
+  }
+
   override def afterAll(): Unit = {
     localNode.stop(true)
   }
@@ -79,63 +104,49 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
 
   test("That all returns all documents ordered by id ascending") {
     val Success(results) = multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(sort = Sort.ByIdAsc))
-    val hits = results.results
-    results.totalCount should be(13)
-    hits.head.id should be(1)
-    hits(1).id should be(1)
-    hits(2).id should be(2)
-    hits(3).id should be(2)
-    hits(4).id should be(3)
-    hits(5).id should be(3)
-    hits(6).id should be(4)
-    hits(7).id should be(5)
-    hits(8).id should be(6)
-    hits(9).id should be(7)
-    hits(10).id should be(8)
-    hits(11).id should be(9)
-    hits.last.id should be(11)
+    val expected = idsForLang("nb").sorted
+    results.totalCount should be(expected.size)
+    results.results.map(_.id) should be(expected)
   }
 
   test("That all returns all documents ordered by id descending") {
     val Success(results) = multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(sort = Sort.ByIdDesc))
-    val hits = results.results
-    results.totalCount should be(13)
-    hits.head.id should be(11)
-    hits.takeRight(2).head.id should be(1)
-    hits.last.id should be(1)
+    val expected = idsForLang("nb").sorted.reverse
+    results.totalCount should be(expected.size)
+    results.results.map(_.id) should be(expected)
   }
 
   test("That all returns all documents ordered by title ascending") {
     val Success(results) = multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(sort = Sort.ByTitleAsc))
-    val hits = results.results
-    results.totalCount should be(13)
-    results.results.map(_.id) should be(List(8, 9, 2, 1, 3, 3, 5, 11, 6, 1, 2, 4, 7))
+    val expected = titlesForLang("nb").sorted
+    results.totalCount should be(expected.size)
+    results.results.map(_.title.title) should be(expected)
   }
 
   test("That all returns all documents ordered by title descending") {
     val Success(results) = multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(sort = Sort.ByTitleDesc))
-    val hits = results.results
-    results.totalCount should be(13)
-    results.results.map(_.id) should be(List(7, 4, 2, 1, 6, 11, 5, 3, 3, 1, 2, 9, 8))
+    val expected = titlesForLang("nb").sorted.reverse
+    results.totalCount should be(expected.size)
+    results.results.map(_.title.title) should be(expected)
   }
 
   test("That all returns all documents ordered by lastUpdated descending") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(sort = Sort.ByLastUpdatedDesc))
-    val hits = results.results
-    results.totalCount should be(13)
-    hits.head.id should be(3)
-    hits.last.id should be(5)
+    val expected = idsForLang("nb")
+    results.totalCount should be(expected.size)
+    results.results.head.id should be(3)
+    results.results.last.id should be(5)
   }
 
   test("That all returns all documents ordered by lastUpdated ascending") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(sort = Sort.ByLastUpdatedAsc))
-    val hits = results.results
-    results.totalCount should be(13)
-    hits.head.id should be(5)
-    hits(1).id should be(1)
-    hits.last.id should be(3)
+    val expected = idsForLang("nb")
+    results.totalCount should be(expected.size)
+    results.results.head.id should be(5)
+    results.results(1).id should be(1)
+    results.results.last.id should be(3)
   }
 
   test("That paging returns only hits on current page and not more than page-size") {
@@ -143,15 +154,16 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(page = 1, pageSize = 2, sort = Sort.ByIdAsc))
     val Success(page2) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(page = 2, pageSize = 2, sort = Sort.ByIdAsc))
+    val expected = idsForLang("nb")
     val hits1 = page1.results
     val hits2 = page2.results
-    page1.totalCount should be(13)
-    page1.page should be(1)
+    page1.totalCount should be(expected.size)
+    page1.page.get should be(1)
     hits1.size should be(2)
     hits1.head.id should be(1)
     hits1.last.id should be(1)
-    page2.totalCount should be(13)
-    page2.page should be(2)
+    page2.totalCount should be(expected.size)
+    page2.page.get should be(2)
     hits2.size should be(2)
     hits2.head.id should be(2)
     hits2.last.id should be(2)
@@ -252,7 +264,7 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = 100, sort = Sort.ByTitleAsc))
 
-    search.totalCount should equal(16)
+    search.totalCount should equal(titlesForLang("all").size)
   }
 
   test("Search for all languages should return all articles in correct language") {
@@ -261,7 +273,7 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
         multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = 100))
     val hits = search.results
 
-    search.totalCount should equal(16)
+    search.totalCount should equal(idsForLang("all").size)
     hits.head.id should be(1)
     hits(1).id should be(1)
     hits(2).id should be(2)
@@ -347,40 +359,40 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("VG2")))
-    search2.totalCount should be(4)
-    search2.results.map(_.id) should be(Seq(1, 3, 5, 6))
+    search2.totalCount should be(5)
+    search2.results.map(_.id) should be(Seq(1, 3, 5, 6, 12))
   }
 
   test("That filtering for mulitple levels/filters returns resources from all") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
-    search.totalCount should be(4)
-    search.results.map(_.id) should be(Seq(1, 5, 6, 7))
+    search.totalCount should be(5)
+    search.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
   }
 
   test("That filtering for levels/filters works with spaces as well") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("Tysk 2")))
-    search.totalCount should be(1)
-    search.results.map(_.id) should be(Seq(3))
+    search.totalCount should be(2)
+    search.results.map(_.id) should be(Seq(1, 3))
   }
 
   test("That filtering for subjects works as expected") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(subjects = List("urn:subject:2"), language = "all"))
-    search.totalCount should be(6)
-    search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11))
+    search.totalCount should be(7)
+    search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11, 12))
   }
 
   test("That filtering for subjects returns all drafts with any of listed subjects") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(subjects = List("urn:subject:2", "urn:subject:1")))
-    search.totalCount should be(13)
-    search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11))
+    search.totalCount should be(14)
+    search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
   test("That filtering for resource-types works as expected") {
@@ -393,8 +405,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
-    search2.totalCount should be(6)
-    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
+    search2.totalCount should be(7)
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
@@ -409,8 +421,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle),
                                     language = "all"))
 
-    search.totalCount should be(10)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11))
+    search.totalCount should be(11)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
   }
 
   test("That filtering on learning-resource-type works") {
@@ -419,8 +431,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(learningResourceTypes = List(LearningResourceType.TopicArticle), language = "all"))
 
-    search.totalCount should be(6)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7))
+    search.totalCount should be(7)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
     search2.totalCount should be(4)
     search2.results.map(_.id) should be(Seq(8, 9, 10, 11))
@@ -432,8 +444,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle),
                                     language = "all"))
 
-    search.totalCount should be(10)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11))
+    search.totalCount should be(11)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
   }
 
   test("That filtering on learningpath learningresourcetype returns learningpaths") {
@@ -457,14 +469,14 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
-    search2.totalCount should be(16)
-    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11))
+    search2.totalCount should be(17)
+    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("nb"), language = "all"))
-    search3.totalCount should be(13)
-    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11))
+    search3.totalCount should be(14)
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
   test("That filtering on supportedLanguages should still prioritize the selected language") {
@@ -504,9 +516,9 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(topics = List("urn:topic:1")))
 
-    search.totalCount should be(6)
+    search.totalCount should be(7)
 
-    search.results.map(_.id) should be(Seq(1, 1, 2, 2, 4, 9))
+    search.results.map(_.id) should be(Seq(1, 1, 2, 2, 4, 9, 12))
   }
 
   test("That searching for authors works as expected") {
@@ -519,6 +531,71 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
       multiDraftSearchSettings.copy(query = Some("Svims"), language = Language.AllLanguages))
     search2.totalCount should be(2)
     search2.results.map(_.id) should be(Seq(2, 5))
+  }
+
+  test("That filtering by relevance id works when no subject is specified") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:core")))
+    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:supplementary")))
+    search2.results.map(_.id) should be(Seq(1, 3, 12))
+
+    val Success(search3) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:supplementary", "urn:relevance:core")))
+    search3.results.map(_.id) should be(Seq(1, 3, 5, 6, 7, 12))
+  }
+
+  test("That filtering by relevance and subject only returns for relevances in filtered subjects") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:core"),
+                                    subjects = List("urn:subject:1")))
+
+    search1.results.map(_.id) should be(Seq(1, 5))
+  }
+
+  test("That filtering by relevance and levels only returns for relevances in filtered levels") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages,
+                                    relevanceIds = List("urn:relevance:supplementary"),
+                                    taxonomyFilters = List("Tysk 2")))
+
+    search.results.map(_.id) should be(Seq(3))
+  }
+
+  test("That scrolling works as expected") {
+    val pageSize = 2
+    val ids = idsForLang("all").sorted.sliding(pageSize, pageSize).toList
+
+    val Success(initialSearch) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = pageSize))
+
+    val Success(scroll1) = multiDraftSearchService.scroll(initialSearch.scrollId.get, "all", fallback = true)
+    val Success(scroll2) = multiDraftSearchService.scroll(scroll1.scrollId.get, "all", fallback = true)
+    val Success(scroll3) = multiDraftSearchService.scroll(scroll2.scrollId.get, "all", fallback = true)
+    val Success(scroll4) = multiDraftSearchService.scroll(scroll3.scrollId.get, "all", fallback = true)
+    val Success(scroll5) = multiDraftSearchService.scroll(scroll4.scrollId.get, "all", fallback = true)
+    val Success(scroll6) = multiDraftSearchService.scroll(scroll5.scrollId.get, "all", fallback = true)
+    val Success(scroll7) = multiDraftSearchService.scroll(scroll6.scrollId.get, "all", fallback = true)
+    val Success(scroll8) = multiDraftSearchService.scroll(scroll7.scrollId.get, "all", fallback = true)
+    val Success(scroll9) = multiDraftSearchService.scroll(scroll8.scrollId.get, "all", fallback = true)
+    val Success(scroll10) = multiDraftSearchService.scroll(scroll9.scrollId.get, "all", fallback = true)
+
+    initialSearch.results.map(_.id) should be(ids.head)
+    scroll1.results.map(_.id) should be(ids(1))
+    scroll2.results.map(_.id) should be(ids(2))
+    scroll3.results.map(_.id) should be(ids(3))
+    scroll4.results.map(_.id) should be(ids(4))
+    scroll5.results.map(_.id) should be(ids(5))
+    scroll6.results.map(_.id) should be(ids(6))
+    scroll7.results.map(_.id) should be(ids(7))
+    scroll8.results.map(_.id) should be(ids(8))
+    scroll9.results.map(_.id) should be(List.empty)
+    scroll10.results.map(_.id) should be(List.empty)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

@@ -10,7 +10,8 @@ package no.ndla.searchapi.model.search.settings
 import no.ndla.searchapi.model.domain.Sort
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 
-case class SearchSettings(fallback: Boolean,
+case class SearchSettings(query: Option[String],
+                          fallback: Boolean,
                           language: String,
                           license: Option[String],
                           page: Int,
@@ -21,4 +22,5 @@ case class SearchSettings(fallback: Boolean,
                           subjects: List[String],
                           resourceTypes: List[String],
                           learningResourceTypes: List[LearningResourceType.Value],
-                          supportedLanguages: List[String])
+                          supportedLanguages: List[String],
+                          relevanceIds: List[String])

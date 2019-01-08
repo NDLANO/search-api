@@ -565,6 +565,7 @@ trait SearchConverterService {
             search.SearchableTaxonomyFilter(
               filterId = filter.id,
               name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
+              relevanceId = filterConnection.relevanceId,
               relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
             ))
         case _ => None
@@ -789,6 +790,16 @@ trait SearchConverterService {
 
       (resources, topics)
     }
+
+    def toApiMultiSearchResult(searchResult: domain.SearchResult): MultiSearchResult =
+      api.MultiSearchResult(
+        searchResult.totalCount,
+        searchResult.page,
+        searchResult.pageSize,
+        searchResult.language,
+        searchResult.results,
+      )
+
   }
 
 }

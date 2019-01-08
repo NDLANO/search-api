@@ -39,13 +39,14 @@ object Error {
   val INDEX_MISSING = "INDEX_MISSING"
   val INVALID_BODY = "INVALID_BODY"
   val TAXONOMY_FAILURE = "TAXONOMY_FAILURE"
+  val INVALID_SEARCH_CONTEXT = "INVALID_SEARCH_CONTEXT"
 
   val GENERIC_DESCRIPTION =
     s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
   val VALIDATION_DESCRIPTION = "Validation Error"
 
   val WINDOW_TOO_LARGE_DESCRIPTION =
-    s"The result window is too large. Fetching pages above ${SearchApiProperties.ElasticSearchIndexMaxResultWindow} results are unsupported."
+    s"The result window is too large. Fetching pages above ${SearchApiProperties.ElasticSearchIndexMaxResultWindow} results requires scrolling, see query-parameter 'search-context'."
 
   val INDEX_MISSING_DESCRIPTION =
     s"Ooops. Our search index is not available at the moment, but we are trying to recreate it. Please try again in a few minutes. Feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."
@@ -53,9 +54,13 @@ object Error {
   val INVALID_BODY_DESCRIPTION =
     "Unable to index the requested document because body was invalid."
 
+  val INVALID_SEARCH_CONTEXT_DESCRIPTION =
+    "The search-context specified was not expected. Please create one by searching from page 1."
+
   val GenericError = Error(GENERIC, GENERIC_DESCRIPTION)
   val IndexMissingError = Error(INDEX_MISSING, INDEX_MISSING_DESCRIPTION)
   val InvalidBody = Error(INVALID_BODY, INVALID_BODY_DESCRIPTION)
+  val InvalidSearchContext = Error(INVALID_SEARCH_CONTEXT, INVALID_SEARCH_CONTEXT_DESCRIPTION)
 }
 
 class ValidationException(message: String = "Validation Error", val errors: Seq[ValidationMessage])
