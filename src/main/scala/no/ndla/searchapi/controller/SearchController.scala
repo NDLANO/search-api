@@ -405,7 +405,6 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(scrollId)
         )
-          authorizations "oauth2"
           responseMessages response500)
     ) {
       scrollWithOr(multiSearchService) {
@@ -443,7 +442,6 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(scrollId)
         )
-          authorizations "oauth2"
           responseMessages response500)
     ) {
       scrollWithOr(multiDraftSearchService) {
