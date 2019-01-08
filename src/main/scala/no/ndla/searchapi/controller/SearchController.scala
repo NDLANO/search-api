@@ -12,7 +12,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.{ElasticSearchIndexMaxResultWindow, ElasticSearchScrollKeepAlive}
+import no.ndla.searchapi.SearchApiProperties.{
+  DefaultPageSize,
+  MaxPageSize,
+  ElasticSearchIndexMaxResultWindow,
+  ElasticSearchScrollKeepAlive
+}
 import no.ndla.searchapi.integration.SearchApiClient
 import no.ndla.searchapi.model.api.{
   Error,
@@ -79,8 +84,11 @@ trait SearchController {
              The following are supported: ${Sort.values.mkString(", ")}.
              Default is by -relevance (desc) when query is set, and id (asc) when query is empty.""".stripMargin
     )
+
     private val pageNo = Param[Option[Int]]("page", "The page number of the search hits to display.")
-    private val pageSize = Param[Option[Int]]("page-size", "The number of search hits to display for each page.")
+    private val pageSize = Param[Option[Int]](
+      "page-size",
+      s"The number of search hits to display for each page. Defaults to $DefaultPageSize and max is $MaxPageSize.")
     private val resourceTypes = Param[Option[Seq[String]]](
       "resource-types",
       "Return only learning resources of specific type(s). To provide multiple types, separate by comma (,).")
@@ -159,7 +167,6 @@ trait SearchController {
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter)
         )
-          authorizations "oauth2"
           responseMessages response500)
     ) {
       val page = intOrDefault(this.pageNo.paramName, 1)
@@ -255,7 +262,6 @@ trait SearchController {
             asQueryParam(pageSize),
             asQueryParam(apiTypes)
         )
-          authorizations "oauth2"
           responseMessages response500)
     ) {
       val language = paramOrDefault(this.language.paramName, "nb")
