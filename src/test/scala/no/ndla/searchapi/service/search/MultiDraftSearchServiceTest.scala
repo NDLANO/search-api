@@ -15,8 +15,7 @@ import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.NdlaE4sClient
 import no.ndla.searchapi.model.api.MetaImage
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.draft.Draft
-import no.ndla.searchapi.model.domain.learningpath.LearningPath
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
@@ -596,6 +595,38 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     scroll8.results.map(_.id) should be(ids(8))
     scroll9.results.map(_.id) should be(List.empty)
     scroll10.results.map(_.id) should be(List.empty)
+  }
+
+  test("Filtering for statuses should only return drafts with the specified statuses") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(
+        language = Language.AllLanguages,
+        statusFilter = List(ArticleStatus.PROPOSAL),
+        learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle)
+      ))
+    search1.results.map(_.id) should be(Seq(10, 11))
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(
+        language = Language.AllLanguages,
+        statusFilter = List(ArticleStatus.IMPORTED),
+        learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle)
+      ))
+    search2.results.map(_.id) should be(Seq(12))
+  }
+
+  test("Filtering for statuses should not filter learningPaths") {
+    val expectedLearningPathIds = expectedAllPublicLearningPaths(Language.AllLanguages).map(_.id.get)
+    val expectedArticleIds = List(10, 11).map(_.toLong)
+    val expectedIds = (expectedArticleIds ++ expectedLearningPathIds).sorted
+
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(
+        language = Language.AllLanguages,
+        statusFilter = List(ArticleStatus.PROPOSAL)
+      ))
+    search1.results.map(_.id) should be(expectedIds)
+
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

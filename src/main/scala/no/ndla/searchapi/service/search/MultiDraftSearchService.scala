@@ -10,18 +10,17 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.SearchHit
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
-  SearchIndexes,
+  ElasticSearchIndexMaxResultWindow,
   ElasticSearchScrollKeepAlive,
-  ElasticSearchIndexMaxResultWindow
+  SearchIndexes
 }
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary, ResultWindowTooLargeException}
-import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
+import no.ndla.searchapi.model.api.ResultWindowTooLargeException
+import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult, draft}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.MultiDraftSearchSettings
 
@@ -135,6 +134,8 @@ trait MultiDraftSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
 
+      val statusFilter = draftStatusFilter(settings.statusFilter)
+
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
@@ -161,9 +162,21 @@ trait MultiDraftSearchService {
         taxonomyResourceTypesFilter,
         taxonomyContextFilter,
         supportedLanguageFilter,
-        taxonomyRelevanceFilter
+        taxonomyRelevanceFilter,
+        statusFilter
       ).flatten
     }
+
+    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value]) =
+      if (statuses.isEmpty) None
+      else
+        Some(
+          boolQuery().should(
+            // Documents without draftStatus field are not drafts and will not be filtered.
+            boolQuery().not(existsQuery("draftStatus")),
+            boolQuery().should(statuses.map(s => termQuery("draftStatus", s.toString)))
+          )
+        )
 
     override def scheduleIndexDocuments(): Unit = {
       val threadPoolSize = if (searchIndex.nonEmpty) searchIndex.size else 1

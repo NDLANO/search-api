@@ -156,9 +156,16 @@ trait SearchConverterService {
           draft.copyright.map(_.rightsholders).toList
       ).flatten.map(_.name)
 
+      val statuses = List(draft.status.current) ++ draft.status.other
+      val notes: List[String] = draft.notes match {
+        case Left(n)  => n.map(_.note)
+        case Right(n) => n
+      }
+
       Success(
         SearchableDraft(
           id = draft.id.get,
+          draftStatus = statuses.map(_.toString),
           title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
           content = SearchableLanguageValues(draft.content.map(article =>
             LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
@@ -176,7 +183,7 @@ trait SearchConverterService {
           metaImage = draft.metaImage.toList,
           defaultTitle = defaultTitle.map(t => t.title),
           supportedLanguages = supportedLanguages,
-          notes = draft.notes,
+          notes = notes,
           contexts = taxonomyForDraft.getOrElse(List.empty)
         ))
 
