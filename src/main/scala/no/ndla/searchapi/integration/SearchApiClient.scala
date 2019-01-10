@@ -7,12 +7,13 @@
 
 package no.ndla.searchapi.integration
 
-import io.lemonlabs.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
+import io.lemonlabs.uri.dsl._
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.model.api.ApiSearchException
 import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, SearchParams}
 import org.json4s.Formats
@@ -74,6 +75,7 @@ trait SearchApiClient {
     def get[T](path: String, params: Map[String, Any], timeout: Int = 5000)(implicit mf: Manifest[T]): Try[T] = {
       implicit val formats: Formats =
         org.json4s.DefaultFormats +
+          new EnumNameSerializer(ArticleStatus) +
           new EnumNameSerializer(LearningPathStatus) +
           new EnumNameSerializer(LearningPathVerificationStatus) +
           new EnumNameSerializer(StepType) +

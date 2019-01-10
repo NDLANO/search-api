@@ -362,6 +362,9 @@ object TestData {
     article12
   )
 
+  val draftStatus = draft.Status(draft.ArticleStatus.DRAFT, Set.empty)
+  val importedDraftStatus = draft.Status(draft.ArticleStatus.DRAFT, Set(draft.ArticleStatus.IMPORTED))
+
   val draftPublicDomainCopyright =
     draft.Copyright(Some("publicdomain"), Some(""), List.empty, List(), List(), None, None, None)
 
@@ -386,6 +389,7 @@ object TestData {
   val sampleDraftWithPublicDomain = Draft(
     Option(1),
     Option(1),
+    draftStatus,
     Seq(Title("test", "en")),
     Seq(ArticleContent("<section><div>test</div></section>", "en")),
     Some(draftPublicDomainCopyright),
@@ -399,7 +403,7 @@ object TestData {
     DateTime.now().minusDays(2),
     "ndalId54321",
     LearningResourceType.Article,
-    List.empty
+    Left(List.empty)
   )
 
   val sampleDraftWithByNcSa: Draft = sampleDraftWithPublicDomain.copy(copyright = Some(draftByNcSaCopyright))
@@ -469,7 +473,7 @@ object TestData {
     tags = List(Tag(List("hulk"), "nb")),
     created = today.minusDays(40),
     updated = today.minusDays(35),
-    notes = List("kakemonster")
+    notes = Left(List(draft.EditorNote("kakemonster")))
   )
 
   val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -526,6 +530,7 @@ object TestData {
 
   val draft10: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(10),
+    status = draft.Status(draft.ArticleStatus.PROPOSAL, Set.empty),
     title = List(Title("This article is in english", "en")),
     introduction = List(ArticleIntroduction("Engulsk", "en")),
     metaDescription = List.empty,
@@ -540,6 +545,7 @@ object TestData {
 
   val draft11: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(11),
+    status = draft.Status(draft.ArticleStatus.PROPOSAL, Set.empty),
     title = List(Title("Katter", "nb"), Title("Cats", "en")),
     introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
     content = List(ArticleContent("<p>Noe om en katt</p>", "nb"), ArticleContent("<p>Something about a cat</p>", "en")),
@@ -553,6 +559,7 @@ object TestData {
 
   val draft12: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(12),
+    status = importedDraftStatus,
     title = List(Title("Ekstrastoff", "nb")),
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
@@ -903,7 +910,8 @@ object TestData {
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty,
-    relevanceIds = List.empty
+    relevanceIds = List.empty,
+    statusFilter = List.empty
   )
 
   val searchableResourceTypes = List(

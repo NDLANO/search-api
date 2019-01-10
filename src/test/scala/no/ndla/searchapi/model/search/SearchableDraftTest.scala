@@ -10,6 +10,7 @@ package no.ndla.searchapi.model.search
 import no.ndla.searchapi.model.domain.article.{ArticleMetaImage, LearningResourceType}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import org.json4s.Formats
 import org.json4s.native.Serialization.{read, write}
 
@@ -49,6 +50,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
 
     val original = SearchableDraft(
       id = 100,
+      draftStatus = List(ArticleStatus.DRAFT.toString, ArticleStatus.PROPOSAL.toString),
       title = titles,
       content = contents,
       visualElement = visualElements,

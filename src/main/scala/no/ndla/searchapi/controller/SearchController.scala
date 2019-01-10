@@ -23,6 +23,7 @@ import no.ndla.searchapi.model.api.{
   ValidationError
 }
 import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.service.search.{
@@ -126,6 +127,13 @@ trait SearchController {
         |The search context may change between scrolls. Always use the most recent one (The context if unused dies after $ElasticSearchScrollKeepAlive).
         |Used to enable scrolling past $ElasticSearchIndexMaxResultWindow results.
       """.stripMargin
+    )
+
+    private val statusFilter = Param[Option[Seq[String]]](
+      "draft-status",
+      s"""List of statuses to filter by.
+         |A draft only needs to have one of the available statuses to be included in result (OR).
+         |Supported values are ${ArticleStatus.values.mkString(", ")}.""".stripMargin
     )
 
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
@@ -326,6 +334,7 @@ trait SearchController {
       val topics = paramAsListOfString(this.topics.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
+      val statusFilter = paramAsListOfString(this.statusFilter.paramName)
 
       MultiDraftSearchSettings(
         query = query,
@@ -343,7 +352,8 @@ trait SearchController {
         resourceTypes = resourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances
+        relevanceIds = relevances,
+        statusFilter = statusFilter.flatMap(ArticleStatus.valueOf)
       )
     }
 
@@ -352,7 +362,7 @@ trait SearchController {
       * If no scrollId is specified execute the function @orFunction in the second parameter list.
       *
       * @param scroller SearchService to scroll with
-      * @param orFunction Funciton to execute if no scrollId in parameters (Usually searching)
+      * @param orFunction Function to execute if no scrollId in parameters (Usually searching)
       * @tparam T SearchService
       * @return A Try with scroll result, or the return of the orFunction (Usually a try with a search result).
       */
@@ -435,7 +445,8 @@ trait SearchController {
             asQueryParam(subjects),
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
-            asQueryParam(scrollId)
+            asQueryParam(scrollId),
+            asQueryParam(statusFilter)
         )
           authorizations "oauth2"
           responseMessages response500)

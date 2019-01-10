@@ -22,6 +22,7 @@ import no.ndla.searchapi.model.api.{
 }
 import no.ndla.searchapi.model.domain.NdlaSearchException
 import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
 import org.apache.logging.log4j.ThreadContext
 import org.elasticsearch.index.IndexNotFoundException
@@ -36,6 +37,7 @@ import scala.util.{Failure, Success, Try}
 abstract class NdlaController extends ScalatraServlet with NativeJsonSupport with LazyLogging {
   protected implicit override val jsonFormats: Formats =
     org.json4s.DefaultFormats +
+      new EnumNameSerializer(ArticleStatus) +
       new EnumNameSerializer(LearningPathStatus) +
       new EnumNameSerializer(LearningPathVerificationStatus) +
       new EnumNameSerializer(StepType) +
@@ -82,7 +84,7 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
     case Success(s) => s
   }
 
-  override def renderPipeline = customRenderer orElse super.renderPipeline
+  override def renderPipeline: PartialFunction[Any, Any] = customRenderer orElse super.renderPipeline
 
   def paramOrNone(paramName: String)(implicit request: HttpServletRequest): Option[String] =
     params.get(paramName).map(_.trim).filterNot(_.isEmpty())
@@ -119,11 +121,11 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
 
   def long(paramName: String)(implicit request: HttpServletRequest): Long = {
     val paramValue = params(paramName)
-    paramValue.forall(_.isDigit) match {
-      case true => paramValue.toLong
-      case false =>
-        throw new ValidationException(
-          errors = Seq(ValidationMessage(paramName, s"Invalid value for $paramName. Only digits are allowed.")))
+    if (paramValue.forall(_.isDigit)) {
+      paramValue.toLong
+    } else {
+      throw new ValidationException(
+        errors = Seq(ValidationMessage(paramName, s"Invalid value for $paramName. Only digits are allowed.")))
     }
   }
 
@@ -135,10 +137,9 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
 
   def extract[T](json: String)(implicit mf: scala.reflect.Manifest[T]): T = {
     Try(read[T](json)) match {
-      case Failure(e) => {
+      case Failure(e) =>
         logger.error(e.getMessage, e)
         throw new ValidationException(errors = Seq(ValidationMessage("body", e.getMessage)))
-      }
       case Success(data) => data
     }
   }
