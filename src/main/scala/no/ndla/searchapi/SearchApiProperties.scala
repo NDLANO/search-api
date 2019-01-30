@@ -29,12 +29,12 @@ object SearchApiProperties extends LazyLogging {
 
   lazy val Domain = Domains.get(Environment)
 
-  val DraftApiUrl: String = propOrElse("DRAFT_API_HOST", "http://draft-api.ndla-local")
-  val ArticleApiUrl: String = propOrElse("ARTICLE_API_HOST", "http://article-api.ndla-local")
-  val LearningpathApiUrl: String = propOrElse("LEARNINGPATH_API_HOST", "http://learningpath-api.ndla-local")
-  val ImageApiUrl: String = propOrElse("IMAGE_API_HOST", "http://image-api.ndla-local")
-  val AudioApiUrl: String = propOrElse("AUDIO_API_HOST", "http://audio-api.ndla-local")
-  val ApiGatewayUrl: String = propOrElse("API_GATEWAY_HOST", "http://api-gateway.ndla-local")
+  val DraftApiUrl: String = s"http://${propOrElse("DRAFT_API_HOST", "draft-api.ndla-local")}"
+  val ArticleApiUrl: String = s"http://${propOrElse("ARTICLE_API_HOST", "article-api.ndla-local")}"
+  val LearningpathApiUrl: String = s"http://${propOrElse("LEARNINGPATH_API_HOST", "learningpath-api.ndla-local")}"
+  val ImageApiUrl: String = s"http://${propOrElse("IMAGE_API_HOST", "image-api.ndla-local")}"
+  val AudioApiUrl: String = s"http://${propOrElse("AUDIO_API_HOST", "audio-api.ndla-local")}"
+  val ApiGatewayUrl: String = s"http://${propOrElse("API_GATEWAY_HOST", "api-gateway.ndla-local")}"
 
   val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-search-api.ndla-local")
   val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
