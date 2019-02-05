@@ -104,7 +104,7 @@ trait TaxonomyApiClient {
         f12 <- topics
       } yield Bundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12)
 
-      Try(Await.result(x, Duration(60, "seconds"))) match {
+      Try(Await.result(x, Duration(300, "seconds"))) match {
         case Success(bundle) =>
           logger.info(s"Fetched taxonomy in ${System.currentTimeMillis() - startFetch}ms...")
           Success(bundle)
@@ -115,7 +115,7 @@ trait TaxonomyApiClient {
     }
 
     private def get[A](url: String, params: (String, String)*)(implicit mf: Manifest[A]): Try[A] = {
-      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(20000, 20000).params(params))
+      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(60000, 60000).params(params))
     }
   }
 }
