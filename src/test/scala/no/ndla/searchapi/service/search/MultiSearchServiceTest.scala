@@ -402,11 +402,11 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }
 
-  test("That filtering for multiple resource-types returns resources from both") {
+  test("That filtering for multiple resource-types returns only resources containing both") {
     val Success(search) = multiSearchService.matchingQuery(
       searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
-    search.totalCount should be(7)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
+    search.totalCount should be(1)
+    search.results.map(_.id) should be(Seq(7))
   }
 
   test("That filtering on learning-resource-type works") {
