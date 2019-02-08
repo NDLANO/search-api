@@ -21,7 +21,7 @@ object SearchApiInfo {
 
   val apiInfo = ApiInfo(
     "Search Api",
-    "A common endpoint for searching across article, draft, learningpath, image and audio APIs." +
+    "A common endpoint for searching across article, draft, learningpath, image and audio APIs.\n\n" +
       "The Search API provides a common endpoint for searching across the article, draft, learningpath, image and audio APIs. " +
       "The search does a free text search in data and metadata. It is also possible to search targeted at specific " +
       "meta-data fields like language or license.\n" +
