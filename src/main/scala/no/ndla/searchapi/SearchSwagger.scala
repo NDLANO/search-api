@@ -27,7 +27,7 @@ object SearchApiInfo {
       "meta-data fields like language or license.\n" +
       "Note that the query parameter is based on the Elasticsearch simple search language. For more information, see " +
       "https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
-    "https://om.ndla.no/terms",
+    "https://om.ndla.no/tos",
     SearchApiProperties.ContactEmail,
     "GPL v3.0",
     "http://www.gnu.org/licenses/gpl-3.0.en.html"
