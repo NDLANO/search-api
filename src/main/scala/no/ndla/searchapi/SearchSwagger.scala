@@ -21,8 +21,13 @@ object SearchApiInfo {
 
   val apiInfo = ApiInfo(
     "Search Api",
-    "Documentation for the Search API of NDLA.no",
-    "https://ndla.no",
+    "A common endpoint for searching across article, draft, learningpath, image and audio APIs." +
+      "The Search API provides a common endpoint for searching across the article, draft, learningpath, image and audio APIs. " +
+      "The search does a free text search in data and metadata. It is also possible to search targeted at specific " +
+      "meta-data fields like language or license.\n" +
+      "Note that the query parameter is based on the Elasticsearch simple search language. For more information, see " +
+      "https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
+    "https://om.ndla.no/tos",
     SearchApiProperties.ContactEmail,
     "GPL v3.0",
     "http://www.gnu.org/licenses/gpl-3.0.en.html"
