@@ -402,11 +402,11 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(1, 2, 3, 4))
   }
 
-  test("That filtering for multiple resource-types returns only resources containing both") {
+  test("That filtering for multiple resource-types returns resources from both") {
     val Success(search) = multiSearchService.matchingQuery(
       searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
-    search.totalCount should be(1)
-    search.results.map(_.id) should be(Seq(7))
+    search.totalCount should be(7)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
   }
 
   test("That filtering on learning-resource-type works") {
@@ -553,6 +553,18 @@ class MultiSearchServiceTest extends UnitSuite with TestEnvironment {
     scroll6.results.map(_.id) should be(ids(6))
     scroll7.results.map(_.id) should be(ids(7))
     scroll8.results.map(_.id) should be(List.empty)
+  }
+
+  test("That filtering on context-types works") {
+    val Success(search) =
+      multiSearchService.matchingQuery(searchSettings.copy(contextIds = List("urn:resourcetype:academicArticle")))
+    val Success(search2) =
+      multiSearchService.matchingQuery(searchSettings.copy(contextIds = List("urn:resourcetype:movieAndClip")))
+
+    search.totalCount should be(2)
+    search.results.map(_.id) should be(Seq(2, 5))
+
+    search2.totalCount should be(0)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

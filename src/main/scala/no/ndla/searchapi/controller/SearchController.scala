@@ -126,6 +126,12 @@ trait SearchController {
         |If subjects are specified the learning resource must have specified relevances in relation to a specified subject.
         |If levels are specified the learning resource must have specified relevances in relation to a specified level.""".stripMargin
     )
+    private val contextFilter = Param[Option[Seq[String]]](
+      "context-filter",
+      """A comma separated list of resource-types the learning resources should be filtered by.
+        |Used in conjunction with the parameter resource-types to filter additional resource-types.
+      """.stripMargin
+    )
 
     private val scrollId = Param[Option[String]](
       "search-context",
@@ -173,7 +179,8 @@ trait SearchController {
             asQueryParam(levels),
             asQueryParam(contextTypes),
             asQueryParam(languageFilter),
-            asQueryParam(relevanceFilter)
+            asQueryParam(relevanceFilter),
+            asQueryParam(contextFilter)
         )
           responseMessages response500)
     ) {
@@ -192,6 +199,7 @@ trait SearchController {
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
+      val contexts = paramAsListOfString(this.contextFilter.paramName)
 
       val settings = SearchSettings(
         query = query,
@@ -207,7 +215,8 @@ trait SearchController {
         resourceTypes = List.empty,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances
+        relevanceIds = relevances,
+        contextIds = contexts
       )
 
       groupSearch(query, settings.copy(resourceTypes = resourceTypes))
@@ -304,6 +313,7 @@ trait SearchController {
       val subjects = paramAsListOfString(this.subjects.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
+      val contexts = paramAsListOfString(this.contextFilter.paramName)
 
       SearchSettings(
         query = query,
@@ -319,7 +329,8 @@ trait SearchController {
         resourceTypes = resourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances
+        relevanceIds = relevances,
+        contextIds = contexts
       )
     }
 
@@ -413,6 +424,7 @@ trait SearchController {
             asQueryParam(subjects),
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
+            asQueryParam(contextFilter),
             asQueryParam(scrollId)
         )
           responseMessages response500)

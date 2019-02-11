@@ -81,7 +81,7 @@ trait TaxonomyFiltering {
     if (resourceTypes.isEmpty) None
     else
       Some(
-        boolQuery().must(
+        boolQuery().should(
           resourceTypes.map(
             resourceTypeId =>
               nestedQuery("contexts.resourceTypes").query(

@@ -891,7 +891,8 @@ object TestData {
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty,
-    relevanceIds = List.empty
+    relevanceIds = List.empty,
+    contextIds = List.empty
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
