@@ -511,6 +511,14 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     search2.totalCount should be(0)
   }
 
+  test("That search matches notes on drafts, even if query is regular query") {
+    val Success(search) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(query = Some("kakemonster")))
+
+    search.totalCount should be(1)
+    search.results.head.id should be(5)
+  }
+
   test("That filtering for topics returns every child learningResource") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(topics = List("urn:topic:1")))
