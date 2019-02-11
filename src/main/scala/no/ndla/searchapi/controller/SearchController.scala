@@ -126,8 +126,8 @@ trait SearchController {
         |If subjects are specified the learning resource must have specified relevances in relation to a specified subject.
         |If levels are specified the learning resource must have specified relevances in relation to a specified level.""".stripMargin
     )
-    private val contextFilter = Param[Option[Seq[String]]](
-      "context-filter",
+    private val contextFilters = Param[Option[Seq[String]]](
+      "context-filters",
       """A comma separated list of resource-types the learning resources should be filtered by.
         |Used in conjunction with the parameter resource-types to filter additional resource-types.
       """.stripMargin
@@ -180,7 +180,7 @@ trait SearchController {
             asQueryParam(contextTypes),
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
-            asQueryParam(contextFilter)
+            asQueryParam(contextFilters)
         )
           responseMessages response500)
     ) {
@@ -199,7 +199,7 @@ trait SearchController {
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
-      val contexts = paramAsListOfString(this.contextFilter.paramName)
+      val contexts = paramAsListOfString(this.contextFilters.paramName)
 
       val settings = SearchSettings(
         query = query,
@@ -313,7 +313,7 @@ trait SearchController {
       val subjects = paramAsListOfString(this.subjects.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
-      val contexts = paramAsListOfString(this.contextFilter.paramName)
+      val contexts = paramAsListOfString(this.contextFilters.paramName)
 
       SearchSettings(
         query = query,
@@ -424,7 +424,7 @@ trait SearchController {
             asQueryParam(subjects),
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
-            asQueryParam(contextFilter),
+            asQueryParam(contextFilters),
             asQueryParam(scrollId)
         )
           responseMessages response500)
