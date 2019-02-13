@@ -623,10 +623,9 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     search2.results.map(_.id) should be(Seq(12))
   }
 
-  test("Filtering for statuses should not filter learningPaths") {
-    val expectedLearningPathIds = expectedAllPublicLearningPaths(Language.AllLanguages).map(_.id.get)
+  test("Filtering for statuses should also filter learningPaths") {
     val expectedArticleIds = List(10, 11).map(_.toLong)
-    val expectedIds = (expectedArticleIds ++ expectedLearningPathIds).sorted
+    val expectedIds = (expectedArticleIds).sorted
 
     val Success(search1) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(
