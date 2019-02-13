@@ -173,11 +173,7 @@ trait MultiDraftSearchService {
       if (statuses.isEmpty) None
       else
         Some(
-          boolQuery().should(
-            // Documents without draftStatus field are not drafts and will not be filtered.
-            boolQuery().not(existsQuery("draftStatus")),
-            boolQuery().should(statuses.map(s => termQuery("draftStatus", s.toString)))
-          )
+          boolQuery().should(statuses.map(s => termQuery("draftStatus", s.toString)))
         )
 
     override def scheduleIndexDocuments(): Unit = {
