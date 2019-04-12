@@ -27,7 +27,7 @@ case class Draft(
     created: DateTime,
     updated: DateTime,
     updatedBy: String,
+    published: DateTime,
     articleType: LearningResourceType.Value,
-    // TODO: Remove Either and simply use List[EditorNote] for notes to no longer be compatible with old draft-api
-    notes: Either[List[EditorNote], List[String]]
+    notes: List[EditorNote]
 ) extends Content

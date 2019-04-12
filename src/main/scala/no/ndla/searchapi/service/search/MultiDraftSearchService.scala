@@ -137,6 +137,7 @@ trait MultiDraftSearchService {
       }
 
       val statusFilter = draftStatusFilter(settings.statusFilter)
+      val usersFilter = boolUsersFilter(settings.userFilter)
 
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
@@ -165,7 +166,8 @@ trait MultiDraftSearchService {
         taxonomyContextFilter,
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
-        statusFilter
+        statusFilter,
+        usersFilter
       ).flatten
     }
 
@@ -174,6 +176,14 @@ trait MultiDraftSearchService {
       else
         Some(
           boolQuery().should(statuses.map(s => termQuery("draftStatus", s.toString)))
+        )
+
+    private def boolUsersFilter(users: Seq[String]): Option[BoolQuery] =
+      if (users.isEmpty) None
+      else
+        Some(
+          boolQuery()
+            .should(users.map(simpleStringQuery(_).field("users", 1)))
         )
 
     override def scheduleIndexDocuments(): Unit = {

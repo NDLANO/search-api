@@ -7,4 +7,4 @@
 
 package no.ndla.searchapi.model.domain.draft
 
-case class EditorNote(note: String)
+case class EditorNote(note: String, user: String)

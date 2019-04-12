@@ -28,5 +28,6 @@ case class MultiDraftSearchSettings(
     learningResourceTypes: List[LearningResourceType.Value],
     supportedLanguages: List[String],
     relevanceIds: List[String],
-    statusFilter: List[ArticleStatus.Value]
+    statusFilter: List[ArticleStatus.Value],
+    userFilter: List[String]
 )
