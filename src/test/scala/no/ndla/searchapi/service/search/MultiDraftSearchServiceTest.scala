@@ -200,6 +200,17 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     hits(1).id should be(2)
   }
 
+  test("That search matches updatedBy") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(userFilter = List("ndalId54321"), sort = Sort.ByIdAsc))
+    val hits = results.results
+    results.totalCount should be(10)
+    hits.head.id should be(1)
+    hits.head.contexts.head.learningResourceType should be("standard")
+    hits(1).id should be(2)
+  }
+
   test("That search matches tags") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(query = Some("and"), sort = Sort.ByTitleAsc))

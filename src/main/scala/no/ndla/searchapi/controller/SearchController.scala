@@ -150,6 +150,13 @@ trait SearchController {
          |Supported values are ${ArticleStatus.values.mkString(", ")}.""".stripMargin
     )
 
+    private val userFilter = Param[Option[Seq[String]]](
+      "user",
+      s"""List of users to filter by.
+         |The value to search for is the user-id from Auth0.
+         |UpdatedBy on article and user in editorial-notes are searched.""".stripMargin
+    )
+
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
 
@@ -352,6 +359,7 @@ trait SearchController {
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
       val statusFilter = paramAsListOfString(this.statusFilter.paramName)
+      val userFilter = paramAsListOfString(this.userFilter.paramName)
 
       MultiDraftSearchSettings(
         query = query,
@@ -370,7 +378,8 @@ trait SearchController {
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
-        statusFilter = statusFilter.flatMap(ArticleStatus.valueOf)
+        statusFilter = statusFilter.flatMap(ArticleStatus.valueOf),
+        userFilter = userFilter
       )
     }
 
@@ -463,7 +472,8 @@ trait SearchController {
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
             asQueryParam(scrollId),
-            asQueryParam(statusFilter)
+            asQueryParam(statusFilter),
+            asQueryParam(userFilter)
         )
           responseMessages response500)
     ) {

@@ -157,10 +157,8 @@ trait SearchConverterService {
       ).flatten.map(_.name)
 
       val statuses = List(draft.status.current) ++ draft.status.other
-      val notes: List[String] = draft.notes match {
-        case Left(n)  => n.map(_.note)
-        case Right(n) => n
-      }
+      val notes: List[String] = draft.notes.map(_.note)
+      val users: List[String] = draft.updatedBy +: draft.notes.map(_.user)
 
       Success(
         SearchableDraft(
@@ -184,7 +182,8 @@ trait SearchConverterService {
           defaultTitle = defaultTitle.map(t => t.title),
           supportedLanguages = supportedLanguages,
           notes = notes,
-          contexts = taxonomyForDraft.getOrElse(List.empty)
+          contexts = taxonomyForDraft.getOrElse(List.empty),
+          users = users
         ))
 
     }

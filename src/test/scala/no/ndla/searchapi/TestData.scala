@@ -402,8 +402,9 @@ object TestData {
     DateTime.now().minusDays(4),
     DateTime.now().minusDays(2),
     "ndalId54321",
+    DateTime.now().minusDays(2),
     LearningResourceType.Article,
-    Left(List.empty)
+    List.empty
   )
 
   val sampleDraftWithByNcSa: Draft = sampleDraftWithPublicDomain.copy(copyright = Some(draftByNcSaCopyright))
@@ -473,7 +474,7 @@ object TestData {
     tags = List(Tag(List("hulk"), "nb")),
     created = today.minusDays(40),
     updated = today.minusDays(35),
-    notes = Left(List(draft.EditorNote("kakemonster")))
+    notes = List(draft.EditorNote("kakemonster", "ndalId54321"))
   )
 
   val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -912,7 +913,8 @@ object TestData {
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty,
     relevanceIds = List.empty,
-    statusFilter = List.empty
+    statusFilter = List.empty,
+    userFilter = List.empty
   )
 
   val searchableResourceTypes = List(
