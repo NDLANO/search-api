@@ -151,7 +151,7 @@ trait SearchController {
     )
 
     private val userFilter = Param[Option[Seq[String]]](
-      "user",
+      "users",
       s"""List of users to filter by.
          |The value to search for is the user-id from Auth0.
          |UpdatedBy on article and user in editorial-notes are searched.""".stripMargin
