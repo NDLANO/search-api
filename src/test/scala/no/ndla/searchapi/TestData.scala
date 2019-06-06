@@ -10,7 +10,7 @@ package no.ndla.searchapi
 import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.draft.Draft
+import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Draft, Status}
 import no.ndla.searchapi.model.domain.learningpath.{
   Description,
   LearningPath,
@@ -474,7 +474,9 @@ object TestData {
     tags = List(Tag(List("hulk"), "nb")),
     created = today.minusDays(40),
     updated = today.minusDays(35),
-    notes = List(draft.EditorNote("kakemonster", "ndalId54321"))
+    notes = List(
+      draft
+        .EditorNote("kakemonster", "ndalId54321", Status(ArticleStatus.DRAFT, Set.empty), today.minusDays(30).toDate))
   )
 
   val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(

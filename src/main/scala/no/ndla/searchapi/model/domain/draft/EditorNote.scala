@@ -7,4 +7,6 @@
 
 package no.ndla.searchapi.model.domain.draft
 
-case class EditorNote(note: String, user: String)
+import java.util.Date
+
+case class EditorNote(note: String, user: String, status: Status, timestamp: Date)
