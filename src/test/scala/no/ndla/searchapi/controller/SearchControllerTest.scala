@@ -8,6 +8,7 @@
 
 package no.ndla.searchapi.controller
 
+import no.ndla.searchapi.auth.{Role, UserInfo}
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.SearchParams
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
@@ -71,6 +72,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val multiResult = domain.SearchResult(0, None, 10, "nb", Seq.empty, Some(validScrollId))
 
     when(multiDraftSearchService.matchingQuery(any[MultiDraftSearchSettings])).thenReturn(Success(multiResult))
+    when(user.getUser).thenReturn(UserInfo("SomeId", Set(Role.DRAFTWRITE)))
     get(s"/test/editorial/") {
       status should equal(200)
       response.headers("search-context").head should be(validScrollId)
@@ -107,12 +109,20 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Some(newValidScrollId))
 
     when(multiDraftSearchService.scroll(eqTo(validScrollId), eqTo("nn"), eqTo(true))).thenReturn(Success(multiResult))
+    when(user.getUser).thenReturn(UserInfo("SomeId", Set(Role.DRAFTWRITE)))
     get(s"/test/editorial/?search-context=$validScrollId&language=nn&fallback=true") {
       status should equal(200)
       response.headers("search-context").head should be(newValidScrollId)
     }
 
     verify(multiDraftSearchService, times(1)).scroll(eqTo(validScrollId), eqTo("nn"), eqTo(true))
+  }
+
+  test("That /editorial/ returns access denied if user does not have drafts:write role") {
+    when(user.getUser).thenReturn(UserInfo("SomeId", Set()))
+    get(s"/test/editorial/") {
+      status should equal(403)
+    }
   }
 
 }

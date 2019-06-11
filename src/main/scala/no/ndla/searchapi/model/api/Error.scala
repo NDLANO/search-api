@@ -40,6 +40,7 @@ object Error {
   val INVALID_BODY = "INVALID_BODY"
   val TAXONOMY_FAILURE = "TAXONOMY_FAILURE"
   val INVALID_SEARCH_CONTEXT = "INVALID_SEARCH_CONTEXT"
+  val ACCESS_DENIED = "ACCESS DENIED"
 
   val GENERIC_DESCRIPTION =
     s"Ooops. Something we didn't anticipate occured. We have logged the error, and will look into it. But feel free to contact ${SearchApiProperties.ContactEmail} if the error persists."

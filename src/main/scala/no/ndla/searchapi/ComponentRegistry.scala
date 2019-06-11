@@ -13,6 +13,7 @@ import no.ndla.network.NdlaClient
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.SearchApiProperties._
+import no.ndla.searchapi.auth.User
 import no.ndla.searchapi.service.search._
 import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients, search}
 
@@ -40,6 +41,7 @@ object ComponentRegistry
     with ApiSearchService
     with SearchController
     with InternController
+    with User
     with SearchApiClient {
   implicit val swagger = new SearchSwagger
 
@@ -73,4 +75,6 @@ object ComponentRegistry
   lazy val learningPathIndexService = new LearningPathIndexService
   lazy val draftIndexService = new DraftIndexService
   lazy val multiDraftSearchService = new MultiDraftSearchService
+
+  lazy val user = new User
 }
