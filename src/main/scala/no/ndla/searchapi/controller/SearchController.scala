@@ -14,12 +14,14 @@ import java.util.concurrent.TimeUnit.SECONDS
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
   DefaultPageSize,
-  MaxPageSize,
   ElasticSearchIndexMaxResultWindow,
-  ElasticSearchScrollKeepAlive
+  ElasticSearchScrollKeepAlive,
+  MaxPageSize
 }
+import no.ndla.searchapi.auth.{Role, User, UserInfo}
 import no.ndla.searchapi.integration.SearchApiClient
 import no.ndla.searchapi.model.api.{
+  AccessDeniedException,
   Error,
   GroupSearchResult,
   GroupSummary,
@@ -55,7 +57,8 @@ trait SearchController {
     with MultiSearchService
     with SearchConverterService
     with SearchService
-    with MultiDraftSearchService =>
+    with MultiDraftSearchService
+    with User =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -477,17 +480,18 @@ trait SearchController {
         )
           responseMessages response500)
     ) {
-      scrollWithOr(multiDraftSearchService) {
-        multiDraftSearchService.matchingQuery(getDraftSearchSettingsFromRequest) match {
-          case Success(searchResult) =>
-            Ok(searchConverterService.toApiMultiSearchResult(searchResult), scrollIdToHeader(searchResult.scrollId))
-          case Failure(ex) =>
-            errorHandler(ex)
+      if (!user.getUser.roles.contains(Role.DRAFTWRITE)) {
+        errorHandler(AccessDeniedException("You do not have access to the requested resource."))
+      } else {
+        scrollWithOr(multiDraftSearchService) {
+          multiDraftSearchService.matchingQuery(getDraftSearchSettingsFromRequest) match {
+            case Success(searchResult) =>
+              Ok(searchConverterService.toApiMultiSearchResult(searchResult), scrollIdToHeader(searchResult.scrollId))
+            case Failure(ex) =>
+              errorHandler(ex)
+          }
         }
       }
-
     }
-
   }
-
 }

@@ -13,6 +13,7 @@ import java.nio.file.{Files, Path}
 import com.sksamuel.elastic4s.embedded.{InternalLocalNode, LocalNode}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
+import no.ndla.searchapi.auth.User
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.service.search._
@@ -41,6 +42,7 @@ trait TestEnvironment
     with SearchService
     with ApiSearchService
     with SearchController
+    with User
     with LearningPathIndexService
     with InternController
     with SearchApiClient {
@@ -75,4 +77,6 @@ trait TestEnvironment
   val learningPathIndexService = mock[LearningPathIndexService]
   val draftIndexService = mock[DraftIndexService]
   val multiDraftSearchService = mock[MultiDraftSearchService]
+
+  val user = mock[User]
 }

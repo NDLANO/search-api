@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties.{CorrelationIdHeader, CorrelationIdKey}
 import no.ndla.searchapi.model.api.{
+  AccessDeniedException,
   Error,
   InvalidIndexBodyException,
   ResultWindowTooLargeException,
@@ -70,6 +71,7 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
     case _: IndexNotFoundException         => InternalServerError(body = Error.IndexMissingError)
     case _: InvalidIndexBodyException      => BadRequest(body = Error.InvalidBody)
     case te: TaxonomyException             => InternalServerError(body = Error(Error.TAXONOMY_FAILURE, te.getMessage))
+    case ade: AccessDeniedException        => Forbidden(Error(Error.ACCESS_DENIED, ade.getMessage))
     case nse: NdlaSearchException
         if nse.rf.error.rootCause.exists(x =>
           x.`type` == "search_context_missing_exception" || x.reason == "Cannot parse scroll id") =>
