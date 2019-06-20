@@ -75,6 +75,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     topicFilterConnections = List.empty,
     topicResourceConnections = topicResourceConnections,
     topicSubtopicConnections = List.empty,
+    topicResourceTypeConnections = List.empty,
     topics = topics
   )
 

@@ -19,6 +19,7 @@ case class Bundle(
     topicFilterConnections: List[TopicFilterConnection],
     topicResourceConnections: List[TopicResourceConnection],
     topicSubtopicConnections: List[TopicSubtopicConnection],
+    topicResourceTypeConnections: List[TopicResourceTypeConnection],
     topics: List[Resource]
 ) {
 
