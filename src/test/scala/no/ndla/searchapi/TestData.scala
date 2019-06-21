@@ -845,6 +845,10 @@ object TestData {
     TopicSubtopicConnection("urn:topic:1", "urn:topic:2", "urn:topic-subtopic:1", primary = true, 1)
   )
 
+  val topicResourceTypeConnections = List(
+    TopicResourceTypeConnection("urn:topic:1", "urn:resourcetype:subjectMaterial", "urn:topic-connectionid:1")
+  )
+
   val resourceResourceTypeConnections = List(
     ResourceResourceTypeConnection("urn:resource:1", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:1"),
     ResourceResourceTypeConnection("urn:resource:2", "urn:resourcetype:subjectMaterial", "urn:resource-resourcetype:2"),
@@ -877,6 +881,7 @@ object TestData {
     topicFilterConnections = List.empty,
     topicResourceConnections = topicResourceConnections,
     topicSubtopicConnections = topicSubtopicConnections,
+    topicResourceTypeConnections = topicResourceTypeConnections,
     topics = topics
   )
 

@@ -51,6 +51,9 @@ trait TaxonomyApiClient {
     def getAllResourceResourceTypeConnections: Try[List[ResourceResourceTypeConnection]] =
       get[List[ResourceResourceTypeConnection]](s"$TaxonomyApiEndpoint/resource-resourcetypes/").map(_.distinct)
 
+    def getAllTopicResourceTypeConnections: Try[List[TopicResourceTypeConnection]] =
+      get[List[TopicResourceTypeConnection]](s"$TaxonomyApiEndpoint/topic-resourcetypes/").map(_.distinct)
+
     def getAllSubjectTopicConnections: Try[List[SubjectTopicConnection]] =
       get[List[SubjectTopicConnection]](s"$TaxonomyApiEndpoint/subject-topics/").map(_.distinct)
 
@@ -87,6 +90,7 @@ trait TaxonomyApiClient {
       val topicFilterConnections = tryToFuture(getAllTopicFilterConnections _)
       val topicResourceConnections = tryToFuture(getAllTopicResourceConnections _)
       val topicSubtopicConnections = tryToFuture(getAllTopicSubtopicConnections _)
+      val topicResourceTypeConnection = tryToFuture(getAllTopicResourceTypeConnections _)
       val topics = tryToFuture(getAllTopics _)
 
       val x = for {
@@ -101,8 +105,9 @@ trait TaxonomyApiClient {
         f9 <- topicFilterConnections
         f10 <- topicResourceConnections
         f11 <- topicSubtopicConnections
-        f12 <- topics
-      } yield Bundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12)
+        f12 <- topicResourceTypeConnection
+        f13 <- topics
+      } yield Bundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13)
 
       Try(Await.result(x, Duration(300, "seconds"))) match {
         case Success(bundle) =>

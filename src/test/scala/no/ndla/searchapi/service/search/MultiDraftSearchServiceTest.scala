@@ -415,8 +415,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
-    search2.totalCount should be(7)
-    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
+    search2.totalCount should be(8)
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 12))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
