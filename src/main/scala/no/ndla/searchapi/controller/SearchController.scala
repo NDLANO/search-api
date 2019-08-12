@@ -287,12 +287,13 @@ trait SearchController {
             asQueryParam(language),
             asQueryParam(pageNo),
             asQueryParam(pageSize),
-            asQueryParam(apiTypes)
+            asQueryParam(apiTypes),
+            asQueryParam(sort)
         )
           responseMessages response500)
     ) {
       val language = paramOrDefault(this.language.paramName, "nb")
-      val sort = Sort.ByRelevanceDesc
+      val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, "-relevance")).getOrElse(Sort.ByRelevanceDesc)
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, 5)
       val apisToSearch: Set[SearchApiClient] =
