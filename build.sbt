@@ -11,7 +11,7 @@ val Jettyversion = "9.4.18.v20190429"
 val AwsSdkversion = "1.11.434"
 val MockitoVersion = "2.23.0"
 val Elastic4sVersion = "6.3.7"
-val JacksonVersion = "2.9.9"
+val JacksonVersion = "2.9.9.3"
 val ElasticsearchVersion = "6.3.2"
 val Json4SVersion = "3.5.4"
 
@@ -42,7 +42,7 @@ lazy val search_api = (project in file("."))
       "org.apache.logging.log4j" % "log4j-api" % Log4JVersion,
       "org.apache.logging.log4j" % "log4j-core" % Log4JVersion,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % Log4JVersion,
-      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % JacksonVersion,
+      "com.fasterxml.jackson.core" % "jackson-databind" % JacksonVersion,
       "joda-time" % "joda-time" % "2.10",
       "org.scalatra" %% "scalatra" % Scalatraversion,
       "org.scalatra" %% "scalatra-json" % Scalatraversion,
