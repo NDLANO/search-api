@@ -772,14 +772,14 @@ trait SearchConverterService {
           val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
 
           val all = resourceContexts ++ topicContexts
-
-          val successful = all.collect { case Success(c) => c }
-          val failed = all.collect { case Failure(e)     => Failure(e) }
+          val failed = all.collect { case Failure(e) => Failure(e) }
 
           if (failed.nonEmpty) {
             failed.head
           } else {
-            Success(successful.flatten)
+            val successful = all.collect { case Success(c) => c }
+            val distinctContexts = successful.flatten.distinct
+            Success(distinctContexts)
           }
       }
     }
