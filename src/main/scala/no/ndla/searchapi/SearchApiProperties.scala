@@ -53,7 +53,7 @@ object SearchApiProperties extends LazyLogging {
   )
 
   val DefaultPageSize = 10
-  val MaxPageSize = 100
+  val MaxPageSize = 10000
   val IndexBulkSize = 1000
   val ElasticSearchIndexMaxResultWindow = 10000
   val ElasticSearchScrollKeepAlive = "10s"
