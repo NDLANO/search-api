@@ -431,8 +431,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle),
                                     language = "all"))
 
-    search.totalCount should be(11)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
+    search.totalCount should be(12)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13))
   }
 
   test("That filtering on learning-resource-type works") {
@@ -444,8 +444,8 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     search.totalCount should be(7)
     search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
-    search2.totalCount should be(4)
-    search2.results.map(_.id) should be(Seq(8, 9, 10, 11))
+    search2.totalCount should be(5)
+    search2.results.map(_.id) should be(Seq(8, 9, 10, 11, 13))
   }
 
   test("That filtering on multiple context-types returns every type") {
@@ -454,19 +454,17 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle),
                                     language = "all"))
 
-    search.totalCount should be(11)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
+    search.totalCount should be(12)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13))
   }
 
   test("That filtering on learningpath learningresourcetype returns learningpaths") {
     val Success(search) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(learningResourceTypes = List(LearningResourceType.LearningPath), language = "all"))
 
-    search.totalCount should be(5)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5))
-    search.results.map(_.contexts.head.learningResourceType) should be(
-      Seq.fill(5) { LearningResourceType.LearningPath.toString }
-    )
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 6))
+    search.results.map(_.url.contains("learningpath")).distinct should be(Seq(true))
   }
 
   test("That filtering on supportedLanguages works") {
@@ -479,14 +477,14 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
-    search2.totalCount should be(17)
-    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12))
+    search2.totalCount should be(18)
+    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("nb"), language = "all"))
-    search3.totalCount should be(14)
-    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
+    search3.totalCount should be(15)
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13))
   }
 
   test("That filtering on supportedLanguages should still prioritize the selected language") {
@@ -645,6 +643,26 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
       ))
     search1.results.map(_.id) should be(expectedIds)
 
+  }
+
+  test("Filtering for learningresourcetype should still work if no context") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(
+        learningResourceTypes = List(LearningResourceType.TopicArticle)
+      ))
+
+    search1.results.map(_.id) should be(Seq(8, 9, 11, 13))
+    search1.results.last.contexts should be(List.empty)
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(
+        query = Some("kek"),
+        language = Language.AllLanguages,
+        learningResourceTypes = List(LearningResourceType.LearningPath)
+      ))
+
+    search2.results.map(_.id) should be(Seq(6))
+    search2.results.last.contexts should be(List.empty)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {
