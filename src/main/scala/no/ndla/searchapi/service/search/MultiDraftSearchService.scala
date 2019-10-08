@@ -52,6 +52,7 @@ trait MultiDraftSearchService {
         val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
         val authorSearch = simpleStringQuery(q).field("authors", 1)
         val notesSearch = simpleStringQuery(q).field("notes", 1)
+        val previousNotesSearch = simpleStringQuery(q).field("previousVersionsNotes", 1)
 
         boolQuery()
           .should(
@@ -61,14 +62,16 @@ trait MultiDraftSearchService {
             contentSearch,
             tagSearch,
             authorSearch,
-            notesSearch
+            notesSearch,
+            previousNotesSearch
           )
       })
 
       val noteSearch = settings.noteQuery.map(q => {
         boolQuery()
           .should(
-            simpleStringQuery(q).field("notes", 1)
+            simpleStringQuery(q).field("notes", 1),
+            simpleStringQuery(q).field("previousVersionsNotes", 1)
           )
       })
 

@@ -55,6 +55,7 @@ trait DraftIndexService {
           keywordField("articleType"),
           keywordField("supportedLanguages"),
           textField("notes"),
+          textField("previousVersionsNotes"),
           keywordField("users"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(

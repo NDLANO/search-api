@@ -29,5 +29,6 @@ case class Draft(
     updatedBy: String,
     published: DateTime,
     articleType: LearningResourceType.Value,
-    notes: List[EditorNote]
+    notes: List[EditorNote],
+    previousVersionsNotes: List[EditorNote]
 ) extends Content

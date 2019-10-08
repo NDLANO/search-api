@@ -66,7 +66,8 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
       supportedLanguages = List("en", "nb", "nn"),
       notes = List("Note1", "note2"),
       contexts = searchableTaxonomyContexts,
-      users = List("ndalId54321", "ndalId12345")
+      users = List("ndalId54321", "ndalId12345"),
+      previousVersionsNotes = List("OldNote")
     )
     val json = write(original)
     val deserialized = read[SearchableDraft](json)
