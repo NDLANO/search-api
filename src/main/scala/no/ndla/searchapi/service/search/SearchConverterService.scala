@@ -183,7 +183,8 @@ trait SearchConverterService {
           supportedLanguages = supportedLanguages,
           notes = notes,
           contexts = taxonomyForDraft.getOrElse(List.empty),
-          users = users
+          users = users,
+          previousVersionsNotes = draft.previousVersionsNotes.map(_.note)
         ))
 
     }

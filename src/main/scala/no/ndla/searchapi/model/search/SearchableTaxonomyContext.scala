@@ -7,12 +7,14 @@
 
 package no.ndla.searchapi.model.search
 
-case class SearchableTaxonomyContext(id: String,
-                                     subjectId: String,
-                                     subject: SearchableLanguageValues,
-                                     path: String,
-                                     breadcrumbs: SearchableLanguageList,
-                                     contextType: String,
-                                     filters: List[SearchableTaxonomyFilter],
-                                     resourceTypes: List[SearchableTaxonomyResourceType],
-                                     parentTopicIds: List[String])
+case class SearchableTaxonomyContext(
+    id: String,
+    subjectId: String,
+    subject: SearchableLanguageValues,
+    path: String,
+    breadcrumbs: SearchableLanguageList,
+    contextType: String,
+    filters: List[SearchableTaxonomyFilter],
+    resourceTypes: List[SearchableTaxonomyResourceType],
+    parentTopicIds: List[String]
+)

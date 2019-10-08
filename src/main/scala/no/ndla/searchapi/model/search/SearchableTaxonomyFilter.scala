@@ -7,7 +7,9 @@
 
 package no.ndla.searchapi.model.search
 
-case class SearchableTaxonomyFilter(filterId: String,
-                                    name: SearchableLanguageValues,
-                                    relevanceId: String,
-                                    relevance: SearchableLanguageValues)
+case class SearchableTaxonomyFilter(
+    filterId: String,
+    name: SearchableLanguageValues,
+    relevanceId: String,
+    relevance: SearchableLanguageValues
+)

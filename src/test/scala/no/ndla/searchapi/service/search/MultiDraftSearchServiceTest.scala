@@ -665,6 +665,19 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
     search2.results.last.contexts should be(List.empty)
   }
 
+  test("That search matches previous notes on drafts") {
+    val Success(search1) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(query = Some("kultgammeltnotat")))
+    val Success(search2) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(noteQuery = Some("kultgammeltnotat")))
+
+    search1.totalCount should be(1)
+    search1.results.head.id should be(5)
+
+    search2.totalCount should be(1)
+    search2.results.head.id should be(5)
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

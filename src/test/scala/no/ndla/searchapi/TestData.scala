@@ -404,6 +404,7 @@ object TestData {
     "ndalId54321",
     DateTime.now().minusDays(2),
     LearningResourceType.Article,
+    List.empty,
     List.empty
   )
 
@@ -475,8 +476,19 @@ object TestData {
     created = today.minusDays(40),
     updated = today.minusDays(35),
     notes = List(
-      draft
-        .EditorNote("kakemonster", "ndalId54321", Status(ArticleStatus.DRAFT, Set.empty), today.minusDays(30).toDate))
+      draft.EditorNote(
+        "kakemonster",
+        "ndalId54321",
+        Status(ArticleStatus.DRAFT, Set.empty),
+        today.minusDays(30).toDate
+      )),
+    previousVersionsNotes = List(
+      draft.EditorNote(
+        "kultgammeltnotat",
+        "ndalId54321",
+        Status(ArticleStatus.DRAFT, Set.empty),
+        today.minusDays(31).toDate
+      ))
   )
 
   val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(
