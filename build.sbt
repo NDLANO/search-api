@@ -23,19 +23,37 @@ appProperties := {
   prop
 }
 
+import com.itv.scalapact.plugin._
+val pactVersion = "2.3.9"
+
+val pactTestFramework = Seq(
+  "com.itv" %% "scalapact-argonaut-6-2" % pactVersion % "test",
+  "com.itv" %% "scalapact-http4s-0-16a" % pactVersion % "test",
+  "com.itv" %% "scalapact-scalatest" % pactVersion % "test"
+)
+
 lazy val commonSettings = Seq(
   organization := appProperties.value.getProperty("NDLAOrganization"),
   version := appProperties.value.getProperty("NDLAComponentVersion"),
   scalaVersion := Scalaversion
 )
 
+lazy val PactTest = config("pact") extend Test
 lazy val search_api = (project in file("."))
+  .configs(PactTest)
+  .settings(
+    inConfig(PactTest)(Defaults.testTasks),
+    // Since pactTest gets its options from Test configuration, the 'Test' (default) config won't run PactProviderTests
+    // To run all tests use pact config ('sbt pact:test')
+    Test / testOptions := Seq(Tests.Argument("-l", "PactProviderTest")),
+    PactTest / testOptions := Seq.empty
+  )
   .settings(commonSettings: _*)
   .settings(
     name := "search-api",
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature"),
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= pactTestFramework ++ Seq(
       "ndla" %% "network" % "0.38",
       "ndla" %% "mapping" % "0.11",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
