@@ -27,8 +27,8 @@ import com.itv.scalapact.plugin._
 val pactVersion = "2.3.9"
 
 val pactTestFramework = Seq(
-  "com.itv" %% "scalapact-argonaut-6-2" % pactVersion % "test",
-  "com.itv" %% "scalapact-http4s-0-16a" % pactVersion % "test",
+  "com.itv" %% "scalapact-circe-0-9" % pactVersion % "test",
+  "com.itv" %% "scalapact-http4s-0-18" % pactVersion % "test",
   "com.itv" %% "scalapact-scalatest" % pactVersion % "test"
 )
 
@@ -88,6 +88,7 @@ lazy val search_api = (project in file("."))
   )
   .enablePlugins(DockerPlugin)
   .enablePlugins(JettyPlugin)
+  .enablePlugins(ScalaPactPlugin)
 
 assembly / assemblyJarName := "search-api.jar"
 assembly / mainClass := Some("no.ndla.searchapi.JettyLauncher")

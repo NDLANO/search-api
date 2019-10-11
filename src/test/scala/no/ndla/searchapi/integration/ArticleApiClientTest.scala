@@ -7,31 +7,27 @@
 
 package no.ndla.searchapi.integration
 
-import java.util.Date
-
 import no.ndla.network.AuthUser
-import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.model.api.MetaImage
 import no.ndla.searchapi.model.domain
-import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Copyright}
-import no.ndla.mapping.License.CC_BY
-import no.ndla.searchapi.model.domain.DomainDumpResults
-import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.model.domain.learningpath.{
-  EmbedType,
-  LearningPathStatus,
-  LearningPathVerificationStatus,
-  StepStatus,
-  StepType
+import no.ndla.searchapi.model.domain.article.{
+  ArticleContent,
+  ArticleMetaImage,
+  Copyright,
+  LearningResourceType,
+  MetaDescription
 }
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
+import no.ndla.searchapi.model.domain.learningpath._
+import no.ndla.searchapi.model.domain.{DomainDumpResults, Tag, Title}
 import no.ndla.searchapi.model.search.LanguageValue
+import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.joda.time.DateTime
+import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization.write
-import org.json4s.{DefaultFormats, Formats}
 
-import scala.util.Success
-
-class DraftApiClientTest extends UnitSuite with TestEnvironment {
+class ArticleApiClientTest extends UnitSuite with TestEnvironment {
   implicit val formats: Formats =
     org.json4s.DefaultFormats +
       new EnumNameSerializer(ArticleStatus) +
@@ -44,6 +40,7 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
       org.json4s.ext.JodaTimeSerializers.all
 
   override val ndlaClient = new NdlaClient
+  override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
   // Pact CDC imports
@@ -55,56 +52,42 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
     "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik9FSTFNVVU0T0RrNU56TTVNekkyTXpaRE9EazFOMFl3UXpkRE1EUXlPRFZDUXpRM1FUSTBNQSJ9.eyJodHRwczovL25kbGEubm8vY2xpZW50X2lkIjogInh4eHl5eSIsICJpc3MiOiAiaHR0cHM6Ly9uZGxhLmV1LmF1dGgwLmNvbS8iLCAic3ViIjogInh4eHl5eUBjbGllbnRzIiwgImF1ZCI6ICJuZGxhX3N5c3RlbSIsICJpYXQiOiAxNTEwMzA1NzczLCAiZXhwIjogMTUxMDM5MjE3MywgInNjb3BlIjogImFydGljbGVzLXRlc3Q6cHVibGlzaCBkcmFmdHMtdGVzdDp3cml0ZSBkcmFmdHMtdGVzdDpzZXRfdG9fcHVibGlzaCBhcnRpY2xlcy10ZXN0OndyaXRlIiwgImd0eSI6ICJjbGllbnQtY3JlZGVudGlhbHMifQ.gsM-U84ykgaxMSbL55w6UYIIQUouPIB6YOmJuj1KhLFnrYctu5vwYBo80zyr1je9kO_6L-rI7SUnrHVao9DFBZJmfFfeojTxIT3CE58hoCdxZQZdPUGePjQzROWRWeDfG96iqhRcepjbVF9pMhKp6FNqEVOxkX00RZg9vFT8iMM"
   val authHeaderMap = Map("Authorization" -> s"Bearer $exampleToken")
 
-  test("that dumping drafts returns drafts in serializable format") {
+  test("that dumping articles returns articles in serializable format") {
 
     val today = new DateTime(0)
     withFrozenTime(today) {
 
-      val draft = domain.draft.Draft(
-        Some(1),
+      val article = domain.article.Article(
+        Option(2),
         None,
-        domain.draft.Status(domain.draft.ArticleStatus.DRAFT, Set.empty),
-        Seq(domain.Title("title", "nb")),
-        Seq(domain.article.ArticleContent("content", "nb")),
-        Some(
-          Copyright(
-            Some(CC_BY.toString),
-            Some(""),
-            List.empty,
-            List.empty,
-            List.empty,
-            None,
-            None,
-            None
-          )),
-        Seq.empty,
-        Seq.empty,
-        Seq.empty,
-        Seq.empty,
-        Seq(domain.article.MetaDescription("meta description", "nb")),
-        Seq.empty,
+        Seq(Title("title", "nb")),
+        Seq(ArticleContent("content", "nb")),
+        Copyright("CC-BY-4.0", "", Seq(), Seq(), Seq(), None, None, None),
+        Seq(Tag(Seq("tag"), "nb")),
+        Seq(),
+        Seq(),
+        Seq(),
+        Seq(MetaDescription("meta description", "nb")),
+        Seq(ArticleMetaImage("11", "alt", "nb")),
         today,
         today,
         "ndalId54321",
-        today,
-        domain.article.LearningResourceType.Article,
-        List.empty,
-        List.empty
+        LearningResourceType.Article
       )
 
-      val expectedResult = DomainDumpResults[domain.draft.Draft](
+      val expectedResult = DomainDumpResults[domain.article.Article](
         totalCount = 10,
         page = 1,
         pageSize = 250,
-        results = Seq(draft)
+        results = Seq(article)
       )
 
       forgePact
         .between("search-api")
-        .and("draft-api")
+        .and("article-api")
         .addInteraction(
           interaction
-            .description("Dumping drafts returns drafts in expected format")
+            .description("Dumping articles returns articles in expected format")
             .given("articles")
             .uponReceiving(
               method = GET,
@@ -123,11 +106,11 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
         )
         .runConsumerTest(mockConfig => {
           AuthUser.setHeader(s"Bearer $exampleToken")
-          val draftApiClient = new DraftApiClient(mockConfig.baseUrl)
+          val articleApiClient = new ArticleApiClient(mockConfig.baseUrl)
 
-          val chunks = draftApiClient.getChunks[domain.draft.Draft].toList
-          val fetchedDraft = chunks.flatMap(_.get).head
-          val searchable = searchConverterService.asSearchableDraft(fetchedDraft, TestData.taxonomyTestBundle)
+          val chunks = articleApiClient.getChunks[domain.article.Article].toList
+          val fetchedArticle = chunks.flatMap(_.get).head
+          val searchable = searchConverterService.asSearchableArticle(fetchedArticle, TestData.taxonomyTestBundle)
 
           searchable.isSuccess should be(true)
           searchable.get.title.languageValues should be(Seq(LanguageValue("nb", "title")))
