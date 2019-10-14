@@ -7,7 +7,9 @@ notifications:
 matrix:
   fast_finish: true
   include:
-    - name: "Test"
+
+    - name: "Unit tests with pact publication"
+      script: sbt ++$TRAVIS_SCALA_VERSION pactPublish
       language: scala
       dist: trusty
       scala:
@@ -22,6 +24,7 @@ matrix:
         # Tricks to avoid unnecessary cache updates
         - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
         - find $HOME/.sbt -name "*.lock" -delete
+
     - name: "Release"
       language: python
       if: branch = master AND type = push

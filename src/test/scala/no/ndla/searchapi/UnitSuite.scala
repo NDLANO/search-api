@@ -8,6 +8,7 @@
 
 package no.ndla.searchapi
 
+import org.joda.time.{DateTime, DateTimeUtils}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest._
 
@@ -38,5 +39,11 @@ abstract class UnitSuite
     val field = System.getenv().getClass.getDeclaredField("m")
     field.setAccessible(true)
     field.get(System.getenv()).asInstanceOf[java.util.Map[java.lang.String, java.lang.String]]
+  }
+
+  def withFrozenTime(time: DateTime = new DateTime())(toExecute: => Any) = {
+    DateTimeUtils.setCurrentMillisFixed(time.getMillis)
+    toExecute
+    DateTimeUtils.setCurrentMillisSystem()
   }
 }
