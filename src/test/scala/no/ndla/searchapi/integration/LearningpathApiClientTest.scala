@@ -86,7 +86,7 @@ class LearningpathApiClientTest extends UnitSuite with TestEnvironment {
         List(domain.learningpath.Description("deskripsjon", Language.DefaultLanguage)),
         None,
         Some(60),
-        domain.learningpath.LearningPathStatus.PRIVATE,
+        domain.learningpath.LearningPathStatus.PUBLISHED,
         domain.learningpath.LearningPathVerificationStatus.CREATED_BY_NDLA,
         today,
         List(domain.Tag(List("tag"), Language.DefaultLanguage)),
@@ -104,7 +104,7 @@ class LearningpathApiClientTest extends UnitSuite with TestEnvironment {
 
       forgePact
         .between("search-api")
-        .and("learningpaath-api")
+        .and("learningpath-api")
         .addInteraction(
           interaction
             .description("Dumping learningpaths returns learningpaths in expected format")
