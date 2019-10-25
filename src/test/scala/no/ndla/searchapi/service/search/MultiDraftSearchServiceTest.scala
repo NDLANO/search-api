@@ -9,25 +9,26 @@ package no.ndla.searchapi.service.search
 
 import java.nio.file.{Files, Path}
 
-import com.sksamuel.elastic4s.embedded.LocalNode
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.TestData._
-import no.ndla.searchapi.integration.NdlaE4sClient
+import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
 import no.ndla.searchapi.model.api.MetaImage
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
-import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.{IntegrationSuite, SearchApiProperties, TestEnvironment, UnitSuite}
+import org.scalatest.Outcome
 
 import scala.util.Success
 
-class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
-  val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
-  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
-  val localNode = LocalNode(localNodeSettings)
-
-  override val e4sClient = NdlaE4sClient(localNode.client(true))
+class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment {
+  e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
+  // Skip tests if no docker environment available
+  override def withFixture(test: NoArgTest): Outcome = {
+    assume(elasticSearchContainer.isSuccess)
+    super.withFixture(test)
+  }
 
   override val articleIndexService = new ArticleIndexService
   override val draftIndexService = new DraftIndexService
@@ -36,7 +37,7 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
-  override def beforeAll: Unit = {
+  override def beforeAll: Unit = if (elasticSearchContainer.isSuccess) {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
     draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
@@ -76,10 +77,6 @@ class MultiDraftSearchServiceTest extends UnitSuite with TestEnvironment {
   private def titlesForLang(language: String) = {
     expectedAllPublicDrafts(language).map(_.title.find(_.language == language || language == "all").get.title) ++
       expectedAllPublicLearningPaths(language).map(_.title.find(_.language == language || language == "all").get.title)
-  }
-
-  override def afterAll(): Unit = {
-    localNode.stop(true)
   }
 
   test("That getStartAtAndNumResults returns SEARCH_MAX_PAGE_SIZE for value greater than SEARCH_MAX_PAGE_SIZE") {
