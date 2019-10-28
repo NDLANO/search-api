@@ -7,21 +7,20 @@
 
 package no.ndla.searchapi.service.search
 
-import java.nio.file.{Files, Path}
-
-import com.sksamuel.elastic4s.embedded.LocalNode
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
-import no.ndla.searchapi.{TestEnvironment, UnitSuite}
+import no.ndla.searchapi.integration.Elastic4sClientFactory
+import no.ndla.searchapi.{IntegrationSuite, TestEnvironment}
+import org.scalatest.Outcome
 
 import scala.util.Success
 
-class IndexServiceTest extends UnitSuite with TestEnvironment {
-  val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
-  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
-  val localNode = LocalNode(localNodeSettings)
-
-  override val e4sClient = NdlaE4sClient(localNode.client(true))
+class IndexServiceTest extends IntegrationSuite with TestEnvironment {
+  e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
+  // Skip tests if no docker environment available
+  override def withFixture(test: NoArgTest): Outcome = {
+    assume(elasticSearchContainer.isSuccess)
+    super.withFixture(test)
+  }
 
   val testIndexPrefix = "searchapi-index-service-test"
 
@@ -53,9 +52,5 @@ class IndexServiceTest extends UnitSuite with TestEnvironment {
     indexNames should not contain article2Name
 
     searchIndexService.cleanupIndexes(testIndexPrefix)
-  }
-
-  override def afterAll: Unit = {
-    localNode.stop(true)
   }
 }

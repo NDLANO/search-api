@@ -51,7 +51,7 @@ object ComponentRegistry
   lazy val resourcesApp = new ResourcesApp
 
   lazy val ndlaClient = new NdlaClient
-  lazy val e4sClient: NdlaE4sClient = Elastic4sClientFactory.getClient()
+  var e4sClient: NdlaE4sClient = Elastic4sClientFactory.getClient()
 
   lazy val taxonomyApiClient = new TaxonomyApiClient
 

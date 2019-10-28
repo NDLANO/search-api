@@ -7,31 +7,29 @@
 
 package no.ndla.searchapi.service.search
 
-import com.sksamuel.elastic4s.embedded.LocalNode
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
-import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
+import no.ndla.searchapi.integration.Elastic4sClientFactory
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
+import no.ndla.searchapi.{IntegrationSuite, TestData, TestEnvironment}
 import org.json4s.native.Serialization.read
-import java.nio.file.{Files, Path}
+import org.scalatest.Outcome
 
 import scala.util.Success
 
-class ArticleIndexServiceTest extends UnitSuite with TestEnvironment {
-  val tmpDir: Path = Files.createTempDirectory(this.getClass.getName)
-  val localNodeSettings: Map[String, String] = LocalNode.requiredSettings(this.getClass.getName, tmpDir.toString)
-  val localNode = LocalNode(localNodeSettings)
+class ArticleIndexServiceTest extends IntegrationSuite with TestEnvironment {
 
-  override val e4sClient = NdlaE4sClient(localNode.client(true))
+  e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
+  // Skip tests if no docker environment available
+  override def withFixture(test: NoArgTest): Outcome = {
+    assume(elasticSearchContainer.isSuccess)
+    super.withFixture(test)
+  }
+
   override val articleIndexService = new ArticleIndexService
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
   implicit val formats = SearchableLanguageFormats.JSonFormats
-
-  override def afterAll(): Unit = {
-    localNode.stop(true)
-  }
 
   test("That articles are indexed correctly") {
     articleIndexService.createIndexWithGeneratedName

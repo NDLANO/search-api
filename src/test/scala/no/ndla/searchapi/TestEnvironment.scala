@@ -8,9 +8,6 @@
 
 package no.ndla.searchapi
 
-import java.nio.file.{Files, Path}
-
-import com.sksamuel.elastic4s.embedded.{InternalLocalNode, LocalNode}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.auth.User
@@ -52,7 +49,7 @@ trait TestEnvironment
   val resourcesApp = mock[ResourcesApp]
 
   val ndlaClient = mock[NdlaClient]
-  val e4sClient: NdlaE4sClient = mock[NdlaE4sClient]
+  var e4sClient: NdlaE4sClient = mock[NdlaE4sClient]
 
   val taxonomyApiClient = mock[TaxonomyApiClient]
 

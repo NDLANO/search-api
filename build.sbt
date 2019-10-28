@@ -2,18 +2,19 @@ import java.util.Properties
 import sbt._
 import Keys._
 
-val Scalaversion = "2.12.7"
-val Scalatraversion = "2.6.3"
+val Scalaversion = "2.12.10"
+val Scalatraversion = "2.6.5"
 val ScalaLoggingVersion = "3.9.0"
 val ScalaTestVersion = "3.0.5"
 val Log4JVersion = "2.11.1"
 val Jettyversion = "9.4.18.v20190429"
 val AwsSdkversion = "1.11.434"
 val MockitoVersion = "2.23.0"
-val Elastic4sVersion = "6.3.7"
-val JacksonVersion = "2.9.9.3"
-val ElasticsearchVersion = "6.3.2"
+val Elastic4sVersion = "6.7.3"
+val JacksonVersion = "2.9.10.1"
+val ElasticsearchVersion = "6.8.2"
 val Json4SVersion = "3.5.4"
+val TestContainersVersion = "1.12.2"
 
 val appProperties = settingKey[Properties]("The application properties")
 
@@ -70,8 +71,9 @@ lazy val search_api = (project in file("."))
       "org.elasticsearch" % "elasticsearch" % ElasticsearchVersion,
       "com.sksamuel.elastic4s" %% "elastic4s-core" % Elastic4sVersion,
       "com.sksamuel.elastic4s" %% "elastic4s-http" % Elastic4sVersion,
-      "com.sksamuel.elastic4s" %% "elastic4s-aws" % Elastic4sVersion,
-      "com.sksamuel.elastic4s" %% "elastic4s-embedded" % Elastic4sVersion % "test",
+      "vc.inreach.aws" % "aws-signing-request-interceptor" % "0.0.22",
+      "org.apache.httpcomponents" % "httpclient" % "4.5.10", // Overridden because vulnerability in request interceptor
+      "com.google.guava" % "guava" % "28.1-jre", // Overridden because vulnerability in request interceptor
       "com.fasterxml.jackson.core" % "jackson-databind" % JacksonVersion, // Overriding jackson-databind used in dependencies because of https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-72884
       "org.eclipse.jetty" % "jetty-webapp" % Jettyversion % "container;compile",
       "org.eclipse.jetty" % "jetty-plus" % Jettyversion % "container",
@@ -81,9 +83,11 @@ lazy val search_api = (project in file("."))
       "net.bull.javamelody" % "javamelody-core" % "1.74.0",
       "org.jrobin" % "jrobin" % "1.5.9",
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % AwsSdkversion,
-      "io.lemonlabs" %% "scala-uri" % "1.3.1",
+      "io.lemonlabs" %% "scala-uri" % "1.5.1",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
-      "org.mockito" % "mockito-core" % MockitoVersion % "test"
+      "org.mockito" % "mockito-core" % MockitoVersion % "test",
+      "org.testcontainers" % "elasticsearch" % TestContainersVersion % "test",
+      "org.testcontainers" % "testcontainers" % TestContainersVersion % "test"
     )
   )
   .enablePlugins(DockerPlugin)
