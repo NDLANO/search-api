@@ -292,7 +292,7 @@ trait SearchController {
         )
           responseMessages response500)
     ) {
-      val language = paramOrDefault(this.language.paramName, "nb")
+      val language = paramOrNone(this.language.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, "-relevance")).getOrElse(Sort.ByRelevanceDesc)
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, 5)
