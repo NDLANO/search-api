@@ -38,7 +38,7 @@ trait InternController {
     private def resolveResultFutures(indexResults: List[Future[(String, Try[ReindexResult])]]): ActionResult = {
 
       val futureIndexed = Future.sequence(indexResults)
-      val completedIndexed = Await.result(futureIndexed, Duration(10, TimeUnit.MINUTES))
+      val completedIndexed = Await.result(futureIndexed, Duration(60, TimeUnit.MINUTES))
 
       completedIndexed.collect { case (name, Failure(ex)) => (name, ex) } match {
         case Nil =>
