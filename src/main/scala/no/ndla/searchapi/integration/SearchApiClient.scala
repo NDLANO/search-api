@@ -89,7 +89,7 @@ trait SearchApiClient {
 
     protected def search[T <: ApiSearchResults](searchParams: SearchParams)(
         implicit mf: Manifest[T]): Future[Try[T]] = {
-      val queryParams = searchParams.remaindingParams ++ Map("language" -> searchParams.language,
+      val queryParams = searchParams.remaindingParams ++ Map("language" -> searchParams.language.getOrElse("all"),
                                                              "sort" -> searchParams.sort,
                                                              "page" -> searchParams.page,
                                                              "page-size" -> searchParams.pageSize)
