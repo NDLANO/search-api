@@ -67,7 +67,6 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
       TestData.articlesToIndex.filter(_.title.map(_.language).contains(language))
     }
     x.filter(_.copyright.license != "copyrighted")
-      .filter(hasTaxonomy)
   }
 
   private def expectedAllPublicLearningPaths(language: String) = {
@@ -75,7 +74,6 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
       TestData.learningPathsToIndex.filter(_.title.map(_.language).contains(language))
     }
     x.filter(_.copyright.license != "copyrighted")
-      .filter(hasTaxonomy)
   }
 
   private def idsForLang(language: String) =
@@ -280,13 +278,13 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     hits(8).id should be(5)
     hits(8).title.language should be("en")
     hits(9).id should be(6)
-    hits(10).id should be(7)
-    hits(11).id should be(8)
-    hits(12).id should be(9)
-    hits(13).id should be(10)
-    hits(13).title.language should be("en")
-    hits(14).id should be(11)
-    hits(14).title.language should be("nb")
+    hits(10).id should be(6)
+    hits(11).id should be(7)
+    hits(12).id should be(8)
+    hits(13).id should be(9)
+    hits(13).title.language should be("nb")
+    hits(14).id should be(10)
+    hits(14).title.language should be("en")
   }
 
   test("Search for all languages should return all languages if copyrighted") {
@@ -430,9 +428,9 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val Success(search) = multiSearchService.matchingQuery(
       searchSettings.copy(learningResourceTypes = List(LearningResourceType.LearningPath), language = "all"))
 
-    search.totalCount should be(5)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5))
-    search.results.map(_.contexts.head.learningResourceType) should be(
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 6))
+    search.results.filter(_.contexts.nonEmpty).map(_.contexts.head.learningResourceType) should be(
       Seq.fill(5) { LearningResourceType.LearningPath.toString }
     )
   }
@@ -440,13 +438,13 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
   test("That filtering on supportedLanguages works") {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en"), language = "all"))
-    search.totalCount should be(6)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 10, 11))
+    search.totalCount should be(7)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11))
 
     val Success(search2) =
       multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
-    search2.totalCount should be(16)
-    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12))
+    search2.totalCount should be(17)
+    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12))
 
     val Success(search3) =
       multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("nb"), language = "all"))
@@ -470,12 +468,6 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search.results.head.id should be(10)
     search.results.head.metaImage should be(
       Some(MetaImage("http://api-gateway.ndla-local/image-api/raw/id/442", "alt", "en")))
-  }
-
-  test("That learningpaths without taxonomy are not returned") {
-    val Success(search) = multiSearchService.matchingQuery(searchSettings.copy(language = "en", withIdIn = List(6)))
-
-    search.totalCount should be(0)
   }
 
   test("That searching for authors works as expected") {
@@ -547,7 +539,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     scroll5.results.map(_.id) should be(ids(5))
     scroll6.results.map(_.id) should be(ids(6))
     scroll7.results.map(_.id) should be(ids(7))
-    scroll8.results.map(_.id) should be(List.empty)
+    scroll8.results.map(_.id) should be(ids(8))
   }
 
   test("That filtering on context-types works") {
