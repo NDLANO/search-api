@@ -47,54 +47,45 @@ trait SearchConverterService {
 
     def asSearchableArticle(ai: Article, taxonomyBundle: Bundle): Try[SearchableArticle] = {
       getTaxonomyContexts(ai.id.get, "article", taxonomyBundle) match {
-        case Success(contexts) =>
-          if (contexts.isEmpty) {
-            Failure(ElasticIndexingException(s"No taxonomy found for article with id '${ai.id.getOrElse(-1)}'"))
-          } else {
-            val articleWithAgreement = converterService.withAgreementCopyright(ai)
+        case Success(contexts) => {
+          val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
-            val defaultTitle = articleWithAgreement.title
-              .sortBy(title => {
-                ISO639.languagePriority.reverse.indexOf(title.language)
-              })
-              .lastOption
+          val defaultTitle = articleWithAgreement.title
+            .sortBy(title => {
+              ISO639.languagePriority.reverse.indexOf(title.language)
+            })
+            .lastOption
 
-            val supportedLanguages = Language
-              .getSupportedLanguages(ai.title,
-                                     ai.visualElement,
-                                     ai.introduction,
-                                     ai.metaDescription,
-                                     ai.content,
-                                     ai.tags)
-              .toList
+          val supportedLanguages = Language
+            .getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
+            .toList
 
-            Success(
-              SearchableArticle(
-                id = articleWithAgreement.id.get,
-                title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
-                  LanguageValue(title.language, title.title))),
-                visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual =>
-                  LanguageValue(visual.language, visual.resource))),
-                introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro =>
-                  LanguageValue(intro.language, intro.introduction))),
-                metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta =>
-                  LanguageValue(meta.language, meta.content))),
-                content = SearchableLanguageValues(articleWithAgreement.content.map(article =>
-                  LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
-                tags = SearchableLanguageList(articleWithAgreement.tags.map(tag =>
-                  LanguageValue(tag.language, tag.tags))),
-                lastUpdated = articleWithAgreement.updated,
-                license = articleWithAgreement.copyright.license,
-                authors =
-                  (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(
-                    _.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
-                articleType = articleWithAgreement.articleType.toString,
-                metaImage = articleWithAgreement.metaImage.toList,
-                defaultTitle = defaultTitle.map(t => t.title),
-                supportedLanguages = supportedLanguages,
-                contexts = contexts
-              ))
-          }
+          Success(
+            SearchableArticle(
+              id = articleWithAgreement.id.get,
+              title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
+                LanguageValue(title.language, title.title))),
+              visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual =>
+                LanguageValue(visual.language, visual.resource))),
+              introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro =>
+                LanguageValue(intro.language, intro.introduction))),
+              metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta =>
+                LanguageValue(meta.language, meta.content))),
+              content = SearchableLanguageValues(articleWithAgreement.content.map(article =>
+                LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+              tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+              lastUpdated = articleWithAgreement.updated,
+              license = articleWithAgreement.copyright.license,
+              authors =
+                (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(
+                  _.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
+              articleType = articleWithAgreement.articleType.toString,
+              metaImage = articleWithAgreement.metaImage.toList,
+              defaultTitle = defaultTitle.map(t => t.title),
+              supportedLanguages = supportedLanguages,
+              contexts = contexts
+            ))
+        }
         case Failure(ex) => Failure(ex)
       }
 
