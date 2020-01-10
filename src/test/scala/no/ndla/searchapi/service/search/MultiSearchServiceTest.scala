@@ -285,6 +285,8 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     hits(13).title.language should be("nb")
     hits(14).id should be(10)
     hits(14).title.language should be("en")
+    hits(15).id should be(11)
+    hits(15).title.language should be("nb")
   }
 
   test("Search for all languages should return all languages if copyrighted") {
