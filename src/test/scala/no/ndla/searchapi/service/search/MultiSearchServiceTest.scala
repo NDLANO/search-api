@@ -532,6 +532,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val Success(scroll6) = multiSearchService.scroll(scroll5.scrollId.get, "all", fallback = true)
     val Success(scroll7) = multiSearchService.scroll(scroll6.scrollId.get, "all", fallback = true)
     val Success(scroll8) = multiSearchService.scroll(scroll7.scrollId.get, "all", fallback = true)
+    val Success(scroll9) = multiSearchService.scroll(scroll8.scrollId.get, "all", fallback = true)
 
     initialSearch.results.map(_.id) should be(ids.head)
     scroll1.results.map(_.id) should be(ids(1))
@@ -542,6 +543,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     scroll6.results.map(_.id) should be(ids(6))
     scroll7.results.map(_.id) should be(ids(7))
     scroll8.results.map(_.id) should be(ids(8))
+    scroll9.results.map(_.id) should be(List.empty)
   }
 
   test("That filtering on context-types works") {
