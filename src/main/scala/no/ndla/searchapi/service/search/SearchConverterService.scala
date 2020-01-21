@@ -46,48 +46,44 @@ trait SearchConverterService {
     }
 
     def asSearchableArticle(ai: Article, taxonomyBundle: Bundle): Try[SearchableArticle] = {
-      getTaxonomyContexts(ai.id.get, "article", taxonomyBundle) match {
-        case Success(contexts) => {
-          val articleWithAgreement = converterService.withAgreementCopyright(ai)
+      val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle)
 
-          val defaultTitle = articleWithAgreement.title
-            .sortBy(title => {
-              ISO639.languagePriority.reverse.indexOf(title.language)
-            })
-            .lastOption
+      val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
-          val supportedLanguages = Language
-            .getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
-            .toList
+      val defaultTitle = articleWithAgreement.title
+        .sortBy(title => {
+          ISO639.languagePriority.reverse.indexOf(title.language)
+        })
+        .lastOption
 
-          Success(
-            SearchableArticle(
-              id = articleWithAgreement.id.get,
-              title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
-                LanguageValue(title.language, title.title))),
-              visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual =>
-                LanguageValue(visual.language, visual.resource))),
-              introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro =>
-                LanguageValue(intro.language, intro.introduction))),
-              metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta =>
-                LanguageValue(meta.language, meta.content))),
-              content = SearchableLanguageValues(articleWithAgreement.content.map(article =>
-                LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
-              tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
-              lastUpdated = articleWithAgreement.updated,
-              license = articleWithAgreement.copyright.license,
-              authors =
-                (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors.map(
-                  _.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
-              articleType = articleWithAgreement.articleType.toString,
-              metaImage = articleWithAgreement.metaImage.toList,
-              defaultTitle = defaultTitle.map(t => t.title),
-              supportedLanguages = supportedLanguages,
-              contexts = contexts
-            ))
-        }
-        case Failure(ex) => Failure(ex)
-      }
+      val supportedLanguages = Language
+        .getSupportedLanguages(ai.title, ai.visualElement, ai.introduction, ai.metaDescription, ai.content, ai.tags)
+        .toList
+
+      Success(
+        SearchableArticle(
+          id = articleWithAgreement.id.get,
+          title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
+            LanguageValue(title.language, title.title))),
+          visualElement = SearchableLanguageValues(articleWithAgreement.visualElement.map(visual =>
+            LanguageValue(visual.language, visual.resource))),
+          introduction = SearchableLanguageValues(articleWithAgreement.introduction.map(intro =>
+            LanguageValue(intro.language, intro.introduction))),
+          metaDescription = SearchableLanguageValues(articleWithAgreement.metaDescription.map(meta =>
+            LanguageValue(meta.language, meta.content))),
+          content = SearchableLanguageValues(articleWithAgreement.content.map(article =>
+            LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
+          tags = SearchableLanguageList(articleWithAgreement.tags.map(tag => LanguageValue(tag.language, tag.tags))),
+          lastUpdated = articleWithAgreement.updated,
+          license = articleWithAgreement.copyright.license,
+          authors = (articleWithAgreement.copyright.creators.map(_.name) ++ articleWithAgreement.copyright.processors
+            .map(_.name) ++ articleWithAgreement.copyright.rightsholders.map(_.name)).toList,
+          articleType = articleWithAgreement.articleType.toString,
+          metaImage = articleWithAgreement.metaImage.toList,
+          defaultTitle = defaultTitle.map(t => t.title),
+          supportedLanguages = supportedLanguages,
+          contexts = taxonomyForArticle.getOrElse(List.empty)
+        ))
 
     }
 
@@ -756,23 +752,20 @@ trait SearchConverterService {
     private[service] def getTaxonomyContexts(id: Long,
                                              taxonomyType: String,
                                              bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
-      getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType) match {
-        case (Nil, Nil) =>
-          Failure(ElasticIndexingException(s"$taxonomyType $id could not be found in taxonomy."))
-        case (resources, topics) =>
-          val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
-          val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
+      val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
+      val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
+      val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
 
-          val all = resourceContexts ++ topicContexts
-          val failed = all.collect { case Failure(e) => Failure(e) }
+      val all = resourceContexts ++ topicContexts
+      val failed = all.collect { case Failure(e) => Failure(e) }
 
-          if (failed.nonEmpty) {
-            failed.head
-          } else {
-            val successful = all.collect { case Success(c) => c }
-            val distinctContexts = successful.flatten.distinct
-            Success(distinctContexts)
-          }
+      if (failed.nonEmpty) {
+        logger.info("")
+        failed.head
+      } else {
+        val successful = all.collect { case Success(c) => c }
+        val distinctContexts = successful.flatten.distinct
+        Success(distinctContexts)
       }
     }
 
