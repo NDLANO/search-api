@@ -760,7 +760,6 @@ trait SearchConverterService {
       val failed = all.collect { case Failure(e) => Failure(e) }
 
       if (failed.nonEmpty) {
-        logger.info("")
         failed.head
       } else {
         val successful = all.collect { case Success(c) => c }
