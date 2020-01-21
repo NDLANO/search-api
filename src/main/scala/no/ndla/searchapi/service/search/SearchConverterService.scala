@@ -757,7 +757,13 @@ trait SearchConverterService {
       val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
 
       val all = resourceContexts ++ topicContexts
-      val failed = all.collect { case Failure(e) => Failure(e) }
+      val failed = all.collect {
+            case Failure(e) => {
+                  logger.error(s"Getting taxonomy context for $id failed with: ", e)
+                  Failure(e)
+            }
+      }
+
 
       if (failed.nonEmpty) {
         failed.head
