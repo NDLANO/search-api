@@ -19,4 +19,7 @@ case class MultiSearchSummary(
     @(ApiModelProperty @field)(description = "The meta image for the resource") metaImage: Option[MetaImage],
     @(ApiModelProperty @field)(description = "Url pointing to the resource") url: String,
     @(ApiModelProperty @field)(description = "Contexts of the resource") contexts: List[ApiTaxonomyContext],
-    @(ApiModelProperty @field)(description = "Languages the resource exists in") supportedLanguages: Seq[String])
+    @(ApiModelProperty @field)(description = "Languages the resource exists in") supportedLanguages: Seq[String],
+    @(ApiModelProperty @field)(description =
+      "Learning resource type, either 'standard', 'topic-article' or 'learningpath'") learningResourceType: String,
+)

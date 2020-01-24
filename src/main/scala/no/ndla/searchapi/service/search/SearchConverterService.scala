@@ -380,7 +380,8 @@ trait SearchConverterService {
         metaImage = metaImage,
         url = url,
         contexts = contexts,
-        supportedLanguages = supportedLanguages
+        supportedLanguages = supportedLanguages,
+        learningResourceType = searchableArticle.articleType
       )
     }
 
@@ -418,7 +419,8 @@ trait SearchConverterService {
         metaImage = metaImage,
         url = url,
         contexts = contexts,
-        supportedLanguages = supportedLanguages
+        supportedLanguages = supportedLanguages,
+        learningResourceType = searchableDraft.articleType
       )
     }
 
@@ -456,7 +458,8 @@ trait SearchConverterService {
         metaImage = metaImage,
         url = url,
         contexts = contexts,
-        supportedLanguages = supportedLanguages
+        supportedLanguages = supportedLanguages,
+        learningResourceType = LearningResourceType.LearningPath.toString
       )
     }
 
