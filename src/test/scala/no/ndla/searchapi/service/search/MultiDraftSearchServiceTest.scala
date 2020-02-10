@@ -675,6 +675,19 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search2.results.head.id should be(5)
   }
 
+  test("That filtering on competences returns articles which has competences") {
+    val Success(search1) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(competences = List("K123")))
+    val Success(search2) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(competences = List("K456")))
+    val Success(search3) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(competences = List("K123", "K456")))
+
+    search1.results.map(_.id) should be(Seq(1, 2, 3))
+    search2.results.map(_.id) should be(Seq(1, 2, 4))
+    search3.results.map(_.id) should be(Seq(1, 2, 3, 4))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

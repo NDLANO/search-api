@@ -11,22 +11,24 @@ import no.ndla.searchapi.model.domain.{Content, Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer
 
-case class Article(id: Option[Long],
-                   revision: Option[Int],
-                   title: Seq[Title],
-                   content: Seq[ArticleContent],
-                   copyright: Copyright,
-                   tags: Seq[Tag],
-                   requiredLibraries: Seq[RequiredLibrary],
-                   visualElement: Seq[VisualElement],
-                   introduction: Seq[ArticleIntroduction],
-                   metaDescription: Seq[MetaDescription],
-                   metaImage: Seq[ArticleMetaImage],
-                   created: DateTime,
-                   updated: DateTime,
-                   updatedBy: String,
-                   articleType: LearningResourceType.Value)
-    extends Content
+case class Article(
+    id: Option[Long],
+    revision: Option[Int],
+    title: Seq[Title],
+    content: Seq[ArticleContent],
+    copyright: Copyright,
+    tags: Seq[Tag],
+    requiredLibraries: Seq[RequiredLibrary],
+    visualElement: Seq[VisualElement],
+    introduction: Seq[ArticleIntroduction],
+    metaDescription: Seq[MetaDescription],
+    metaImage: Seq[ArticleMetaImage],
+    created: DateTime,
+    updated: DateTime,
+    updatedBy: String,
+    articleType: LearningResourceType.Value,
+    competences: Seq[String]
+) extends Content
 
 object LearningResourceType extends Enumeration {
   val Article = Value("standard")

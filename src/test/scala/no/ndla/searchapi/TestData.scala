@@ -149,7 +149,8 @@ object TestData {
     today.minusDays(4),
     today.minusDays(2),
     "ndalId54321",
-    LearningResourceType.Article
+    LearningResourceType.Article,
+    Seq.empty
   )
 
   val sampleDomainArticle = Article(
@@ -167,7 +168,8 @@ object TestData {
     today,
     today,
     "ndalId54321",
-    LearningResourceType.Article
+    LearningResourceType.Article,
+    Seq.empty
   )
 
   val sampleDomainArticle2 = Article(
@@ -185,7 +187,8 @@ object TestData {
     today,
     today,
     "ndalId54321",
-    LearningResourceType.Article
+    LearningResourceType.Article,
+    Seq.empty
   )
   val sampleArticleWithByNcSa: Article = sampleArticleWithPublicDomain.copy(copyright = byNcSaCopyright)
   val sampleArticleWithCopyrighted: Article = sampleArticleWithPublicDomain.copy(copyright = copyrighted)
@@ -201,7 +204,8 @@ object TestData {
     tags = List(Tag(List("fugl"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(3),
-    copyright = byNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet")))
+    copyright = byNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet"))),
+    competences = Seq("K123", "K456")
   )
 
   val article2: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -215,7 +219,8 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(2),
     copyright = publicDomainCopyright.copy(creators = List(Author("Forfatter", "Pjolter")),
-                                           processors = List(Author("Editorial", "Svims")))
+                                           processors = List(Author("Editorial", "Svims"))),
+    competences = Seq("K456", "K123")
   )
 
   val article3: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -227,7 +232,8 @@ object TestData {
     visualElement = List.empty,
     tags = List(Tag(List("and"), "nb")),
     created = today.minusDays(4),
-    updated = today.minusDays(1)
+    updated = today.minusDays(1),
+    competences = Seq("K123")
   )
 
   val article4: Article = TestData.sampleArticleWithCopyrighted.copy(
@@ -240,7 +246,8 @@ object TestData {
     visualElement = List.empty,
     tags = List(Tag(List("supermann"), "nb")),
     created = today.minusDays(4),
-    updated = today
+    updated = today,
+    competences = Seq("K456")
   )
 
   val article5: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -405,7 +412,8 @@ object TestData {
     DateTime.now().minusDays(2),
     LearningResourceType.Article,
     List.empty,
-    List.empty
+    List.empty,
+    Seq.empty
   )
 
   val sampleDraftWithByNcSa: Draft = sampleDraftWithPublicDomain.copy(copyright = Some(draftByNcSaCopyright))
@@ -422,7 +430,8 @@ object TestData {
     tags = List(Tag(List("fugl"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(3),
-    copyright = Some(draftByNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet"))))
+    copyright = Some(draftByNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet")))),
+    competences = Seq("K123", "K456")
   )
 
   val draft2: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -437,7 +446,8 @@ object TestData {
     updated = today.minusDays(2),
     copyright = Some(
       draftPublicDomainCopyright.copy(creators = List(Author("Forfatter", "Pjolter")),
-                                      processors = List(Author("Editorial", "Svims"))))
+                                      processors = List(Author("Editorial", "Svims")))),
+    competences = Seq("K456", "K123")
   )
 
   val draft3: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -449,7 +459,8 @@ object TestData {
     content = List(ArticleContent("<p>Bilde av en en and</p><p> som <strong>kjører</strong> en rød bil.</p>", "nb")),
     tags = List(Tag(List("and"), "nb")),
     created = today.minusDays(4),
-    updated = today.minusDays(1)
+    updated = today.minusDays(1),
+    competences = Seq("K123")
   )
 
   val draft4: Draft = TestData.sampleDraftWithCopyrighted.copy(
@@ -462,7 +473,8 @@ object TestData {
       List(ArticleContent("<p>Bilde av en flygende mann</p><p> som <strong>har</strong> superkrefter.</p>", "nb")),
     tags = List(Tag(List("supermann"), "nb")),
     created = today.minusDays(4),
-    updated = today
+    updated = today,
+    competences = Seq("K456")
   )
 
   val draft5: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -927,7 +939,8 @@ object TestData {
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty,
     relevanceIds = List.empty,
-    contextIds = List.empty
+    contextIds = List.empty,
+    competences = List.empty
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
@@ -948,7 +961,8 @@ object TestData {
     supportedLanguages = List.empty,
     relevanceIds = List.empty,
     statusFilter = List.empty,
-    userFilter = List.empty
+    userFilter = List.empty,
+    competences = List.empty
   )
 
   val searchableResourceTypes = List(

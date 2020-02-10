@@ -30,5 +30,6 @@ case class Draft(
     published: DateTime,
     articleType: LearningResourceType.Value,
     notes: List[EditorNote],
-    previousVersionsNotes: List[EditorNote]
+    previousVersionsNotes: List[EditorNote],
+    competences: Seq[String]
 ) extends Content
