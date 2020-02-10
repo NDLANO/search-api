@@ -82,7 +82,8 @@ trait SearchConverterService {
           metaImage = articleWithAgreement.metaImage.toList,
           defaultTitle = defaultTitle.map(t => t.title),
           supportedLanguages = supportedLanguages,
-          contexts = taxonomyForArticle.getOrElse(List.empty)
+          contexts = taxonomyForArticle.getOrElse(List.empty),
+          competences = articleWithAgreement.competences.toList
         ))
 
     }
@@ -171,7 +172,8 @@ trait SearchConverterService {
           notes = notes,
           contexts = taxonomyForDraft.getOrElse(List.empty),
           users = users,
-          previousVersionsNotes = draft.previousVersionsNotes.map(_.note)
+          previousVersionsNotes = draft.previousVersionsNotes.map(_.note),
+          competences = draft.competences.toList
         ))
 
     }

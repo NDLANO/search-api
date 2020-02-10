@@ -63,7 +63,8 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       metaImage = metaImages,
       defaultTitle = Some("Christian Tut"),
       supportedLanguages = List("en", "nb", "nn"),
-      contexts = searchableTaxonomyContexts
+      contexts = searchableTaxonomyContexts,
+      competences = List("K123", "K456")
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)

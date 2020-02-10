@@ -684,8 +684,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(competences = List("K123", "K456")))
 
     search1.results.map(_.id) should be(Seq(1, 2, 3))
-    search2.results.map(_.id) should be(Seq(1, 2, 4))
-    search3.results.map(_.id) should be(Seq(1, 2, 3, 4))
+    search2.results.map(_.id) should be(Seq(1, 2, 5))
+    search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

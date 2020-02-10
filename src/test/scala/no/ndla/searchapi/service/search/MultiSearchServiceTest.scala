@@ -564,8 +564,8 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val Success(search3) = multiSearchService.matchingQuery(searchSettings.copy(competences = List("K123", "K456")))
 
     search1.results.map(_.id) should be(Seq(1, 2, 3))
-    search2.results.map(_.id) should be(Seq(1, 2, 4))
-    search3.results.map(_.id) should be(Seq(1, 2, 3, 4))
+    search2.results.map(_.id) should be(Seq(1, 2, 5))
+    search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

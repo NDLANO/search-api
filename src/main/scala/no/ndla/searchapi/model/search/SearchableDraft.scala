@@ -29,5 +29,6 @@ case class SearchableDraft(
     contexts: List[SearchableTaxonomyContext],
     draftStatus: List[String],
     users: List[String],
-    previousVersionsNotes: List[String]
+    previousVersionsNotes: List[String],
+    competences: List[String]
 )

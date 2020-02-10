@@ -57,6 +57,7 @@ trait DraftIndexService {
           textField("notes"),
           textField("previousVersionsNotes"),
           keywordField("users"),
+          keywordField("competences"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),

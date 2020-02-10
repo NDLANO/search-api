@@ -246,8 +246,7 @@ object TestData {
     visualElement = List.empty,
     tags = List(Tag(List("supermann"), "nb")),
     created = today.minusDays(4),
-    updated = today,
-    competences = Seq("K456")
+    updated = today
   )
 
   val article5: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -259,7 +258,8 @@ object TestData {
     visualElement = List.empty,
     tags = List(Tag(List("hulk"), "nb")),
     created = today.minusDays(40),
-    updated = today.minusDays(35)
+    updated = today.minusDays(35),
+    competences = Seq("K456")
   )
 
   val article6: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -473,8 +473,7 @@ object TestData {
       List(ArticleContent("<p>Bilde av en flygende mann</p><p> som <strong>har</strong> superkrefter.</p>", "nb")),
     tags = List(Tag(List("supermann"), "nb")),
     created = today.minusDays(4),
-    updated = today,
-    competences = Seq("K456")
+    updated = today
   )
 
   val draft5: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -500,7 +499,8 @@ object TestData {
         "ndalId54321",
         Status(ArticleStatus.DRAFT, Set.empty),
         today.minusDays(31).toDate
-      ))
+      )),
+    competences = Seq("K456")
   )
 
   val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(
