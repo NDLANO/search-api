@@ -25,5 +25,6 @@ case class SearchSettings(
     learningResourceTypes: List[LearningResourceType.Value],
     supportedLanguages: List[String],
     relevanceIds: List[String],
-    contextIds: List[String]
+    contextIds: List[String],
+    competences: List[String]
 )

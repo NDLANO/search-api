@@ -138,6 +138,9 @@ trait MultiDraftSearchService {
         case None      => Some(boolQuery().not(termQuery("license", "copyrighted")))
         case Some(lic) => Some(termQuery("license", lic))
       }
+      val competenceFilter =
+        if (settings.competences.nonEmpty) Some(termsQuery("competences", settings.competences))
+        else None
 
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)
@@ -170,7 +173,8 @@ trait MultiDraftSearchService {
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
         statusFilter,
-        usersFilter
+        usersFilter,
+        competenceFilter
       ).flatten
     }
 

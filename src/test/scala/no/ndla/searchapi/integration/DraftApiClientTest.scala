@@ -89,7 +89,8 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
         today,
         domain.article.LearningResourceType.Article,
         List.empty,
-        List.empty
+        List.empty,
+        Seq.empty
       )
 
       val expectedResult = DomainDumpResults[domain.draft.Draft](

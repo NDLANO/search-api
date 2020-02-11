@@ -127,6 +127,10 @@ trait MultiSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
 
+      val competenceFilter =
+        if (settings.competences.nonEmpty) Some(termsQuery("competences", settings.competences))
+        else None
+
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
@@ -153,7 +157,8 @@ trait MultiSearchService {
         taxonomyContextTypeFilter,
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
-        taxonomyResourceTypesContextFilter
+        taxonomyResourceTypesContextFilter,
+        competenceFilter
       ).flatten
     }
 

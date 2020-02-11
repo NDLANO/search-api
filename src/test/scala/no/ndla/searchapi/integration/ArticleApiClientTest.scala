@@ -72,7 +72,8 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
         today,
         today,
         "ndalId54321",
-        LearningResourceType.Article
+        LearningResourceType.Article,
+        competences = Seq()
       )
 
       val expectedResult = DomainDumpResults[domain.article.Article](

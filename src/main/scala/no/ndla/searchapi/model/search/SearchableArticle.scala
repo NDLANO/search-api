@@ -25,5 +25,6 @@ case class SearchableArticle(
     metaImage: List[ArticleMetaImage],
     defaultTitle: Option[String],
     supportedLanguages: List[String],
-    contexts: List[SearchableTaxonomyContext]
+    contexts: List[SearchableTaxonomyContext],
+    competences: List[String]
 )
