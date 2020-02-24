@@ -11,7 +11,7 @@ val Jettyversion = "9.4.18.v20190429"
 val AwsSdkversion = "1.11.434"
 val MockitoVersion = "2.23.0"
 val Elastic4sVersion = "6.7.4"
-val JacksonVersion = "2.9.10.2"
+val JacksonVersion = "2.10.2"
 val ElasticsearchVersion = "6.8.6"
 val Json4SVersion = "3.5.4"
 val TestContainersVersion = "1.12.2"
@@ -96,6 +96,12 @@ lazy val search_api = (project in file("."))
 
 assembly / assemblyJarName := "search-api.jar"
 assembly / mainClass := Some("no.ndla.searchapi.JettyLauncher")
+assemblyMergeStrategy in assembly := {
+  case "module-info.class" => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
 
 val checkfmt = taskKey[Boolean]("check for code style errors")
 checkfmt := {
