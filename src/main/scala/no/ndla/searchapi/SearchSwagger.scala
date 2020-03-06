@@ -19,6 +19,17 @@ class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with N
 
 object SearchApiInfo {
 
+  val contactInfo = ContactInfo(
+    "NDLA",
+    "ndla.no",
+    SearchApiProperties.ContactEmail
+  )
+
+  val licenseInfo = LicenseInfo(
+    "GPL v3.0",
+    "http://www.gnu.org/licenses/gpl-3.0.en.html"
+  )
+
   val apiInfo = ApiInfo(
     "Search Api",
     "A common endpoint for searching across article, draft, learningpath, image and audio APIs.\n\n" +
@@ -28,9 +39,8 @@ object SearchApiInfo {
       "Note that the query parameter is based on the Elasticsearch simple search language. For more information, see " +
       "https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
     "https://om.ndla.no/tos",
-    SearchApiProperties.ContactEmail,
-    "GPL v3.0",
-    "http://www.gnu.org/licenses/gpl-3.0.en.html"
+    contactInfo,
+    licenseInfo
   )
 }
 

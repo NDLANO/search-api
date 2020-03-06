@@ -12,7 +12,7 @@ import no.ndla.searchapi.ComponentRegistry.{healthController, resourcesApp, sear
 
 class ScalatraBootstrap extends LifeCycle {
 
-  override def init(context: ServletContext) {
+  override def init(context: ServletContext): Unit = {
     context.mount(searchController, "/search-api/v1/search", "search")
     context.mount(internController, "/intern")
     context.mount(resourcesApp, "/search-api/api-docs")

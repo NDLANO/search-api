@@ -310,7 +310,7 @@ trait SearchController {
 
       val usedKeys =
         Set(this.language.paramName, this.pageNo.paramName, this.pageSize.paramName, this.apiTypes.paramName)
-      val remainingParams = params(request).filterKeys(key => !usedKeys.contains(key))
+      val remainingParams = params(request).toMap.view.filterKeys(key => !usedKeys.contains(key)).toMap
 
       searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), apisToSearch)
     }
