@@ -15,10 +15,11 @@ import no.ndla.searchapi.controller.{HealthController, InternController, SearchC
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.service.search._
 import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients}
-import org.scalatest.mockito.MockitoSugar._
+import org.mockito.scalatest.MockitoSugar
 
 trait TestEnvironment
     extends ArticleApiClient
+    with MockitoSugar
     with ArticleIndexService
     with MultiSearchService
     with DraftIndexService

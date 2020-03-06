@@ -372,7 +372,7 @@ object TestData {
   val draftStatus = draft.Status(draft.ArticleStatus.DRAFT, Set.empty)
   val importedDraftStatus = draft.Status(draft.ArticleStatus.DRAFT, Set(draft.ArticleStatus.IMPORTED))
 
-  val draftPublicDomainCopyright =
+  val draftPublicDomainCopyright: domain.draft.Copyright =
     draft.Copyright(Some("publicdomain"), Some(""), List.empty, List(), List(), None, None, None)
 
   val draftByNcSaCopyright = draft.Copyright(Some("by-nc-sa"),

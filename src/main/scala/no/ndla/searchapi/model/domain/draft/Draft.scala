@@ -7,7 +7,8 @@
 
 package no.ndla.searchapi.model.domain.draft
 
-import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.domain.article
+import no.ndla.searchapi.model.domain.draft
 import no.ndla.searchapi.model.domain.{Content, Tag, Title}
 import org.joda.time.DateTime
 
@@ -16,19 +17,19 @@ case class Draft(
     revision: Option[Int],
     status: Status,
     title: Seq[Title],
-    content: Seq[ArticleContent],
-    copyright: Option[Copyright],
+    content: Seq[article.ArticleContent],
+    copyright: Option[draft.Copyright],
     tags: Seq[Tag],
-    requiredLibraries: Seq[RequiredLibrary],
-    visualElement: Seq[VisualElement],
-    introduction: Seq[ArticleIntroduction],
-    metaDescription: Seq[MetaDescription],
-    metaImage: Seq[ArticleMetaImage],
+    requiredLibraries: Seq[article.RequiredLibrary],
+    visualElement: Seq[article.VisualElement],
+    introduction: Seq[article.ArticleIntroduction],
+    metaDescription: Seq[article.MetaDescription],
+    metaImage: Seq[article.ArticleMetaImage],
     created: DateTime,
     updated: DateTime,
     updatedBy: String,
     published: DateTime,
-    articleType: LearningResourceType.Value,
+    articleType: article.LearningResourceType.Value,
     notes: List[EditorNote],
     previousVersionsNotes: List[EditorNote],
     competences: Seq[String]
