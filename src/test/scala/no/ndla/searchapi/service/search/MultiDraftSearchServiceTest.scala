@@ -61,6 +61,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
       draftsToIndex.filter(_.title.map(_.language).contains(language))
     }
     x.filter(!_.copyright.flatMap(_.license).contains("copyrighted"))
+      .filterNot(_.status.current == ArticleStatus.ARCHIVED)
   }
 
   private def expectedAllPublicLearningPaths(language: String) = {
@@ -686,6 +687,25 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search1.results.map(_.id) should be(Seq(1, 2, 3))
     search2.results.map(_.id) should be(Seq(1, 2, 5))
     search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
+  }
+
+  test("ARCHIVED drafts should only be returned if filtered by ARCHIVED") {
+    val query = Some("Slettet")
+    val Success(search1) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = query,
+          statusFilter = List(ArticleStatus.ARCHIVED)
+        ))
+    val Success(search2) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = query,
+          statusFilter = List.empty
+        ))
+
+    search1.results.map(_.id) should be(Seq(14))
+    search2.results.map(_.id) should be(Seq.empty)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

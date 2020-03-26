@@ -20,6 +20,7 @@ import no.ndla.searchapi.SearchApiProperties.{
 }
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.ResultWindowTooLargeException
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult, draft}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.MultiDraftSearchSettings
@@ -179,18 +180,21 @@ trait MultiDraftSearchService {
     }
 
     private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value]) =
-      if (statuses.isEmpty) None
-      else
+      if (statuses.isEmpty) {
         Some(
-          boolQuery().should(statuses.map(s => termQuery("draftStatus", s.toString)))
+          boolQuery.not(termQuery("draftStatus", ArticleStatus.ARCHIVED.toString))
         )
+      } else {
+        Some(
+          boolQuery.should(statuses.map(s => termQuery("draftStatus", s.toString)))
+        )
+      }
 
     private def boolUsersFilter(users: Seq[String]): Option[BoolQuery] =
       if (users.isEmpty) None
       else
         Some(
-          boolQuery()
-            .should(users.map(simpleStringQuery(_).field("users", 1)))
+          boolQuery.should(users.map(simpleStringQuery(_).field("users", 1)))
         )
 
     override def scheduleIndexDocuments(): Unit = {

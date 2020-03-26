@@ -612,6 +612,23 @@ object TestData {
     articleType = LearningResourceType.TopicArticle
   )
 
+  val draft14: Draft = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(14),
+    title = List(Title("Slettet", "nb")),
+    introduction = List(ArticleIntroduction("Slettet", "nb")),
+    metaDescription = List(MetaDescription("", "nb")),
+    content = List(ArticleContent("", "nb")),
+    visualElement = List.empty,
+    tags = List(Tag(List(""), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.Article,
+    status = Status(
+      current = ArticleStatus.ARCHIVED,
+      other = Set.empty
+    )
+  )
+
   val draftsToIndex: List[Draft] = List(
     draft1,
     draft2,
@@ -625,7 +642,8 @@ object TestData {
     draft10,
     draft11,
     draft12,
-    draft13
+    draft13,
+    draft14
   )
 
   val paul = Author("author", "Truly Weird Rand Paul")
