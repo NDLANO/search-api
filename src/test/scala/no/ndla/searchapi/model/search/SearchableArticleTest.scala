@@ -64,7 +64,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       defaultTitle = Some("Christian Tut"),
       supportedLanguages = List("en", "nb", "nn"),
       contexts = searchableTaxonomyContexts,
-      competences = List("K123", "K456")
+      grepCodes = List("K123", "K456")
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)

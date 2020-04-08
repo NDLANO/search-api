@@ -27,7 +27,7 @@ case class Article(
     updated: DateTime,
     updatedBy: String,
     articleType: LearningResourceType.Value,
-    competences: Seq[String]
+    grepCodes: Seq[String]
 ) extends Content
 
 object LearningResourceType extends Enumeration {

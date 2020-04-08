@@ -26,5 +26,5 @@ case class SearchSettings(
     supportedLanguages: List[String],
     relevanceIds: List[String],
     contextIds: List[String],
-    competences: List[String]
+    grepCodes: List[String]
 )

@@ -32,5 +32,5 @@ case class Draft(
     articleType: article.LearningResourceType.Value,
     notes: List[EditorNote],
     previousVersionsNotes: List[EditorNote],
-    competences: Seq[String]
+    grepCodes: Seq[String]
 ) extends Content

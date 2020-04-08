@@ -136,9 +136,9 @@ trait SearchController {
       """.stripMargin
     )
 
-    private val competences = Param[Option[Seq[String]]](
-      "competences",
-      "A comma separated list of competence goals the resources should be filtered by.")
+    private val grepCodes = Param[Option[Seq[String]]](
+      "grep-codes",
+      "A comma separated list of codes from GREP API the resources should be filtered by.")
 
     private val scrollId = Param[Option[String]](
       "search-context",
@@ -214,7 +214,7 @@ trait SearchController {
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
       val contexts = paramAsListOfString(this.contextFilters.paramName)
-      val competences = paramAsListOfString(this.competences.paramName)
+      val grepCodes = paramAsListOfString(this.grepCodes.paramName)
 
       val settings = SearchSettings(
         query = query,
@@ -232,7 +232,7 @@ trait SearchController {
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
         contextIds = contexts,
-        competences = competences
+        grepCodes = grepCodes
       )
 
       groupSearch(query, settings.copy(resourceTypes = resourceTypes))
@@ -331,7 +331,7 @@ trait SearchController {
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
       val contexts = paramAsListOfString(this.contextFilters.paramName)
-      val competences = paramAsListOfString(this.competences.paramName)
+      val grepCodes = paramAsListOfString(this.grepCodes.paramName)
 
       SearchSettings(
         query = query,
@@ -349,7 +349,7 @@ trait SearchController {
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
         contextIds = contexts,
-        competences = competences
+        grepCodes = grepCodes
       )
     }
 
@@ -372,7 +372,7 @@ trait SearchController {
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
       val statusFilter = paramAsListOfString(this.statusFilter.paramName)
       val userFilter = paramAsListOfString(this.userFilter.paramName)
-      val competences = paramAsListOfString(this.competences.paramName)
+      val grepCodes = paramAsListOfString(this.grepCodes.paramName)
 
       MultiDraftSearchSettings(
         query = query,
@@ -393,7 +393,7 @@ trait SearchController {
         relevanceIds = relevances,
         statusFilter = statusFilter.flatMap(ArticleStatus.valueOf),
         userFilter = userFilter,
-        competences = competences
+        grepCodes = grepCodes
       )
     }
 

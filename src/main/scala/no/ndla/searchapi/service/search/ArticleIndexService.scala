@@ -53,7 +53,7 @@ trait ArticleIndexService {
           textField("authors"),
           keywordField("articleType"),
           keywordField("supportedLanguages"),
-          keywordField("competences"),
+          keywordField("grepCodes"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),

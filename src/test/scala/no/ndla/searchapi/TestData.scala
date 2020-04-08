@@ -205,7 +205,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(3),
     copyright = byNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet"))),
-    competences = Seq("K123", "K456")
+    grepCodes = Seq("K123", "K456")
   )
 
   val article2: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -220,7 +220,7 @@ object TestData {
     updated = today.minusDays(2),
     copyright = publicDomainCopyright.copy(creators = List(Author("Forfatter", "Pjolter")),
                                            processors = List(Author("Editorial", "Svims"))),
-    competences = Seq("K456", "K123")
+    grepCodes = Seq("K456", "K123")
   )
 
   val article3: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -233,7 +233,7 @@ object TestData {
     tags = List(Tag(List("and"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(1),
-    competences = Seq("K123")
+    grepCodes = Seq("K123")
   )
 
   val article4: Article = TestData.sampleArticleWithCopyrighted.copy(
@@ -259,7 +259,7 @@ object TestData {
     tags = List(Tag(List("hulk"), "nb")),
     created = today.minusDays(40),
     updated = today.minusDays(35),
-    competences = Seq("K456")
+    grepCodes = Seq("K456")
   )
 
   val article6: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -431,7 +431,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(3),
     copyright = Some(draftByNcSaCopyright.copy(creators = List(Author("Forfatter", "Kjekspolitiet")))),
-    competences = Seq("K123", "K456")
+    grepCodes = Seq("K123", "K456")
   )
 
   val draft2: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -447,7 +447,7 @@ object TestData {
     copyright = Some(
       draftPublicDomainCopyright.copy(creators = List(Author("Forfatter", "Pjolter")),
                                       processors = List(Author("Editorial", "Svims")))),
-    competences = Seq("K456", "K123")
+    grepCodes = Seq("K456", "K123")
   )
 
   val draft3: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -460,7 +460,7 @@ object TestData {
     tags = List(Tag(List("and"), "nb")),
     created = today.minusDays(4),
     updated = today.minusDays(1),
-    competences = Seq("K123")
+    grepCodes = Seq("K123")
   )
 
   val draft4: Draft = TestData.sampleDraftWithCopyrighted.copy(
@@ -500,7 +500,7 @@ object TestData {
         Status(ArticleStatus.DRAFT, Set.empty),
         today.minusDays(31).toDate
       )),
-    competences = Seq("K456")
+    grepCodes = Seq("K456")
   )
 
   val draft6: Draft = TestData.sampleDraftWithPublicDomain.copy(
@@ -958,7 +958,7 @@ object TestData {
     supportedLanguages = List.empty,
     relevanceIds = List.empty,
     contextIds = List.empty,
-    competences = List.empty
+    grepCodes = List.empty
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
@@ -980,7 +980,7 @@ object TestData {
     relevanceIds = List.empty,
     statusFilter = List.empty,
     userFilter = List.empty,
-    competences = List.empty
+    grepCodes = List.empty
   )
 
   val searchableResourceTypes = List(

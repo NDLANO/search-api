@@ -26,5 +26,5 @@ case class SearchableArticle(
     defaultTitle: Option[String],
     supportedLanguages: List[String],
     contexts: List[SearchableTaxonomyContext],
-    competences: List[String]
+    grepCodes: List[String]
 )

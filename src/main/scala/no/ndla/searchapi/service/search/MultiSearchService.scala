@@ -127,8 +127,8 @@ trait MultiSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
 
-      val competenceFilter =
-        if (settings.competences.nonEmpty) Some(termsQuery("competences", settings.competences))
+      val grepCodesFilter =
+        if (settings.grepCodes.nonEmpty) Some(termsQuery("grepCodes", settings.grepCodes))
         else None
 
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
@@ -158,7 +158,7 @@ trait MultiSearchService {
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
         taxonomyResourceTypesContextFilter,
-        competenceFilter
+        grepCodesFilter
       ).flatten
     }
 
