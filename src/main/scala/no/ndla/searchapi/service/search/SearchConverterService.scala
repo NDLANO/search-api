@@ -83,7 +83,7 @@ trait SearchConverterService {
           defaultTitle = defaultTitle.map(t => t.title),
           supportedLanguages = supportedLanguages,
           contexts = taxonomyForArticle.getOrElse(List.empty),
-          competences = articleWithAgreement.competences.toList
+          grepCodes = articleWithAgreement.grepCodes.toList
         ))
 
     }
@@ -173,7 +173,7 @@ trait SearchConverterService {
           contexts = taxonomyForDraft.getOrElse(List.empty),
           users = users,
           previousVersionsNotes = draft.previousVersionsNotes.map(_.note),
-          competences = draft.competences.toList
+          grepCodes = draft.grepCodes.toList
         ))
 
     }

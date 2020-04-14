@@ -558,10 +558,10 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search2.totalCount should be(0)
   }
 
-  test("That filtering on competences returns articles which has competences") {
-    val Success(search1) = multiSearchService.matchingQuery(searchSettings.copy(competences = List("K123")))
-    val Success(search2) = multiSearchService.matchingQuery(searchSettings.copy(competences = List("K456")))
-    val Success(search3) = multiSearchService.matchingQuery(searchSettings.copy(competences = List("K123", "K456")))
+  test("That filtering on grepCodes returns articles which has grepCodes") {
+    val Success(search1) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("K123")))
+    val Success(search2) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("K456")))
+    val Success(search3) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("K123", "K456")))
 
     search1.results.map(_.id) should be(Seq(1, 2, 3))
     search2.results.map(_.id) should be(Seq(1, 2, 5))

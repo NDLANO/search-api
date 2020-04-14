@@ -30,5 +30,5 @@ case class SearchableDraft(
     draftStatus: List[String],
     users: List[String],
     previousVersionsNotes: List[String],
-    competences: List[String]
+    grepCodes: List[String]
 )
