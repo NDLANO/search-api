@@ -53,12 +53,13 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     Tag(Seq("the", "words"), "unknown")
   )
 
-  val resources = List(Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1"))
-  val topics = List(Resource("urn:topic:10", "Topic1", Some("urn:article:10"), "/subject:1/topic:10"))
+  val resources = List(
+    Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1", None))
+  val topics = List(Resource("urn:topic:10", "Topic1", Some("urn:article:10"), "/subject:1/topic:10", None))
 
   val topicResourceConnections = List(
     TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
-  val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1"))
+  val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1", None))
 
   val subjectTopicConnections = List(
     SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
