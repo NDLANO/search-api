@@ -10,7 +10,7 @@ package no.ndla.searchapi.controller
 import java.util.concurrent.{Executors, TimeUnit}
 
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.TaxonomyApiClient
+import no.ndla.searchapi.integration.{GrepApiClient, TaxonomyApiClient}
 import no.ndla.searchapi.model.api.InvalidIndexBodyException
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.domain.draft.Draft
@@ -28,7 +28,8 @@ trait InternController {
     with ArticleIndexService
     with LearningPathIndexService
     with DraftIndexService
-    with TaxonomyApiClient =>
+    with TaxonomyApiClient
+    with GrepApiClient =>
   val internController: InternController
 
   class InternController extends NdlaController {
@@ -135,22 +136,26 @@ trait InternController {
 
     post("/index") {
       val runInBackground = booleanOrDefault("run-in-background", default = false)
-      taxonomyApiClient.getTaxonomyBundle match {
-        case Success(bundle) =>
+      val bundles = for {
+        taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle
+        grepBundle <- grepApiClient.getGrepBundle
+      } yield (taxonomyBundle, grepBundle)
+      bundles match {
+        case Failure(ex) => errorHandler(ex)
+        case Success((taxonomyBundle, grepBundle)) =>
           val requestInfo = RequestInfo()
-
           val indexes = List(
             Future {
               requestInfo.setRequestInfo()
-              ("learningpaths", learningPathIndexService.indexDocuments(bundle))
+              ("learningpaths", learningPathIndexService.indexDocuments(taxonomyBundle, grepBundle))
             },
             Future {
               requestInfo.setRequestInfo()
-              ("articles", articleIndexService.indexDocuments(bundle))
+              ("articles", articleIndexService.indexDocuments(taxonomyBundle, grepBundle))
             },
             Future {
               requestInfo.setRequestInfo()
-              ("drafts", draftIndexService.indexDocuments(bundle))
+              ("drafts", draftIndexService.indexDocuments(taxonomyBundle, grepBundle))
             }
           )
           if (runInBackground) {
@@ -158,7 +163,6 @@ trait InternController {
           } else {
             resolveResultFutures(indexes)
           }
-        case Failure(ex) => errorHandler(ex)
       }
     }
 

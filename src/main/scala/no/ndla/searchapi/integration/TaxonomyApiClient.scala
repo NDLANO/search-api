@@ -69,7 +69,7 @@ trait TaxonomyApiClient {
     def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
       get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/").map(_.distinct)
 
-    def getTaxonomyBundle: Try[Bundle] = {
+    def getTaxonomyBundle: Try[TaxonomyBundle] = {
       logger.info("Fetching taxonomy in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(12))
@@ -107,7 +107,7 @@ trait TaxonomyApiClient {
         f11 <- topicSubtopicConnections
         f12 <- topicResourceTypeConnection
         f13 <- topics
-      } yield Bundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13)
+      } yield TaxonomyBundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13)
 
       Try(Await.result(x, Duration(300, "seconds"))) match {
         case Success(bundle) =>

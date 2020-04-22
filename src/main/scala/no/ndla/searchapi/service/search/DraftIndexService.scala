@@ -14,15 +14,16 @@ import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyApiClient}
 import no.ndla.searchapi.model.domain.draft.Draft
+import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
-import no.ndla.searchapi.model.taxonomy.Bundle
+import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 import org.json4s.Formats
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
 
 trait DraftIndexService {
-  this: SearchConverterService with IndexService with DraftApiClient with TaxonomyApiClient =>
+  this: SearchConverterService with IndexService with DraftApiClient =>
   val draftIndexService: DraftIndexService
 
   class DraftIndexService extends LazyLogging with IndexService[Draft] {
@@ -33,8 +34,9 @@ trait DraftIndexService {
 
     override def createIndexRequest(domainModel: Draft,
                                     indexName: String,
-                                    taxonomyBundle: Bundle): Try[IndexRequest] = {
-      searchConverterService.asSearchableDraft(domainModel, taxonomyBundle) match {
+                                    taxonomyBundle: TaxonomyBundle,
+                                    grepBundle: GrepBundle): Try[IndexRequest] = {
+      searchConverterService.asSearchableDraft(domainModel, taxonomyBundle, grepBundle) match {
         case Success(searchableDraft) =>
           val source = write(searchableDraft)
           Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString))
@@ -57,7 +59,8 @@ trait DraftIndexService {
           textField("notes"),
           textField("previousVersionsNotes"),
           keywordField("users"),
-          keywordField("grepCodes"),
+          keywordField("grepContexts.code"),
+          textField("grepContexts.title"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),

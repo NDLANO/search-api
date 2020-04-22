@@ -128,7 +128,8 @@ trait MultiSearchService {
       }
 
       val grepCodesFilter =
-        if (settings.grepCodes.nonEmpty) Some(termsQuery("grepCodes", settings.grepCodes))
+        if (settings.grepCodes.nonEmpty)
+          Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)

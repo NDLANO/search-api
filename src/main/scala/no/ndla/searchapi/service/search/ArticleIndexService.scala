@@ -14,8 +14,9 @@ import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.ArticleApiClient
 import no.ndla.searchapi.model.domain.article.Article
+import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
-import no.ndla.searchapi.model.taxonomy.Bundle
+import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 import org.json4s.native.Serialization.write
 import no.ndla.searchapi.model.search.SearchType
 
@@ -33,8 +34,9 @@ trait ArticleIndexService {
 
     override def createIndexRequest(domainModel: Article,
                                     indexName: String,
-                                    taxonomyBundle: Bundle): Try[IndexRequest] = {
-      searchConverterService.asSearchableArticle(domainModel, taxonomyBundle) match {
+                                    taxonomyBundle: TaxonomyBundle,
+                                    grepBundle: GrepBundle): Try[IndexRequest] = {
+      searchConverterService.asSearchableArticle(domainModel, taxonomyBundle, grepBundle) match {
         case Success(searchableArticle) =>
           val source = write(searchableArticle)
           Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString))
@@ -53,7 +55,8 @@ trait ArticleIndexService {
           textField("authors"),
           keywordField("articleType"),
           keywordField("supportedLanguages"),
-          keywordField("grepCodes"),
+          keywordField("grepContexts.code"),
+          textField("grepContexts.title"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),

@@ -73,3 +73,4 @@ case class ElasticIndexingException(message: String) extends RuntimeException(me
 case class AccessDeniedException(message: String) extends RuntimeException(message)
 case class InvalidIndexBodyException(message: String = Error.INVALID_BODY_DESCRIPTION) extends RuntimeException(message)
 case class TaxonomyException(message: String) extends RuntimeException(message)
+case class GrepException(message: String) extends RuntimeException(message)

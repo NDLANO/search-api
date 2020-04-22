@@ -54,6 +54,7 @@ trait MultiDraftSearchService {
         val authorSearch = simpleStringQuery(q).field("authors", 1)
         val notesSearch = simpleStringQuery(q).field("notes", 1)
         val previousNotesSearch = simpleStringQuery(q).field("previousVersionsNotes", 1)
+        val grepCodesTitleSearch = simpleStringQuery(q).field("grepContexts.title", 1)
 
         boolQuery()
           .should(
@@ -64,7 +65,8 @@ trait MultiDraftSearchService {
             tagSearch,
             authorSearch,
             notesSearch,
-            previousNotesSearch
+            previousNotesSearch,
+            grepCodesTitleSearch,
           )
       })
 
@@ -140,7 +142,7 @@ trait MultiDraftSearchService {
         case Some(lic) => Some(termQuery("license", lic))
       }
       val grepCodesFilter =
-        if (settings.grepCodes.nonEmpty) Some(termsQuery("grepCodes", settings.grepCodes))
+        if (settings.grepCodes.nonEmpty) Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
       val statusFilter = draftStatusFilter(settings.statusFilter)
