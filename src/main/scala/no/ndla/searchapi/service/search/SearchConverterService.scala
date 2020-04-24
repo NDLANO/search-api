@@ -796,10 +796,8 @@ trait SearchConverterService {
             SearchableGrepContext(
               grepCode,
               grepContext
-                .find(grepElement => grepElement.kode == grepCode) match {
-                case Some(element) => element.tittel.find(title => title.spraak == "default").map(title => title.verdi)
-                case None          => None
-              }
+                .find(grepElement => grepElement.kode == grepCode)
+                .flatMap(element => element.tittel.find(title => title.spraak == "default").map(title => title.verdi))
           ))
         .toList
     }

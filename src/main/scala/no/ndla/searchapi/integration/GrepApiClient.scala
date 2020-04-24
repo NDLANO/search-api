@@ -71,7 +71,7 @@ trait GrepApiClient {
     }
 
     private def get[A](url: String, params: (String, String)*)(implicit mf: Manifest[A]): Try[A] = {
-      ndlaClient.fetchWithForwardedAuth[A](Http(url).timeout(60000, 60000).params(params))
+      ndlaClient.fetch[A](Http(url).timeout(60000, 60000).params(params))
     }
   }
 }
