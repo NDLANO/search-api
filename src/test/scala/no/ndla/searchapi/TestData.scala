@@ -649,6 +649,7 @@ object TestData {
   val paul = Author("author", "Truly Weird Rand Paul")
   val license = "publicdomain"
   val copyright = domain.learningpath.Copyright(license, List(paul))
+  val visibleMetadata = Some(Metadata(Seq.empty, visible = true))
 
   val DefaultLearningPath = LearningPath(
     id = None,
@@ -739,8 +740,8 @@ object TestData {
   )
 
   val subjects = List(
-    Resource("urn:subject:1", "Matte", None, "/subject:1", None),
-    Resource("urn:subject:2", "Historie", None, "/subject:2", None)
+    Resource("urn:subject:1", "Matte", None, "/subject:1", visibleMetadata),
+    Resource("urn:subject:2", "Historie", None, "/subject:2", visibleMetadata)
   )
 
   val filters = List(
@@ -813,67 +814,69 @@ object TestData {
              article1.title.head.title,
              Some(s"urn:article:${article1.id.get}"),
              s"/subject:1/topic:1/resource:1",
-             None),
+             visibleMetadata),
     Resource("urn:resource:2",
              article2.title.head.title,
              Some(s"urn:article:${article2.id.get}"),
              s"/subject:1/topic:1/resource:2",
-             None),
+             visibleMetadata),
     Resource("urn:resource:3",
              article3.title.head.title,
              Some(s"urn:article:${article3.id.get}"),
              s"/subject:1/topic:3/resource:3",
-             None),
+             visibleMetadata),
     Resource("urn:resource:4",
              article4.title.head.title,
              Some(s"urn:article:${article4.id.get}"),
              s"/subject:1/topic:1/topic:2/resource:4",
-             None),
+             visibleMetadata),
     Resource("urn:resource:5",
              article5.title.head.title,
              Some(s"urn:article:${article5.id.get}"),
              s"/subject:2/topic:4/resource:5",
-             None),
+             visibleMetadata),
     Resource("urn:resource:6",
              article6.title.head.title,
              Some(s"urn:article:${article6.id.get}"),
              s"/subject:2/topic:4/resource:6",
-             None),
+             visibleMetadata),
     Resource("urn:resource:7",
              article7.title.head.title,
              Some(s"urn:article:${article7.id.get}"),
              s"/subject:2/topic:4/resource:7",
-             None),
+             visibleMetadata),
     Resource("urn:resource:8",
              learningPath1.title.head.title,
              Some(s"urn:learningpath:${learningPath1.id.get}"),
              s"/subject:1/topic:1/resource:1",
-             None),
+             visibleMetadata),
     Resource("urn:resource:9",
              learningPath2.title.head.title,
              Some(s"urn:learningpath:${learningPath2.id.get}"),
              s"/subject:1/topic:1/resource:2",
-             None),
+             visibleMetadata),
     Resource("urn:resource:10",
              learningPath3.title.head.title,
              Some(s"urn:learningpath:${learningPath3.id.get}"),
              s"/subject:1/topic:3/resource:3",
-             None),
-    Resource("urn:resource:11",
-             learningPath4.title.head.title,
-             Some(s"urn:learningpath:${learningPath4.id.get}"),
-             s"/subject:1/topic:1/topic:2/resource:4",
-             None),
+             visibleMetadata),
+    Resource(
+      "urn:resource:11",
+      learningPath4.title.head.title,
+      Some(s"urn:learningpath:${learningPath4.id.get}"),
+      s"/subject:1/topic:1/topic:2/resource:4",
+      visibleMetadata
+    ),
     Resource("urn:resource:12",
              learningPath5.title.head.title,
              Some(s"urn:learningpath:${learningPath5.id.get}"),
              s"/subject:2/topic:4/resource:5",
-             None),
+             visibleMetadata),
     Resource("urn:resource:13",
              article12.title.head.title,
              Some(s"urn:article:${article12.id.get}"),
              s"/subject:2/topic:4/resource:13",
-             None)
+             visibleMetadata)
   )
 
   val topics = List(
@@ -881,22 +884,22 @@ object TestData {
              article8.title.head.title,
              Some(s"urn:article:${article8.id.get}"),
              "/subject:1/topic:1",
-             None),
+             visibleMetadata),
     Resource("urn:topic:2",
              article9.title.head.title,
              Some(s"urn:article:${article9.id.get}"),
              "/subject:1/topic:1/topic:2",
-             None),
+             visibleMetadata),
     Resource("urn:topic:3",
              article10.title.head.title,
              Some(s"urn:article:${article10.id.get}"),
              "/subject:1/topic:3",
-             None),
+             visibleMetadata),
     Resource("urn:topic:4",
              article11.title.head.title,
              Some(s"urn:article:${article11.id.get}"),
              "/subject:2/topic:4",
-             None)
+             visibleMetadata)
   )
 
   val subjectTopicConnections = List(

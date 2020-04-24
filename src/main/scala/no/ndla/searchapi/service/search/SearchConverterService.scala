@@ -758,8 +758,12 @@ trait SearchConverterService {
                                              taxonomyType: String,
                                              bundle: Bundle): Try[List[SearchableTaxonomyContext]] = {
       val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
-      val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
-      val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
+      val resourceContexts = resources
+        .filter(resource => resource.metadata.exists(metadata => metadata.visible))
+        .map(resource => getResourceTaxonomyContexts(resource, bundle))
+      val topicContexts = topics
+        .filter(topic => topic.metadata.exists(metadata => metadata.visible))
+        .map(topic => getTopicTaxonomyContexts(topic, bundle))
 
       val all = resourceContexts ++ topicContexts
       val failed = all.collect {

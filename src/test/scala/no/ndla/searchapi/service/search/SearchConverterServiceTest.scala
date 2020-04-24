@@ -53,13 +53,16 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     Tag(Seq("the", "words"), "unknown")
   )
 
+  val visibleMetadata = Some(Metadata(Seq.empty, visible = true))
+  val invisibleMetadata = Some(Metadata(Seq.empty, visible = false))
+
   val resources = List(
-    Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1", None))
-  val topics = List(Resource("urn:topic:10", "Topic1", Some("urn:article:10"), "/subject:1/topic:10", None))
+    Resource("urn:resource:1", "Resource1", Some("urn:article:1"), "/subject:1/topic:10/resource:1", visibleMetadata))
+  val topics = List(Resource("urn:topic:10", "Topic1", Some("urn:article:10"), "/subject:1/topic:10", visibleMetadata))
 
   val topicResourceConnections = List(
     TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
-  val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1", None))
+  val subjects = List(Resource("urn:subject:1", "Subject1", None, "/subject:1", visibleMetadata))
 
   val subjectTopicConnections = List(
     SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
@@ -202,6 +205,21 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchable5.contexts.size should be(2)
     searchable5.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
     searchable5.contexts(1).subject.languageValues.map(_.value) should be(Seq("Historie"))
+  }
+
+  test("That invisible contexts are not indexed") {
+    val taxonomyBundleInvisibleMetadata = TestData.taxonomyTestBundle.copy(resources = resources.map(resource =>
+      resource.copy(metadata = invisibleMetadata)))
+    val Success(searchable1) =
+      searchConverterService.asSearchableArticle(TestData.article1, taxonomyBundleInvisibleMetadata)
+    val Success(searchable4) =
+      searchConverterService.asSearchableArticle(TestData.article4, taxonomyBundleInvisibleMetadata)
+    val Success(searchable5) =
+      searchConverterService.asSearchableArticle(TestData.article5, taxonomyBundleInvisibleMetadata)
+
+    searchable1.contexts.size should be(0)
+    searchable4.contexts.size should be(0)
+    searchable5.contexts.size should be(0)
   }
 
   test("That taxonomy filters are derived correctly") {
