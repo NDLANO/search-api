@@ -14,8 +14,9 @@ import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.LearningPathApiClient
 import no.ndla.searchapi.model.domain.learningpath.LearningPath
+import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
-import no.ndla.searchapi.model.taxonomy.Bundle
+import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
@@ -32,7 +33,8 @@ trait LearningPathIndexService {
 
     override def createIndexRequest(domainModel: LearningPath,
                                     indexName: String,
-                                    taxonomyBundle: Bundle): Try[IndexRequest] = {
+                                    taxonomyBundle: TaxonomyBundle,
+                                    grepBundle: GrepBundle): Try[IndexRequest] = {
       searchConverterService.asSearchableLearningPath(domainModel, taxonomyBundle) match {
         case Success(searchableLearningPath) =>
           val source = write(searchableLearningPath)

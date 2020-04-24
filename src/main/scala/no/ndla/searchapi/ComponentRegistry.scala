@@ -42,7 +42,8 @@ object ComponentRegistry
     with SearchController
     with InternController
     with User
-    with SearchApiClient {
+    with SearchApiClient
+    with GrepApiClient {
   implicit val swagger = new SearchSwagger
 
   lazy val searchController = new SearchController
@@ -54,6 +55,7 @@ object ComponentRegistry
   var e4sClient: NdlaE4sClient = Elastic4sClientFactory.getClient()
 
   lazy val taxonomyApiClient = new TaxonomyApiClient
+  lazy val grepApiClient = new GrepApiClient
 
   lazy val draftApiClient = new DraftApiClient(DraftApiUrl)
   lazy val learningPathApiClient = new LearningPathApiClient(LearningpathApiUrl)

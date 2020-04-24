@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class Bundle(
+case class TaxonomyBundle(
     filters: List[Filter],
     relevances: List[Relevance],
     resourceFilterConnections: List[ResourceFilterConnection],
@@ -15,7 +15,7 @@ case class Bundle(
     resourceTypes: List[ResourceType],
     resources: List[Resource],
     subjectTopicConnections: List[SubjectTopicConnection],
-    subjects: List[Subject],
+    subjects: List[TaxSubject],
     topicFilterConnections: List[TopicFilterConnection],
     topicResourceConnections: List[TopicResourceConnection],
     topicSubtopicConnections: List[TopicSubtopicConnection],
@@ -28,7 +28,7 @@ case class Bundle(
     topics.filter(topic => tc.map(_.topicid).contains(topic.id))
   }
 
-  def getSubject(path: String): Option[Subject] = {
+  def getSubject(path: String): Option[TaxSubject] = {
     val subject = path.split('/')(1)
     subjects.find(_.id == s"urn:$subject")
   }

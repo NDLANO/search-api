@@ -30,5 +30,5 @@ case class MultiDraftSearchSettings(
     relevanceIds: List[String],
     statusFilter: List[ArticleStatus.Value],
     userFilter: List[String],
-    grepCodes: List[String]
+    grepCodes: List[String],
 )

@@ -9,7 +9,13 @@ package no.ndla.searchapi.service.search
 
 import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
-import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageList, SearchableLanguageValues}
+import no.ndla.searchapi.model.grep.{GrepElement, GrepTitle}
+import no.ndla.searchapi.model.search.{
+  SearchableArticle,
+  SearchableGrepContext,
+  SearchableLanguageList,
+  SearchableLanguageValues
+}
 import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.mockito.ArgumentMatchers._
@@ -63,13 +69,13 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   val topicResourceConnections = List(
     TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
-  val subject1 = Subject("urn:subject:1", "Subject1", None, "/subject:1", visibleMetadata)
+  val subject1 = TaxSubject("urn:subject:1", "Subject1", None, "/subject:1", visibleMetadata)
   val subjects = List(subject1)
 
   val subjectTopicConnections = List(
     SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
 
-  val emptyBundle = Bundle(
+  val emptyBundle = TaxonomyBundle(
     filters = List.empty,
     relevances = List.empty,
     resourceFilterConnections = List.empty,
@@ -94,25 +100,29 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   test("That asSearchableArticle converts titles with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(title = titles)
-    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, emptyBundle)
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
     verifyTitles(searchableArticle)
   }
 
   test("That asSearchable converts articles with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(content = articles)
-    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, emptyBundle)
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
     verifyArticles(searchableArticle)
   }
 
   test("That asSearchable converts tags with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(tags = articleTags)
-    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, emptyBundle)
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
     verifyTags(searchableArticle)
   }
 
   test("That asSearchable converts all fields with correct language") {
     val article = TestData.sampleArticleWithByNcSa.copy(title = titles, content = articles, tags = articleTags)
-    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, emptyBundle)
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
 
     verifyTitles(searchableArticle)
     verifyArticles(searchableArticle)
@@ -123,17 +133,24 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     val article = TestData.sampleArticleWithByNcSa.copy(title = titles)
     when(converterService.withAgreementCopyright(any[Article]))
       .thenReturn(article.copy(copyright = article.copyright.copy(license = "gnu")))
-    val Success(searchableArticle) = searchConverterService.asSearchableArticle(article, emptyBundle)
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
     searchableArticle.license should equal("gnu")
   }
 
   test("That resource types are derived correctly") {
     val Success(searchable2) =
-      searchConverterService.asSearchableArticle(TestData.article2, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article2,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable4) =
-      searchConverterService.asSearchableArticle(TestData.article4, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article4,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable7) =
-      searchConverterService.asSearchableArticle(TestData.article7, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article7,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
 
     searchable2.contexts.head.resourceTypes.map(_.id).sorted should be(
       Seq("urn:resourcetype:subjectMaterial", "urn:resourcetype:academicArticle").sorted)
@@ -150,11 +167,17 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   test("That breadcrumbs are derived correctly") {
     val Success(searchable1) =
-      searchConverterService.asSearchableArticle(TestData.article1, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article1,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable4) =
-      searchConverterService.asSearchableArticle(TestData.article4, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article4,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable6) =
-      searchConverterService.asSearchableArticle(TestData.article6, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article6,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
 
     searchable1.contexts.size should be(2)
     searchable1.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
@@ -191,11 +214,17 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   test("That subjects are derived correctly from taxonomy") {
     val Success(searchable1) =
-      searchConverterService.asSearchableArticle(TestData.article1, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article1,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable4) =
-      searchConverterService.asSearchableArticle(TestData.article4, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article4,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable5) =
-      searchConverterService.asSearchableArticle(TestData.article5, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article5,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
 
     searchable1.contexts.size should be(2)
     searchable1.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
@@ -213,11 +242,17 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     val taxonomyBundleInvisibleMetadata = TestData.taxonomyTestBundle.copy(resources = resources.map(resource =>
       resource.copy(metadata = invisibleMetadata)))
     val Success(searchable1) =
-      searchConverterService.asSearchableArticle(TestData.article1, taxonomyBundleInvisibleMetadata)
+      searchConverterService.asSearchableArticle(TestData.article1,
+                                                 taxonomyBundleInvisibleMetadata,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable4) =
-      searchConverterService.asSearchableArticle(TestData.article4, taxonomyBundleInvisibleMetadata)
+      searchConverterService.asSearchableArticle(TestData.article4,
+                                                 taxonomyBundleInvisibleMetadata,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable5) =
-      searchConverterService.asSearchableArticle(TestData.article5, taxonomyBundleInvisibleMetadata)
+      searchConverterService.asSearchableArticle(TestData.article5,
+                                                 taxonomyBundleInvisibleMetadata,
+                                                 TestData.emptyGrepBundle)
 
     searchable1.contexts.size should be(0)
     searchable4.contexts.size should be(0)
@@ -228,11 +263,17 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     val taxonomyBundleInvisibleMetadata =
       TestData.taxonomyTestBundle.copy(subjects = subjects.map(subject => subject.copy(metadata = invisibleMetadata)))
     val Success(searchable1) =
-      searchConverterService.asSearchableArticle(TestData.article1, taxonomyBundleInvisibleMetadata)
+      searchConverterService.asSearchableArticle(TestData.article1,
+                                                 taxonomyBundleInvisibleMetadata,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable4) =
-      searchConverterService.asSearchableArticle(TestData.article4, taxonomyBundleInvisibleMetadata)
+      searchConverterService.asSearchableArticle(TestData.article4,
+                                                 taxonomyBundleInvisibleMetadata,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable5) =
-      searchConverterService.asSearchableArticle(TestData.article5, taxonomyBundleInvisibleMetadata)
+      searchConverterService.asSearchableArticle(TestData.article5,
+                                                 taxonomyBundleInvisibleMetadata,
+                                                 TestData.emptyGrepBundle)
 
     searchable1.contexts.size should be(0)
     searchable4.contexts.size should be(0)
@@ -241,11 +282,17 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   test("That taxonomy filters are derived correctly") {
     val Success(searchable1) =
-      searchConverterService.asSearchableArticle(TestData.article1, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article1,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable4) =
-      searchConverterService.asSearchableArticle(TestData.article4, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article4,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
     val Success(searchable5) =
-      searchConverterService.asSearchableArticle(TestData.article5, TestData.taxonomyTestBundle)
+      searchConverterService.asSearchableArticle(TestData.article5,
+                                                 TestData.taxonomyTestBundle,
+                                                 TestData.emptyGrepBundle)
 
     searchable1.contexts.size should be(2)
     searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(
@@ -258,6 +305,88 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchable5.contexts.size should be(2)
     searchable5.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG2")))
     searchable5.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1"), Seq("VG2")))
+  }
+
+  test("That asSearchableArticle converts grepContexts correctly based on article grepCodes if grepBundle is empty") {
+    val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
+    val grepContexts = List(SearchableGrepContext("KE12", None),
+                            SearchableGrepContext("KM123", None),
+                            SearchableGrepContext("TT2", None))
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle.grepContexts should equal(grepContexts)
+  }
+
+  test("That asSearchableArticle converts grepContexts correctly based on grepBundle if article has grepCodes") {
+    val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
+    val grepBundle = TestData.emptyGrepBundle.copy(
+      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
+                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
+      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
+      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
+    )
+    val grepContexts = List(SearchableGrepContext("KE12", Some("tittel12")),
+                            SearchableGrepContext("KM123", Some("tittel123")),
+                            SearchableGrepContext("TT2", Some("tittel2")))
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, grepBundle)
+    searchableArticle.grepContexts should equal(grepContexts)
+  }
+
+  test("That asSearchableArticle converts grepContexts correctly based on grepBundle if article has no grepCodes") {
+    val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq.empty)
+    val grepBundle = TestData.emptyGrepBundle.copy(
+      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
+                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
+      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
+      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
+    )
+    val grepContexts = List.empty
+
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, grepBundle)
+    searchableArticle.grepContexts should equal(grepContexts)
+  }
+
+  test("That asSearchableDraft converts grepContexts correctly based on draft grepCodes if grepBundle is empty") {
+    val draft = TestData.emptyDomainDraft.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
+    val grepContexts = List(SearchableGrepContext("KE12", None),
+                            SearchableGrepContext("KM123", None),
+                            SearchableGrepContext("TT2", None))
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableDraft(draft, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle.grepContexts should equal(grepContexts)
+  }
+
+  test("That asSearchableDraft converts grepContexts correctly based on grepBundle if draft has grepCodes") {
+    val draft = TestData.emptyDomainDraft.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
+    val grepBundle = TestData.emptyGrepBundle.copy(
+      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
+                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
+      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
+      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
+    )
+    val grepContexts = List(SearchableGrepContext("KE12", Some("tittel12")),
+                            SearchableGrepContext("KM123", Some("tittel123")),
+                            SearchableGrepContext("TT2", Some("tittel2")))
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableDraft(draft, emptyBundle, grepBundle)
+    searchableArticle.grepContexts should equal(grepContexts)
+  }
+
+  test("That asSearchableDraft converts grepContexts correctly based on grepBundle if draft has no grepCodes") {
+    val draft = TestData.emptyDomainDraft.copy(id = Some(99), grepCodes = Seq.empty)
+    val grepBundle = TestData.emptyGrepBundle.copy(
+      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
+                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
+      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
+      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
+    )
+    val grepContexts = List.empty
+
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableDraft(draft, emptyBundle, grepBundle)
+    searchableArticle.grepContexts should equal(grepContexts)
   }
 
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {

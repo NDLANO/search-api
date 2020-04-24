@@ -17,6 +17,7 @@ import no.ndla.searchapi.model.domain.learningpath.{
   LearningPathStatus,
   LearningPathVerificationStatus
 }
+import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.model.taxonomy._
@@ -367,6 +368,48 @@ object TestData {
     article10,
     article11,
     article12
+  )
+
+  val emptyDomainArticle = Article(
+    id = None,
+    revision = None,
+    title = Seq.empty,
+    content = Seq.empty,
+    copyright = Copyright("", "", Seq.empty, Seq.empty, Seq.empty, None, None, None),
+    tags = Seq.empty,
+    requiredLibraries = Seq.empty,
+    visualElement = Seq.empty,
+    introduction = Seq.empty,
+    metaDescription = Seq.empty,
+    metaImage = Seq.empty,
+    created = today,
+    updated = today,
+    updatedBy = "",
+    articleType = LearningResourceType.Article,
+    grepCodes = Seq.empty
+  )
+
+  val emptyDomainDraft = Draft(
+    id = None,
+    revision = None,
+    status = draft.Status(draft.ArticleStatus.DRAFT, Set.empty),
+    title = Seq.empty,
+    content = Seq.empty,
+    copyright = None,
+    tags = Seq.empty,
+    requiredLibraries = Seq.empty,
+    visualElement = Seq.empty,
+    introduction = Seq.empty,
+    metaDescription = Seq.empty,
+    metaImage = Seq.empty,
+    created = today,
+    updated = today,
+    updatedBy = "",
+    published = today,
+    articleType = LearningResourceType.Article,
+    notes = List.empty,
+    previousVersionsNotes = List.empty,
+    grepCodes = Seq.empty
   )
 
   val draftStatus = draft.Status(draft.ArticleStatus.DRAFT, Set.empty)
@@ -740,8 +783,8 @@ object TestData {
   )
 
   val subjects = List(
-    Subject("urn:subject:1", "Matte", None, "/subject:1", visibleMetadata),
-    Subject("urn:subject:2", "Historie", None, "/subject:2", visibleMetadata)
+    TaxSubject("urn:subject:1", "Matte", None, "/subject:1", visibleMetadata),
+    TaxSubject("urn:subject:2", "Historie", None, "/subject:2", visibleMetadata)
   )
 
   val filters = List(
@@ -955,7 +998,7 @@ object TestData {
                                    "urn:resource-resourcetype:15"),
   )
 
-  val taxonomyTestBundle = Bundle(
+  val taxonomyTestBundle = TaxonomyBundle(
     filters = filters,
     relevances = relevances,
     resourceFilterConnections = resourceFilterConnections,
@@ -969,6 +1012,12 @@ object TestData {
     topicSubtopicConnections = topicSubtopicConnections,
     topicResourceTypeConnections = topicResourceTypeConnections,
     topics = topics
+  )
+
+  val emptyGrepBundle = GrepBundle(
+    kjerneelementer = List.empty,
+    kompetansemaal = List.empty,
+    tverrfagligeTemaer = List.empty,
   )
 
   val searchSettings = SearchSettings(

@@ -16,7 +16,7 @@ abstract class TaxonomyElement(id: String,
   def getName(): String = name
 }
 
-case class Subject(id: String, name: String, contentUri: Option[String], path: String, metadata: Option[Metadata])
+case class TaxSubject(id: String, name: String, contentUri: Option[String], path: String, metadata: Option[Metadata])
     extends TaxonomyElement(id, name, contentUri, path, metadata)
 case class Resource(id: String, name: String, contentUri: Option[String], path: String, metadata: Option[Metadata])
     extends TaxonomyElement(id, name, contentUri, path, metadata)

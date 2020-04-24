@@ -128,7 +128,9 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
 
           val chunks = draftApiClient.getChunks[domain.draft.Draft].toList
           val fetchedDraft = chunks.flatMap(_.get).head
-          val searchable = searchConverterService.asSearchableDraft(fetchedDraft, TestData.taxonomyTestBundle)
+          val searchable = searchConverterService.asSearchableDraft(fetchedDraft,
+                                                                    TestData.taxonomyTestBundle,
+                                                                    TestData.emptyGrepBundle)
 
           searchable.isSuccess should be(true)
           searchable.get.title.languageValues should be(Seq(LanguageValue("nb", "title")))

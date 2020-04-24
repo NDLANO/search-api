@@ -43,7 +43,8 @@ trait TestEnvironment
     with User
     with LearningPathIndexService
     with InternController
-    with SearchApiClient {
+    with SearchApiClient
+    with GrepApiClient {
   val searchController = mock[SearchController]
   val healthController = mock[HealthController]
   val internController = mock[InternController]
@@ -53,6 +54,7 @@ trait TestEnvironment
   var e4sClient: NdlaE4sClient = mock[NdlaE4sClient]
 
   val taxonomyApiClient = mock[TaxonomyApiClient]
+  val grepApiClient = mock[GrepApiClient]
 
   val draftApiClient = mock[DraftApiClient]
   val learningPathApiClient = mock[LearningPathApiClient]
