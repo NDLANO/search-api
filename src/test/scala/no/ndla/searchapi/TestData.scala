@@ -740,8 +740,8 @@ object TestData {
   )
 
   val subjects = List(
-    Resource("urn:subject:1", "Matte", None, "/subject:1", visibleMetadata),
-    Resource("urn:subject:2", "Historie", None, "/subject:2", visibleMetadata)
+    Subject("urn:subject:1", "Matte", None, "/subject:1", visibleMetadata),
+    Subject("urn:subject:2", "Historie", None, "/subject:2", visibleMetadata)
   )
 
   val filters = List(
@@ -880,26 +880,26 @@ object TestData {
   )
 
   val topics = List(
-    Resource("urn:topic:1",
-             article8.title.head.title,
-             Some(s"urn:article:${article8.id.get}"),
-             "/subject:1/topic:1",
-             visibleMetadata),
-    Resource("urn:topic:2",
-             article9.title.head.title,
-             Some(s"urn:article:${article9.id.get}"),
-             "/subject:1/topic:1/topic:2",
-             visibleMetadata),
-    Resource("urn:topic:3",
-             article10.title.head.title,
-             Some(s"urn:article:${article10.id.get}"),
-             "/subject:1/topic:3",
-             visibleMetadata),
-    Resource("urn:topic:4",
-             article11.title.head.title,
-             Some(s"urn:article:${article11.id.get}"),
-             "/subject:2/topic:4",
-             visibleMetadata)
+    Topic("urn:topic:1",
+          article8.title.head.title,
+          Some(s"urn:article:${article8.id.get}"),
+          "/subject:1/topic:1",
+          visibleMetadata),
+    Topic("urn:topic:2",
+          article9.title.head.title,
+          Some(s"urn:article:${article9.id.get}"),
+          "/subject:1/topic:1/topic:2",
+          visibleMetadata),
+    Topic("urn:topic:3",
+          article10.title.head.title,
+          Some(s"urn:article:${article10.id.get}"),
+          "/subject:1/topic:3",
+          visibleMetadata),
+    Topic("urn:topic:4",
+          article11.title.head.title,
+          Some(s"urn:article:${article11.id.get}"),
+          "/subject:2/topic:4",
+          visibleMetadata)
   )
 
   val subjectTopicConnections = List(

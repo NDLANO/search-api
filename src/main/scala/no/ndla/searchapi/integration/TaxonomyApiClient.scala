@@ -34,11 +34,11 @@ trait TaxonomyApiClient {
     def getAllResources: Try[List[Resource]] =
       get[List[Resource]](s"$TaxonomyApiEndpoint/resources/$Metadata").map(_.distinct)
 
-    def getAllSubjects: Try[List[Resource]] =
-      get[List[Resource]](s"$TaxonomyApiEndpoint/subjects/$Metadata").map(_.distinct)
+    def getAllSubjects: Try[List[Subject]] =
+      get[List[Subject]](s"$TaxonomyApiEndpoint/subjects/$Metadata").map(_.distinct)
 
-    def getAllTopics: Try[List[Resource]] =
-      get[List[Resource]](s"$TaxonomyApiEndpoint/topics/$Metadata").map(_.distinct)
+    def getAllTopics: Try[List[Topic]] =
+      get[List[Topic]](s"$TaxonomyApiEndpoint/topics/$Metadata").map(_.distinct)
 
     def getAllResourceTypes: Try[List[ResourceType]] =
       get[List[ResourceType]](s"$TaxonomyApiEndpoint/resource-types/").map(_.distinct)
