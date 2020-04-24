@@ -11,6 +11,7 @@ import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.model.domain.article.ArticleMetaImage
+import no.ndla.searchapi.model.search
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.Formats
 
@@ -64,7 +65,8 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       defaultTitle = Some("Christian Tut"),
       supportedLanguages = List("en", "nb", "nn"),
       contexts = searchableTaxonomyContexts,
-      grepCodes = List("K123", "K456")
+      grepContexts =
+        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2")))
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)

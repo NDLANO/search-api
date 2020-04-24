@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class Bundle(
+case class TaxonomyBundle(
     filters: List[Filter],
     relevances: List[Relevance],
     resourceFilterConnections: List[ResourceFilterConnection],

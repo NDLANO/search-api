@@ -111,7 +111,9 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
 
           val chunks = articleApiClient.getChunks[domain.article.Article].toList
           val fetchedArticle = chunks.flatMap(_.get).head
-          val searchable = searchConverterService.asSearchableArticle(fetchedArticle, TestData.taxonomyTestBundle)
+          val searchable = searchConverterService.asSearchableArticle(fetchedArticle,
+                                                                      TestData.taxonomyTestBundle,
+                                                                      TestData.emptyGrepBundle)
 
           searchable.isSuccess should be(true)
           searchable.get.title.languageValues should be(Seq(LanguageValue("nb", "title")))

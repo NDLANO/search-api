@@ -487,7 +487,8 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(scrollId),
             asQueryParam(statusFilter),
-            asQueryParam(userFilter)
+            asQueryParam(userFilter),
+            asQueryParam(grepCodes),
         )
           responseMessages response500)
     ) {
