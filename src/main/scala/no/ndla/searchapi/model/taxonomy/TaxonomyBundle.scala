@@ -29,8 +29,8 @@ case class TaxonomyBundle(
   }
 
   def getSubject(path: String): Option[TaxSubject] = {
-    val subject = path.split('/')(1)
-    subjects.find(_.id == s"urn:$subject")
+    val subject = path.split('/').lift(1)
+    subject.flatMap(s => subjects.find(_.id == s"urn:$s"))
   }
 
   def getObject(id: String): Option[TaxonomyElement] = {

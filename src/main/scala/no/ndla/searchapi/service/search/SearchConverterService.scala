@@ -13,18 +13,18 @@ import no.ndla.mapping.ISO639
 import no.ndla.mapping.License.getLicense
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.model.api.{article, _}
+import no.ndla.searchapi.model.api._
 import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.draft.DraftSummary
 import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
+import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
-import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.draft.Draft
-import no.ndla.searchapi.model.search.{settings, _}
-import no.ndla.searchapi.model.taxonomy._
+import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
 import no.ndla.searchapi.model.grep._
+import no.ndla.searchapi.model.search._
+import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.model.{api, domain, search}
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
@@ -493,7 +493,7 @@ trait SearchConverterService {
         path = context.path,
         breadcrumbs = breadcrumbs,
         filters = filters,
-        learningResourceType = context.contextType.toString,
+        learningResourceType = context.contextType,
         resourceTypes = resourceTypes,
         language = language
       )
@@ -536,7 +536,7 @@ trait SearchConverterService {
 
     private def getBreadcrumbFromIds(ids: List[String], bundle: TaxonomyBundle): Seq[String] = {
       ids.map(id => {
-        bundle.getObject(id).map(_.getName).getOrElse("")
+        bundle.getObject(id).map(_.name).getOrElse("")
       })
     }
 
@@ -555,7 +555,7 @@ trait SearchConverterService {
                            objectFilterConnections: List[FilterConnection]): List[SearchableTaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
       val filterConnections = objectFilterConnections
-        .filter(_.objectId == taxonomyElement.getId)
+        .filter(_.objectId == taxonomyElement.id)
         .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
 
       val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
@@ -670,8 +670,7 @@ trait SearchConverterService {
             name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, rt.name))) // TODO: Get translations
         ))
 
-      val subjectLanguageValues = SearchableLanguageValues(
-        Seq(LanguageValue(Language.DefaultLanguage, subject.getName))) // TODO: Get translations
+      val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
       val breadcrumbList = Seq(LanguageValue(
         Language.DefaultLanguage,
         getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
@@ -767,23 +766,15 @@ trait SearchConverterService {
                                              taxonomyType: String,
                                              bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
       val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
-      val resourceContexts = resources
-        .filter(resource =>
-          bundle.getSubject(resource.path).exists(subject => subject.metadata.exists(metadata => metadata.visible)))
-        .filter(resource => resource.metadata.exists(metadata => metadata.visible))
-        .map(resource => getResourceTaxonomyContexts(resource, bundle))
-      val topicContexts = topics
-        .filter(topic =>
-          bundle.getSubject(topic.path).exists(subject => subject.metadata.exists(metadata => metadata.visible)))
-        .filter(topic => topic.metadata.exists(metadata => metadata.visible))
-        .map(topic => getTopicTaxonomyContexts(topic, bundle))
+      val resourceContexts =
+        filterByVisibility(resources, bundle).map(resource => getResourceTaxonomyContexts(resource, bundle))
+      val topicContexts = filterByVisibility(topics, bundle).map(topic => getTopicTaxonomyContexts(topic, bundle))
 
       val all = resourceContexts ++ topicContexts
       val failed = all.collect {
-        case Failure(e) => {
+        case Failure(e) =>
           logger.error(s"Getting taxonomy context for $id failed with: ", e)
           Failure(e)
-        }
       }
 
       if (failed.nonEmpty) {
@@ -793,6 +784,15 @@ trait SearchConverterService {
         val distinctContexts = successful.flatten.distinct
         Success(distinctContexts)
       }
+    }
+
+    private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T], bundle: TaxonomyBundle): List[T] = {
+      val isVisible = (e: TaxonomyElement) => e.metadata.exists(_.visible)
+      val hasVisibleSubject = (e: TaxonomyElement) => bundle.getSubject(e.path).exists(isVisible)
+
+      elementsToFilter
+        .filter(isVisible)
+        .filter(hasVisibleSubject)
     }
 
     private[service] def getGrepContexts(grepCodes: Seq[String], bundle: GrepBundle): List[SearchableGrepContext] = {
