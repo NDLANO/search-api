@@ -15,20 +15,25 @@ case class TaxonomyBundle(
     resourceTypes: List[ResourceType],
     resources: List[Resource],
     subjectTopicConnections: List[SubjectTopicConnection],
-    subjects: List[Resource],
+    subjects: List[TaxSubject],
     topicFilterConnections: List[TopicFilterConnection],
     topicResourceConnections: List[TopicResourceConnection],
     topicSubtopicConnections: List[TopicSubtopicConnection],
     topicResourceTypeConnections: List[TopicResourceTypeConnection],
-    topics: List[Resource]
+    topics: List[Topic]
 ) {
 
-  def getResourceTopics(resource: Resource): List[Resource] = {
+  def getResourceTopics(resource: Resource): List[Topic] = {
     val tc = topicResourceConnections.filter(_.resourceId == resource.id)
     topics.filter(topic => tc.map(_.topicid).contains(topic.id))
   }
 
-  def getObject(id: String): Option[Resource] = {
+  def getSubject(path: String): Option[TaxSubject] = {
+    val subject = path.split('/').lift(1)
+    subject.flatMap(s => subjects.find(_.id == s"urn:$s"))
+  }
+
+  def getObject(id: String): Option[TaxonomyElement] = {
     if (id.contains(":resource:")) {
       resources.find(_.id == id)
     } else if (id.contains(":topic:")) {

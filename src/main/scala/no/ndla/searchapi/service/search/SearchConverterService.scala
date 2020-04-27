@@ -13,18 +13,18 @@ import no.ndla.mapping.ISO639
 import no.ndla.mapping.License.getLicense
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
-import no.ndla.searchapi.model.api.{article, _}
+import no.ndla.searchapi.model.api._
 import no.ndla.searchapi.model.api.article.ArticleSummary
 import no.ndla.searchapi.model.api.draft.DraftSummary
 import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
+import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
-import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.draft.Draft
-import no.ndla.searchapi.model.search.{settings, _}
-import no.ndla.searchapi.model.taxonomy._
+import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
 import no.ndla.searchapi.model.grep._
+import no.ndla.searchapi.model.search._
+import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.model.{api, domain, search}
 import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
@@ -39,9 +39,9 @@ trait SearchConverterService {
 
   class SearchConverterService extends LazyLogging {
 
-    def getParentTopicsAndPaths(topic: Resource,
+    def getParentTopicsAndPaths(topic: Topic,
                                 bundle: TaxonomyBundle,
-                                path: List[String]): List[(Resource, List[String])] = {
+                                path: List[String]): List[(Topic, List[String])] = {
       val parentConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == topic.id)
       val parents = bundle.topics.filter(t => parentConnections.map(_.topicid).contains(t.id))
 
@@ -493,7 +493,7 @@ trait SearchConverterService {
         path = context.path,
         breadcrumbs = breadcrumbs,
         filters = filters,
-        learningResourceType = context.contextType.toString,
+        learningResourceType = context.contextType,
         resourceTypes = resourceTypes,
         language = language
       )
@@ -543,19 +543,19 @@ trait SearchConverterService {
     /**
       * Returns filters connected to an object and a subject.
       *
-      * @param resource Taxonomy Object (Can be resource or topic)
+      * @param taxonomyElement Taxonomy Object (Can be resource or topic)
       * @param subject Filters must be connected to subject
       * @param bundle Bundle for resolving taxonomy
       * @param objectFilterConnections [[ResourceFilterConnection]]'s or [[TopicFilterConnection]]'s
       * @return
       */
-    private def getFilters(resource: Resource,
-                           subject: Resource,
+    private def getFilters(taxonomyElement: TaxonomyElement,
+                           subject: TaxSubject,
                            bundle: TaxonomyBundle,
                            objectFilterConnections: List[FilterConnection]): List[SearchableTaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
       val filterConnections = objectFilterConnections
-        .filter(_.objectId == resource.id)
+        .filter(_.objectId == taxonomyElement.id)
         .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
 
       val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
@@ -655,7 +655,7 @@ trait SearchConverterService {
 
     private def getSearchableTaxonomyContext(taxonomyId: String,
                                              pathIds: List[String],
-                                             subject: Resource,
+                                             subject: TaxSubject,
                                              contextType: LearningResourceType.Value,
                                              contextFilters: List[SearchableTaxonomyFilter],
                                              resourceTypes: List[ResourceType],
@@ -719,8 +719,7 @@ trait SearchConverterService {
       (resourceTypes ++ subParents).distinct
     }
 
-    private def getTopicTaxonomyContexts(topic: Resource,
-                                         bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getTopicTaxonomyContexts(topic: Topic, bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
       val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
       val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
@@ -767,15 +766,15 @@ trait SearchConverterService {
                                              taxonomyType: String,
                                              bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
       val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
-      val resourceContexts = resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
-      val topicContexts = topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
+      val resourceContexts =
+        filterByVisibility(resources, bundle).map(resource => getResourceTaxonomyContexts(resource, bundle))
+      val topicContexts = filterByVisibility(topics, bundle).map(topic => getTopicTaxonomyContexts(topic, bundle))
 
       val all = resourceContexts ++ topicContexts
       val failed = all.collect {
-        case Failure(e) => {
+        case Failure(e) =>
           logger.error(s"Getting taxonomy context for $id failed with: ", e)
           Failure(e)
-        }
       }
 
       if (failed.nonEmpty) {
@@ -785,6 +784,15 @@ trait SearchConverterService {
         val distinctContexts = successful.flatten.distinct
         Success(distinctContexts)
       }
+    }
+
+    private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T], bundle: TaxonomyBundle): List[T] = {
+      val isVisible = (e: TaxonomyElement) => e.metadata.exists(_.visible)
+      val hasVisibleSubject = (e: TaxonomyElement) => bundle.getSubject(e.path).exists(isVisible)
+
+      elementsToFilter
+        .filter(isVisible)
+        .filter(hasVisibleSubject)
     }
 
     private[service] def getGrepContexts(grepCodes: Seq[String], bundle: GrepBundle): List[SearchableGrepContext] = {
