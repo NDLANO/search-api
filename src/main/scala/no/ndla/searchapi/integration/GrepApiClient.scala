@@ -62,7 +62,6 @@ trait GrepApiClient {
       Try(Await.result(x, Duration(300, "seconds"))) match {
         case Success(bundle) =>
           logger.info(s"Fetched grep in ${System.currentTimeMillis() - startFetch}ms...")
-          println(Success(bundle))
           Success(bundle)
         case Failure(ex) =>
           logger.error(s"Could not fetch grep bundle (${ex.getMessage})", ex)

@@ -28,10 +28,11 @@ case class TaxonomyBundle(
     topics.filter(topic => tc.map(_.topicid).contains(topic.id))
   }
 
-  def getSubject(path: String): Option[TaxSubject] = {
-    val subject = path.split('/').lift(1)
-    subject.flatMap(s => subjects.find(_.id == s"urn:$s"))
-  }
+  def getSubject(path: String): Option[TaxSubject] =
+    if (path != null) {
+      val subject = path.split('/').lift(1)
+      subject.flatMap(s => subjects.find(_.id == s"urn:$s"))
+    } else None
 
   def getObject(id: String): Option[TaxonomyElement] = {
     if (id.contains(":resource:")) {
