@@ -788,7 +788,7 @@ trait SearchConverterService {
 
     private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T], bundle: TaxonomyBundle): List[T] = {
       val isVisible = (e: TaxonomyElement) => e.metadata.exists(_.visible)
-      val hasVisibleSubject = (e: TaxonomyElement) => bundle.getSubject(Option(e.path)).exists(isVisible)
+      val hasVisibleSubject = (e: TaxonomyElement) => bundle.getSubject(e.path).exists(isVisible)
 
       elementsToFilter
         .filter(isVisible)
