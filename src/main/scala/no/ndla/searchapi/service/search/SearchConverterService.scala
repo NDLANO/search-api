@@ -7,8 +7,6 @@
 
 package no.ndla.searchapi.service.search
 
-import java.util.Optional
-
 import com.sksamuel.elastic4s.http.search.SearchHit
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
