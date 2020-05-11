@@ -24,12 +24,11 @@ trait TaxonomyFiltering {
             relevanceId =>
               nestedQuery("contexts").query(
                 boolQuery().must(
-                  nestedQuery("contexts.filters").query(boolQuery().must(
-                    termQuery("contexts.filters.relevanceId", relevanceId),
-                    boolQuery().should(levels.map(f =>
-                      boolQuery().should(ISO639.languagePriority.map(l =>
-                        termQuery(s"contexts.filters.name.$l.raw", f)))))
-                  )),
+                  nestedQuery("contexts.filters").query(
+                    boolQuery().must(
+                      termQuery("contexts.filters.relevanceId", relevanceId),
+                      boolQuery().must(levels.map(f => termQuery(s"contexts.filters.filterId", f)))
+                    )),
                   boolQuery().should(subjectIds.map(sId => termQuery("contexts.subjectId", sId)))
                 )
             )
@@ -68,11 +67,9 @@ trait TaxonomyFiltering {
       Some(
         boolQuery().should(
           taxonomyFilters.map(
-            filterName =>
+            filterId =>
               nestedQuery("contexts.filters").query(
-                boolQuery().should(
-                  ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
-                )
+                termQuery(s"contexts.filters.filterId", filterId)
             ))
         )
       )
