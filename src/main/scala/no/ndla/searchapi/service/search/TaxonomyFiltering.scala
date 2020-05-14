@@ -6,9 +6,8 @@
  */
 
 package no.ndla.searchapi.service.search
-import no.ndla.mapping.ISO639
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.searches.queries.BoolQuery
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 
 trait TaxonomyFiltering {
@@ -35,61 +34,53 @@ trait TaxonomyFiltering {
           )
         ))
 
-  protected def subjectFilter(subjects: List[String]): Option[BoolQuery] =
+  protected def subjectFilter(subjects: List[String]): Option[NestedQuery] =
     if (subjects.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          nestedQuery("contexts")
-            .query(
-              boolQuery().should(
-                subjects.map(
-                  subjectId => termQuery(s"contexts.subjectId", subjectId)
-                )
+        nestedQuery("contexts")
+          .query(
+            boolQuery().should(
+              subjects.map(
+                subjectId => termQuery(s"contexts.subjectId", subjectId)
               ))
-        ))
+          ))
 
-  protected def topicFilter(topics: List[String]): Option[BoolQuery] =
+  protected def topicFilter(topics: List[String]): Option[NestedQuery] =
     if (topics.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          nestedQuery("contexts")
-            .query(
-              boolQuery().should(
-                topics.map(
-                  topicId => termQuery("contexts.parentTopicIds", topicId)
-                )
+        nestedQuery("contexts")
+          .query(
+            boolQuery().should(
+              topics.map(
+                topicId => termQuery("contexts.parentTopicIds", topicId)
               ))
-        ))
+          ))
 
-  protected def levelFilter(taxonomyFilters: List[String]): Option[BoolQuery] =
+  protected def levelFilter(taxonomyFilters: List[String]): Option[NestedQuery] =
     if (taxonomyFilters.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          nestedQuery("contexts.filters")
-            .query(
-              boolQuery().should(
-                taxonomyFilters.map(
-                  filterId => termQuery("contexts.filters.filterId", filterId)
-                )
+        nestedQuery("contexts.filters")
+          .query(
+            boolQuery().should(
+              taxonomyFilters.map(
+                filterId => termQuery("contexts.filters.filterId", filterId)
               ))
-        ))
+          ))
 
-  protected def resourceTypeFilter(resourceTypes: List[String]): Option[BoolQuery] =
+  protected def resourceTypeFilter(resourceTypes: List[String]): Option[NestedQuery] =
     if (resourceTypes.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          nestedQuery("contexts.resourceTypes")
-            .query(
-              boolQuery().should(
-                resourceTypes.map(
-                  resourceTypeId => termQuery("contexts.resourceTypes.id", resourceTypeId)
-                )
+        nestedQuery("contexts.resourceTypes")
+          .query(
+            boolQuery().should(
+              resourceTypes.map(
+                resourceTypeId => termQuery("contexts.resourceTypes.id", resourceTypeId)
               ))
-        ))
+          ))
 
   protected def contextTypeFilter(contextTypes: List[LearningResourceType.Value]): Option[BoolQuery] =
     if (contextTypes.isEmpty) None
