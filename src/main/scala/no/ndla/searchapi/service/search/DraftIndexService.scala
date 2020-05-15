@@ -49,7 +49,8 @@ trait DraftIndexService {
       mapping(documentType).fields(
         List(
           intField("id"),
-          keywordField("draftStatus"),
+          keywordField("draftStatus.current"),
+          keywordField("draftStatus.other"),
           dateField("lastUpdated"),
           keywordField("license"),
           keywordField("defaultTitle"),
