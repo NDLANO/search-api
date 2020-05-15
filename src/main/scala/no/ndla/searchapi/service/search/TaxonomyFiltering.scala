@@ -6,9 +6,8 @@
  */
 
 package no.ndla.searchapi.service.search
-import no.ndla.mapping.ISO639
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.searches.queries.BoolQuery
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 
 trait TaxonomyFiltering {
@@ -24,71 +23,64 @@ trait TaxonomyFiltering {
             relevanceId =>
               nestedQuery("contexts").query(
                 boolQuery().must(
-                  nestedQuery("contexts.filters").query(boolQuery().must(
-                    termQuery("contexts.filters.relevanceId", relevanceId),
-                    boolQuery().should(levels.map(f =>
-                      boolQuery().should(ISO639.languagePriority.map(l =>
-                        termQuery(s"contexts.filters.name.$l.raw", f)))))
-                  )),
+                  nestedQuery("contexts.filters").query(
+                    boolQuery().must(
+                      termQuery("contexts.filters.relevanceId", relevanceId),
+                      boolQuery().must(levels.map(f => termQuery(s"contexts.filters.filterId", f)))
+                    )),
                   boolQuery().should(subjectIds.map(sId => termQuery("contexts.subjectId", sId)))
                 )
             )
           )
         ))
 
-  protected def subjectFilter(subjects: List[String]): Option[BoolQuery] =
+  protected def subjectFilter(subjects: List[String]): Option[NestedQuery] =
     if (subjects.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          subjects.map(
-            subjectId =>
-              nestedQuery("contexts").query(
-                termQuery(s"contexts.subjectId", subjectId)
-            ))
-        )
-      )
+        nestedQuery("contexts")
+          .query(
+            boolQuery().should(
+              subjects.map(
+                subjectId => termQuery(s"contexts.subjectId", subjectId)
+              ))
+          ))
 
-  protected def topicFilter(topics: List[String]): Option[BoolQuery] =
+  protected def topicFilter(topics: List[String]): Option[NestedQuery] =
     if (topics.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          topics.map(
-            topicId =>
-              nestedQuery("contexts").query(
-                termQuery(s"contexts.parentTopicIds", topicId)
-            ))
-        )
-      )
+        nestedQuery("contexts")
+          .query(
+            boolQuery().should(
+              topics.map(
+                topicId => termQuery("contexts.parentTopicIds", topicId)
+              ))
+          ))
 
-  protected def levelFilter(taxonomyFilters: List[String]): Option[BoolQuery] =
+  protected def levelFilter(taxonomyFilters: List[String]): Option[NestedQuery] =
     if (taxonomyFilters.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          taxonomyFilters.map(
-            filterName =>
-              nestedQuery("contexts.filters").query(
-                boolQuery().should(
-                  ISO639.languagePriority.map(l => termQuery(s"contexts.filters.name.$l.raw", filterName))
-                )
-            ))
-        )
-      )
+        nestedQuery("contexts.filters")
+          .query(
+            boolQuery().should(
+              taxonomyFilters.map(
+                filterId => termQuery("contexts.filters.filterId", filterId)
+              ))
+          ))
 
-  protected def resourceTypeFilter(resourceTypes: List[String]): Option[BoolQuery] =
+  protected def resourceTypeFilter(resourceTypes: List[String]): Option[NestedQuery] =
     if (resourceTypes.isEmpty) None
     else
       Some(
-        boolQuery().should(
-          resourceTypes.map(
-            resourceTypeId =>
-              nestedQuery("contexts.resourceTypes").query(
-                termQuery(s"contexts.resourceTypes.id", resourceTypeId)
-            ))
-        )
-      )
+        nestedQuery("contexts.resourceTypes")
+          .query(
+            boolQuery().should(
+              resourceTypes.map(
+                resourceTypeId => termQuery("contexts.resourceTypes.id", resourceTypeId)
+              ))
+          ))
 
   protected def contextTypeFilter(contextTypes: List[LearningResourceType.Value]): Option[BoolQuery] =
     if (contextTypes.isEmpty) None

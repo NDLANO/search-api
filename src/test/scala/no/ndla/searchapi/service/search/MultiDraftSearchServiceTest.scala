@@ -361,29 +361,29 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
   test("That filtering for levels/filters on resources works as expected") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("YF-VG1")))
+        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:6")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(6, 7))
 
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("VG2")))
-    search2.totalCount should be(5)
-    search2.results.map(_.id) should be(Seq(1, 3, 5, 6, 12))
+        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
+    search2.totalCount should be(3)
+    search2.results.map(_.id) should be(Seq(1, 3, 5))
   }
 
   test("That filtering for mulitple levels/filters returns resources from all") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
-    search.totalCount should be(5)
-    search.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
+        multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:6", "urn:filter:1")))
+    search.totalCount should be(4)
+    search.results.map(_.id) should be(Seq(1, 6, 7, 12))
   }
 
   test("That filtering for levels/filters works with spaces as well") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("Tysk 2")))
+        multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:7")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(1, 3))
   }
@@ -577,7 +577,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(search) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages,
                                     relevanceIds = List("urn:relevance:supplementary"),
-                                    taxonomyFilters = List("Tysk 2")))
+                                    taxonomyFilters = List("urn:filter:7")))
 
     search.results.map(_.id) should be(Seq(3))
   }

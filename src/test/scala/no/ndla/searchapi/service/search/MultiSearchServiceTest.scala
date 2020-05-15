@@ -343,26 +343,27 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
 
   test("That filtering for levels/filters on resources works as expected") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("YF-VG1")))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:6")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(6, 7))
 
     val Success(search2) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("VG2")))
-    search2.totalCount should be(5)
-    search2.results.map(_.id) should be(Seq(1, 3, 5, 6, 12))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
+    search2.totalCount should be(3)
+    search2.results.map(_.id) should be(Seq(1, 3, 5))
   }
 
   test("That filtering for multiple levels/filters returns resources from all filters") {
     val Success(search3) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "nb", taxonomyFilters = List("YF-VG1", "VG1")))
-    search3.totalCount should be(5)
-    search3.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
+      multiSearchService.matchingQuery(
+        searchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:6", "urn:filter:1")))
+    search3.totalCount should be(4)
+    search3.results.map(_.id) should be(Seq(1, 6, 7, 12))
   }
 
   test("That filtering for levels/filters works with spaces as well") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "nb", taxonomyFilters = List("Tysk 2")))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:7")))
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(1, 3))
   }
@@ -513,7 +514,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val Success(search) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages,
                           relevanceIds = List("urn:relevance:supplementary"),
-                          taxonomyFilters = List("Tysk 2")))
+                          taxonomyFilters = List("urn:filter:7")))
 
     search.results.map(_.id) should be(Seq(3))
   }
