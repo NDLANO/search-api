@@ -151,14 +151,13 @@ trait SearchConverterService {
           draft.copyright.map(_.rightsholders).toList
       ).flatten.map(_.name)
 
-      val statuses = List(draft.status.current) ++ draft.status.other
       val notes: List[String] = draft.notes.map(_.note)
       val users: List[String] = draft.updatedBy +: draft.notes.map(_.user)
 
       Success(
         SearchableDraft(
           id = draft.id.get,
-          draftStatus = statuses.map(_.toString),
+          draftStatus = search.Status(draft.status.current.toString, draft.status.other.map(_.toString).toSeq),
           title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),
           content = SearchableLanguageValues(draft.content.map(article =>
             LanguageValue(article.language, Jsoup.parseBodyFragment(article.content).text()))),
@@ -390,7 +389,8 @@ trait SearchConverterService {
         url = url,
         contexts = contexts,
         supportedLanguages = supportedLanguages,
-        learningResourceType = searchableArticle.articleType
+        learningResourceType = searchableArticle.articleType,
+        status = None
       )
     }
 
@@ -429,7 +429,8 @@ trait SearchConverterService {
         url = url,
         contexts = contexts,
         supportedLanguages = supportedLanguages,
-        learningResourceType = searchableDraft.articleType
+        learningResourceType = searchableDraft.articleType,
+        status = Some(api.Status(searchableDraft.draftStatus.current, searchableDraft.draftStatus.other))
       )
     }
 
@@ -468,7 +469,8 @@ trait SearchConverterService {
         url = url,
         contexts = contexts,
         supportedLanguages = supportedLanguages,
-        learningResourceType = LearningResourceType.LearningPath.toString
+        learningResourceType = LearningResourceType.LearningPath.toString,
+        status = Some(api.Status(searchableLearningPath.status, Seq.empty))
       )
     }
 

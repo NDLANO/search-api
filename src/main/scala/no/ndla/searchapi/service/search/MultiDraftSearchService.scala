@@ -181,16 +181,18 @@ trait MultiDraftSearchService {
       ).flatten
     }
 
-    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value]) =
+    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value]): Some[BoolQuery] = {
+      val draftStatuses = Seq("draftStatus.current", "draftStatus.other")
       if (statuses.isEmpty) {
         Some(
-          boolQuery.not(termQuery("draftStatus", ArticleStatus.ARCHIVED.toString))
+          boolQuery.not(termQuery("draftStatus.current", ArticleStatus.ARCHIVED.toString))
         )
       } else {
         Some(
-          boolQuery.should(statuses.map(s => termQuery("draftStatus", s.toString)))
+          boolQuery.should(draftStatuses.flatMap(ds => statuses.map(s => termQuery(ds, s.toString))))
         )
       }
+    }
 
     private def boolUsersFilter(users: Seq[String]): Option[BoolQuery] =
       if (users.isEmpty) None

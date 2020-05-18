@@ -22,4 +22,5 @@ case class MultiSearchSummary(
     @(ApiModelProperty @field)(description = "Languages the resource exists in") supportedLanguages: Seq[String],
     @(ApiModelProperty @field)(description =
       "Learning resource type, either 'standard', 'topic-article' or 'learningpath'") learningResourceType: String,
+    @(ApiModelProperty @field)(description = "Status information of the resource") status: Option[Status]
 )
