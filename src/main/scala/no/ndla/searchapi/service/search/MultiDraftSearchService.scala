@@ -185,7 +185,7 @@ trait MultiDraftSearchService {
       val draftStatuses = Seq("draftStatus.current", "draftStatus.other")
       if (statuses.isEmpty) {
         Some(
-          boolQuery.not(draftStatuses.map(s => termQuery(s, ArticleStatus.ARCHIVED.toString)))
+          boolQuery.not(termQuery("draftStatus.current", ArticleStatus.ARCHIVED.toString))
         )
       } else {
         Some(
