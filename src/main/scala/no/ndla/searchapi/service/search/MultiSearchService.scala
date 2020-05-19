@@ -11,15 +11,12 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
+import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.{
-  ElasticSearchIndexMaxResultWindow,
-  ElasticSearchScrollKeepAlive,
-  SearchIndexes
-}
+import no.ndla.searchapi.SearchApiProperties.{ElasticSearchIndexMaxResultWindow, ElasticSearchScrollKeepAlive, SearchIndexes}
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api.{MultiSearchResult, ResultWindowTooLargeException}
+import no.ndla.searchapi.model.api.ResultWindowTooLargeException
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.SearchSettings
@@ -38,12 +35,33 @@ trait MultiSearchService {
   class MultiSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
+    def suggestions(settings: SearchSettings): Seq[PhraseSuggestion] = {
+      settings.query
+        .map(q => {
+          val searchLanguage =
+            if (settings.language == Language.AllLanguages || settings.fallback) "nb" else settings.language
+          Seq(
+            suggestion(q, "title", searchLanguage)
+          )
+        })
+        .getOrElse(Seq.empty)
+    }
+
+    def suggestion(query: String, field: String, language: String): PhraseSuggestion = {
+      phraseSuggestion(name = field)
+        .on(s"$field.$language.trigram")
+        .addDirectGenerator(DirectGenerator(field = s"$field.$language.trigram", suggestMode = Some("always")))
+        .size(1)
+        .gramSize(3)
+        .text(query)
+    }
+
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val fullQuery = settings.query match {
         case Some(q) =>
           val searchLanguage =
             if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 3)
+          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 6)
           val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
           val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
           val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
@@ -81,6 +99,7 @@ trait MultiSearchService {
 
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
+          .suggestions(suggestions(settings))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))

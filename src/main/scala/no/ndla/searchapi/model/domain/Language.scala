@@ -9,17 +9,26 @@ package no.ndla.searchapi.model.domain
 
 import com.sksamuel.elastic4s.analyzers._
 import no.ndla.mapping.ISO639
-import scala.annotation.tailrec
 
 object Language {
   val DefaultLanguage = "nb"
   val UnknownLanguage = "unknown"
   val NoLanguage = ""
   val AllLanguages = "all"
+  val Nynorsk = "nynorsk"
+
+  // Must be included in search index settings
+  val nynorskLanguageAnalyzer = CustomAnalyzerDefinition(
+    name = Nynorsk,
+    tokenizer = StandardTokenizer,
+    filters = Seq(LowercaseTokenFilter,
+                  StopTokenFilter("norwegian_stop"),
+                  StemmerTokenFilter("nynorsk_stemmer", lang = "light_nynorsk"))
+  )
 
   val languageAnalyzers = List(
     LanguageAnalyzer(DefaultLanguage, NorwegianLanguageAnalyzer),
-    LanguageAnalyzer("nn", NorwegianLanguageAnalyzer),
+    LanguageAnalyzer("nn", CustomAnalyzer(Nynorsk)),
     LanguageAnalyzer("en", EnglishLanguageAnalyzer),
     LanguageAnalyzer("fr", FrenchLanguageAnalyzer),
     LanguageAnalyzer("de", GermanLanguageAnalyzer),

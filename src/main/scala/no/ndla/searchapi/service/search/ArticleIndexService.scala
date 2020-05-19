@@ -15,10 +15,9 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.ArticleApiClient
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.grep.GrepBundle
-import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
+import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 import org.json4s.native.Serialization.write
-import no.ndla.searchapi.model.search.SearchType
 
 import scala.util.{Failure, Success, Try}
 
