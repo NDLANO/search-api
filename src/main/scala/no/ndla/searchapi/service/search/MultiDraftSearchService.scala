@@ -114,6 +114,7 @@ trait MultiDraftSearchService {
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
+                suggestions = getSuggestions(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)

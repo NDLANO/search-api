@@ -10,14 +10,14 @@ package no.ndla.searchapi.service.search
 import java.lang.Math.max
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
+import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.{ElasticSearchScrollKeepAlive, MaxPageSize}
 import no.ndla.searchapi.integration.Elastic4sClient
+import no.ndla.searchapi.model.api.{MultiSearchSuggestion, MultiSearchSummary, SearchSuggestion, SuggestOption}
 import no.ndla.searchapi.model.domain._
-import no.ndla.searchapi.SearchApiProperties.{MaxPageSize, ElasticSearchScrollKeepAlive}
-import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary}
 import no.ndla.searchapi.model.search.SearchType
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
@@ -69,6 +69,31 @@ trait SearchService {
       }
     }
 
+    def getSuggestions(response: SearchResponse): Seq[MultiSearchSuggestion] = {
+      response.suggestions.map {
+        case (key, value) =>
+          MultiSearchSuggestion(name = key, suggestions = getSuggestion(value))
+      }.toSeq
+    }
+
+    def getSuggestion(results: Seq[SuggestionResult]): Seq[SearchSuggestion] = {
+      results.map(
+        result =>
+          SearchSuggestion(text = result.text,
+                           offset = result.offset,
+                           length = result.length,
+                           options = result.options.map(mapToSuggestOption)))
+    }
+
+    def mapToSuggestOption(optionsMap: Map[String, Any]): SuggestOption = {
+      val text = optionsMap.getOrElse("text", "")
+      val score = optionsMap.getOrElse("score", 1)
+      SuggestOption(
+        text.asInstanceOf[String],
+        score.asInstanceOf[Double]
+      )
+    }
+
     def scroll(scrollId: String, language: String, fallback: Boolean): Try[SearchResult] = {
       e4sClient
         .execute {
@@ -76,12 +101,14 @@ trait SearchService {
         }
         .map(response => {
           val hits = getHits(response.result, language, fallback)
+          val suggestions = getSuggestions(response.result)
           SearchResult(
             totalCount = response.result.totalHits,
             page = None,
             pageSize = response.result.hits.hits.length,
             language = if (language == "*") Language.AllLanguages else language,
             results = hits,
+            suggestions = suggestions,
             scrollId = response.result.scrollId
           )
         })

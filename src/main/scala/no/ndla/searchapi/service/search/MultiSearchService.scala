@@ -14,7 +14,11 @@ import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.{ElasticSearchIndexMaxResultWindow, ElasticSearchScrollKeepAlive, SearchIndexes}
+import no.ndla.searchapi.SearchApiProperties.{
+  ElasticSearchIndexMaxResultWindow,
+  ElasticSearchScrollKeepAlive,
+  SearchIndexes
+}
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.ResultWindowTooLargeException
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
@@ -118,6 +122,7 @@ trait MultiSearchService {
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
+                suggestions = getSuggestions(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)
