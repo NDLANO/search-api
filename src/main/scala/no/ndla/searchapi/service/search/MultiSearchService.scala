@@ -39,27 +39,6 @@ trait MultiSearchService {
   class MultiSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
-    def suggestions(settings: SearchSettings): Seq[PhraseSuggestion] = {
-      settings.query
-        .map(q => {
-          val searchLanguage =
-            if (settings.language == Language.AllLanguages || settings.fallback) "nb" else settings.language
-          Seq(
-            suggestion(q, "title", searchLanguage)
-          )
-        })
-        .getOrElse(Seq.empty)
-    }
-
-    def suggestion(query: String, field: String, language: String): PhraseSuggestion = {
-      phraseSuggestion(name = field)
-        .on(s"$field.$language.trigram")
-        .addDirectGenerator(DirectGenerator(field = s"$field.$language.trigram", suggestMode = Some("always")))
-        .size(1)
-        .gramSize(3)
-        .text(query)
-    }
-
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val fullQuery = settings.query match {
         case Some(q) =>
@@ -103,7 +82,7 @@ trait MultiSearchService {
 
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
-          .suggestions(suggestions(settings))
+          .suggestions(suggestions(settings.query, settings.language, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))

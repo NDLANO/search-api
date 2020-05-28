@@ -12,6 +12,7 @@ import java.lang.Math.max
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
+import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{ElasticSearchScrollKeepAlive, MaxPageSize}
@@ -69,6 +70,27 @@ trait SearchService {
       }
     }
 
+    def suggestions(query: Option[String], language: String, fallback: Boolean): Seq[PhraseSuggestion] = {
+      query
+        .map(q => {
+          val searchLanguage =
+            if (language == Language.AllLanguages || fallback) "nb" else language
+          Seq(
+            suggestion(q, "title", searchLanguage) // TODO suggest on more fields?
+          )
+        })
+        .getOrElse(Seq.empty)
+    }
+
+    def suggestion(query: String, field: String, language: String): PhraseSuggestion = {
+      phraseSuggestion(name = field)
+        .on(s"$field.$language.trigram")
+        .addDirectGenerator(DirectGenerator(field = s"$field.$language.trigram", suggestMode = Some("always")))
+        .size(1)
+        .gramSize(3)
+        .text(query)
+    }
+
     def getSuggestions(response: SearchResponse): Seq[MultiSearchSuggestion] = {
       response.suggestions.map {
         case (key, value) =>
@@ -123,22 +145,22 @@ trait SearchService {
       sort match {
         case Sort.ByTitleAsc =>
           language match {
-            case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.ASC).missing("_last")
-            case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.ASC).missing("_last")
+            case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Asc).missing("_last")
+            case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Asc).missing("_last")
           }
         case Sort.ByTitleDesc =>
           language match {
-            case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.DESC).missing("_last")
-            case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.DESC).missing("_last")
+            case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Desc).missing("_last")
+            case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Desc).missing("_last")
           }
-        case Sort.ByDurationAsc     => fieldSort("duration").order(SortOrder.ASC).missing("_last")
-        case Sort.ByDurationDesc    => fieldSort("duration").order(SortOrder.DESC).missing("_last")
-        case Sort.ByRelevanceAsc    => fieldSort("_score").order(SortOrder.ASC)
-        case Sort.ByRelevanceDesc   => fieldSort("_score").order(SortOrder.DESC)
-        case Sort.ByLastUpdatedAsc  => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
-        case Sort.ByLastUpdatedDesc => fieldSort("lastUpdated").order(SortOrder.DESC).missing("_last")
-        case Sort.ByIdAsc           => fieldSort("id").order(SortOrder.ASC).missing("_last")
-        case Sort.ByIdDesc          => fieldSort("id").order(SortOrder.DESC).missing("_last")
+        case Sort.ByDurationAsc     => fieldSort("duration").sortOrder(SortOrder.Asc).missing("_last")
+        case Sort.ByDurationDesc    => fieldSort("duration").sortOrder(SortOrder.Desc).missing("_last")
+        case Sort.ByRelevanceAsc    => fieldSort("_score").sortOrder(SortOrder.Asc)
+        case Sort.ByRelevanceDesc   => fieldSort("_score").sortOrder(SortOrder.Desc)
+        case Sort.ByLastUpdatedAsc  => fieldSort("lastUpdated").sortOrder(SortOrder.Asc).missing("_last")
+        case Sort.ByLastUpdatedDesc => fieldSort("lastUpdated").sortOrder(SortOrder.Desc).missing("_last")
+        case Sort.ByIdAsc           => fieldSort("id").sortOrder(SortOrder.Asc).missing("_last")
+        case Sort.ByIdDesc          => fieldSort("id").sortOrder(SortOrder.Desc).missing("_last")
       }
     }
 
