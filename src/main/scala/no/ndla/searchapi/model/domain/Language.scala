@@ -7,9 +7,8 @@
 
 package no.ndla.searchapi.model.domain
 
-import com.sksamuel.elastic4s.analyzers._
+import com.sksamuel.elastic4s.analysis.{CustomAnalyzer, LanguageAnalyzers, StemmerTokenFilter}
 import no.ndla.mapping.ISO639
-import scala.annotation.tailrec
 
 object Language {
   val DefaultLanguage = "nb"
@@ -17,20 +16,31 @@ object Language {
   val NoLanguage = ""
   val AllLanguages = "all"
 
-  val languageAnalyzers = List(
-    LanguageAnalyzer(DefaultLanguage, NorwegianLanguageAnalyzer),
-    LanguageAnalyzer("nn", NorwegianLanguageAnalyzer),
-    LanguageAnalyzer("en", EnglishLanguageAnalyzer),
-    LanguageAnalyzer("fr", FrenchLanguageAnalyzer),
-    LanguageAnalyzer("de", GermanLanguageAnalyzer),
-    LanguageAnalyzer("es", SpanishLanguageAnalyzer),
-    LanguageAnalyzer("se", StandardAnalyzer), // SAMI
-    LanguageAnalyzer("sma", StandardAnalyzer), // SAMI
-    LanguageAnalyzer("zh", ChineseLanguageAnalyzer),
-    LanguageAnalyzer(UnknownLanguage, StandardAnalyzer)
+  val Nynorsk = "nynorsk"
+
+  // Must be included in search index settings
+  val nynorskStemmer: StemmerTokenFilter = StemmerTokenFilter("nynorsk_stemmer", lang = "light_nynorsk")
+
+  val nynorskLanguageAnalyzer: CustomAnalyzer = CustomAnalyzer(
+    name = Nynorsk,
+    tokenizer = "standard",
+    tokenFilters = List("lowercase", "nynorsk_stemmer")
   )
 
-  val supportedLanguages = languageAnalyzers.map(_.lang)
+  val languageAnalyzers = List(
+    LanguageAnalyzer(DefaultLanguage, LanguageAnalyzers.norwegian),
+    LanguageAnalyzer("nn", Nynorsk),
+    LanguageAnalyzer("en", LanguageAnalyzers.english),
+    LanguageAnalyzer("fr", LanguageAnalyzers.french),
+    LanguageAnalyzer("de", LanguageAnalyzers.german),
+    LanguageAnalyzer("es", LanguageAnalyzers.spanish),
+    LanguageAnalyzer("se", "standard"), // SAMI
+    LanguageAnalyzer("sma", "standard"), // SAMI
+    LanguageAnalyzer("zh", LanguageAnalyzers.cjk),
+    LanguageAnalyzer(UnknownLanguage, "standard")
+  )
+
+  val supportedLanguages: Seq[String] = languageAnalyzers.map(_.lang)
 
   def findByLanguageOrBestEffort[P <: LanguageField](sequence: Seq[P], language: String): Option[P] = {
     sequence
@@ -64,4 +74,4 @@ object Language {
   }
 }
 
-case class LanguageAnalyzer(lang: String, analyzer: Analyzer)
+case class LanguageAnalyzer(lang: String, analyzer: String)

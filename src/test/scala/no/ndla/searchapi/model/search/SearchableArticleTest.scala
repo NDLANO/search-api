@@ -8,7 +8,7 @@
 package no.ndla.searchapi.model.search
 
 import no.ndla.searchapi.model.domain.article.LearningResourceType
-import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.model.domain.article.ArticleMetaImage
 import no.ndla.searchapi.model.search
@@ -50,6 +50,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
     val original = SearchableArticle(
+      `type` = SearchApiProperties.SearchDocuments(SearchType.Articles),
       id = 100,
       title = titles,
       content = contents,

@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.service.search
 
-import com.sksamuel.elastic4s.http.search.SearchHit
+import com.sksamuel.elastic4s.requests.searches.SearchHit
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.mapping.License.getLicense
@@ -67,6 +67,7 @@ trait SearchConverterService {
 
       Success(
         SearchableArticle(
+          `type` = SearchApiProperties.SearchDocuments(SearchType.Articles),
           id = articleWithAgreement.id.get,
           title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
             LanguageValue(title.language, title.title))),
@@ -104,6 +105,7 @@ trait SearchConverterService {
 
       Success(
         SearchableLearningPath(
+          `type` = SearchApiProperties.SearchDocuments(SearchType.LearningPaths),
           id = lp.id.get,
           title = SearchableLanguageValues(lp.title.map(t => LanguageValue(t.language, t.title))),
           description = SearchableLanguageValues(lp.description.map(d => LanguageValue(d.language, d.description))),
@@ -156,6 +158,7 @@ trait SearchConverterService {
 
       Success(
         SearchableDraft(
+          `type` = SearchApiProperties.SearchDocuments(SearchType.Drafts),
           id = draft.id.get,
           draftStatus = search.Status(draft.status.current.toString, draft.status.other.map(_.toString).toSeq),
           title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),

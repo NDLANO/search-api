@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.domain
 
-import com.sksamuel.elastic4s.http.RequestFailure
+import com.sksamuel.elastic4s.RequestFailure
 
 case class NdlaSearchException(rf: RequestFailure)
     extends RuntimeException(

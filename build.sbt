@@ -10,9 +10,9 @@ val Log4JVersion = "2.11.1"
 val Jettyversion = "9.4.27.v20200227"
 val AwsSdkversion = "1.11.434"
 val MockitoVersion = "1.11.4"
-val Elastic4sVersion = "6.7.4"
+val Elastic4sVersion = "7.7.0"
 val JacksonVersion = "2.10.2"
-val ElasticsearchVersion = "6.8.6"
+val ElasticsearchVersion = "7.7.0"
 val Json4SVersion = "3.6.7"
 val TestContainersVersion = "1.12.2"
 
@@ -70,7 +70,7 @@ lazy val search_api = (project in file("."))
       "org.jsoup" % "jsoup" % "1.11.3",
       "org.elasticsearch" % "elasticsearch" % ElasticsearchVersion,
       "com.sksamuel.elastic4s" %% "elastic4s-core" % Elastic4sVersion,
-      "com.sksamuel.elastic4s" %% "elastic4s-http" % Elastic4sVersion,
+      "com.sksamuel.elastic4s" %% "elastic4s-client-esjava" % Elastic4sVersion,
       "vc.inreach.aws" % "aws-signing-request-interceptor" % "0.0.22",
       "org.apache.httpcomponents" % "httpclient" % "4.5.10", // Overridden because vulnerability in request interceptor
       "com.google.guava" % "guava" % "28.1-jre", // Overridden because vulnerability in request interceptor

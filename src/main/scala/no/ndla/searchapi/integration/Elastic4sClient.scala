@@ -12,7 +12,8 @@ import java.util.concurrent.Executors
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.{Region, Regions}
-import com.sksamuel.elastic4s.http._
+import com.sksamuel.elastic4s._
+import com.sksamuel.elastic4s.http.{JavaClient, NoOpHttpClientConfigCallback}
 import io.lemonlabs.uri.dsl._
 import no.ndla.searchapi.model.domain.NdlaSearchException
 import org.apache.http.client.config.RequestConfig
@@ -71,16 +72,16 @@ object Elastic4sClientFactory {
     * This method gets a client which will sign the requests using credentials from the server.
     */
   private def getSigningClient(searchServer: String): ElasticClient = ElasticClient(
-    getProperties(searchServer, 80),
-    httpClientConfigCallback = HttpClientCallbackWithAwsInterceptor,
-    requestConfigCallback = RequestConfigCallbackWithTimeout
+    JavaClient(getProperties(searchServer, 80),
+               httpClientConfigCallback = HttpClientCallbackWithAwsInterceptor,
+               requestConfigCallback = RequestConfigCallbackWithTimeout)
   )
 
   /** Get client useful for testing and running in local environments which require no AWS signing. */
   private def getNonSigningClient(searchServer: String): ElasticClient = ElasticClient(
-    getProperties(searchServer, 9200),
-    requestConfigCallback = RequestConfigCallbackWithTimeout,
-    httpClientConfigCallback = NoOpHttpClientConfigCallback
+    JavaClient(getProperties(searchServer, 9200),
+               requestConfigCallback = RequestConfigCallbackWithTimeout,
+               httpClientConfigCallback = NoOpHttpClientConfigCallback)
   )
 
   /** Callback added to all requests that will increase timeout */

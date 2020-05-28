@@ -10,7 +10,7 @@ package no.ndla.searchapi.model.search
 import no.ndla.searchapi.model.api.learningpath.{Author, Copyright, License}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.learningpath.{LearningPathStatus, LearningPathVerificationStatus, StepType}
-import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
 import org.json4s.Formats
 import org.json4s.native.Serialization.{read, write}
@@ -55,6 +55,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
     )
 
     val original = SearchableLearningPath(
+      `type` = SearchApiProperties.SearchDocuments(SearchType.LearningPaths),
       id = 101,
       title = titles,
       description = descriptions,

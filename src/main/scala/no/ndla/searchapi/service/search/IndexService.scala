@@ -11,18 +11,19 @@ package no.ndla.searchapi.service.search
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import com.sksamuel.elastic4s.alias.AliasAction
+import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.analysis.{Analysis, CustomAnalyzer, ShingleTokenFilter}
+import com.sksamuel.elastic4s.requests.alias.AliasAction
+import com.sksamuel.elastic4s.requests.indexes.IndexRequest
+import com.sksamuel.elastic4s.requests.mappings.{FieldDefinition, MappingDefinition, NestedField}
 import com.typesafe.scalalogging.LazyLogging
-import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.indexes.IndexRequest
-import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
-import no.ndla.searchapi.model.domain.{Content, ReindexResult}
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
-import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
+import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
+import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 
 import scala.util.{Failure, Success, Try}
 
@@ -33,6 +34,12 @@ trait IndexService {
     val apiClient: SearchApiClient
     val documentType: String
     val searchIndex: String
+
+    val shingle: ShingleTokenFilter =
+      ShingleTokenFilter(name = "shingle", minShingleSize = Some(2), maxShingleSize = Some(3))
+
+    val trigram: CustomAnalyzer =
+      CustomAnalyzer(name = "trigram", tokenizer = "standard", tokenFilters = List("lowercase", "shingle"))
 
     def getMapping: MappingDefinition
 
@@ -170,7 +177,7 @@ trait IndexService {
         }
         deleted <- {
           e4sClient.execute {
-            delete(s"$contentId").from(searchIndex / documentType)
+            deleteById(searchIndex, s"$contentId")
           }
         }
       } yield deleted
@@ -184,7 +191,9 @@ trait IndexService {
       } else {
         val response = e4sClient.execute {
           createIndex(indexName)
-            .mappings(getMapping)
+            .mapping(getMapping)
+            .analysis(Analysis(analyzers = List(trigram, Language.nynorskLanguageAnalyzer),
+                               tokenFilters = List(shingle, Language.nynorskStemmer)))
             .indexSetting("max_result_window", SearchApiProperties.ElasticSearchIndexMaxResultWindow)
         }
 
@@ -213,9 +222,9 @@ trait IndexService {
       } else {
         val actions = oldIndexName match {
           case None =>
-            List[AliasAction](addAlias(searchIndex).on(newIndexName))
+            List[AliasAction](addAlias(searchIndex, newIndexName))
           case Some(oldIndex) =>
-            List[AliasAction](removeAlias(searchIndex).on(oldIndex), addAlias(searchIndex).on(newIndexName))
+            List[AliasAction](removeAlias(searchIndex, oldIndex), addAlias(searchIndex, newIndexName))
         }
 
         e4sClient.execute(aliases(actions)) match {

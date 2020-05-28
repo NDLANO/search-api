@@ -173,8 +173,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
         multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc))
     val hits = results.results
     results.totalCount should be(3)
-    hits.head.id should be(5)
-    hits(1).id should be(1)
+    hits.head.id should be(1)
+    hits(1).id should be(5)
     hits.last.id should be(3)
   }
 

@@ -9,15 +9,15 @@ package no.ndla.searchapi.service.search
 
 import java.lang.Math.max
 
-import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse}
-import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
+import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.requests.searches.sort.{FieldSort, SortOrder}
+import com.sksamuel.elastic4s.requests.searches.{SearchHit, SearchResponse}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.{ElasticSearchScrollKeepAlive, MaxPageSize}
 import no.ndla.searchapi.integration.Elastic4sClient
+import no.ndla.searchapi.model.api.MultiSearchSummary
 import no.ndla.searchapi.model.domain._
-import no.ndla.searchapi.SearchApiProperties.{MaxPageSize, ElasticSearchScrollKeepAlive}
-import no.ndla.searchapi.model.api.{MultiSearchResult, MultiSearchSummary}
 import no.ndla.searchapi.model.search.SearchType
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
@@ -42,12 +42,12 @@ trait SearchService {
       val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
       val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
       val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
-      hit.`type` match {
-        case `articleType` =>
+      hit.sourceAsMap.get("type") match {
+        case Some(`articleType`) =>
           searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        case `draftType` =>
+        case Some(`draftType`) =>
           searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
-        case `learningPathType` =>
+        case Some(`learningPathType`) =>
           searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
       }
     }
@@ -96,22 +96,22 @@ trait SearchService {
       sort match {
         case Sort.ByTitleAsc =>
           language match {
-            case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.ASC).missing("_last")
-            case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.ASC).missing("_last")
+            case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Asc).missing("_last")
+            case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Asc).missing("_last")
           }
         case Sort.ByTitleDesc =>
           language match {
-            case "*" | Language.AllLanguages => fieldSort("defaultTitle").order(SortOrder.DESC).missing("_last")
-            case _                           => fieldSort(s"title.$sortLanguage.raw").order(SortOrder.DESC).missing("_last")
+            case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Desc).missing("_last")
+            case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Desc).missing("_last")
           }
-        case Sort.ByDurationAsc     => fieldSort("duration").order(SortOrder.ASC).missing("_last")
-        case Sort.ByDurationDesc    => fieldSort("duration").order(SortOrder.DESC).missing("_last")
-        case Sort.ByRelevanceAsc    => fieldSort("_score").order(SortOrder.ASC)
-        case Sort.ByRelevanceDesc   => fieldSort("_score").order(SortOrder.DESC)
-        case Sort.ByLastUpdatedAsc  => fieldSort("lastUpdated").order(SortOrder.ASC).missing("_last")
-        case Sort.ByLastUpdatedDesc => fieldSort("lastUpdated").order(SortOrder.DESC).missing("_last")
-        case Sort.ByIdAsc           => fieldSort("id").order(SortOrder.ASC).missing("_last")
-        case Sort.ByIdDesc          => fieldSort("id").order(SortOrder.DESC).missing("_last")
+        case Sort.ByDurationAsc     => fieldSort("duration").sortOrder(SortOrder.Asc).missing("_last")
+        case Sort.ByDurationDesc    => fieldSort("duration").sortOrder(SortOrder.Desc).missing("_last")
+        case Sort.ByRelevanceAsc    => fieldSort("_score").sortOrder(SortOrder.Asc)
+        case Sort.ByRelevanceDesc   => fieldSort("_score").sortOrder(SortOrder.Desc)
+        case Sort.ByLastUpdatedAsc  => fieldSort("lastUpdated").sortOrder(SortOrder.Asc).missing("_last")
+        case Sort.ByLastUpdatedDesc => fieldSort("lastUpdated").sortOrder(SortOrder.Desc).missing("_last")
+        case Sort.ByIdAsc           => fieldSort("id").sortOrder(SortOrder.Asc).missing("_last")
+        case Sort.ByIdDesc          => fieldSort("id").sortOrder(SortOrder.Desc).missing("_last")
       }
     }
 

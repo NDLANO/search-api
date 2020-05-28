@@ -7,9 +7,10 @@
 
 package no.ndla.searchapi.service.search
 
-import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.indexes.IndexRequest
-import com.sksamuel.elastic4s.mappings._
+import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.fields.{DateField, IntegerField, KeywordField, NestedField, ObjectField, TextField}
+import com.sksamuel.elastic4s.requests.indexes.IndexRequest
+import com.sksamuel.elastic4s.requests.mappings.MappingDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.LearningPathApiClient
@@ -17,6 +18,7 @@ import no.ndla.searchapi.model.domain.learningpath.LearningPath
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
+import org.json4s.Formats
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
@@ -26,7 +28,7 @@ trait LearningPathIndexService {
   val learningPathIndexService: LearningPathIndexService
 
   class LearningPathIndexService extends LazyLogging with IndexService[LearningPath] {
-    implicit val formats = SearchableLanguageFormats.JSonFormats
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
     override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.LearningPaths)
     override val apiClient: LearningPathApiClient = learningPathApiClient
@@ -38,15 +40,16 @@ trait LearningPathIndexService {
       searchConverterService.asSearchableLearningPath(domainModel, taxonomyBundle) match {
         case Success(searchableLearningPath) =>
           val source = write(searchableLearningPath)
-          Success(indexInto(indexName / documentType).doc(source).id(domainModel.id.get.toString))
+          Success(indexInto(indexName).doc(source).id(domainModel.id.get.toString))
         case Failure(ex) =>
           Failure(ex)
       }
     }
 
     def getMapping: MappingDefinition = {
-      mapping(documentType).fields(
+      emptyMapping.fields(
         List(
+          keywordField("type"),
           intField("id"),
           textField("coverPhotoUrl"),
           intField("duration"),

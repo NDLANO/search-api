@@ -11,6 +11,7 @@ import no.ndla.searchapi.model.api.learningpath.Copyright
 import org.joda.time.DateTime
 
 case class SearchableLearningPath(
+    `type`: String,
     id: Long,
     title: SearchableLanguageValues,
     description: SearchableLanguageValues,

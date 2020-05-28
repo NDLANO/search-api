@@ -9,8 +9,8 @@ package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
 
-import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
+import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.requests.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
@@ -19,7 +19,7 @@ import no.ndla.searchapi.SearchApiProperties.{
   SearchIndexes
 }
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api.{MultiSearchResult, ResultWindowTooLargeException}
+import no.ndla.searchapi.model.api.ResultWindowTooLargeException
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.SearchSettings
