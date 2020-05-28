@@ -709,6 +709,16 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search2.results.map(_.id) should be(Seq.empty)
   }
 
+  test("that search with query returns suggestion for query") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings
+        .copy(query = Some("bil"), language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
+
+    search.totalCount should equal(3)
+    search.suggestions.length should equal(1)
+    search.suggestions.head.suggestions.head.text should equal("bil")
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false
