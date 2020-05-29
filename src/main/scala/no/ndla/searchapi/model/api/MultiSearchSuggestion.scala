@@ -14,7 +14,7 @@ case class MultiSearchSuggestion(
 case class SearchSuggestion(
     @(ApiModelProperty @field)(description = "The search query suggestions are made for") text: String,
     @(ApiModelProperty @field)(description = "The offset in the search query") offset: Int,
-    @(ApiModelProperty @field)(description = "The position index in the search qyery") length: Int,
+    @(ApiModelProperty @field)(description = "The position index in the search query") length: Int,
     @(ApiModelProperty @field)(description = "The list of suggest options for the field") options: Seq[SuggestOption])
 
 @ApiModel(description = "Search suggestion options for the terms in the query")
