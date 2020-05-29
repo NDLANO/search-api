@@ -11,7 +11,7 @@ import no.ndla.searchapi.model.domain.article.ArticleMetaImage
 import org.joda.time.DateTime
 
 case class SearchableDraft(
-    `type`: String,
+    `type`: Option[String],
     id: Long,
     title: SearchableLanguageValues,
     content: SearchableLanguageValues,

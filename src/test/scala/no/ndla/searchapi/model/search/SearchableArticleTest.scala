@@ -50,7 +50,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
     val original = SearchableArticle(
-      `type` = SearchApiProperties.SearchDocuments(SearchType.Articles),
+      `type` = Some(SearchApiProperties.SearchDocuments(SearchType.Articles)),
       id = 100,
       title = titles,
       content = contents,

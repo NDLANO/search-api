@@ -38,17 +38,19 @@ trait SearchService {
       * @param language language as ISO639 code
       * @return api-model summary of hit
       */
-    def hitToApiModel(hit: SearchHit, language: String): MultiSearchSummary = {
+    def hitToApiModel(hit: SearchHit, language: String): Option[MultiSearchSummary] = {
       val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
       val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
       val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
-      hit.sourceAsMap.get("type") match {
+      val hitType = hit.sourceAsMap.getOrElse("type", Some(hit.`type`))
+      hitType match {
         case Some(`articleType`) =>
-          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
+          Some(searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language))
         case Some(`draftType`) =>
-          searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
+          Some(searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language))
         case Some(`learningPathType`) =>
-          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+          Some(searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language))
+        case _ => None
       }
     }
 
@@ -57,7 +59,7 @@ trait SearchService {
         case count if count > 0 =>
           val resultArray = response.hits.hits.toList
 
-          resultArray.map(result => {
+          resultArray.flatMap(result => {
             val matchedLanguage = language match {
               case Language.AllLanguages | "*" =>
                 searchConverterService.getLanguageFromHit(result).getOrElse(language)

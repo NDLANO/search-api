@@ -49,7 +49,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
     val metaImages = List(ArticleMetaImage("1", "norAlt", "nb"), ArticleMetaImage("2", "enAlt", "en"))
 
     val original = SearchableDraft(
-      `type` = SearchApiProperties.SearchDocuments(SearchType.Drafts),
+      `type` = Some(SearchApiProperties.SearchDocuments(SearchType.Drafts)),
       id = 100,
       draftStatus = Status(ArticleStatus.DRAFT.toString, Seq(ArticleStatus.PROPOSAL.toString)),
       title = titles,

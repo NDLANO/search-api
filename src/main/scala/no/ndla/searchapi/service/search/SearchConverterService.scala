@@ -67,7 +67,7 @@ trait SearchConverterService {
 
       Success(
         SearchableArticle(
-          `type` = SearchApiProperties.SearchDocuments(SearchType.Articles),
+          `type` = Some(SearchApiProperties.SearchDocuments(SearchType.Articles)),
           id = articleWithAgreement.id.get,
           title = SearchableLanguageValues(articleWithAgreement.title.map(title =>
             LanguageValue(title.language, title.title))),
@@ -105,7 +105,7 @@ trait SearchConverterService {
 
       Success(
         SearchableLearningPath(
-          `type` = SearchApiProperties.SearchDocuments(SearchType.LearningPaths),
+          `type` = Some(SearchApiProperties.SearchDocuments(SearchType.LearningPaths)),
           id = lp.id.get,
           title = SearchableLanguageValues(lp.title.map(t => LanguageValue(t.language, t.title))),
           description = SearchableLanguageValues(lp.description.map(d => LanguageValue(d.language, d.description))),
@@ -158,7 +158,7 @@ trait SearchConverterService {
 
       Success(
         SearchableDraft(
-          `type` = SearchApiProperties.SearchDocuments(SearchType.Drafts),
+          `type` = Some(SearchApiProperties.SearchDocuments(SearchType.Drafts)),
           id = draft.id.get,
           draftStatus = search.Status(draft.status.current.toString, draft.status.other.map(_.toString).toSeq),
           title = SearchableLanguageValues(draft.title.map(title => LanguageValue(title.language, title.title))),

@@ -55,7 +55,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
     )
 
     val original = SearchableLearningPath(
-      `type` = SearchApiProperties.SearchDocuments(SearchType.LearningPaths),
+      `type` = Some(SearchApiProperties.SearchDocuments(SearchType.LearningPaths)),
       id = 101,
       title = titles,
       description = descriptions,
