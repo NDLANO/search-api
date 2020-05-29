@@ -44,11 +44,11 @@ trait SearchService {
       val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
       val hitType = hit.sourceAsMap.getOrElse("type", Some(hit.`type`))
       hitType match {
-        case Some(`articleType`) =>
+        case `articleType` =>
           Some(searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language))
-        case Some(`draftType`) =>
+        case `draftType` =>
           Some(searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language))
-        case Some(`learningPathType`) =>
+        case `learningPathType` =>
           Some(searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language))
         case _ => None
       }
