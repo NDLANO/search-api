@@ -716,6 +716,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
 
     search.totalCount should equal(3)
     search.suggestions.length should equal(1)
+    search.suggestions.head.name should be("title")
     search.suggestions.head.suggestions.head.text should equal("bil")
   }
 
