@@ -334,9 +334,10 @@ trait IndexService {
     protected def generateLanguageSupportedFieldList(fieldName: String,
                                                      keepRaw: Boolean = false): List[FieldDefinition] = {
       if (keepRaw) {
-        generateLanguageFieldWithSubFields(fieldName, List(keywordField("raw")))
+        generateLanguageFieldWithSubFields(fieldName,
+                                           List(textField("trigram").analyzer("trigram"), keywordField("raw")))
       } else {
-        generateLanguageFieldWithSubFields(fieldName, List.empty)
+        generateLanguageFieldWithSubFields(fieldName, List(textField("trigram").analyzer("trigram")))
       }
     }
 

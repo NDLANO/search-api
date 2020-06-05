@@ -842,6 +842,7 @@ trait SearchConverterService {
         searchResult.pageSize,
         searchResult.language,
         searchResult.results,
+        searchResult.suggestions
       )
 
   }

@@ -15,7 +15,6 @@ object Language {
   val UnknownLanguage = "unknown"
   val NoLanguage = ""
   val AllLanguages = "all"
-
   val Nynorsk = "nynorsk"
 
   // Must be included in search index settings

@@ -96,6 +96,7 @@ trait MultiDraftSearchService {
       } else {
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
+          .suggestions(suggestions(settings.query, settings.language, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
@@ -114,6 +115,7 @@ trait MultiDraftSearchService {
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
+                suggestions = getSuggestions(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)

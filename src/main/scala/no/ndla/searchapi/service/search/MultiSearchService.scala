@@ -43,7 +43,7 @@ trait MultiSearchService {
         case Some(q) =>
           val searchLanguage =
             if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 3)
+          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 6)
           val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
           val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
           val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
@@ -81,6 +81,7 @@ trait MultiSearchService {
 
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
+          .suggestions(suggestions(settings.query, settings.language, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
@@ -99,6 +100,7 @@ trait MultiSearchService {
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
+                suggestions = getSuggestions(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)
