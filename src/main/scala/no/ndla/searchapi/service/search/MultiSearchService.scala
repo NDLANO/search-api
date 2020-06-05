@@ -11,6 +11,7 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
+import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
@@ -19,7 +20,7 @@ import no.ndla.searchapi.SearchApiProperties.{
   SearchIndexes
 }
 import no.ndla.searchapi.integration.Elastic4sClient
-import no.ndla.searchapi.model.api.{MultiSearchResult, ResultWindowTooLargeException}
+import no.ndla.searchapi.model.api.ResultWindowTooLargeException
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.SearchSettings
@@ -43,7 +44,7 @@ trait MultiSearchService {
         case Some(q) =>
           val searchLanguage =
             if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 3)
+          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 6)
           val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
           val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
           val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
@@ -81,6 +82,7 @@ trait MultiSearchService {
 
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
+          .suggestions(suggestions(settings.query, settings.language, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
@@ -99,6 +101,7 @@ trait MultiSearchService {
                 pageSize = numResults,
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
+                suggestions = getSuggestions(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)
