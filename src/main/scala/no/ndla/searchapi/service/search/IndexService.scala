@@ -10,6 +10,7 @@ package no.ndla.searchapi.service.search
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analysis.{Analysis, CustomAnalyzer, ShingleTokenFilter}
@@ -25,6 +26,8 @@ import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 trait IndexService {
@@ -108,17 +111,29 @@ trait IndexService {
       })
     }
 
-    def sendToElastic(indexName: String, taxonomyBundle: TaxonomyBundle, grepBundle: GrepBundle)(
-        implicit mf: Manifest[D]): Try[Int] = {
+    def sendToElastic(
+        indexName: String,
+        taxonomyBundle: TaxonomyBundle,
+        grepBundle: GrepBundle
+    )(implicit mf: Manifest[D]): Try[Int] = {
+      val numThreads = 10
+      implicit val executionContext: ExecutionContextExecutorService =
+        ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(numThreads))
+
       val stream = apiClient.getChunks[D]
-      val chunks = stream
-        .map({
-          case Success(c) =>
-            val numIndexed = indexDocuments(c, indexName, taxonomyBundle, grepBundle)
-            Success(numIndexed.getOrElse(0), c.size)
-          case Failure(ex) => Failure(ex)
+      val futures = stream
+        .map(x =>
+          Future {
+            x match {
+              case Failure(ex) => Failure(ex)
+              case Success(c) =>
+                val numIndexed = indexDocuments(c, indexName, taxonomyBundle, grepBundle)
+                Success(numIndexed.getOrElse(0), c.size)
+            }
         })
         .toList
+
+      val chunks = Await.result(Future.sequence(futures), Duration.Inf)
 
       chunks.collect { case Failure(ex) => Failure(ex) } match {
         case Nil =>
