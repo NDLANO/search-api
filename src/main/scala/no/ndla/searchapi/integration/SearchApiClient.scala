@@ -59,7 +59,7 @@ trait SearchApiClient {
         "page-size" -> pageSize
       )
 
-      get[DomainDumpResults[T]](dumpDomainPath, params, timeout = 20000) match {
+      get[DomainDumpResults[T]](dumpDomainPath, params, timeout = 120000) match {
         case Success(result) =>
           logger.info(s"Fetched chunk of ${result.results.size} $name from ${baseUrl.addParams(params)}")
           Success(result)
