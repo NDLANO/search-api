@@ -73,7 +73,7 @@ trait TaxonomyApiClient {
 
     val getTaxonomyBundle: Memoize[Try[TaxonomyBundle]] = Memoize(_getTaxonomyBundle)
 
-    def _getTaxonomyBundle(): Try[TaxonomyBundle] = {
+    private def _getTaxonomyBundle(): Try[TaxonomyBundle] = {
       logger.info("Fetching taxonomy in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(12))

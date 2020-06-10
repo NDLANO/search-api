@@ -42,7 +42,7 @@ trait GrepApiClient {
 
     val getGrepBundle: Memoize[Try[GrepBundle]] = Memoize(_getGrepBundle)
 
-    def _getGrepBundle(): Try[GrepBundle] = {
+    private def _getGrepBundle(): Try[GrepBundle] = {
       logger.info("Fetching grep in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(3))
