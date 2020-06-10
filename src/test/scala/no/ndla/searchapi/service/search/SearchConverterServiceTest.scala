@@ -100,7 +100,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) =>
       invocation.getArgument[Article](0))
 
-    when(taxonomyApiClient.getTaxonomyBundle).thenReturn(Success(emptyBundle))
+    when(taxonomyApiClient.getTaxonomyBundle()).thenReturn(Success(emptyBundle))
   }
 
   test("That asSearchableArticle converts titles with correct language") {

@@ -137,8 +137,8 @@ trait InternController {
     post("/index") {
       val runInBackground = booleanOrDefault("run-in-background", default = false)
       val bundles = for {
-        taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle
-        grepBundle <- grepApiClient.getGrepBundle
+        taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle()
+        grepBundle <- grepApiClient.getGrepBundle()
       } yield (taxonomyBundle, grepBundle)
       bundles match {
         case Failure(ex) => errorHandler(ex)

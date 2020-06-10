@@ -47,23 +47,42 @@ abstract class NdlaController extends ScalatraServlet with NativeJsonSupport wit
       new EnumNameSerializer(LearningResourceType) ++
       org.json4s.ext.JodaTimeSerializers.all
 
+  private val currentTimeBeforeRequest = new ThreadLocal[Long]
+
   before() {
+    currentTimeBeforeRequest.set(System.currentTimeMillis())
     contentType = formats("json")
     CorrelationID.set(Option(request.getHeader(CorrelationIdHeader)))
     ThreadContext.put(CorrelationIdKey, CorrelationID.get.getOrElse(""))
     ApplicationUrl.set(request)
     AuthUser.set(request)
-    logger.info("{} {}{}",
-                request.getMethod,
-                request.getRequestURI,
-                Option(request.getQueryString).map(s => s"?$s").getOrElse(""))
+
+    logger.info(
+      "{} {}{}",
+      request.getMethod,
+      request.getRequestURI,
+      Option(request.getQueryString).map(s => s"?$s").getOrElse("")
+    )
   }
 
   after() {
+    logger.info(
+      "{} {}{} in {} with code {}",
+      request.getMethod,
+      request.getRequestURI,
+      Option(request.getQueryString).map(s => s"?$s").getOrElse(""),
+      Option(currentTimeBeforeRequest.get())
+        .map(ct => System.currentTimeMillis() - ct)
+        .map(s => s" in ${s}ms")
+        .getOrElse(""),
+      response.getStatus
+    )
+
     CorrelationID.clear()
     ThreadContext.remove(CorrelationIdKey)
     AuthUser.clear()
     ApplicationUrl.clear
+    currentTimeBeforeRequest.remove()
   }
 
   error {
