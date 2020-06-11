@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties.ApiGatewayUrl
+import no.ndla.searchapi.caching.Memoize
 import no.ndla.searchapi.model.api.TaxonomyException
 import no.ndla.searchapi.model.domain.RequestInfo
 import no.ndla.searchapi.model.taxonomy._
@@ -70,7 +71,10 @@ trait TaxonomyApiClient {
     def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
       get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/").map(_.distinct)
 
-    def getTaxonomyBundle: Try[TaxonomyBundle] = {
+    val getTaxonomyBundle: Memoize[Try[TaxonomyBundle]] = Memoize(getTaxonomyBundleUncached _)
+
+    /** The memoized function of this [[getTaxonomyBundle]] should probably be used in most cases */
+    private def getTaxonomyBundleUncached: Try[TaxonomyBundle] = {
       logger.info("Fetching taxonomy in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(12))

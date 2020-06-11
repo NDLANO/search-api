@@ -7,6 +7,7 @@
 
 package no.ndla.searchapi.service.search
 
+import no.ndla.searchapi.caching.Memoize
 import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
 import no.ndla.searchapi.model.grep.{GrepElement, GrepTitle}
@@ -22,7 +23,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 
-import scala.util.Success
+import scala.util.{Success, Try}
 
 class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
@@ -100,7 +101,8 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) =>
       invocation.getArgument[Article](0))
 
-    when(taxonomyApiClient.getTaxonomyBundle).thenReturn(Success(emptyBundle))
+    when(taxonomyApiClient.getTaxonomyBundle)
+      .thenReturn(new Memoize[Try[TaxonomyBundle]](0, () => Success(emptyBundle)))
   }
 
   test("That asSearchableArticle converts titles with correct language") {

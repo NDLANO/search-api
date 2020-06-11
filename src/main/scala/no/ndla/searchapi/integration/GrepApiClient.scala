@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.SearchApiProperties.GrepApiUrl
+import no.ndla.searchapi.caching.Memoize
 import no.ndla.searchapi.model.api.GrepException
 import no.ndla.searchapi.model.domain.RequestInfo
 import no.ndla.searchapi.model.grep._
@@ -39,7 +40,10 @@ trait GrepApiClient {
     def getAllTverrfagligeTemaer: Try[List[GrepElement]] =
       get[List[GrepElement]](s"$GrepApiEndpoint/tverrfaglige-temaer-lk20/").map(_.distinct)
 
-    def getGrepBundle: Try[GrepBundle] = {
+    val getGrepBundle: Memoize[Try[GrepBundle]] = Memoize(getGrepBundleUncached _)
+
+    /** The memoized function of this [[getGrepBundle]] should probably be used in most cases */
+    private def getGrepBundleUncached: Try[GrepBundle] = {
       logger.info("Fetching grep in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(3))
