@@ -71,9 +71,10 @@ trait TaxonomyApiClient {
     def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
       get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/").map(_.distinct)
 
-    val getTaxonomyBundle: Memoize[Try[TaxonomyBundle]] = Memoize(_getTaxonomyBundle)
+    val getTaxonomyBundle: Memoize[Try[TaxonomyBundle]] = Memoize(getTaxonomyBundleUncached _)
 
-    private def _getTaxonomyBundle(): Try[TaxonomyBundle] = {
+    /** The memoized function of this [[getTaxonomyBundle]] should probably be used in most cases */
+    private def getTaxonomyBundleUncached: Try[TaxonomyBundle] = {
       logger.info("Fetching taxonomy in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(12))

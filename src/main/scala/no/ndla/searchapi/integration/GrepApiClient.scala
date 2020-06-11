@@ -40,9 +40,10 @@ trait GrepApiClient {
     def getAllTverrfagligeTemaer: Try[List[GrepElement]] =
       get[List[GrepElement]](s"$GrepApiEndpoint/tverrfaglige-temaer-lk20/").map(_.distinct)
 
-    val getGrepBundle: Memoize[Try[GrepBundle]] = Memoize(_getGrepBundle)
+    val getGrepBundle: Memoize[Try[GrepBundle]] = Memoize(getGrepBundleUncached _)
 
-    private def _getGrepBundle(): Try[GrepBundle] = {
+    /** The memoized function of this [[getGrepBundle]] should probably be used in most cases */
+    private def getGrepBundleUncached: Try[GrepBundle] = {
       logger.info("Fetching grep in bulk...")
       val startFetch = System.currentTimeMillis()
       implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(3))
