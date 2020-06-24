@@ -72,6 +72,7 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
         today,
         today,
         "ndalId54321",
+        today,
         LearningResourceType.Article,
         grepCodes = Seq()
       )
