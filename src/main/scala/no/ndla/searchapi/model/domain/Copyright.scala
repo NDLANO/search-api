@@ -1,13 +1,12 @@
 /*
- * Part of NDLA search_api.
+ * Part of NDLA search-api.
  * Copyright (C) 2018 NDLA
  *
  * See LICENSE
  */
 
-package no.ndla.searchapi.model.domain.draft
+package no.ndla.searchapi.model.domain
 
-import no.ndla.searchapi.model.domain.Author
 import org.joda.time.DateTime
 
 case class Copyright(

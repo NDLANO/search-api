@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.domain.learningpath
 
-import no.ndla.searchapi.model.domain.{Content, Tag, Title}
+import no.ndla.searchapi.model.domain.{ContentWithId, Tag, Title}
 import org.joda.time.DateTime
 
 case class LearningPath(id: Option[Long],
@@ -25,7 +25,7 @@ case class LearningPath(id: Option[Long],
                         owner: String,
                         copyright: Copyright,
                         learningsteps: List[LearningStep] = Nil)
-    extends Content
+    extends ContentWithId
 
 object LearningPathStatus extends Enumeration {
   val PUBLISHED, PRIVATE, DELETED, SUBMITTED, UNLISTED = Value

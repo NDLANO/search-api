@@ -7,9 +7,10 @@
 
 package no.ndla.searchapi.model.search
 
-import no.ndla.searchapi.model.domain.article.{ArticleMetaImage, LearningResourceType}
+import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
+import no.ndla.searchapi.model.domain.MetaImage
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import org.json4s.Formats
 import org.json4s.native.Serialization.{read, write}
@@ -46,7 +47,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("Mum", "Car", "Wroom"))
       ))
 
-    val metaImages = List(ArticleMetaImage("1", "norAlt", "nb"), ArticleMetaImage("2", "enAlt", "en"))
+    val metaImages = List(MetaImage("1", "norAlt", "nb"), MetaImage("2", "enAlt", "en"))
 
     val original = SearchableDraft(
       id = 100,

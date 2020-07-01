@@ -10,16 +10,10 @@ package no.ndla.searchapi.integration
 import no.ndla.network.AuthUser
 import no.ndla.searchapi.model.api.MetaImage
 import no.ndla.searchapi.model.domain
-import no.ndla.searchapi.model.domain.article.{
-  ArticleContent,
-  ArticleMetaImage,
-  Copyright,
-  LearningResourceType,
-  MetaDescription
-}
+import no.ndla.searchapi.model.domain.article.{Copyright, LearningResourceType, MetaDescription}
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
-import no.ndla.searchapi.model.domain.{DomainDumpResults, Tag, Title}
+import no.ndla.searchapi.model.domain.{Content, DomainDumpResults, MetaImage, Tag, Title}
 import no.ndla.searchapi.model.search.LanguageValue
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.joda.time.DateTime
@@ -61,14 +55,14 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
         Option(2),
         None,
         Seq(Title("title", "nb")),
-        Seq(ArticleContent("content", "nb")),
+        Seq(Content("content", "nb")),
         Copyright("CC-BY-4.0", "", Seq(), Seq(), Seq(), None, None, None),
         Seq(Tag(Seq("tag"), "nb")),
         Seq(),
         Seq(),
         Seq(),
         Seq(MetaDescription("meta description", "nb")),
-        Seq(ArticleMetaImage("11", "alt", "nb")),
+        Seq(MetaImage("11", "alt", "nb")),
         today,
         today,
         "ndalId54321",

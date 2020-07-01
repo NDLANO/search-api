@@ -7,4 +7,4 @@
 
 package no.ndla.searchapi.model.domain
 
-case class Content(content: String, language: String) extends LanguageField
+case class MetaImage(imageId: String, altText: String, language: String) extends LanguageField

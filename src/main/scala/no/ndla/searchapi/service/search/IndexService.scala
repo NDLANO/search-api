@@ -27,7 +27,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
-import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
+import no.ndla.searchapi.model.domain.{ContentWithId, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 
@@ -38,7 +38,7 @@ import scala.util.{Failure, Success, Try}
 trait IndexService {
   this: Elastic4sClient with SearchApiClient with TaxonomyApiClient with GrepApiClient =>
 
-  trait IndexService[D <: Content] extends LazyLogging {
+  trait IndexService[D <: ContentWithId] extends LazyLogging {
     val apiClient: SearchApiClient
     val documentType: String
     val searchIndex: String

@@ -10,12 +10,12 @@ package no.ndla.searchapi.integration
 import no.ndla.network.AuthUser
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article._
-import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
 import no.ndla.searchapi.model.domain.{DomainDumpResults, Language, Tag, Title}
 import no.ndla.searchapi.model.search.LanguageValue
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.mapping.License.CC_BY
+import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import org.joda.time.DateTime
 import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer

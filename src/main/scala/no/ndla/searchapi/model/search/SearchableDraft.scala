@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.model.search
 
-import no.ndla.searchapi.model.domain.article.ArticleMetaImage
+import no.ndla.searchapi.model.domain.MetaImage
 import org.joda.time.DateTime
 
 case class SearchableDraft(
@@ -22,7 +22,7 @@ case class SearchableDraft(
     license: Option[String],
     authors: List[String],
     articleType: String,
-    metaImage: List[ArticleMetaImage],
+    metaImage: List[MetaImage],
     defaultTitle: Option[String],
     supportedLanguages: List[String],
     notes: List[String],

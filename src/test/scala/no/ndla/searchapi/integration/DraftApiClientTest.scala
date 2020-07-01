@@ -12,10 +12,10 @@ import java.util.Date
 import no.ndla.network.AuthUser
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.model.domain
-import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Copyright}
 import no.ndla.mapping.License.CC_BY
-import no.ndla.searchapi.model.domain.DomainDumpResults
+import no.ndla.searchapi.model.domain.{Content, Copyright, DomainDumpResults}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Status}
 import no.ndla.searchapi.model.domain.learningpath.{
   EmbedType,
   LearningPathStatus,
@@ -63,9 +63,9 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
       val draft = domain.draft.Draft(
         Some(1),
         None,
-        domain.draft.Status(domain.draft.ArticleStatus.DRAFT, Set.empty),
+        Status(ArticleStatus.DRAFT, Set.empty),
         Seq(domain.Title("title", "nb")),
-        Seq(domain.article.ArticleContent("content", "nb")),
+        Seq(Content("content", "nb")),
         Some(
           Copyright(
             Some(CC_BY.toString),

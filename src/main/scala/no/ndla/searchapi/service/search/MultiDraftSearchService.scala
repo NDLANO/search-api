@@ -183,7 +183,7 @@ trait MultiDraftSearchService {
       ).flatten
     }
 
-    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value]): Some[BoolQuery] = {
+    private def draftStatusFilter(statuses: Seq[ArticleStatus.Value]): Some[BoolQuery] = {
       val draftStatuses = Seq("draftStatus.current", "draftStatus.other")
       if (statuses.isEmpty) {
         Some(

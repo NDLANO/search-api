@@ -8,8 +8,8 @@
 package no.ndla.searchapi.service.search
 
 import no.ndla.searchapi.caching.Memoize
-import no.ndla.searchapi.model.domain.{Tag, Title}
-import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
+import no.ndla.searchapi.model.domain.{Content, Tag, Title}
+import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.grep.{GrepElement, GrepTitle}
 import no.ndla.searchapi.model.search.{
   SearchableArticle,
@@ -41,13 +41,13 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   )
 
   val articles = Seq(
-    ArticleContent("Bokmål artikkel", "nb"),
-    ArticleContent("Nynorsk artikkel", "nn"),
-    ArticleContent("English article", "en"),
-    ArticleContent("Francais article", "fr"),
-    ArticleContent("Deutsch Artikel", "de"),
-    ArticleContent("Articulo espanol", "es"),
-    ArticleContent("Nekonata artikolo", "unknown")
+    Content("Bokmål artikkel", "nb"),
+    Content("Nynorsk artikkel", "nn"),
+    Content("English article", "en"),
+    Content("Francais article", "fr"),
+    Content("Deutsch Artikel", "de"),
+    Content("Articulo espanol", "es"),
+    Content("Nekonata artikolo", "unknown")
   )
 
   val articleTags = Seq(
@@ -440,7 +440,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     titles.find(_.language == lang).get.title
   }
 
-  private def articleForLang(articles: Seq[ArticleContent], lang: String = "unknown"): String = {
+  private def articleForLang(articles: Seq[Content], lang: String = "unknown"): String = {
     articles.find(_.language == lang).get.content
   }
 
