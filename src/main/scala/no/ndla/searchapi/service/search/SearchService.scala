@@ -210,5 +210,26 @@ trait SearchService {
       }
     }
 
+    /** Takes in a string and returns strins with removed whitespaces
+      * Example: "helse søster hjelp" would return Seq("helsesøster hjelp", "helse søsterhjelp")
+      * Used to search for misspelled compound words (Its hard to determine which words to combine so we combine all of them).
+      */
+    protected def generateQueryStringsWithRemovedWhitespaces(qs: String): Seq[String] = {
+      if (qs.contains(" ")) {
+        val trimmed = qs.trim()
+        val numSpaces = trimmed.count(_ == ' ')
+
+        (0 until numSpaces)
+          .foldLeft((0, Seq.empty[String])) {
+            case (acc, _) => {
+              val lastIdx = acc._1
+              val idxToReplace = trimmed.indexOf(" ", lastIdx + 1)
+              (idxToReplace, acc._2 :+ trimmed.patch(idxToReplace, "", 1))
+            }
+          }
+          ._2
+      } else { Seq.empty }
+    }
+
   }
 }

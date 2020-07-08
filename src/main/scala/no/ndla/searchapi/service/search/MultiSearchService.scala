@@ -39,29 +39,37 @@ trait MultiSearchService {
   class MultiSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
 
+    private def getTextQueries(q: String, searchLanguage: String) = {
+      val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 6)
+      val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
+      val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
+      val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
+      val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
+      val authorSearch = simpleStringQuery(q).field("authors", 1)
+
+      Seq(
+        titleSearch,
+        introSearch,
+        metaSearch,
+        contentSearch,
+        tagSearch,
+        authorSearch
+      )
+    }
+
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val fullQuery = settings.query match {
         case Some(q) =>
           val searchLanguage =
             if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 6)
-          val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
-          val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
-          val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
-          val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
-          val authorSearch = simpleStringQuery(q).field("authors", 1)
+
+          val withWhitespace = getTextQueries(q, searchLanguage)
 
           boolQuery()
             .must(
-              boolQuery()
-                .should(
-                  titleSearch,
-                  introSearch,
-                  metaSearch,
-                  contentSearch,
-                  tagSearch,
-                  authorSearch
-                )
+              boolQuery().should(
+                withWhitespace ++ generateQueryStringsWithRemovedWhitespaces(q)
+                  .flatMap(s => getTextQueries(s, searchLanguage)))
             )
         case None =>
           boolQuery()

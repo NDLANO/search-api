@@ -570,6 +570,15 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
   }
 
+  test("Search with whitespace matches resources with compound words") {
+    val Success(search) = multiSearchService.matchingQuery(
+      searchSettings.copy(query = Some("midgaards ormen"))
+    )
+
+    search.results.head.id should be(6)
+    search.totalCount should be(1)
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

@@ -720,6 +720,15 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.suggestions.head.suggestions.head.text should equal("bil")
   }
 
+  test("Search with whitespace matches resources with compound words") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("midgaards ormen"))
+    )
+
+    search.results.head.id should be(6)
+    search.totalCount should be(1)
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

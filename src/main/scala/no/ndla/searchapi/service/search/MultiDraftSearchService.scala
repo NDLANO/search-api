@@ -10,7 +10,7 @@ package no.ndla.searchapi.service.search
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query, SimpleStringQuery}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
@@ -41,36 +41,45 @@ trait MultiDraftSearchService {
 
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
 
+    private def getTextQueries(q: String, searchLanguage: String): Seq[SimpleStringQuery] = {
+      val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 3)
+      val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
+      val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
+      val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
+      val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
+      val authorSearch = simpleStringQuery(q).field("authors", 1)
+      val notesSearch = simpleStringQuery(q).field("notes", 1)
+      val previousNotesSearch = simpleStringQuery(q).field("previousVersionsNotes", 1)
+      val grepCodesTitleSearch = simpleStringQuery(q).field("grepContexts.title", 1)
+
+      Seq(
+        titleSearch,
+        introSearch,
+        metaSearch,
+        contentSearch,
+        tagSearch,
+        authorSearch,
+        notesSearch,
+        previousNotesSearch,
+        grepCodesTitleSearch
+      )
+    }
+
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
       val searchLanguage =
         if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
 
-      val contentSearch = settings.query.map(q => {
-        val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 3)
-        val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
-        val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
-        val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
-        val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
-        val authorSearch = simpleStringQuery(q).field("authors", 1)
-        val notesSearch = simpleStringQuery(q).field("notes", 1)
-        val previousNotesSearch = simpleStringQuery(q).field("previousVersionsNotes", 1)
-        val grepCodesTitleSearch = simpleStringQuery(q).field("grepContexts.title", 1)
+      val contentBoolQuery = settings.query.map(q => {
+        val withWhitespace = getTextQueries(q, searchLanguage)
 
-        boolQuery()
-          .should(
-            titleSearch,
-            introSearch,
-            metaSearch,
-            contentSearch,
-            tagSearch,
-            authorSearch,
-            notesSearch,
-            previousNotesSearch,
-            grepCodesTitleSearch,
-          )
+        boolQuery().should(
+          withWhitespace ++
+            generateQueryStringsWithRemovedWhitespaces(q)
+              .flatMap(s => getTextQueries(s, searchLanguage))
+        )
       })
 
-      val noteSearch = settings.noteQuery.map(q => {
+      val noteBoolQuery = settings.noteQuery.map(q => {
         boolQuery()
           .should(
             simpleStringQuery(q).field("notes", 1),
@@ -78,7 +87,7 @@ trait MultiDraftSearchService {
           )
       })
 
-      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
+      val boolQueries: List[BoolQuery] = List(contentBoolQuery, noteBoolQuery).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)
