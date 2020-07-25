@@ -11,6 +11,7 @@ object SearchType extends Enumeration {
   val Articles: SearchType.Value = Value("article")
   val Drafts: SearchType.Value = Value("draft")
   val LearningPaths: SearchType.Value = Value("learningpath")
+  val Concepts: SearchType.Value = Value("concept")
 
   def all: List[String] = SearchType.values.map(_.toString).toList
 

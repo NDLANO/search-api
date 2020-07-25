@@ -15,8 +15,15 @@ import no.ndla.searchapi.model.api.InvalidIndexBodyException
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.domain.learningpath._
+import no.ndla.searchapi.model.domain.concept.Concept
 import no.ndla.searchapi.model.domain.{ReindexResult, RequestInfo}
-import no.ndla.searchapi.service.search.{ArticleIndexService, DraftIndexService, IndexService, LearningPathIndexService}
+import no.ndla.searchapi.service.search.{
+  ArticleIndexService,
+  DraftIndexService,
+  IndexService,
+  LearningPathIndexService,
+  ConceptIndexService
+}
 import org.scalatra._
 
 import scala.concurrent._
@@ -94,6 +101,8 @@ trait InternController {
           parseBody[Draft](request.body).flatMap(d => draftIndexService.indexDocument(d))
         case learningPathIndexService.documentType =>
           parseBody[LearningPath](request.body).flatMap(l => learningPathIndexService.indexDocument(l))
+        case conceptIndexService.documentType =>
+          parseBody[Concept](request.body).flatMap(c => conceptIndexService.indexDocument(c))
       }
 
       indexedTry match {

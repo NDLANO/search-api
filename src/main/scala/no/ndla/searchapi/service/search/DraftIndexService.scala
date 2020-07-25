@@ -12,7 +12,7 @@ import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.MappingDefinition
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyApiClient}
+import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}

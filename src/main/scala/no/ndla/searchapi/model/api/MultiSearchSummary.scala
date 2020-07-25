@@ -24,3 +24,6 @@ case class MultiSearchSummary(
       "Learning resource type, either 'standard', 'topic-article' or 'learningpath'") learningResourceType: String,
     @(ApiModelProperty @field)(description = "Status information of the resource") status: Option[Status]
 )
+
+// TODO: TIlpasse MultiSearchSummary for ConceptIndexService
+// med mindre det skal gjøres på en annen måte?

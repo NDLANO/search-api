@@ -44,13 +44,15 @@ object SearchApiProperties extends LazyLogging {
   val SearchIndexes: Map[SearchType.Value, String] = Map(
     SearchType.Articles -> propOrElse("ARTICLE_SEARCH_INDEX_NAME", "articles"),
     SearchType.Drafts -> propOrElse("DRAFT_SEARCH_INDEX_NAME", "drafts"),
-    SearchType.LearningPaths -> propOrElse("LEARNINGPATH_SEARCH_INDEX_NAME", "learningpaths")
+    SearchType.LearningPaths -> propOrElse("LEARNINGPATH_SEARCH_INDEX_NAME", "learningpaths"),
+    SearchType.Concepts -> propOrElse("CONCEPT_SEARCH_INDEX_NAME", "concepts")
   )
 
   val SearchDocuments: Map[SearchType.Value, String] = Map(
     SearchType.Articles -> "article",
     SearchType.Drafts -> "draft",
-    SearchType.LearningPaths -> "learningpath"
+    SearchType.LearningPaths -> "learningpath",
+    SearchType.Concepts -> "concept",
   )
 
   val DefaultPageSize = 10

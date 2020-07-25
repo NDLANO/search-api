@@ -58,6 +58,9 @@ trait IndexService {
                            grepBundle: GrepBundle): Try[IndexRequest]
 
     def indexDocument(imported: D): Try[D] = {
+      imported match {
+        case conceptIndexService.documentType =>
+      }
       val bundles = for {
         taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle()
         grepBundle <- grepApiClient.getGrepBundle()
