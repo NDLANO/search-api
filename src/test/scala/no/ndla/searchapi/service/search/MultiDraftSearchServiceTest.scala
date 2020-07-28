@@ -715,9 +715,11 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
         .copy(query = Some("bil"), language = Language.AllLanguages, sort = Sort.ByRelevanceDesc))
 
     search.totalCount should equal(3)
-    search.suggestions.length should equal(1)
-    search.suggestions.head.name should be("title")
+    search.suggestions.length should equal(2)
+    search.suggestions.head.name should be("content")
     search.suggestions.head.suggestions.head.text should equal("bil")
+    search.suggestions.last.name should be("title")
+    search.suggestions.last.suggestions.head.text should equal("bil")
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {
