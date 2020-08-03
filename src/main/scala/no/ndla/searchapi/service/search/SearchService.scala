@@ -76,7 +76,8 @@ trait SearchService {
           val searchLanguage =
             if (language == Language.AllLanguages || fallback) "nb" else language
           Seq(
-            suggestion(q, "title", searchLanguage) // TODO suggest on more fields?
+            suggestion(q, "title", searchLanguage),
+            suggestion(q, "content", searchLanguage)
           )
         })
         .getOrElse(Seq.empty)

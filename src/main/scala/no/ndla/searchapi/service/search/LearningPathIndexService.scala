@@ -78,6 +78,7 @@ trait LearningPathIndexService {
           getTaxonomyContextMapping
         ) ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
+          generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("description") ++
           generateLanguageSupportedFieldList("tags", keepRaw = true)
       )
