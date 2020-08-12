@@ -177,9 +177,9 @@ trait SearchController {
       "/group/",
       operation(
         apiOperation[Seq[GroupSearchResult]]("groupSearch")
-          summary "Search across multiple groups of learning resources"
-          description "Search across multiple groups of learning resources"
-          parameters (
+          .summary("Search across multiple groups of learning resources")
+          .description("Search across multiple groups of learning resources")
+          .parameters(
             asHeaderParam(correlationId),
             asQueryParam(query),
             asQueryParam(groupTypes),
@@ -195,8 +195,8 @@ trait SearchController {
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters)
-        )
-          responseMessages response500)
+          )
+          .responseMessages(response500))
     ) {
       val page = intOrDefault(this.pageNo.paramName, 1)
       val pageSize = intOrDefault(this.pageSize.paramName, SearchApiProperties.DefaultPageSize)
@@ -285,9 +285,9 @@ trait SearchController {
       "/draft/",
       operation(
         apiOperation[Seq[SearchResults]]("searchAPIs")
-          summary "search across APIs"
-          description "search across APIs"
-          parameters (
+          .summary("search across APIs")
+          .description("search across APIs")
+          .parameters(
             asHeaderParam(correlationId),
             asQueryParam(query),
             asQueryParam(language),
@@ -295,8 +295,8 @@ trait SearchController {
             asQueryParam(pageSize),
             asQueryParam(apiTypes),
             asQueryParam(sort)
-        )
-          responseMessages response500)
+          )
+          .responseMessages(response500))
     ) {
       val language = paramOrNone(this.language.paramName)
       val sort = Sort.valueOf(paramOrDefault(this.sort.paramName, "-relevance")).getOrElse(Sort.ByRelevanceDesc)
@@ -429,9 +429,9 @@ trait SearchController {
       "/",
       operation(
         apiOperation[MultiSearchResult]("searchLearningResources")
-          summary "Find learning resources"
-          description "Shows all learning resources. You can search too."
-          parameters (
+          .summary("Find learning resources")
+          .description("Shows all learning resources. You can search too.")
+          .parameters(
             asHeaderParam(correlationId),
             asQueryParam(pageNo),
             asQueryParam(pageSize),
@@ -449,8 +449,8 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
             asQueryParam(scrollId)
-        )
-          responseMessages response500)
+          )
+          .responseMessages(response500))
     ) {
       scrollWithOr(multiSearchService) {
         multiSearchService.matchingQuery(getSearchSettingsFromRequest) match {
@@ -466,9 +466,9 @@ trait SearchController {
       "/editorial/",
       operation(
         apiOperation[MultiSearchResult]("searchDraftLearningResources")
-          summary "Find draft learning resources"
-          description "Shows all draft learning resources. You can search too."
-          parameters (
+          .summary("Find draft learning resources")
+          .description("Shows all draft learning resources. You can search too.")
+          .parameters(
             asHeaderParam(correlationId),
             asQueryParam(pageNo),
             asQueryParam(pageSize),
@@ -489,8 +489,8 @@ trait SearchController {
             asQueryParam(statusFilter),
             asQueryParam(userFilter),
             asQueryParam(grepCodes),
-        )
-          responseMessages response500)
+          )
+          .responseMessages(response500))
     ) {
       if (!user.getUser.roles.contains(Role.DRAFTWRITE)) {
         errorHandler(AccessDeniedException("You do not have access to the requested resource."))

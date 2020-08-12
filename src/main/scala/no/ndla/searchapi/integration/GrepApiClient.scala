@@ -40,7 +40,7 @@ trait GrepApiClient {
     def getAllTverrfagligeTemaer: Try[List[GrepElement]] =
       get[List[GrepElement]](s"$GrepApiEndpoint/tverrfaglige-temaer-lk20/").map(_.distinct)
 
-    val getGrepBundle: Memoize[Try[GrepBundle]] = Memoize(getGrepBundleUncached _)
+    val getGrepBundle: Memoize[Try[GrepBundle]] = Memoize(() => getGrepBundleUncached)
 
     /** The memoized function of this [[getGrepBundle]] should probably be used in most cases */
     private def getGrepBundleUncached: Try[GrepBundle] = {
@@ -53,9 +53,9 @@ trait GrepApiClient {
       /** Calls function in separate thread and converts Try to Future */
       def tryToFuture[T](x: () => Try[T]) = Future { requestInfo.setRequestInfo(); x() }.flatMap(Future.fromTry)
 
-      val kjerneelementer = tryToFuture(getAllKjerneelementer _)
-      val kompetansemaal = tryToFuture(getAllKompetansemaal _)
-      val tverrfagligeTemaer = tryToFuture(getAllTverrfagligeTemaer _)
+      val kjerneelementer = tryToFuture(() => getAllKjerneelementer)
+      val kompetansemaal = tryToFuture(() => getAllKompetansemaal)
+      val tverrfagligeTemaer = tryToFuture(() => getAllTverrfagligeTemaer)
 
       val x = for {
         f1 <- kjerneelementer

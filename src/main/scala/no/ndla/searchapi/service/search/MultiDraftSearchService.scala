@@ -187,11 +187,11 @@ trait MultiDraftSearchService {
       val draftStatuses = Seq("draftStatus.current", "draftStatus.other")
       if (statuses.isEmpty) {
         Some(
-          boolQuery.not(termQuery("draftStatus.current", ArticleStatus.ARCHIVED.toString))
+          boolQuery().not(termQuery("draftStatus.current", ArticleStatus.ARCHIVED.toString))
         )
       } else {
         Some(
-          boolQuery.should(draftStatuses.flatMap(ds => statuses.map(s => termQuery(ds, s.toString))))
+          boolQuery().should(draftStatuses.flatMap(ds => statuses.map(s => termQuery(ds, s.toString))))
         )
       }
     }
@@ -200,7 +200,7 @@ trait MultiDraftSearchService {
       if (users.isEmpty) None
       else
         Some(
-          boolQuery.should(users.map(simpleStringQuery(_).field("users", 1)))
+          boolQuery().should(users.map(simpleStringQuery(_).field("users", 1)))
         )
 
     override def scheduleIndexDocuments(): Unit = {

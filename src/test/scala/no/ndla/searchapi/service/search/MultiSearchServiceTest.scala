@@ -35,7 +35,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
-  override def beforeAll: Unit = if (elasticSearchContainer.isSuccess) {
+  override def beforeAll(): Unit = if (elasticSearchContainer.isSuccess) {
     articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
     draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
