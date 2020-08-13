@@ -11,6 +11,7 @@ import java.lang.Math.max
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
+import com.sksamuel.elastic4s.searches.queries.SimpleStringQuery
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
@@ -50,6 +51,27 @@ trait SearchService {
           searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
         case `learningPathType` =>
           searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+      }
+    }
+
+    def buildSimpleStringQueryForField(
+        query: String,
+        field: String,
+        boost: Int,
+        language: String,
+        fallback: Boolean
+    ): SimpleStringQuery = {
+      if (language == Language.AllLanguages || fallback) {
+        Language.languageAnalyzers.foldLeft(simpleStringQuery(query))(
+          (acc, cur) =>
+            acc
+              .field(s"$field.${cur.lang}", boost)
+              .field(s"$field.${cur.lang}.compound")
+        )
+      } else {
+        simpleStringQuery(query)
+          .field(s"$field.$language", boost)
+          .field(s"$field.$language.compound")
       }
     }
 

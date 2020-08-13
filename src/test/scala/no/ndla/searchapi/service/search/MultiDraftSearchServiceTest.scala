@@ -722,6 +722,20 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.suggestions.last.suggestions.head.text should equal("bil")
   }
 
+  test("That compound words are matched when searched wrongly") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = Language.AllLanguages))
+
+    search1.totalCount should be(1)
+    search1.results.map(_.id) should be(Seq(13))
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb"))
+
+    search2.totalCount should be(1)
+    search2.results.map(_.id) should be(Seq(13))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

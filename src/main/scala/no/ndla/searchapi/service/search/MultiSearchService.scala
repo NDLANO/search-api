@@ -42,27 +42,19 @@ trait MultiSearchService {
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val fullQuery = settings.query match {
         case Some(q) =>
-          val searchLanguage =
-            if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
-          val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 6)
-          val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
-          val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
-          val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
-          val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
-          val authorSearch = simpleStringQuery(q).field("authors", 1)
+          val langQueryFunc = (fieldName: String, boost: Int) => {
+            buildSimpleStringQueryForField(q, fieldName, boost, settings.language, settings.fallback)
+          }
 
-          boolQuery()
-            .must(
-              boolQuery()
-                .should(
-                  titleSearch,
-                  introSearch,
-                  metaSearch,
-                  contentSearch,
-                  tagSearch,
-                  authorSearch
-                )
-            )
+          boolQuery().must(
+            boolQuery().should(
+              langQueryFunc("title", 6),
+              langQueryFunc("introduction", 2),
+              langQueryFunc("metaDescription", 1),
+              langQueryFunc("content", 1),
+              langQueryFunc("tags", 1),
+              simpleStringQuery(q).field("authors", 1)
+            ))
         case None =>
           boolQuery()
       }

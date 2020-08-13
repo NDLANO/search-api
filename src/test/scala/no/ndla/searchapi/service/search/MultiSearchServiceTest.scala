@@ -570,6 +570,20 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
   }
 
+  test("That compound words are matched when searched wrongly") {
+    val Success(search1) = multiSearchService.matchingQuery(
+      searchSettings.copy(query = Some("Helse søster"), language = Language.AllLanguages))
+
+    search1.totalCount should be(1)
+    search1.results.map(_.id) should be(Seq(12))
+
+    val Success(search2) =
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("Helse søster"), language = "nb"))
+
+    search2.totalCount should be(1)
+    search2.results.map(_.id) should be(Seq(12))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

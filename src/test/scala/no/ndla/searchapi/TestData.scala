@@ -363,7 +363,7 @@ object TestData {
   val article12: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(12),
     title = List(Title("Ekstrastoff", "nb")),
-    content = List(ArticleContent("", "nb")),
+    content = List(ArticleContent("Helsesøster", "nb")),
     tags = List(Tag(List(""), "nb")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
@@ -666,7 +666,7 @@ object TestData {
     title = List(Title("Luringen", "nb")),
     introduction = List(ArticleIntroduction("Luringen", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
-    content = List(ArticleContent("", "nb")),
+    content = List(ArticleContent("Helsesøster", "nb")),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),
