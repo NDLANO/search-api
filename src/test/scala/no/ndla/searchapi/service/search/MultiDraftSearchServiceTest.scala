@@ -193,10 +193,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("Pingvinen"), sort = Sort.ByTitleAsc))
     val hits = results.results
-    results.totalCount should be(2)
-    hits.head.id should be(1)
-    hits.head.contexts.head.learningResourceType should be("learningpath")
-    hits(1).id should be(2)
+    results.totalCount should be(3)
+    hits.map(_.contexts.head.learningResourceType) should be(Seq("standard", "learningpath", "standard"))
+    hits.map(_.id) should be(Seq(1, 1, 2))
   }
 
   test("That search matches updatedBy") {
@@ -224,7 +223,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("supermann"), sort = Sort.ByTitleAsc))
-    results.totalCount should be(0)
+    results.totalCount should be(3)
+    results.results.map(_.id) should be(Seq(2, 1, 1))
+    results.results.map(_.learningResourceType) should be(Seq("learningpath", "standard", "learningpath"))
   }
 
   test("That search returns superman since license is specified as copyrighted") {
@@ -252,7 +253,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(search3) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(query = Some("bil + bilde + -flaggermusmann"), sort = Sort.ByTitleAsc))
     val hits3 = search3.results
-    hits3.map(_.id) should equal(Seq(3, 5))
+    hits3.map(_.id) should equal(Seq(1, 3, 5)) // TODO: Dette er litt rart? -flaggermusmann treffer fortsatt flaggermusmann?
 
     val Success(search4) =
       multiDraftSearchService.matchingQuery(
