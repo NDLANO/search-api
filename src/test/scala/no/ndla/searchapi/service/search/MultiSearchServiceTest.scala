@@ -235,17 +235,19 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val hits2 = search2.results
     hits2.map(_.id) should equal(Seq(1))
 
+  }
+
+  test("Searching with NOT returns expected results") {
     println(elasticSearchHost.getOrElse(""))
-
-    val Success(search3) = multiSearchService.matchingQuery(
+    val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(Some("bil + bilde + -flaggermusmann"), sort = Sort.ByTitleAsc))
-    val hits3 = search3.results
-    hits3.map(_.id) should equal(Seq(1, 3, 5)) // TODO: Dette er litt rart? -flaggermusmann treffer fortsatt flaggermusmann?
+    // 1 is matched even if flaggermusmann exists in the document because the decompounded field does not contain flaggermusmann and causes a match
+    // This is unwanted, but as of now i can not see a workaround
+    search1.results.map(_.id) should equal(Seq(1, 3, 5))
 
-    val Success(search4) =
+    val Success(search2) =
       multiSearchService.matchingQuery(searchSettings.copy(Some("bil + -hulken"), sort = Sort.ByTitleAsc))
-    val hits4 = search4.results
-    hits4.map(_.id) should equal(Seq(1, 3))
+    search2.results.map(_.id) should equal(Seq(1, 3))
   }
 
   test("search in content should be ranked lower than introduction and title") {

@@ -389,7 +389,7 @@ trait IndexService {
 
       val sf = List(
         textField("trigram").analyzer("trigram"),
-        textField("compound").analyzer("compound_analyzer")
+        textField("decompounded").analyzer("compound_analyzer")
       )
 
       val subFields = if (keepRaw) sf :+ keywordField("raw") else sf
@@ -407,10 +407,7 @@ trait IndexService {
           textField(s"$fieldName.${langAnalyzer.lang}")
             .fielddata(false)
             .analyzer(langAnalyzer.analyzer)
-            .fields(
-              subFields
-              //:+ textField("compound").analyzer("compound_analyzer").searchAnalyzer(langAnalyzer.analyzer)
-          )
+            .fields(subFields)
       )
 
     }

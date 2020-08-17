@@ -66,12 +66,12 @@ trait SearchService {
           (acc, cur) =>
             acc
               .field(s"$field.${cur.lang}", boost)
-              .field(s"$field.${cur.lang}.compound")
+              .field(s"$field.${cur.lang}.decompounded")
         )
       } else {
         simpleStringQuery(query)
           .field(s"$field.$language", boost)
-          .field(s"$field.$language.compound")
+          .field(s"$field.$language.decompounded")
       }
     }
 

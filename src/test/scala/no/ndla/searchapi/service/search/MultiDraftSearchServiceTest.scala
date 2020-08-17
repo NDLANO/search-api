@@ -249,17 +249,20 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
         multiDraftSearchSettings.copy(query = Some("batmen + bil"), sort = Sort.ByTitleAsc))
     val hits2 = search2.results
     hits2.map(_.id) should equal(Seq(1))
+  }
 
-    val Success(search3) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(query = Some("bil + bilde + -flaggermusmann"), sort = Sort.ByTitleAsc))
-    val hits3 = search3.results
-    hits3.map(_.id) should equal(Seq(1, 3, 5)) // TODO: Dette er litt rart? -flaggermusmann treffer fortsatt flaggermusmann?
+  test("That searching with NOT returns expected results") {
+    println(elasticSearchHost.getOrElse(""))
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("-flaggermusmann + (bil + bilde)"), sort = Sort.ByTitleAsc))
+    // 1 is matched even if flaggermusmann exists in the document because the decompounded field does not contain flaggermusmann and causes a match
+    // This is unwanted, but as of now i can not see a workaround
+    search1.results.map(_.id) should equal(Seq(1, 3, 5))
 
-    val Success(search4) =
+    val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("bil + -hulken"), sort = Sort.ByTitleAsc))
-    val hits4 = search4.results
-    hits4.map(_.id) should equal(Seq(1, 3))
+    search2.results.map(_.id) should equal(Seq(1, 3))
   }
 
   test("search in content should be ranked lower than introduction and title") {
