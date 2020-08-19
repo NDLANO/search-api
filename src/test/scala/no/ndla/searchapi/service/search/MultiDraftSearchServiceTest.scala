@@ -171,11 +171,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc))
-    val hits = results.results
     results.totalCount should be(3)
-    hits.head.id should be(5)
-    hits(1).id should be(1)
-    hits.last.id should be(3)
+    results.results.map(_.id) should be(Seq(1, 5, 3))
   }
 
   test("That search combined with filter by id only returns documents matching the query with one of the given ids") {
@@ -192,10 +189,10 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("Pingvinen"), sort = Sort.ByTitleAsc))
-    val hits = results.results
-    results.totalCount should be(3)
-    hits.map(_.contexts.head.learningResourceType) should be(Seq("standard", "learningpath", "standard"))
-    hits.map(_.id) should be(Seq(1, 1, 2))
+
+    results.results.map(_.contexts.head.learningResourceType) should be(Seq("learningpath", "standard"))
+    results.results.map(_.id) should be(Seq(1, 2))
+    results.totalCount should be(2)
   }
 
   test("That search matches updatedBy") {

@@ -193,9 +193,8 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val Success(results) =
       multiSearchService.matchingQuery(searchSettings.copy(Some("Pingvinen"), sort = Sort.ByTitleAsc))
     val hits = results.results
-    results.totalCount should be(3)
-    hits.map(_.contexts.head.learningResourceType) should be(Seq("standard", "learningpath", "standard"))
-    hits.map(_.id) should be(Seq(1, 1, 2))
+    hits.map(_.contexts.head.learningResourceType) should be(Seq("learningpath", "standard"))
+    hits.map(_.id) should be(Seq(1, 2))
   }
 
   test("That search matches tags") {
