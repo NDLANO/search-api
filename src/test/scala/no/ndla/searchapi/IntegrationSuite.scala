@@ -7,8 +7,7 @@ import scala.util.Try
 abstract class IntegrationSuite extends UnitSuite {
 
   val elasticSearchContainer = Try {
-    val esVersion = "6.3.2"
-    val c = new ElasticsearchContainer(s"docker.elastic.co/elasticsearch/elasticsearch:$esVersion")
+    val c = new ElasticsearchContainer(s"950645517739.dkr.ecr.eu-central-1.amazonaws.com/ndla/search-engine:latest")
     c.start()
     c
   }

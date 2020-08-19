@@ -32,6 +32,7 @@ class ArticleIndexServiceTest extends IntegrationSuite with TestEnvironment {
   implicit val formats = SearchableLanguageFormats.JSonFormats
 
   test("That articles are indexed correctly") {
+    articleIndexService.cleanupIndexes()
     articleIndexService.createIndexWithGeneratedName
 
     articleIndexService.indexDocument(article5, TestData.taxonomyTestBundle, TestData.emptyGrepBundle)

@@ -211,25 +211,15 @@ trait IndexService {
     def createIndexWithGeneratedName: Try[String] = createIndexWithName(searchIndex + "_" + getTimestamp)
 
     private def customCompoundAnalyzer() = {
-      val wordList =
-        Source
-          .fromInputStream(getClass.getResourceAsStream("/compound-wordlist.txt"))
-          .getLines()
-          .toList
-
       CustomAnalyzerDefinition(
         "compound_analyzer",
         StandardTokenizer,
         CompoundWordTokenFilter(
-          name = "dictionary_decompounder",
-          `type` = DictionaryDecompounder,
-          wordList = wordList
+          name = "hyphenation_decompounder",
+          `type` = HyphenationDecompounder,
+          wordListPath = Some("compound-words-norwegian-wordlist.txt"),
+          hyphenationPatternsPath = Some("hyph/no.xml")
         )
-//        CompoundWordTokenFilter(
-//          name = "hyphenation_decompounder",
-//          `type` = HyphenationDecompounder,
-//          wordList = wordList
-//        )
       )
     }
 
