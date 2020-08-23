@@ -63,9 +63,16 @@ trait SearchConverterService {
             dataResource match {
               case "h5p"        => traits += "H5P"
               case "brightcove" => traits += "VIDEO"
+              case "nrk"        => traits += "VIDEO"
               case "external" =>
                 val dataUrl = embed.attr("data-url")
                 if (dataUrl.contains("youtu") || dataUrl.contains("vimeo")) {
+                  traits += "VIDEO"
+                }
+              case "iframe" =>
+                val dataUrl = embed.attr("data-url")
+                if (dataUrl.contains("filmiundervisning") || dataUrl.contains("imdb") || dataUrl
+                      .contains("nrk") || dataUrl.contains("khanacademy")) {
                   traits += "VIDEO"
                 }
             }

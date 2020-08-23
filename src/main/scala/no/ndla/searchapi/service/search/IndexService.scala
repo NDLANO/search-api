@@ -13,7 +13,12 @@ import java.util.Calendar
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.alias.AliasAction
-import com.sksamuel.elastic4s.analyzers.{CustomAnalyzerDefinition, LowercaseTokenFilter, ShingleTokenFilter, StandardTokenizer}
+import com.sksamuel.elastic4s.analyzers.{
+  CustomAnalyzerDefinition,
+  LowercaseTokenFilter,
+  ShingleTokenFilter,
+  StandardTokenizer
+}
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}

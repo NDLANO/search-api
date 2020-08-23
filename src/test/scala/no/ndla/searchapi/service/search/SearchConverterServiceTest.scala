@@ -412,7 +412,10 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
         id = Some(99),
         content = Seq(
           ArticleContent("Skikkelig bra h5p: <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb"),
-          ArticleContent("Fin video <embed data-resource=\"external\" data-url=\"https://youtu.be/id\">", "nn")
+          ArticleContent("Fin video <embed data-resource=\"external\" data-url=\"https://youtu.be/id\">", "nn"),
+          ArticleContent(
+            "Movie trailer <embed data-resource=\"iframe\" data-url=\"https://www.imdb.com/video/vi3074735641\">",
+            "en")
         )
       )
 
