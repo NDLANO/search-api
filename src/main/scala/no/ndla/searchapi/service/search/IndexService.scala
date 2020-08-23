@@ -13,13 +13,7 @@ import java.util.Calendar
 import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.alias.AliasAction
-import com.sksamuel.elastic4s.analyzers.{
-  CustomAnalyzerDefinition,
-  LowercaseTokenFilter,
-  NGramTokenFilter,
-  ShingleTokenFilter,
-  StandardTokenizer
-}
+import com.sksamuel.elastic4s.analyzers.{CustomAnalyzerDefinition, LowercaseTokenFilter, ShingleTokenFilter, StandardTokenizer}
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}
@@ -32,8 +26,8 @@ import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
 
 trait IndexService {
