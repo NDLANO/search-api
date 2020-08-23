@@ -30,7 +30,9 @@ import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
 import org.json4s.native.Serialization.read
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Entities.EscapeMode
 
+import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
 
 trait SearchConverterService {
@@ -48,10 +50,35 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
+    def getArticleTraits(contents: Seq[ArticleContent]): Seq[String] = {
+      contents.flatMap(content => {
+        var traits = ListBuffer[String]()
+        val document = Jsoup.parseBodyFragment(content.content)
+        document.outputSettings().escapeMode(EscapeMode.xhtml).prettyPrint(false)
+        document
+          .body()
+          .select("embed")
+          .forEach(embed => {
+            val dataResource = embed.attr("data-resource")
+            dataResource match {
+              case "h5p"        => traits += "H5P"
+              case "brightcove" => traits += "VIDEO"
+              case "external" =>
+                val dataUrl = embed.attr("data-url")
+                if (dataUrl.contains("youtu") || dataUrl.contains("vimeo")) {
+                  traits += "VIDEO"
+                }
+            }
+          })
+        traits
+      })
+    }
+
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle)
+      val traits = getArticleTraits(ai.content)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -88,7 +115,8 @@ trait SearchConverterService {
           defaultTitle = defaultTitle.map(t => t.title),
           supportedLanguages = supportedLanguages,
           contexts = taxonomyForArticle.getOrElse(List.empty),
-          grepContexts = getGrepContexts(ai.grepCodes, grepBundle)
+          grepContexts = getGrepContexts(ai.grepCodes, grepBundle),
+          traits = traits.toList.distinct
         ))
 
     }
@@ -127,6 +155,7 @@ trait SearchConverterService {
                           taxonomyBundle: TaxonomyBundle,
                           grepBundle: GrepBundle): Try[SearchableDraft] = {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle)
+      val traits = getArticleTraits(draft.content)
 
       val defaultTitle = draft.title
         .sortBy(title => {
@@ -179,7 +208,8 @@ trait SearchConverterService {
           contexts = taxonomyForDraft.getOrElse(List.empty),
           users = users,
           previousVersionsNotes = draft.previousVersionsNotes.map(_.note),
-          grepContexts = getGrepContexts(draft.grepCodes, grepBundle)
+          grepContexts = getGrepContexts(draft.grepCodes, grepBundle),
+          traits = traits.toList.distinct
         ))
 
     }
@@ -390,7 +420,8 @@ trait SearchConverterService {
         contexts = contexts,
         supportedLanguages = supportedLanguages,
         learningResourceType = searchableArticle.articleType,
-        status = None
+        status = None,
+        traits = searchableArticle.traits
       )
     }
 
@@ -430,7 +461,8 @@ trait SearchConverterService {
         contexts = contexts,
         supportedLanguages = supportedLanguages,
         learningResourceType = searchableDraft.articleType,
-        status = Some(api.Status(searchableDraft.draftStatus.current, searchableDraft.draftStatus.other))
+        status = Some(api.Status(searchableDraft.draftStatus.current, searchableDraft.draftStatus.other)),
+        traits = searchableDraft.traits
       )
     }
 
@@ -470,7 +502,8 @@ trait SearchConverterService {
         contexts = contexts,
         supportedLanguages = supportedLanguages,
         learningResourceType = LearningResourceType.LearningPath.toString,
-        status = Some(api.Status(searchableLearningPath.status, Seq.empty))
+        status = Some(api.Status(searchableLearningPath.status, Seq.empty)),
+        traits = List.empty
       )
     }
 

@@ -16,6 +16,7 @@ import com.sksamuel.elastic4s.alias.AliasAction
 import com.sksamuel.elastic4s.analyzers.{
   CustomAnalyzerDefinition,
   LowercaseTokenFilter,
+  NGramTokenFilter,
   ShingleTokenFilter,
   StandardTokenizer
 }
