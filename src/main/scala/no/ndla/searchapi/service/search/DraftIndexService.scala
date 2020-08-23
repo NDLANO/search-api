@@ -62,6 +62,7 @@ trait DraftIndexService {
           keywordField("users"),
           keywordField("grepContexts.code"),
           textField("grepContexts.title"),
+          keywordField("traits"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),

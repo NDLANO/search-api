@@ -56,13 +56,13 @@ trait ArticleIndexService {
           keywordField("supportedLanguages"),
           keywordField("grepContexts.code"),
           textField("grepContexts.title"),
+          keywordField("traits"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),
             keywordField("altText"),
             keywordField("language")
-          ),
-          keywordField("trait")
+          )
         )
           ++
             generateLanguageSupportedFieldList("title", keepRaw = true) ++
