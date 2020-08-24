@@ -570,6 +570,13 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
   }
 
+  test("That search result has traits if content has embeds") {
+    val Success(search) = multiSearchService.matchingQuery(searchSettings.copy(query = Some("Ekstrastoff")))
+    search.totalCount should be(1)
+    search.results.head.id should be(12)
+    search.results.head.traits should be(List("H5P"))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

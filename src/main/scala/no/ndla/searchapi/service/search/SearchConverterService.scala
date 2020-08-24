@@ -61,17 +61,12 @@ trait SearchConverterService {
           .forEach(embed => {
             val dataResource = embed.attr("data-resource")
             dataResource match {
-              case "h5p"        => traits += "H5P"
-              case "brightcove" => traits += "VIDEO"
-              case "nrk"        => traits += "VIDEO"
-              case "external" =>
+              case "h5p"                => traits += "H5P"
+              case "brightcove" | "nrk" => traits += "VIDEO"
+              case "external" | "iframe" =>
                 val dataUrl = embed.attr("data-url")
-                if (dataUrl.contains("youtu") || dataUrl.contains("vimeo")) {
-                  traits += "VIDEO"
-                }
-              case "iframe" =>
-                val dataUrl = embed.attr("data-url")
-                if (dataUrl.contains("filmiundervisning") || dataUrl.contains("imdb") || dataUrl
+                if (dataUrl.contains("youtu") || dataUrl.contains("vimeo") || dataUrl
+                      .contains("filmiundervisning") || dataUrl.contains("imdb") || dataUrl
                       .contains("nrk") || dataUrl.contains("khanacademy")) {
                   traits += "VIDEO"
                 }
