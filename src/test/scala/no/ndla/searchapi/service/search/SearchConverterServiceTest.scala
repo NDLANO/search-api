@@ -400,8 +400,11 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     val article =
       TestData.emptyDomainArticle.copy(
         id = Some(99),
-        content =
-          Seq(ArticleContent("Sjekk denne h5p-en <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb")))
+        content = Seq(
+          ArticleContent("Sjekk denne h5p-en <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb"),
+          ArticleContent("Fil <embed data-resource=\"file\" data-path=\"/file/path\">", "nn")
+        )
+      )
 
     val Success(searchableArticle) =
       searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)

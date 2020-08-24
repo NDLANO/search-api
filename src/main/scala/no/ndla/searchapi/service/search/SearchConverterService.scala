@@ -70,6 +70,7 @@ trait SearchConverterService {
                       .contains("nrk") || dataUrl.contains("khanacademy")) {
                   traits += "VIDEO"
                 }
+              case _ => // Do nothing
             }
           })
         traits
