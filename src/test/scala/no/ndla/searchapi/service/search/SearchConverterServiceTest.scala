@@ -396,6 +396,37 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchableArticle.grepContexts should equal(grepContexts)
   }
 
+  test("That asSearchableArticle extracts traits correctly") {
+    val article =
+      TestData.emptyDomainArticle.copy(
+        id = Some(99),
+        content = Seq(
+          ArticleContent("Sjekk denne h5p-en <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb"),
+          ArticleContent("Fil <embed data-resource=\"file\" data-path=\"/file/path\">", "nn")
+        )
+      )
+
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle.traits should equal(List("H5P"))
+
+    val article2 =
+      TestData.emptyDomainArticle.copy(
+        id = Some(99),
+        content = Seq(
+          ArticleContent("Skikkelig bra h5p: <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb"),
+          ArticleContent("Fin video <embed data-resource=\"external\" data-url=\"https://youtu.be/id\">", "nn"),
+          ArticleContent(
+            "Movie trailer <embed data-resource=\"iframe\" data-url=\"https://www.imdb.com/video/vi3074735641\">",
+            "en")
+        )
+      )
+
+    val Success(searchableArticle2) =
+      searchConverterService.asSearchableArticle(article2, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle2.traits should equal(List("H5P", "VIDEO"))
+  }
+
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
     searchableArticle.title.languageValues.size should equal(titles.size)
     languageValueWithLang(searchableArticle.title, "nb") should equal(titleForLang(titles, "nb"))

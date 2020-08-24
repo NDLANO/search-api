@@ -31,4 +31,5 @@ case class SearchableDraft(
     users: List[String],
     previousVersionsNotes: List[String],
     grepContexts: List[SearchableGrepContext],
+    traits: List[String]
 )

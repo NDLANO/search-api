@@ -69,7 +69,8 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
       users = List("ndalId54321", "ndalId12345"),
       previousVersionsNotes = List("OldNote"),
       grepContexts =
-        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2")))
+        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
+      traits = List.empty
     )
     val json = write(original)
     val deserialized = read[SearchableDraft](json)
