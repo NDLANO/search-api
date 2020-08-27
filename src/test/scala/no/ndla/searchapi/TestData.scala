@@ -17,7 +17,7 @@ import no.ndla.searchapi.model.domain.learningpath.{
   LearningPathStatus,
   LearningPathVerificationStatus
 }
-import no.ndla.searchapi.model.grep.GrepBundle
+import no.ndla.searchapi.model.grep.{GrepBundle, GrepElement, GrepTitle}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.model.taxonomy._
@@ -214,7 +214,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(3),
     published = today.minusDays(3),
-    grepCodes = Seq("K123", "K456")
+    grepCodes = Seq("KM123", "KE12")
   )
 
   val article2: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -230,7 +230,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(2),
     published = today.minusDays(2),
-    grepCodes = Seq("K456", "K123")
+    grepCodes = Seq("KE34", "KM123")
   )
 
   val article3: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -244,7 +244,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(1),
     published = today.minusDays(1),
-    grepCodes = Seq("K123")
+    grepCodes = Seq("TT2", "KM123")
   )
 
   val article4: Article = TestData.sampleArticleWithCopyrighted.copy(
@@ -272,7 +272,7 @@ object TestData {
     created = today.minusDays(40),
     updated = today.minusDays(35),
     published = today.minusDays(35),
-    grepCodes = Seq("K456")
+    grepCodes = Seq("KE12", "TT2")
   )
 
   val article6: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -1046,6 +1046,17 @@ object TestData {
     kjerneelementer = List.empty,
     kompetansemaal = List.empty,
     tverrfagligeTemaer = List.empty,
+  )
+
+  val grepBundle = emptyGrepBundle.copy(
+    kjerneelementer = List(
+      GrepElement("KE12", Seq(GrepTitle("default", "Utforsking og problemløysing"))),
+      GrepElement("KE34", Seq(GrepTitle("default", "Abstraksjon og generalisering")))
+    ),
+    kompetansemaal = List(
+      GrepElement("KM123",
+                  Seq(GrepTitle("default", "bruke ulike kilder på en kritisk, hensiktsmessig og etterrettelig måte")))),
+    tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "Demokrati og medborgerskap"))))
   )
 
   val searchSettings = SearchSettings(
