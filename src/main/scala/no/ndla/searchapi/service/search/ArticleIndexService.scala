@@ -71,7 +71,8 @@ trait ArticleIndexService {
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
           generateLanguageSupportedFieldList("metaDescription") ++
-          generateLanguageSupportedFieldList("tags")
+          generateLanguageSupportedFieldList("tags") ++
+          generateLanguageSupportedFieldList("embedAttributes")
       )
     }
   }

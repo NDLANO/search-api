@@ -75,7 +75,8 @@ trait DraftIndexService {
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
-          generateLanguageSupportedFieldList("tags")
+          generateLanguageSupportedFieldList("tags") ++
+          generateLanguageSupportedFieldList("embedAttributes")
       )
     }
   }
