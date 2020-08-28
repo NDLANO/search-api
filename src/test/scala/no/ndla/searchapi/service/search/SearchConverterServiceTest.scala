@@ -326,32 +326,22 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   test("That asSearchableArticle converts grepContexts correctly based on grepBundle if article has grepCodes") {
     val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
-    val grepBundle = TestData.emptyGrepBundle.copy(
-      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
-                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
-      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
-      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
+    val grepContexts = List(
+      SearchableGrepContext("KE12", Some("Utforsking og problemløysing")),
+      SearchableGrepContext("KM123", Some("bruke ulike kilder på en kritisk, hensiktsmessig og etterrettelig måte")),
+      SearchableGrepContext("TT2", Some("Demokrati og medborgerskap"))
     )
-    val grepContexts = List(SearchableGrepContext("KE12", Some("tittel12")),
-                            SearchableGrepContext("KM123", Some("tittel123")),
-                            SearchableGrepContext("TT2", Some("tittel2")))
     val Success(searchableArticle) =
-      searchConverterService.asSearchableArticle(article, emptyBundle, grepBundle)
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.grepBundle)
     searchableArticle.grepContexts should equal(grepContexts)
   }
 
   test("That asSearchableArticle converts grepContexts correctly based on grepBundle if article has no grepCodes") {
     val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq.empty)
-    val grepBundle = TestData.emptyGrepBundle.copy(
-      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
-                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
-      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
-      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
-    )
     val grepContexts = List.empty
 
     val Success(searchableArticle) =
-      searchConverterService.asSearchableArticle(article, emptyBundle, grepBundle)
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.grepBundle)
     searchableArticle.grepContexts should equal(grepContexts)
   }
 

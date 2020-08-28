@@ -50,6 +50,7 @@ trait MultiSearchService {
           val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
           val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
           val authorSearch = simpleStringQuery(q).field("authors", 1)
+          val grepCodesTitleSearch = simpleStringQuery(q).field("grepContexts.title", 1)
           val attributeSearch = simpleStringQuery(q).field(s"embedAttributes.$searchLanguage", 1)
 
           boolQuery()
@@ -62,6 +63,7 @@ trait MultiSearchService {
                   contentSearch,
                   tagSearch,
                   authorSearch,
+                  grepCodesTitleSearch,
                   attributeSearch
                 )
             )
