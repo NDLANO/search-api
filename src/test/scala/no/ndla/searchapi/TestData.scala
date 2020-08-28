@@ -363,7 +363,8 @@ object TestData {
   val article12: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(12),
     title = List(Title("Ekstrastoff", "nb")),
-    content = List(ArticleContent("H5P <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb")),
+    content =
+      List(ArticleContent("H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\">", "nb")),
     tags = List(Tag(List(""), "nb")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
@@ -653,7 +654,8 @@ object TestData {
     title = List(Title("Ekstrastoff", "nb")),
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
-    content = List(ArticleContent("", "nb")),
+    content =
+      List(ArticleContent("<embed data-resource=\"concept\" data-resource_id=\"55\" data-title=\"Flubber\" />", "nb")),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),

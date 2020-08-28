@@ -52,7 +52,6 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
-    // TODO: Sjekk om denne finnes i et bibliotek. Evt kanskje flytte den? Eller la den ligge her, alt ettersom
     def parseHtml(html: String) = {
       val document = Jsoup.parseBodyFragment(html)
       document.outputSettings().escapeMode(EscapeMode.xhtml).prettyPrint(false)
@@ -91,7 +90,7 @@ trait SearchConverterService {
         .toList
     }
 
-    def getAttributes(embed: Element): List[String] = {
+    private def getAttributes(embed: Element): List[String] = {
       val attributesToKeep = List(
         "data-title",
         "data-caption",
@@ -109,16 +108,10 @@ trait SearchConverterService {
       })
     }
 
-    import scala.language.reflectiveCalls // TODO: Remove this if we skip ducktyping
-
-    private def getAttributesToIndex(article: {
-      // TODO: Is ducktyping okay or should we create some other generic way to handle this?
-      val content: Seq[ArticleContent]
-      val visualElement: Seq[VisualElement]
-
-    }): SearchableLanguageList = {
-      val contentTuples = article.content.map(c => c.language -> getAttributes(c.content))
-      val visualElementTuples = article.visualElement.map(v => v.language -> getAttributes(v.resource))
+    private def getAttributesToIndex(content: Seq[ArticleContent],
+                                     visualElement: Seq[VisualElement]): SearchableLanguageList = {
+      val contentTuples = content.map(c => c.language -> getAttributes(c.content))
+      val visualElementTuples = visualElement.map(v => v.language -> getAttributes(v.resource))
       val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples).groupBy(_._1)
 
       val languageValues = attrsGroupedByLanguage.map {
@@ -133,7 +126,7 @@ trait SearchConverterService {
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle)
       val traits = getArticleTraits(ai.content)
-      val embedAttributes = getAttributesToIndex(ai)
+      val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -212,7 +205,7 @@ trait SearchConverterService {
                           grepBundle: GrepBundle): Try[SearchableDraft] = {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle)
       val traits = getArticleTraits(draft.content)
-      val embedAttributes = getAttributesToIndex(draft)
+      val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
 
       val defaultTitle = draft.title
         .sortBy(title => {
