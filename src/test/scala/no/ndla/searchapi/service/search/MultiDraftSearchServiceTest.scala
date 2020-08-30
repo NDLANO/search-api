@@ -722,6 +722,12 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.suggestions.last.suggestions.head.text should equal("bil")
   }
 
+  test("That searches for embed attributes matches") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Flubber"), language = Language.AllLanguages))
+    search.results.map(_.id) should be(Seq(12))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

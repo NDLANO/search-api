@@ -584,6 +584,12 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search.results.head.traits should be(List("H5P"))
   }
 
+  test("That searches for embed attributes matches") {
+    val Success(search) =
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("Flubber"), language = Language.AllLanguages))
+    search.results.map(_.id) should be(Seq(12))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

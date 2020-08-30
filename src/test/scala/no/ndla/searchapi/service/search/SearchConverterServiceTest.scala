@@ -417,6 +417,13 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchableArticle2.traits should equal(List("H5P", "VIDEO"))
   }
 
+  test("That extracting attributes extracts data-title but not all attributes") {
+    val html =
+      """<section>Hei<p align="center">Heihei</p><embed class="testklasse" tulleattributt data-resource_id="55" data-title="For ei tittel" />"""
+    val result = searchConverterService.getAttributes(html)
+    result should be(List("For ei tittel"))
+  }
+
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
     searchableArticle.title.languageValues.size should equal(titles.size)
     languageValueWithLang(searchableArticle.title, "nb") should equal(titleForLang(titles, "nb"))

@@ -30,9 +30,11 @@ import no.ndla.searchapi.service.ConverterService
 import org.json4s.Formats
 import org.json4s.native.Serialization.read
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import org.jsoup.nodes.Entities.EscapeMode
 
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 trait SearchConverterService {
@@ -50,13 +52,16 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
+    def parseHtml(html: String) = {
+      val document = Jsoup.parseBodyFragment(html)
+      document.outputSettings().escapeMode(EscapeMode.xhtml).prettyPrint(false)
+      document.body()
+    }
+
     def getArticleTraits(contents: Seq[ArticleContent]): Seq[String] = {
       contents.flatMap(content => {
         var traits = ListBuffer[String]()
-        val document = Jsoup.parseBodyFragment(content.content)
-        document.outputSettings().escapeMode(EscapeMode.xhtml).prettyPrint(false)
-        document
-          .body()
+        parseHtml(content.content)
           .select("embed")
           .forEach(embed => {
             val dataResource = embed.attr("data-resource")
@@ -77,11 +82,51 @@ trait SearchConverterService {
       })
     }
 
+    private[service] def getAttributes(html: String): List[String] = {
+      parseHtml(html)
+        .select("embed")
+        .asScala
+        .flatMap(getAttributes)
+        .toList
+    }
+
+    private def getAttributes(embed: Element): List[String] = {
+      val attributesToKeep = List(
+        "data-title",
+        "data-caption",
+        "data-alt",
+        "data-link-text",
+        "data-edition",
+        "data-publisher",
+        "data-authors"
+      )
+
+      attributesToKeep.flatMap(attr =>
+        embed.attr(attr) match {
+          case "" => None
+          case a  => Some(a)
+      })
+    }
+
+    private def getAttributesToIndex(content: Seq[ArticleContent],
+                                     visualElement: Seq[VisualElement]): SearchableLanguageList = {
+      val contentTuples = content.map(c => c.language -> getAttributes(c.content))
+      val visualElementTuples = visualElement.map(v => v.language -> getAttributes(v.resource))
+      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples).groupBy(_._1)
+
+      val languageValues = attrsGroupedByLanguage.map {
+        case (language, values) => LanguageValue(language, values.flatMap(_._2))
+      }
+
+      SearchableLanguageList(languageValues.toSeq)
+    }
+
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle)
       val traits = getArticleTraits(ai.content)
+      val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -119,7 +164,8 @@ trait SearchConverterService {
           supportedLanguages = supportedLanguages,
           contexts = taxonomyForArticle.getOrElse(List.empty),
           grepContexts = getGrepContexts(ai.grepCodes, grepBundle),
-          traits = traits.toList.distinct
+          traits = traits.toList.distinct,
+          embedAttributes = embedAttributes
         ))
 
     }
@@ -159,6 +205,7 @@ trait SearchConverterService {
                           grepBundle: GrepBundle): Try[SearchableDraft] = {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle)
       val traits = getArticleTraits(draft.content)
+      val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
 
       val defaultTitle = draft.title
         .sortBy(title => {
@@ -212,7 +259,8 @@ trait SearchConverterService {
           users = users,
           previousVersionsNotes = draft.previousVersionsNotes.map(_.note),
           grepContexts = getGrepContexts(draft.grepCodes, grepBundle),
-          traits = traits.toList.distinct
+          traits = traits.toList.distinct,
+          embedAttributes = embedAttributes
         ))
 
     }
