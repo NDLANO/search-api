@@ -694,6 +694,20 @@ object TestData {
     )
   )
 
+  val draft15: Draft = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(15),
+    title = List(Title("Engler og demoner", "nb")),
+    introduction = List(ArticleIntroduction("Religion", "nb")),
+    metaDescription = List(MetaDescription("metareligion", "nb")),
+    content =
+      List(ArticleContent("<p>Vanlig i gamle testamentet</p>", "nb"), ArticleContent("<p>Christianity!</p>", "en")),
+    visualElement = List.empty,
+    tags = List(Tag(List("engel"), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.TopicArticle
+  )
+
   val draftsToIndex: List[Draft] = List(
     draft1,
     draft2,
@@ -708,13 +722,15 @@ object TestData {
     draft11,
     draft12,
     draft13,
-    draft14
+    draft14,
+    draft15
   )
 
   val paul = Author("author", "Truly Weird Rand Paul")
   val license = "publicdomain"
   val copyright = domain.learningpath.Copyright(license, List(paul))
   val visibleMetadata = Some(Metadata(Seq.empty, visible = true))
+  val invisibleMetadata = Some(Metadata(Seq.empty, visible = false))
 
   val DefaultLearningPath = LearningPath(
     id = None,
@@ -806,7 +822,8 @@ object TestData {
 
   val subjects = List(
     TaxSubject("urn:subject:1", "Matte", None, Some("/subject:1"), visibleMetadata),
-    TaxSubject("urn:subject:2", "Historie", None, Some("/subject:2"), visibleMetadata)
+    TaxSubject("urn:subject:2", "Historie", None, Some("/subject:2"), visibleMetadata),
+    TaxSubject("urn:subject:3", "Religion", None, Some("/subject:3"), invisibleMetadata)
   )
 
   val filters = List(
@@ -972,13 +989,19 @@ object TestData {
           article11.title.head.title,
           Some(s"urn:article:${article11.id.get}"),
           Some("/subject:2/topic:4"),
-          visibleMetadata)
+          visibleMetadata),
+    Topic("urn:topic:5",
+          draft15.title.head.title,
+          Some(s"urn:article:${draft15.id.get}"),
+          Some("/subject:3/topic:5"),
+          invisibleMetadata)
   )
 
   val subjectTopicConnections = List(
     SubjectTopicConnection("urn:subject:1", "urn:topic:1", "urn:subject-topic:1", primary = true, 1),
     SubjectTopicConnection("urn:subject:1", "urn:topic:3", "urn:subject-topic:2", primary = true, 1),
-    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1)
+    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1),
+    SubjectTopicConnection("urn:subject:3", "urn:topic:5", "urn:subject-topic:4", primary = true, 1),
   )
 
   val topicResourceConnections = List(
