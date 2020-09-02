@@ -560,7 +560,7 @@ object TestData {
     previousVersionsNotes = List(
       draft.EditorNote(
         "kultgammeltnotat",
-        "ndalId54321",
+        "ndalId12345",
         Status(ArticleStatus.DRAFT, Set.empty),
         today.minusDays(31).toDate
       )),
