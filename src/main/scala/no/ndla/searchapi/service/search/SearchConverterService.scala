@@ -231,7 +231,8 @@ trait SearchConverterService {
       ).flatten.map(_.name)
 
       val notes: List[String] = draft.notes.map(_.note)
-      val users: List[String] = draft.updatedBy +: draft.notes.map(_.user)
+      val users: List[String] = List(draft.updatedBy) ++ draft.notes.map(_.user) ++ draft.previousVersionsNotes.map(
+        _.user)
 
       Success(
         SearchableDraft(
@@ -256,7 +257,7 @@ trait SearchConverterService {
           supportedLanguages = supportedLanguages,
           notes = notes,
           contexts = taxonomyForDraft.getOrElse(List.empty),
-          users = users,
+          users = users.distinct,
           previousVersionsNotes = draft.previousVersionsNotes.map(_.note),
           grepContexts = getGrepContexts(draft.grepCodes, grepBundle),
           traits = traits.toList.distinct,

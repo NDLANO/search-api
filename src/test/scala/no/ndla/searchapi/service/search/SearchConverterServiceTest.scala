@@ -8,8 +8,8 @@
 package no.ndla.searchapi.service.search
 
 import no.ndla.searchapi.caching.Memoize
-import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
+import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.grep.{GrepElement, GrepTitle}
 import no.ndla.searchapi.model.search.{
   SearchableArticle,
@@ -19,8 +19,6 @@ import no.ndla.searchapi.model.search.{
 }
 import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
-import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 
 import scala.util.{Success, Try}
@@ -422,6 +420,12 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
       """<section>Hei<p align="center">Heihei</p><embed class="testklasse" tulleattributt data-resource_id="55" data-title="For ei tittel" />"""
     val result = searchConverterService.getAttributes(html)
     result should be(List("For ei tittel"))
+  }
+
+  test("That asSearchableDraft extracts all users from notes correctly") {
+    val draft = searchConverterService.asSearchableDraft(TestData.draft5, emptyBundle, TestData.emptyGrepBundle)
+    draft.get.users.length should be(2)
+    draft.get.users should be(List("ndalId54321", "ndalId12345"))
   }
 
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {
