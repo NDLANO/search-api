@@ -204,7 +204,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(userFilter = List("ndalId54321"), sort = Sort.ByIdAsc))
     val hits = results.results
-    results.totalCount should be(10)
+    results.totalCount should be(11)
     hits.head.id should be(1)
     hits.head.contexts.head.learningResourceType should be("standard")
     hits(1).id should be(2)
@@ -404,6 +404,13 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
+  test("That filtering for invisible subjects returns all drafts with any of listed subjects") {
+    val Success(search) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(subjects = List("urn:subject:3")))
+    search.totalCount should be(1)
+    search.results.map(_.id) should be(Seq(15))
+  }
+
   test("That filtering for resource-types works as expected") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
@@ -430,8 +437,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle),
                                     language = "all"))
 
-    search.totalCount should be(12)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13))
+    search.totalCount should be(13)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15))
   }
 
   test("That filtering on learning-resource-type works") {
@@ -443,8 +450,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.totalCount should be(7)
     search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
-    search2.totalCount should be(5)
-    search2.results.map(_.id) should be(Seq(8, 9, 10, 11, 13))
+    search2.totalCount should be(6)
+    search2.results.map(_.id) should be(Seq(8, 9, 10, 11, 13, 15))
   }
 
   test("That filtering on multiple context-types returns every type") {
@@ -453,8 +460,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle),
                                     language = "all"))
 
-    search.totalCount should be(12)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13))
+    search.totalCount should be(13)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15))
   }
 
   test("That filtering on learningpath learningresourcetype returns learningpaths") {
@@ -470,20 +477,20 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en"), language = "all"))
-    search.totalCount should be(7)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11))
+    search.totalCount should be(8)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11, 15))
 
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
-    search2.totalCount should be(18)
-    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13))
+    search2.totalCount should be(19)
+    search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 15))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("nb"), language = "all"))
-    search3.totalCount should be(15)
-    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13))
+    search3.totalCount should be(16)
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15))
   }
 
   test("That filtering on supportedLanguages should still prioritize the selected language") {
@@ -491,9 +498,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en"), language = "nb"))
 
-    search.totalCount should be(4)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 11))
-    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb"))
+    search.totalCount should be(5)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 11, 15))
+    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb", "nb"))
   }
 
   test("That meta image are returned when searching") {
@@ -599,6 +606,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(scroll8) = multiDraftSearchService.scroll(scroll7.scrollId.get, "all", fallback = true)
     val Success(scroll9) = multiDraftSearchService.scroll(scroll8.scrollId.get, "all", fallback = true)
     val Success(scroll10) = multiDraftSearchService.scroll(scroll9.scrollId.get, "all", fallback = true)
+    val Success(scroll11) = multiDraftSearchService.scroll(scroll10.scrollId.get, "all", fallback = true)
 
     initialSearch.results.map(_.id) should be(ids.head)
     scroll1.results.map(_.id) should be(ids(1))
@@ -609,8 +617,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     scroll6.results.map(_.id) should be(ids(6))
     scroll7.results.map(_.id) should be(ids(7))
     scroll8.results.map(_.id) should be(ids(8))
-    scroll9.results.map(_.id) should be(List.empty)
+    scroll9.results.map(_.id) should be(ids(9))
     scroll10.results.map(_.id) should be(List.empty)
+    scroll11.results.map(_.id) should be(List.empty)
   }
 
   test("Filtering for statuses should only return drafts with the specified statuses") {
@@ -650,8 +659,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
         learningResourceTypes = List(LearningResourceType.TopicArticle)
       ))
 
-    search1.results.map(_.id) should be(Seq(8, 9, 11, 13))
-    search1.results.last.contexts should be(List.empty)
+    search1.results.map(_.id) should be(Seq(8, 9, 11, 13, 15))
+    search1.results.apply(3).contexts should be(List.empty)
 
     val Success(search2) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(

@@ -124,7 +124,7 @@ trait SearchConverterService {
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
-      val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle)
+      val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, true)
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
 
@@ -171,7 +171,7 @@ trait SearchConverterService {
     }
 
     def asSearchableLearningPath(lp: LearningPath, taxonomyBundle: TaxonomyBundle): Try[SearchableLearningPath] = {
-      val taxonomyForLearningPath = getTaxonomyContexts(lp.id.get, "learningpath", taxonomyBundle)
+      val taxonomyForLearningPath = getTaxonomyContexts(lp.id.get, "learningpath", taxonomyBundle, true)
 
       val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description).toList
       val defaultTitle = lp.title.sortBy(title => ISO639.languagePriority.reverse.indexOf(title.language)).lastOption
@@ -203,7 +203,7 @@ trait SearchConverterService {
     def asSearchableDraft(draft: Draft,
                           taxonomyBundle: TaxonomyBundle,
                           grepBundle: GrepBundle): Try[SearchableDraft] = {
-      val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle)
+      val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, false)
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
 
@@ -848,13 +848,21 @@ trait SearchConverterService {
       * @param bundle       All taxonomy in an object.
       * @return Taxonomy that is to be indexed.
       */
-    private[service] def getTaxonomyContexts(id: Long,
-                                             taxonomyType: String,
-                                             bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
+    private def getTaxonomyContexts(id: Long,
+                                    taxonomyType: String,
+                                    bundle: TaxonomyBundle,
+                                    filterVisibles: Boolean): Try[List[SearchableTaxonomyContext]] = {
       val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
-      val resourceContexts =
+      val resourceContexts = if (filterVisibles) {
         filterByVisibility(resources, bundle).map(resource => getResourceTaxonomyContexts(resource, bundle))
-      val topicContexts = filterByVisibility(topics, bundle).map(topic => getTopicTaxonomyContexts(topic, bundle))
+      } else {
+        resources.map(resource => getResourceTaxonomyContexts(resource, bundle))
+      }
+      val topicContexts = if (filterVisibles) {
+        filterByVisibility(topics, bundle).map(topic => getTopicTaxonomyContexts(topic, bundle))
+      } else {
+        topics.map(topic => getTopicTaxonomyContexts(topic, bundle))
+      }
 
       val all = resourceContexts ++ topicContexts
       val failed = all.collect {

@@ -382,6 +382,12 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
+  test("That filtering for invisivle subjects returns nothing") {
+    val Success(search) =
+      multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:3")))
+    search.totalCount should be(0)
+  }
+
   test("That filtering for resource-types works as expected") {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:academicArticle")))
