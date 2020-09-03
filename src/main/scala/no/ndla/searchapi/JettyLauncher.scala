@@ -9,6 +9,7 @@
 package no.ndla.searchapi
 
 import java.util
+import java.util.concurrent.Executors
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.servlet.DispatcherType
@@ -17,6 +18,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{DefaultServlet, FilterHolder, ServletContextHandler}
 import org.scalatra.servlet.ScalatraListener
 
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.io.Source
 
 object JettyLauncher extends LazyLogging {
@@ -43,6 +45,15 @@ object JettyLauncher extends LazyLogging {
                                           "NDLA/APP".replace("APP", SearchApiProperties.ApplicationName))
     }
     context.addFilter(monitoringFilter, "/*", util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC))
+
+    // Trigger reindexing if applicable
+    implicit val indexThreadPool: ExecutionContextExecutorService =
+      ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(1))
+    Future {
+      ComponentRegistry.draftIndexService.buildInitialIndex()
+      ComponentRegistry.learningPathIndexService.buildInitialIndex()
+      ComponentRegistry.articleIndexService.buildInitialIndex()
+    }
 
     val server = new Server(SearchApiProperties.ApplicationPort)
     server.setHandler(context)
