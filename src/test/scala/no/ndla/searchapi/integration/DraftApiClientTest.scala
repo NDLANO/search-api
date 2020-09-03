@@ -29,6 +29,8 @@ import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization.write
 import org.json4s.{DefaultFormats, Formats}
 
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.Duration
 import scala.util.Success
 
 class DraftApiClientTest extends UnitSuite with TestEnvironment {
@@ -126,8 +128,9 @@ class DraftApiClientTest extends UnitSuite with TestEnvironment {
           AuthUser.setHeader(s"Bearer $exampleToken")
           val draftApiClient = new DraftApiClient(mockConfig.baseUrl)
 
+          implicit val ec = ExecutionContext.global
           val chunks = draftApiClient.getChunks[domain.draft.Draft].toList
-          val fetchedDraft = chunks.flatMap(_.get).head
+          val fetchedDraft = Await.result(chunks.head, Duration.Inf).get.head
           val searchable = searchConverterService.asSearchableDraft(fetchedDraft,
                                                                     TestData.taxonomyTestBundle,
                                                                     TestData.emptyGrepBundle)

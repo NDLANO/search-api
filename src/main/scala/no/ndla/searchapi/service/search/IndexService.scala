@@ -24,6 +24,7 @@ import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.ApiVersion
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
@@ -49,6 +50,44 @@ trait IndexService {
     val trigram: CustomAnalyzerDefinition = CustomAnalyzerDefinition(name = "trigram",
                                                                      tokenizer = StandardTokenizer,
                                                                      filters = Seq(LowercaseTokenFilter, shingle))
+
+    /** Returns a tuple with the index shortname and the index version derived from full indexname */
+    private def getCurrentIndexInformation(indexName: String) = {
+      indexName.split('_').toList match {
+        case indexShortName :: indexApiVersion :: _ :: Nil => Some((indexShortName, indexApiVersion))
+        case _                                             => None
+      }
+    }
+
+    def buildInitialIndex()(implicit mf: Manifest[D]): Try[_] = {
+      getAliasTarget match {
+        case Failure(ex) => Failure(ex)
+        case Success(Some(existingIndex)) =>
+          ApiVersion match {
+            case Some(apiVersion) =>
+              getCurrentIndexInformation(existingIndex) match {
+                case Some((indexShortName, indexVersion)) =>
+                  if (indexShortName == this.searchIndex && apiVersion == indexVersion) {
+                    logger.info(s"Index '$existingIndex' matched api version, skipping rebuild.'")
+                    Success(())
+                  } else {
+                    logger.info(s"Found '$existingIndex' which mismatches $apiVersion, rebuilding...")
+                    indexDocuments()
+                  }
+                case None =>
+                  logger.info(s"Could not derive version from index '$existingIndex', rebuilding...")
+                  indexDocuments()
+              }
+            case None =>
+              logger.info("Snapshot version found, not rebuilding on launch")
+              Success(())
+          }
+
+        case Success(None) =>
+          logger.info(s"No index found for $searchIndex on startup, building...")
+          indexDocuments()
+      }
+    }
 
     def getMapping: MappingDefinition
 
@@ -122,24 +161,23 @@ trait IndexService {
         taxonomyBundle: TaxonomyBundle,
         grepBundle: GrepBundle
     )(implicit mf: Manifest[D]): Try[Int] = {
-      val numThreads = 10
       implicit val executionContext: ExecutionContextExecutorService =
-        ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(numThreads))
+        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(10))
 
       val stream = apiClient.getChunks[D]
       val futures = stream
         .map(x =>
-          Future {
-            x match {
-              case Failure(ex) => Failure(ex)
-              case Success(c) =>
-                val numIndexed = indexDocuments(c, indexName, taxonomyBundle, grepBundle)
-                Success(numIndexed.getOrElse(0), c.size)
-            }
+          x.flatMap {
+            case Failure(ex) => Future.successful(Failure(ex))
+            case Success(c) =>
+              indexDocuments(c, indexName, taxonomyBundle, grepBundle).map(numIndexed =>
+                Success(numIndexed.getOrElse(0), c.size))
+
         })
         .toList
 
       val chunks = Await.result(Future.sequence(futures), Duration.Inf)
+      executionContext.shutdown()
 
       chunks.collect { case Failure(ex) => Failure(ex) } match {
         case Nil =>
@@ -160,32 +198,32 @@ trait IndexService {
       }
     }
 
-    def indexDocuments(contents: Seq[D],
-                       indexName: String,
-                       taxonomyBundle: TaxonomyBundle,
-                       grepBundle: GrepBundle): Try[Int] = {
+    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: TaxonomyBundle, grepBundle: GrepBundle)(
+        implicit ec: ExecutionContext): Future[Try[Int]] = {
       if (contents.isEmpty) {
-        Success(0)
+        Future.successful { Success(0) }
       } else {
         val req = contents.map(content => createIndexRequest(content, indexName, taxonomyBundle, grepBundle))
         val indexRequests = req.collect { case Success(indexRequest) => indexRequest }
         val failedToCreateRequests = req.collect { case Failure(ex)  => Failure(ex) }
 
-        if (indexRequests.nonEmpty) {
-          val response = e4sClient.execute {
-            bulk(indexRequests)
-          }
+        Future {
+          if (indexRequests.nonEmpty) {
+            val response = e4sClient.execute {
+              bulk(indexRequests)
+            }
 
-          response match {
-            case Success(r) =>
-              val numFailed = r.result.failures.size + failedToCreateRequests.size
-              logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
-              Success(contents.size - numFailed)
-            case Failure(ex) => Failure(ex)
+            response match {
+              case Success(r) =>
+                val numFailed = r.result.failures.size + failedToCreateRequests.size
+                logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
+                Success(contents.size - numFailed)
+              case Failure(ex) => Failure(ex)
+            }
+          } else {
+            logger.error(s"All ${contents.size} requests failed to be created.")
+            Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
           }
-        } else {
-          logger.error(s"All ${contents.size} requests failed to be created.")
-          Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
         }
       }
     }
@@ -204,7 +242,10 @@ trait IndexService {
       } yield deleted
     }
 
-    def createIndexWithGeneratedName: Try[String] = createIndexWithName(searchIndex + "_" + getTimestamp)
+    def createIndexWithGeneratedName: Try[String] = {
+      val versionInsert = SearchApiProperties.ApiVersion.map(v => s"_$v")
+      createIndexWithName(s"$searchIndex${versionInsert.getOrElse("")}_$getTimestamp")
+    }
 
     def createIndexWithName(indexName: String): Try[String] = {
       if (indexWithNameExists(indexName).getOrElse(false)) {

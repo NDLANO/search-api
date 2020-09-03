@@ -27,6 +27,9 @@ import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization.write
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
+
 class ArticleApiClientTest extends UnitSuite with TestEnvironment {
   implicit val formats: Formats =
     org.json4s.DefaultFormats +
@@ -110,8 +113,9 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
           AuthUser.setHeader(s"Bearer $exampleToken")
           val articleApiClient = new ArticleApiClient(mockConfig.baseUrl)
 
+          implicit val ec = ExecutionContext.global
           val chunks = articleApiClient.getChunks[domain.article.Article].toList
-          val fetchedArticle = chunks.flatMap(_.get).head
+          val fetchedArticle = Await.result(chunks.head, Duration.Inf).get.head
           val searchable = searchConverterService.asSearchableArticle(fetchedArticle,
                                                                       TestData.taxonomyTestBundle,
                                                                       TestData.emptyGrepBundle)

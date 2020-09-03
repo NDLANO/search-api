@@ -16,7 +16,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class ApiSearchServiceTest extends UnitSuite with TestEnvironment {
@@ -25,8 +25,10 @@ class ApiSearchServiceTest extends UnitSuite with TestEnvironment {
   override val converterService = new ConverterService
 
   test("search should return a list of search results from other apis") {
-    when(draftApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleArticleSearch)))
-    when(learningPathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
+    when(draftApiClient.search(any[SearchParams])(any[ExecutionContext]))
+      .thenReturn(Future(Success(TestData.sampleArticleSearch)))
+    when(learningPathApiClient.search(any[SearchParams])(any[ExecutionContext]))
+      .thenReturn(Future(Success(TestData.sampleLearningpath)))
 
     val searchParams = SearchParams(Some("nb"), Sort.ByRelevanceDesc, 1, 10, Map.empty)
     val res = searchService.search(searchParams, Set(draftApiClient, learningPathApiClient))
@@ -38,11 +40,14 @@ class ApiSearchServiceTest extends UnitSuite with TestEnvironment {
   }
 
   test("search should contain an error entry if a search failed") {
-    when(draftApiClient.search(any[SearchParams]))
+    when(draftApiClient.search(any[SearchParams])(any[ExecutionContext]))
       .thenReturn(Future(Failure(new HttpRequestException("Connection refused"))))
-    when(learningPathApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleLearningpath)))
-    when(imageApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleImageSearch)))
-    when(audioApiClient.search(any[SearchParams])).thenReturn(Future(Success(TestData.sampleAudio)))
+    when(learningPathApiClient.search(any[SearchParams])(any[ExecutionContext]))
+      .thenReturn(Future(Success(TestData.sampleLearningpath)))
+    when(imageApiClient.search(any[SearchParams])(any[ExecutionContext]))
+      .thenReturn(Future(Success(TestData.sampleImageSearch)))
+    when(audioApiClient.search(any[SearchParams])(any[ExecutionContext]))
+      .thenReturn(Future(Success(TestData.sampleAudio)))
 
     val searchParams = SearchParams(Some("nb"), Sort.ByRelevanceDesc, 1, 10, Map.empty)
     val res = searchService.search(searchParams, SearchClients.values.toSet)

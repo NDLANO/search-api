@@ -37,6 +37,8 @@ object SearchApiProperties extends LazyLogging {
   val ApiGatewayUrl: String = s"http://${propOrElse("API_GATEWAY_HOST", "api-gateway.ndla-local")}"
   val GrepApiUrl: String = s"https://${propOrElse("GREP_API_HOST", "data.udir.no")}"
 
+  lazy val ApiVersion: Option[String] = propOrNone("SEARCH_API_VERSION")
+
   val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-search-api.ndla-local")
   val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
   val RunWithSignedSearchRequests: Boolean = propOrElse("RUN_WITH_SIGNED_SEARCH_REQUESTS", "true").toBoolean
@@ -55,7 +57,7 @@ object SearchApiProperties extends LazyLogging {
 
   val DefaultPageSize = 10
   val MaxPageSize = 10000
-  val IndexBulkSize = 100
+  val IndexBulkSize = 250
   val ElasticSearchIndexMaxResultWindow = 10000
   val ElasticSearchScrollKeepAlive = "10s"
 

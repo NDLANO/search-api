@@ -10,7 +10,7 @@ package no.ndla.searchapi.integration
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.model.domain.{ImageApiSearchResults, SearchParams}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait ImageApiClient {
@@ -21,7 +21,8 @@ trait ImageApiClient {
     override val searchPath = "image-api/v2/images"
     override val name = "images"
 
-    def search(searchParams: SearchParams): Future[Try[ImageApiSearchResults]] =
+    def search(searchParams: SearchParams)(
+        implicit executionContext: ExecutionContext): Future[Try[ImageApiSearchResults]] =
       search[ImageApiSearchResults](searchParams)
   }
 }

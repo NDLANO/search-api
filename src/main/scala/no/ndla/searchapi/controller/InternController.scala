@@ -140,6 +140,9 @@ trait InternController {
         taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle()
         grepBundle <- grepApiClient.getGrepBundle()
       } yield (taxonomyBundle, grepBundle)
+
+      val start = System.currentTimeMillis()
+
       bundles match {
         case Failure(ex) => errorHandler(ex)
         case Success((taxonomyBundle, grepBundle)) =>
@@ -161,7 +164,9 @@ trait InternController {
           if (runInBackground) {
             Accepted("Starting indexing process...")
           } else {
-            resolveResultFutures(indexes)
+            val out = resolveResultFutures(indexes)
+            logger.info(s"Reindexing all indexes took ${System.currentTimeMillis() - start} ms...")
+            out
           }
       }
     }

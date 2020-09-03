@@ -21,6 +21,9 @@ import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization.write
 
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.Duration
+
 class LearningpathApiClientTest extends UnitSuite with TestEnvironment {
   implicit val formats: Formats =
     org.json4s.DefaultFormats +
@@ -128,8 +131,10 @@ class LearningpathApiClientTest extends UnitSuite with TestEnvironment {
           AuthUser.setHeader(s"Bearer $exampleToken")
           val learningPathApiClient = new LearningPathApiClient(mockConfig.baseUrl)
 
+          implicit val ec = ExecutionContext.global
           val chunks = learningPathApiClient.getChunks[domain.learningpath.LearningPath].toList
-          val fetchedLearningPath = chunks.flatMap(_.get).head
+          val fetchedLearningPath = Await.result(chunks.head, Duration.Inf).get.head
+
           val searchable =
             searchConverterService.asSearchableLearningPath(fetchedLearningPath, TestData.taxonomyTestBundle)
 

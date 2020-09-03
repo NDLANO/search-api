@@ -15,13 +15,14 @@ import no.ndla.searchapi.model.api.ApiSearchException
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.learningpath._
-import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, SearchParams}
+import no.ndla.searchapi.model.domain.{ApiSearchResults, DomainDumpResults, RequestInfo, SearchParams}
 import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
 import scalaj.http.Http
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.math.ceil
 import scala.util.{Failure, Success, Try}
 
@@ -34,43 +35,50 @@ trait SearchApiClient {
     val searchPath: String
     val dumpDomainPath: String = s"intern/dump/$name"
 
-    def getChunks[T](implicit mf: Manifest[T]): Iterator[Try[Seq[T]]] = {
-      getChunk(0, 0) match {
+    def getChunks[T](implicit mf: Manifest[T], ec: ExecutionContext): Iterator[Future[Try[Seq[T]]]] = {
+      val fut = getChunk(0, 0)
+      val initial = Await.result(fut, 10.minutes)
+
+      initial match {
         case Success(initSearch) =>
           val dbCount = initSearch.totalCount
           val pageSize = SearchApiProperties.IndexBulkSize
           val numPages = ceil(dbCount.toDouble / pageSize.toDouble).toInt
           val pages = Seq.range(1, numPages + 1)
 
-          val iterator: Iterator[Try[Seq[T]]] = pages.iterator.map(p => {
-            getChunk[T](p, pageSize).map(_.results)
+          val iterator: Iterator[Future[Try[Seq[T]]]] = pages.iterator.map(p => {
+            getChunk[T](p, pageSize).map(_.map(_.results))
           })
 
           iterator
         case Failure(ex) =>
           logger.error(s"Could not fetch initial chunk from $baseUrl/$dumpDomainPath")
-          Iterator(Failure(ex))
+          Iterator(Future(Failure(ex)))
       }
     }
 
-    private def getChunk[T](page: Int, pageSize: Int)(implicit mf: Manifest[T]): Try[DomainDumpResults[T]] = {
+    private def getChunk[T](page: Int, pageSize: Int)(implicit mf: Manifest[T],
+                                                      ec: ExecutionContext): Future[Try[DomainDumpResults[T]]] = {
       val params = Map(
         "page" -> page,
         "page-size" -> pageSize
       )
-
-      get[DomainDumpResults[T]](dumpDomainPath, params, timeout = 120000) match {
-        case Success(result) =>
-          logger.info(s"Fetched chunk of ${result.results.size} $name from ${baseUrl.addParams(params)}")
-          Success(result)
-        case Failure(ex) =>
-          logger.error(
-            s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$dumpDomainPath'")
-          Failure(ex)
+      val reqs = RequestInfo()
+      Future {
+        reqs.setRequestInfo()
+        get[DomainDumpResults[T]](dumpDomainPath, params, timeout = 120000) match {
+          case Success(result) =>
+            logger.info(s"Fetched chunk of ${result.results.size} $name from ${baseUrl.addParams(params)}")
+            Success(result)
+          case Failure(ex) =>
+            logger.error(
+              s"Could not fetch chunk on page: '$page', with pageSize: '$pageSize' from '$baseUrl/$dumpDomainPath'")
+            Failure(ex)
+        }
       }
     }
 
-    def search(searchParams: SearchParams): Future[Try[ApiSearchResults]]
+    def search(searchParams: SearchParams)(implicit executionContext: ExecutionContext): Future[Try[ApiSearchResults]]
 
     def get[T](path: String, params: Map[String, Any], timeout: Int = 5000)(implicit mf: Manifest[T]): Try[T] = {
       implicit val formats: Formats =
@@ -87,8 +95,8 @@ trait SearchApiClient {
       ndlaClient.fetchWithForwardedAuth[T](Http((baseUrl / path).addParams(params.toList)).timeout(timeout, timeout))
     }
 
-    protected def search[T <: ApiSearchResults](searchParams: SearchParams)(
-        implicit mf: Manifest[T]): Future[Try[T]] = {
+    protected def search[T <: ApiSearchResults](
+        searchParams: SearchParams)(implicit mf: Manifest[T], executionContext: ExecutionContext): Future[Try[T]] = {
       val queryParams = searchParams.remaindingParams ++ Map("language" -> searchParams.language.getOrElse("all"),
                                                              "sort" -> searchParams.sort,
                                                              "page" -> searchParams.page,

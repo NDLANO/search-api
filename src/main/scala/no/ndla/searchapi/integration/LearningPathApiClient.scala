@@ -10,7 +10,7 @@ package no.ndla.searchapi.integration
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.model.domain.{LearningpathApiSearchResults, SearchParams}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait LearningPathApiClient {
@@ -22,7 +22,8 @@ trait LearningPathApiClient {
     override val name = "learningpaths"
     override val dumpDomainPath = "intern/dump/learningpath"
 
-    def search(searchParams: SearchParams): Future[Try[LearningpathApiSearchResults]] =
+    def search(searchParams: SearchParams)(
+        implicit executionContext: ExecutionContext): Future[Try[LearningpathApiSearchResults]] =
       search[LearningpathApiSearchResults](searchParams)
   }
 }
