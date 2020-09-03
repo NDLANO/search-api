@@ -64,6 +64,12 @@ trait IndexService {
         case Failure(ex) => Failure(ex)
         case Success(Some(existingIndex)) =>
           ApiVersion match {
+            case Some(apiVersion) if apiVersion == "SNAPSHOT" =>
+              logger.info("Snapshot version found, not rebuilding on launch")
+              Success(())
+            case None =>
+              logger.info("No version found, assuming snapshot and not rebuilding on launch")
+              Success(())
             case Some(apiVersion) =>
               getCurrentIndexInformation(existingIndex) match {
                 case Some((indexShortName, indexVersion)) =>
@@ -78,9 +84,6 @@ trait IndexService {
                   logger.info(s"Could not derive version from index '$existingIndex', rebuilding...")
                   indexDocuments()
               }
-            case None =>
-              logger.info("Snapshot version found, not rebuilding on launch")
-              Success(())
           }
 
         case Success(None) =>
