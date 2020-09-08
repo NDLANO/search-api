@@ -591,10 +591,7 @@ trait SearchConverterService {
       val name = findByLanguageOrBestEffort(filter.name.languageValues, language).map(_.value).getOrElse("")
       val relevance = findByLanguageOrBestEffort(filter.relevance.languageValues, language).map(_.value).getOrElse("")
 
-      api.TaxonomyContextFilter(
-        name,
-        relevance
-      )
+      api.TaxonomyContextFilter(filter.filterId, name, relevance)
     }
 
     private def compareId(contentUri: String, id: Long, `type`: String): Boolean = {
