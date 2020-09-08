@@ -577,6 +577,7 @@ trait SearchConverterService {
       ApiTaxonomyContext(
         id = context.id,
         subject = subjectName,
+        subjectId = context.subjectId,
         path = context.path,
         breadcrumbs = breadcrumbs,
         filters = filters,

@@ -15,6 +15,7 @@ import scala.annotation.meta.field
 case class ApiTaxonomyContext(
     @(ApiModelProperty @field)(description = "Id of the taoxonomy object") id: String,
     @(ApiModelProperty @field)(description = "Name of the subject this context is in") subject: String,
+    @(ApiModelProperty @field)(description = "Id of the subject this context is in") subjectId: String,
     @(ApiModelProperty @field)(description = "Path to the resource in this context") path: String,
     @(ApiModelProperty @field)(description = "Breadcrumbs of path to the resource in this context") breadcrumbs: List[
       String],
