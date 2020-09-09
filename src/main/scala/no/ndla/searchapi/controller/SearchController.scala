@@ -16,7 +16,8 @@ import no.ndla.searchapi.SearchApiProperties.{
   DefaultPageSize,
   ElasticSearchIndexMaxResultWindow,
   ElasticSearchScrollKeepAlive,
-  MaxPageSize
+  MaxPageSize,
+  InitialScrollContextKeywords
 }
 import no.ndla.searchapi.auth.{Role, User, UserInfo}
 import no.ndla.searchapi.integration.SearchApiClient
@@ -143,6 +144,8 @@ trait SearchController {
     private val scrollId = Param[Option[String]](
       "search-context",
       s"""A search context retrieved from the response header of a previous search.
+        |To get the initial one from a search supply search-context equal any of the following ${InitialScrollContextKeywords
+           .mkString("[", ",", "]")}.
         |If search-context is specified, all other query parameters, except '${this.language.paramName}' and '${this.fallback.paramName}' are ignored
         |For the rest of the parameters the original search of the search-context is used.
         |The search context may change between scrolls. Always use the most recent one (The context if unused dies after $ElasticSearchScrollKeepAlive).
@@ -232,16 +235,14 @@ trait SearchController {
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
         contextIds = contexts,
-        grepCodes = grepCodes
+        grepCodes = grepCodes,
+        shouldScroll = false
       )
 
       groupSearch(query, settings.copy(resourceTypes = resourceTypes))
     }
 
-    private def searchInGroup(query: Option[String],
-                              group: String,
-                              settings: SearchSettings): Try[GroupSearchResult] = {
-
+    private def searchInGroup(group: String, settings: SearchSettings): Try[GroupSearchResult] = {
       multiSearchService
         .matchingQuery(settings)
         .map(
@@ -265,7 +266,7 @@ trait SearchController {
           ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(settings.resourceTypes.size))
 
         val searches = settings.resourceTypes.map(group =>
-          Future { searchInGroup(query, group, settings.copy(resourceTypes = List(group))) })
+          Future { searchInGroup(group, settings.copy(resourceTypes = List(group))) })
 
         val futureSearches = Future.sequence(searches)
         val completedSearches = Await.result(futureSearches, Duration(10, SECONDS))
@@ -332,6 +333,7 @@ trait SearchController {
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
       val contexts = paramAsListOfString(this.contextFilters.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
+      val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
 
       SearchSettings(
         query = query,
@@ -349,7 +351,8 @@ trait SearchController {
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
         contextIds = contexts,
-        grepCodes = grepCodes
+        grepCodes = grepCodes,
+        shouldScroll = shouldScroll
       )
     }
 
@@ -373,6 +376,7 @@ trait SearchController {
       val statusFilter = paramAsListOfString(this.statusFilter.paramName)
       val userFilter = paramAsListOfString(this.userFilter.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
+      val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
 
       MultiDraftSearchSettings(
         query = query,
@@ -393,7 +397,8 @@ trait SearchController {
         relevanceIds = relevances,
         statusFilter = statusFilter.flatMap(ArticleStatus.valueOf),
         userFilter = userFilter,
-        grepCodes = grepCodes
+        grepCodes = grepCodes,
+        shouldScroll = shouldScroll
       )
     }
 

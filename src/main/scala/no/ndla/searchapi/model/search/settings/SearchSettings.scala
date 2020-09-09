@@ -26,5 +26,6 @@ case class SearchSettings(
     supportedLanguages: List[String],
     relevanceIds: List[String],
     contextIds: List[String],
-    grepCodes: List[String]
+    grepCodes: List[String],
+    shouldScroll: Boolean
 )
