@@ -17,7 +17,7 @@ import no.ndla.searchapi.model.domain.learningpath.{
   LearningPathStatus,
   LearningPathVerificationStatus
 }
-import no.ndla.searchapi.model.grep.GrepBundle
+import no.ndla.searchapi.model.grep.{GrepBundle, GrepElement, GrepTitle}
 import no.ndla.searchapi.model.search._
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.model.taxonomy._
@@ -214,7 +214,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(3),
     published = today.minusDays(3),
-    grepCodes = Seq("K123", "K456")
+    grepCodes = Seq("KM123", "KE12")
   )
 
   val article2: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -230,7 +230,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(2),
     published = today.minusDays(2),
-    grepCodes = Seq("K456", "K123")
+    grepCodes = Seq("KE34", "KM123")
   )
 
   val article3: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -244,7 +244,7 @@ object TestData {
     created = today.minusDays(4),
     updated = today.minusDays(1),
     published = today.minusDays(1),
-    grepCodes = Seq("K123")
+    grepCodes = Seq("TT2", "KM123")
   )
 
   val article4: Article = TestData.sampleArticleWithCopyrighted.copy(
@@ -272,7 +272,7 @@ object TestData {
     created = today.minusDays(40),
     updated = today.minusDays(35),
     published = today.minusDays(35),
-    grepCodes = Seq("K456")
+    grepCodes = Seq("KE12", "TT2")
   )
 
   val article6: Article = TestData.sampleArticleWithPublicDomain.copy(
@@ -363,7 +363,9 @@ object TestData {
   val article12: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(12),
     title = List(Title("Ekstrastoff", "nb")),
-    content = List(ArticleContent("Helsesøster", "nb")),
+    content = List(
+      ArticleContent("Helse søster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\">",
+                     "nb")),
     tags = List(Tag(List(""), "nb")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
@@ -559,7 +561,7 @@ object TestData {
     previousVersionsNotes = List(
       draft.EditorNote(
         "kultgammeltnotat",
-        "ndalId54321",
+        "ndalId12345",
         Status(ArticleStatus.DRAFT, Set.empty),
         today.minusDays(31).toDate
       )),
@@ -653,7 +655,8 @@ object TestData {
     title = List(Title("Ekstrastoff", "nb")),
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
-    content = List(ArticleContent("", "nb")),
+    content =
+      List(ArticleContent("<embed data-resource=\"concept\" data-resource_id=\"55\" data-title=\"Flubber\" />", "nb")),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),
@@ -692,6 +695,20 @@ object TestData {
     )
   )
 
+  val draft15: Draft = TestData.sampleDraftWithPublicDomain.copy(
+    id = Option(15),
+    title = List(Title("Engler og demoner", "nb")),
+    introduction = List(ArticleIntroduction("Religion", "nb")),
+    metaDescription = List(MetaDescription("metareligion", "nb")),
+    content =
+      List(ArticleContent("<p>Vanlig i gamle testamentet</p>", "nb"), ArticleContent("<p>Christianity!</p>", "en")),
+    visualElement = List.empty,
+    tags = List(Tag(List("engel"), "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    articleType = LearningResourceType.TopicArticle
+  )
+
   val draftsToIndex: List[Draft] = List(
     draft1,
     draft2,
@@ -706,13 +723,15 @@ object TestData {
     draft11,
     draft12,
     draft13,
-    draft14
+    draft14,
+    draft15
   )
 
   val paul = Author("author", "Truly Weird Rand Paul")
   val license = "publicdomain"
   val copyright = domain.learningpath.Copyright(license, List(paul))
   val visibleMetadata = Some(Metadata(Seq.empty, visible = true))
+  val invisibleMetadata = Some(Metadata(Seq.empty, visible = false))
 
   val DefaultLearningPath = LearningPath(
     id = None,
@@ -804,7 +823,8 @@ object TestData {
 
   val subjects = List(
     TaxSubject("urn:subject:1", "Matte", None, Some("/subject:1"), visibleMetadata),
-    TaxSubject("urn:subject:2", "Historie", None, Some("/subject:2"), visibleMetadata)
+    TaxSubject("urn:subject:2", "Historie", None, Some("/subject:2"), visibleMetadata),
+    TaxSubject("urn:subject:3", "Religion", None, Some("/subject:3"), invisibleMetadata)
   )
 
   val filters = List(
@@ -970,13 +990,19 @@ object TestData {
           article11.title.head.title,
           Some(s"urn:article:${article11.id.get}"),
           Some("/subject:2/topic:4"),
-          visibleMetadata)
+          visibleMetadata),
+    Topic("urn:topic:5",
+          draft15.title.head.title,
+          Some(s"urn:article:${draft15.id.get}"),
+          Some("/subject:3/topic:5"),
+          invisibleMetadata)
   )
 
   val subjectTopicConnections = List(
     SubjectTopicConnection("urn:subject:1", "urn:topic:1", "urn:subject-topic:1", primary = true, 1),
     SubjectTopicConnection("urn:subject:1", "urn:topic:3", "urn:subject-topic:2", primary = true, 1),
-    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1)
+    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1),
+    SubjectTopicConnection("urn:subject:3", "urn:topic:5", "urn:subject-topic:4", primary = true, 1),
   )
 
   val topicResourceConnections = List(
@@ -1046,6 +1072,17 @@ object TestData {
     kjerneelementer = List.empty,
     kompetansemaal = List.empty,
     tverrfagligeTemaer = List.empty,
+  )
+
+  val grepBundle = emptyGrepBundle.copy(
+    kjerneelementer = List(
+      GrepElement("KE12", Seq(GrepTitle("default", "Utforsking og problemløysing"))),
+      GrepElement("KE34", Seq(GrepTitle("default", "Abstraksjon og generalisering")))
+    ),
+    kompetansemaal = List(
+      GrepElement("KM123",
+                  Seq(GrepTitle("default", "bruke ulike kilder på en kritisk, hensiktsmessig og etterrettelig måte")))),
+    tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "Demokrati og medborgerskap"))))
   )
 
   val searchSettings = SearchSettings(

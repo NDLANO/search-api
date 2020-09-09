@@ -47,6 +47,12 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("Mum", "Car", "Wroom"))
       ))
 
+    val embedAttrs = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", Seq("En norsk", "To norsk")),
+        LanguageValue("en", Seq("One english"))
+      ))
+
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
     val original = SearchableArticle(
@@ -66,7 +72,9 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       supportedLanguages = List("en", "nb", "nn"),
       contexts = searchableTaxonomyContexts,
       grepContexts =
-        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2")))
+        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
+      traits = List.empty,
+      embedAttributes = embedAttrs
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)

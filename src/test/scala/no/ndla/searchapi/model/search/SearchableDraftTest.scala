@@ -48,6 +48,12 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
 
     val metaImages = List(ArticleMetaImage("1", "norAlt", "nb"), ArticleMetaImage("2", "enAlt", "en"))
 
+    val embedAttrs = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", Seq("En norsk", "To norsk")),
+        LanguageValue("en", Seq("One english"))
+      ))
+
     val original = SearchableDraft(
       id = 100,
       draftStatus = Status(ArticleStatus.DRAFT.toString, Seq(ArticleStatus.PROPOSAL.toString)),
@@ -69,7 +75,9 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
       users = List("ndalId54321", "ndalId12345"),
       previousVersionsNotes = List("OldNote"),
       grepContexts =
-        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2")))
+        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
+      traits = List.empty,
+      embedAttributes = embedAttrs
     )
     val json = write(original)
     val deserialized = read[SearchableDraft](json)

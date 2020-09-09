@@ -41,7 +41,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
     val indexedArticles =
-      articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, emptyGrepBundle))
+      articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, grepBundle))
 
     val indexedDrafts =
       draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
@@ -237,7 +237,6 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
   }
 
   test("Searching with NOT returns expected results") {
-    println(elasticSearchHost.getOrElse(""))
     val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(Some("bil + bilde + -flaggermusmann"), sort = Sort.ByTitleAsc))
     // 1 is matched even if flaggermusmann exists in the document because the decompounded field does not contain flaggermusmann and causes a match
@@ -383,6 +382,12 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
       multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:2", "urn:subject:1")))
     search.totalCount should be(14)
     search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
+  }
+
+  test("That filtering for invisivle subjects returns nothing") {
+    val Success(search) =
+      multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:3")))
+    search.totalCount should be(0)
   }
 
   test("That filtering for resource-types works as expected") {
@@ -564,13 +569,33 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
   }
 
   test("That filtering on grepCodes returns articles which has grepCodes") {
-    val Success(search1) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("K123")))
-    val Success(search2) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("K456")))
-    val Success(search3) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("K123", "K456")))
+    val Success(search1) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("KM123")))
+    val Success(search2) = multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("KE12")))
+    val Success(search3) =
+      multiSearchService.matchingQuery(searchSettings.copy(grepCodes = List("KM123", "KE34", "TT2")))
 
     search1.results.map(_.id) should be(Seq(1, 2, 3))
-    search2.results.map(_.id) should be(Seq(1, 2, 5))
+    search2.results.map(_.id) should be(Seq(1, 5))
     search3.results.map(_.id) should be(Seq(1, 2, 3, 5))
+  }
+
+  test("That search for grep text returns articles which has grep texts fetched from grepCodes") {
+    val Success(search1) =
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("\"utforsking og problemløysing\"")))
+    search1.results.map(_.id) should be(Seq(1, 5))
+  }
+
+  test("That search result has traits if content has embeds") {
+    val Success(search) = multiSearchService.matchingQuery(searchSettings.copy(query = Some("Ekstrastoff")))
+    search.totalCount should be(1)
+    search.results.head.id should be(12)
+    search.results.head.traits should be(List("H5P"))
+  }
+
+  test("That searches for embed attributes matches") {
+    val Success(search) =
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("Flubber"), language = Language.AllLanguages))
+    search.results.map(_.id) should be(Seq(12))
   }
 
   test("That compound words are matched when searched wrongly") {

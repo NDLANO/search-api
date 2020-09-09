@@ -8,8 +8,8 @@
 package no.ndla.searchapi.service.search
 
 import no.ndla.searchapi.caching.Memoize
-import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
+import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.grep.{GrepElement, GrepTitle}
 import no.ndla.searchapi.model.search.{
   SearchableArticle,
@@ -19,8 +19,6 @@ import no.ndla.searchapi.model.search.{
 }
 import no.ndla.searchapi.model.taxonomy._
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
-import org.mockito.ArgumentMatchers._
-import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 
 import scala.util.{Success, Try}
@@ -326,32 +324,22 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   test("That asSearchableArticle converts grepContexts correctly based on grepBundle if article has grepCodes") {
     val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
-    val grepBundle = TestData.emptyGrepBundle.copy(
-      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
-                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
-      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
-      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
+    val grepContexts = List(
+      SearchableGrepContext("KE12", Some("Utforsking og problemløysing")),
+      SearchableGrepContext("KM123", Some("bruke ulike kilder på en kritisk, hensiktsmessig og etterrettelig måte")),
+      SearchableGrepContext("TT2", Some("Demokrati og medborgerskap"))
     )
-    val grepContexts = List(SearchableGrepContext("KE12", Some("tittel12")),
-                            SearchableGrepContext("KM123", Some("tittel123")),
-                            SearchableGrepContext("TT2", Some("tittel2")))
     val Success(searchableArticle) =
-      searchConverterService.asSearchableArticle(article, emptyBundle, grepBundle)
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.grepBundle)
     searchableArticle.grepContexts should equal(grepContexts)
   }
 
   test("That asSearchableArticle converts grepContexts correctly based on grepBundle if article has no grepCodes") {
     val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq.empty)
-    val grepBundle = TestData.emptyGrepBundle.copy(
-      kjerneelementer = List(GrepElement("KE12", Seq(GrepTitle("default", "tittel12"))),
-                             GrepElement("KE34", Seq(GrepTitle("default", "tittel34")))),
-      kompetansemaal = List(GrepElement("KM123", Seq(GrepTitle("default", "tittel123")))),
-      tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "tittel2"))))
-    )
     val grepContexts = List.empty
 
     val Success(searchableArticle) =
-      searchConverterService.asSearchableArticle(article, emptyBundle, grepBundle)
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.grepBundle)
     searchableArticle.grepContexts should equal(grepContexts)
   }
 
@@ -394,6 +382,50 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     val Success(searchableArticle) =
       searchConverterService.asSearchableDraft(draft, emptyBundle, grepBundle)
     searchableArticle.grepContexts should equal(grepContexts)
+  }
+
+  test("That asSearchableArticle extracts traits correctly") {
+    val article =
+      TestData.emptyDomainArticle.copy(
+        id = Some(99),
+        content = Seq(
+          ArticleContent("Sjekk denne h5p-en <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb"),
+          ArticleContent("Fil <embed data-resource=\"file\" data-path=\"/file/path\">", "nn")
+        )
+      )
+
+    val Success(searchableArticle) =
+      searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle.traits should equal(List("H5P"))
+
+    val article2 =
+      TestData.emptyDomainArticle.copy(
+        id = Some(99),
+        content = Seq(
+          ArticleContent("Skikkelig bra h5p: <embed data-resource=\"h5p\" data-path=\"/resource/id\">", "nb"),
+          ArticleContent("Fin video <embed data-resource=\"external\" data-url=\"https://youtu.be/id\">", "nn"),
+          ArticleContent(
+            "Movie trailer <embed data-resource=\"iframe\" data-url=\"https://www.imdb.com/video/vi3074735641\">",
+            "en")
+        )
+      )
+
+    val Success(searchableArticle2) =
+      searchConverterService.asSearchableArticle(article2, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle2.traits should equal(List("H5P", "VIDEO"))
+  }
+
+  test("That extracting attributes extracts data-title but not all attributes") {
+    val html =
+      """<section>Hei<p align="center">Heihei</p><embed class="testklasse" tulleattributt data-resource_id="55" data-title="For ei tittel" />"""
+    val result = searchConverterService.getAttributes(html)
+    result should be(List("For ei tittel"))
+  }
+
+  test("That asSearchableDraft extracts all users from notes correctly") {
+    val draft = searchConverterService.asSearchableDraft(TestData.draft5, emptyBundle, TestData.emptyGrepBundle)
+    draft.get.users.length should be(2)
+    draft.get.users should be(List("ndalId54321", "ndalId12345"))
   }
 
   private def verifyTitles(searchableArticle: SearchableArticle): Unit = {

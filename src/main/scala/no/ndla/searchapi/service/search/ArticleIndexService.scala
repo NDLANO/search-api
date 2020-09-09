@@ -56,6 +56,7 @@ trait ArticleIndexService {
           keywordField("supportedLanguages"),
           keywordField("grepContexts.code"),
           textField("grepContexts.title"),
+          keywordField("traits"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),
@@ -70,7 +71,8 @@ trait ArticleIndexService {
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
           generateLanguageSupportedFieldList("metaDescription") ++
-          generateLanguageSupportedFieldList("tags")
+          generateLanguageSupportedFieldList("tags") ++
+          generateLanguageSupportedFieldList("embedAttributes")
       )
     }
   }

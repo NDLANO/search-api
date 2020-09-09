@@ -54,6 +54,7 @@ trait MultiDraftSearchService {
           langQueryFunc("metaDescription", 1),
           langQueryFunc("content", 1),
           langQueryFunc("tags", 1),
+          langQueryFunc("embedAttributes", 1),
           simpleStringQuery(queryString).field("authors", 1),
           simpleStringQuery(queryString).field("notes", 1),
           simpleStringQuery(queryString).field("previousVersionsNotes", 1),

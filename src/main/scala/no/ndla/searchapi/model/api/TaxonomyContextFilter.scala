@@ -7,4 +7,4 @@
 
 package no.ndla.searchapi.model.api
 
-case class TaxonomyContextFilter(name: String, relevance: String)
+case class TaxonomyContextFilter(id: String, name: String, relevance: String)

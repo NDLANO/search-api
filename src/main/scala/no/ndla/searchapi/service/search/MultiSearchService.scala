@@ -53,7 +53,9 @@ trait MultiSearchService {
               langQueryFunc("metaDescription", 1),
               langQueryFunc("content", 1),
               langQueryFunc("tags", 1),
-              simpleStringQuery(q).field("authors", 1)
+              langQueryFunc("embedAttributes", 1),
+              simpleStringQuery(q).field("authors", 1),
+              simpleStringQuery(q).field("grepContexts.title", 1)
             ))
         case None =>
           boolQuery()

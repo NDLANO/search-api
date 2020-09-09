@@ -62,6 +62,7 @@ trait DraftIndexService {
           keywordField("users"),
           keywordField("grepContexts.code"),
           textField("grepContexts.title"),
+          keywordField("traits"),
           getTaxonomyContextMapping,
           nestedField("metaImage").fields(
             keywordField("imageId"),
@@ -74,7 +75,8 @@ trait DraftIndexService {
           generateLanguageSupportedFieldList("content") ++
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
-          generateLanguageSupportedFieldList("tags")
+          generateLanguageSupportedFieldList("tags") ++
+          generateLanguageSupportedFieldList("embedAttributes")
       )
     }
   }
