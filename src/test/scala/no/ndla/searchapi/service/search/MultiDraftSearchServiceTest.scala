@@ -417,8 +417,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
   test("That filtering for invisible subjects returns all drafts with any of listed subjects") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(subjects = List("urn:subject:3")))
-    search.totalCount should be(1)
-    search.results.map(_.id) should be(Seq(15))
+    search.totalCount should be(2)
+    search.results.map(_.id) should be(Seq(1, 15))
   }
 
   test("That filtering for resource-types works as expected") {
