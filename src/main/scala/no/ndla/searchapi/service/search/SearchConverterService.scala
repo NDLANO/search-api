@@ -896,12 +896,7 @@ trait SearchConverterService {
     }
 
     private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T], bundle: TaxonomyBundle): List[T] = {
-      val isVisible = (e: TaxonomyElement) => e.metadata.exists(_.visible)
-      val hasVisibleSubject = (e: TaxonomyElement) => bundle.getSubject(e.path).exists(isVisible)
-
-      elementsToFilter
-        .filter(isVisible)
-        .filter(hasVisibleSubject)
+      elementsToFilter.filter((e: TaxonomyElement) => e.metadata.exists(_.visible))
     }
 
     private[service] def getGrepContexts(grepCodes: Seq[String], bundle: GrepBundle): List[SearchableGrepContext] = {

@@ -896,7 +896,7 @@ object TestData {
       "urn:resource:1",
       article1.title.head.title,
       Some(s"urn:article:${article1.id.get}"),
-      Some("/subject:1/topic:1/resource:1"),
+      Some("/subject:3/topic:5/resource:1"),
       visibleMetadata
     ),
     Resource(
