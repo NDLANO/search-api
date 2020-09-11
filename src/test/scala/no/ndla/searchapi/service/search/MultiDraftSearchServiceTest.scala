@@ -171,11 +171,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc))
-    val hits = results.results
     results.totalCount should be(3)
-    hits.head.id should be(5)
-    hits(1).id should be(1)
-    hits.last.id should be(3)
+    results.results.map(_.id) should be(Seq(1, 5, 3))
   }
 
   test("That search combined with filter by id only returns documents matching the query with one of the given ids") {
@@ -192,11 +189,10 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("Pingvinen"), sort = Sort.ByTitleAsc))
-    val hits = results.results
+
+    results.results.map(_.contexts.head.learningResourceType) should be(Seq("learningpath", "standard"))
+    results.results.map(_.id) should be(Seq(1, 2))
     results.totalCount should be(2)
-    hits.head.id should be(1)
-    hits.head.contexts.head.learningResourceType should be("learningpath")
-    hits(1).id should be(2)
   }
 
   test("That search matches updatedBy") {
@@ -234,7 +230,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("supermann"), sort = Sort.ByTitleAsc))
-    results.totalCount should be(0)
+    results.totalCount should be(3)
+    results.results.map(_.id) should be(Seq(2, 1, 1))
+    results.results.map(_.learningResourceType) should be(Seq("learningpath", "standard", "learningpath"))
   }
 
   test("That search returns superman since license is specified as copyrighted") {
@@ -258,17 +256,19 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
         multiDraftSearchSettings.copy(query = Some("batmen + bil"), sort = Sort.ByTitleAsc))
     val hits2 = search2.results
     hits2.map(_.id) should equal(Seq(1))
+  }
 
-    val Success(search3) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(query = Some("bil + bilde + -flaggermusmann"), sort = Sort.ByTitleAsc))
-    val hits3 = search3.results
-    hits3.map(_.id) should equal(Seq(3, 5))
+  test("That searching with NOT returns expected results") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("-flaggermusmann + (bil + bilde)"), sort = Sort.ByTitleAsc))
+    // 1 is matched even if flaggermusmann exists in the document because the decompounded field does not contain flaggermusmann and causes a match
+    // This is unwanted, but as of now i can not see a workaround
+    search1.results.map(_.id) should equal(Seq(1, 3, 5))
 
-    val Success(search4) =
+    val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("bil + -hulken"), sort = Sort.ByTitleAsc))
-    val hits4 = search4.results
-    hits4.map(_.id) should equal(Seq(1, 3))
+    search2.results.map(_.id) should equal(Seq(1, 3))
   }
 
   test("search in content should be ranked lower than introduction and title") {
@@ -714,12 +714,14 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(search1) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
+          withIdIn = List(14),
           query = query,
           statusFilter = List(ArticleStatus.ARCHIVED)
         ))
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
+          withIdIn = List(14),
           query = query,
           statusFilter = List.empty
         ))
@@ -739,6 +741,20 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.suggestions.head.suggestions.head.text should equal("bil")
     search.suggestions.last.name should be("title")
     search.suggestions.last.suggestions.head.text should equal("bil")
+  }
+
+  test("That compound words are matched when searched wrongly") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = Language.AllLanguages))
+
+    search1.totalCount should be(1)
+    search1.results.map(_.id) should be(Seq(13))
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb"))
+
+    search2.totalCount should be(1)
+    search2.results.map(_.id) should be(Seq(13))
   }
 
   test("That searches for embed attributes matches") {

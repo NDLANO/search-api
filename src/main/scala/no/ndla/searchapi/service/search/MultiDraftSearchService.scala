@@ -42,34 +42,25 @@ trait MultiDraftSearchService {
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
 
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
-      val searchLanguage =
-        if (settings.language == Language.AllLanguages || settings.fallback) "*" else settings.language
+      val contentSearch = settings.query.map(queryString => {
 
-      val contentSearch = settings.query.map(q => {
-        val titleSearch = simpleStringQuery(q).field(s"title.$searchLanguage", 3)
-        val introSearch = simpleStringQuery(q).field(s"introduction.$searchLanguage", 2)
-        val metaSearch = simpleStringQuery(q).field(s"metaDescription.$searchLanguage", 1)
-        val contentSearch = simpleStringQuery(q).field(s"content.$searchLanguage", 1)
-        val tagSearch = simpleStringQuery(q).field(s"tags.$searchLanguage", 1)
-        val authorSearch = simpleStringQuery(q).field("authors", 1)
-        val notesSearch = simpleStringQuery(q).field("notes", 1)
-        val previousNotesSearch = simpleStringQuery(q).field("previousVersionsNotes", 1)
-        val grepCodesTitleSearch = simpleStringQuery(q).field("grepContexts.title", 1)
-        val attributesSearch = simpleStringQuery(q).field(s"embedAttributes.$searchLanguage", 1)
+        val langQueryFunc = (fieldName: String, boost: Int) => {
+          buildSimpleStringQueryForField(queryString, fieldName, boost, settings.language, settings.fallback)
+        }
 
-        boolQuery()
-          .should(
-            titleSearch,
-            introSearch,
-            metaSearch,
-            contentSearch,
-            tagSearch,
-            authorSearch,
-            notesSearch,
-            previousNotesSearch,
-            grepCodesTitleSearch,
-            attributesSearch
-          )
+        boolQuery().should(
+          langQueryFunc("title", 3),
+          langQueryFunc("introduction", 2),
+          langQueryFunc("metaDescription", 1),
+          langQueryFunc("content", 1),
+          langQueryFunc("tags", 1),
+          langQueryFunc("embedAttributes", 1),
+          simpleStringQuery(queryString).field("authors", 1),
+          simpleStringQuery(queryString).field("notes", 1),
+          simpleStringQuery(queryString).field("previousVersionsNotes", 1),
+          simpleStringQuery(queryString).field("grepContexts.title", 1)
+        )
+
       })
 
       val noteSearch = settings.noteQuery.map(q => {

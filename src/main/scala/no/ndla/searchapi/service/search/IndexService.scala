@@ -14,7 +14,10 @@ import java.util.concurrent.Executors
 
 import com.sksamuel.elastic4s.alias.AliasAction
 import com.sksamuel.elastic4s.analyzers.{
+  CompoundWordTokenFilter,
   CustomAnalyzerDefinition,
+  DictionaryDecompounder,
+  HyphenationDecompounder,
   LowercaseTokenFilter,
   ShingleTokenFilter,
   StandardTokenizer
@@ -206,6 +209,19 @@ trait IndexService {
 
     def createIndexWithGeneratedName: Try[String] = createIndexWithName(searchIndex + "_" + getTimestamp)
 
+    private def customCompoundAnalyzer() = {
+      CustomAnalyzerDefinition(
+        "compound_analyzer",
+        StandardTokenizer,
+        CompoundWordTokenFilter(
+          name = "hyphenation_decompounder",
+          `type` = HyphenationDecompounder,
+          wordListPath = Some("compound-words-norwegian-wordlist.txt"),
+          hyphenationPatternsPath = Some("hyph/no.xml")
+        )
+      )
+    }
+
     def createIndexWithName(indexName: String): Try[String] = {
       if (indexWithNameExists(indexName).getOrElse(false)) {
         Success(indexName)
@@ -213,7 +229,11 @@ trait IndexService {
         val response = e4sClient.execute {
           createIndex(indexName)
             .mappings(getMapping)
-            .analysis(List(trigram, Language.nynorskLanguageAnalyzer))
+            .analysis(
+              trigram,
+              Language.nynorskLanguageAnalyzer,
+              customCompoundAnalyzer(),
+            )
             .indexSetting("max_result_window", SearchApiProperties.ElasticSearchIndexMaxResultWindow)
         }
 
@@ -351,24 +371,34 @@ trait IndexService {
       *                  Usually used for sorting, aggregations or scripts.
       * @return Sequence of FieldDefinitions for a field.
       */
-    protected def generateLanguageSupportedFieldList(fieldName: String,
-                                                     keepRaw: Boolean = false): List[FieldDefinition] = {
-      if (keepRaw) {
-        generateLanguageFieldWithSubFields(fieldName,
-                                           List(textField("trigram").analyzer("trigram"), keywordField("raw")))
-      } else {
-        generateLanguageFieldWithSubFields(fieldName, List(textField("trigram").analyzer("trigram")))
-      }
+    protected def generateLanguageSupportedFieldList(
+        fieldName: String,
+        keepRaw: Boolean = false
+    ): List[FieldDefinition] = {
+
+      val sf = List(
+        textField("trigram").analyzer("trigram"),
+        textField("decompounded").analyzer("compound_analyzer")
+      )
+
+      val subFields = if (keepRaw) sf :+ keywordField("raw") else sf
+
+      generateLanguageFieldWithSubFields(fieldName, subFields)
     }
 
-    private def generateLanguageFieldWithSubFields(fieldName: String,
-                                                   subFields: List[FieldDefinition]): List[FieldDefinition] = {
+    private def generateLanguageFieldWithSubFields(
+        fieldName: String,
+        subFields: List[FieldDefinition]
+    ): List[FieldDefinition] = {
+
       languageAnalyzers.map(
         langAnalyzer =>
           textField(s"$fieldName.${langAnalyzer.lang}")
             .fielddata(false)
             .analyzer(langAnalyzer.analyzer)
-            .fields(subFields))
+            .fields(subFields)
+      )
+
     }
 
     protected def generateKeywordLanguageFields(fieldName: String): List[FieldDefinition] = {
