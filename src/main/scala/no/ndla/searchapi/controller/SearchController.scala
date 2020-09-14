@@ -448,7 +448,8 @@ trait SearchController {
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
-            asQueryParam(scrollId)
+            asQueryParam(scrollId),
+            asQueryParam(grepCodes)
           )
           .responseMessages(response500))
     ) {
