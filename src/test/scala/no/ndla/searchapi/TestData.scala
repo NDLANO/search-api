@@ -893,41 +893,55 @@ object TestData {
   )
 
   val resources = List(
-    Resource("urn:resource:1",
-             article1.title.head.title,
-             Some(s"urn:article:${article1.id.get}"),
-             Some("/subject:1/topic:1/resource:1"),
-             visibleMetadata),
-    Resource("urn:resource:2",
-             article2.title.head.title,
-             Some(s"urn:article:${article2.id.get}"),
-             Some("/subject:1/topic:1/resource:2"),
-             visibleMetadata),
-    Resource("urn:resource:3",
-             article3.title.head.title,
-             Some(s"urn:article:${article3.id.get}"),
-             Some("/subject:1/topic:3/resource:3"),
-             visibleMetadata),
-    Resource("urn:resource:4",
-             article4.title.head.title,
-             Some(s"urn:article:${article4.id.get}"),
-             Some("/subject:1/topic:1/topic:2/resource:4"),
-             visibleMetadata),
-    Resource("urn:resource:5",
-             article5.title.head.title,
-             Some(s"urn:article:${article5.id.get}"),
-             Some("/subject:2/topic:4/resource:5"),
-             visibleMetadata),
-    Resource("urn:resource:6",
-             article6.title.head.title,
-             Some(s"urn:article:${article6.id.get}"),
-             Some("/subject:2/topic:4/resource:6"),
-             visibleMetadata),
-    Resource("urn:resource:7",
-             article7.title.head.title,
-             Some(s"urn:article:${article7.id.get}"),
-             Some("/subject:2/topic:4/resource:7"),
-             visibleMetadata),
+    Resource(
+      "urn:resource:1",
+      article1.title.head.title,
+      Some(s"urn:article:${article1.id.get}"),
+      Some("/subject:3/topic:5/resource:1"),
+      visibleMetadata
+    ),
+    Resource(
+      "urn:resource:2",
+      article2.title.head.title,
+      Some(s"urn:article:${article2.id.get}"),
+      Some("/subject:1/topic:1/resource:2"),
+      visibleMetadata
+    ),
+    Resource(
+      "urn:resource:3",
+      article3.title.head.title,
+      Some(s"urn:article:${article3.id.get}"),
+      Some("/subject:1/topic:3/resource:3"),
+      visibleMetadata
+    ),
+    Resource(
+      "urn:resource:4",
+      article4.title.head.title,
+      Some(s"urn:article:${article4.id.get}"),
+      Some("/subject:1/topic:1/topic:2/resource:4"),
+      visibleMetadata
+    ),
+    Resource(
+      "urn:resource:5",
+      article5.title.head.title,
+      Some(s"urn:article:${article5.id.get}"),
+      Some("/subject:2/topic:4/resource:5"),
+      visibleMetadata
+    ),
+    Resource(
+      "urn:resource:6",
+      article6.title.head.title,
+      Some(s"urn:article:${article6.id.get}"),
+      Some("/subject:2/topic:4/resource:6"),
+      visibleMetadata
+    ),
+    Resource(
+      "urn:resource:7",
+      article7.title.head.title,
+      Some(s"urn:article:${article7.id.get}"),
+      Some("/subject:2/topic:4/resource:7"),
+      visibleMetadata
+    ),
     Resource(
       "urn:resource:8",
       learningPath1.title.head.title,
@@ -963,11 +977,13 @@ object TestData {
       Some("/subject:2/topic:4/resource:5"),
       visibleMetadata
     ),
-    Resource("urn:resource:13",
-             article12.title.head.title,
-             Some(s"urn:article:${article12.id.get}"),
-             Some("/subject:2/topic:4/resource:13"),
-             visibleMetadata)
+    Resource(
+      "urn:resource:13",
+      article12.title.head.title,
+      Some(s"urn:article:${article12.id.get}"),
+      Some("/subject:2/topic:4/resource:13"),
+      visibleMetadata
+    )
   )
 
   val topics = List(
@@ -1021,7 +1037,8 @@ object TestData {
     TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1),
     TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1),
     TopicResourceConnection("urn:topic:1", "urn:resource:13", "urn:topic-resource:15", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1)
+    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1),
+    TopicResourceConnection("urn:topic:5", "urn:resource:1", "urn:topic-resource:17", primary = true, 1)
   )
 
   val topicSubtopicConnections = List(
