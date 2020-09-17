@@ -604,7 +604,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val ids = idsForLang("all").sorted.sliding(pageSize, pageSize).toList
 
     val Success(initialSearch) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = pageSize))
+      multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = pageSize, shouldScroll = true))
 
     val Success(scroll1) = multiDraftSearchService.scroll(initialSearch.scrollId.get, "all", fallback = true)
     val Success(scroll2) = multiDraftSearchService.scroll(scroll1.scrollId.get, "all", fallback = true)

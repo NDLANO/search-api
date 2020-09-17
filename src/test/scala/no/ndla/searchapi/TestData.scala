@@ -1118,7 +1118,8 @@ object TestData {
     supportedLanguages = List.empty,
     relevanceIds = List.empty,
     contextIds = List.empty,
-    grepCodes = List.empty
+    grepCodes = List.empty,
+    shouldScroll = false
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
@@ -1140,7 +1141,8 @@ object TestData {
     relevanceIds = List.empty,
     statusFilter = List.empty,
     userFilter = List.empty,
-    grepCodes = List.empty
+    grepCodes = List.empty,
+    shouldScroll = false
   )
 
   val searchableResourceTypes = List(
