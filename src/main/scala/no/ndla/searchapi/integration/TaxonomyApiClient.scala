@@ -63,7 +63,7 @@ trait TaxonomyApiClient {
       get[List[Relevance]](s"$TaxonomyApiEndpoint/relevances/").map(_.distinct)
 
     def getAllFilters: Try[List[Filter]] =
-      get[List[Filter]](s"$TaxonomyApiEndpoint/filters/").map(_.distinct)
+      get[List[Filter]](s"$TaxonomyApiEndpoint/filters/$Metadata").map(_.distinct)
 
     def getAllResourceFilterConnections: Try[List[ResourceFilterConnection]] =
       get[List[ResourceFilterConnection]](s"$TaxonomyApiEndpoint/resource-filters/").map(_.distinct)

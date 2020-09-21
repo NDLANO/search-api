@@ -353,6 +353,10 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
       multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
     search2.totalCount should be(3)
     search2.results.map(_.id) should be(Seq(1, 3, 5))
+
+    val Success(search3) =
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:8")))
+    search3.totalCount should be(0)
   }
 
   test("That filtering for multiple levels/filters returns resources from all filters") {

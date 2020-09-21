@@ -828,13 +828,14 @@ object TestData {
   )
 
   val filters = List(
-    Filter("urn:filter:1", "VG1", "urn:subject:1"),
-    Filter("urn:filter:2", "VG2", "urn:subject:1"),
-    Filter("urn:filter:3", "VG3", "urn:subject:1"),
-    Filter("urn:filter:4", "VG1", "urn:subject:2"),
-    Filter("urn:filter:5", "VG2", "urn:subject:2"),
-    Filter("urn:filter:6", "YF-VG1", "urn:subject:2"),
-    Filter("urn:filter:7", "Tysk 2", "urn:subject:1")
+    Filter("urn:filter:1", "VG1", "urn:subject:1", None),
+    Filter("urn:filter:2", "VG2", "urn:subject:1", visibleMetadata),
+    Filter("urn:filter:3", "VG3", "urn:subject:1", None),
+    Filter("urn:filter:4", "VG1", "urn:subject:2", visibleMetadata),
+    Filter("urn:filter:5", "VG2", "urn:subject:2", visibleMetadata),
+    Filter("urn:filter:6", "YF-VG1", "urn:subject:2", visibleMetadata),
+    Filter("urn:filter:7", "Tysk 2", "urn:subject:1", visibleMetadata),
+    Filter("urn:filter:8", "Tysk 1", "urn:subject:1", invisibleMetadata)
   )
 
   val resourceFilterConnections = List(
@@ -856,7 +857,8 @@ object TestData {
                              "urn:filter:1",
                              "urn:resource-filter:15",
                              "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:7", "urn:resource-filter:16", "urn:relevance:core")
+    ResourceFilterConnection("urn:resource:1", "urn:filter:7", "urn:resource-filter:16", "urn:relevance:core"),
+    ResourceFilterConnection("urn:resource:1", "urn:filter:8", "urn:resource-filter:17", "urn:relevance:core")
   )
 
   val relevances = List(

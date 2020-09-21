@@ -637,11 +637,25 @@ trait SearchConverterService {
     private def getFilters(taxonomyElement: TaxonomyElement,
                            subject: TaxSubject,
                            bundle: TaxonomyBundle,
-                           objectFilterConnections: List[FilterConnection]): List[SearchableTaxonomyFilter] = {
+                           objectFilterConnections: List[FilterConnection],
+                           filterVisibles: Boolean): List[SearchableTaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
+      val visibleFilters = if (filterVisibles) {
+        subjectFilters.filter(f => {
+          if (f.metadata.isDefined) f.metadata.exists(_.visible)
+          else true
+        })
+      } else {
+        subjectFilters
+      }
+
       val filterConnections = objectFilterConnections
         .filter(_.objectId == taxonomyElement.id)
-        .filter(fc => subjectFilters.map(_.id).contains(fc.filterId))
+        .filter(fc => visibleFilters.map(_.id).contains(fc.filterId))
+
+      // Denne metoden gir for mange treff. En ressurs som er knytta til forskjellige emner i samme fag og med
+      // forskjellig filter, vil alltid returnere samme liste med filter fra faget uavhengig av kva filter som er
+      // satt på ressursen på den aktuelle plassen.
 
       val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
 
@@ -721,14 +735,15 @@ trait SearchConverterService {
               val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
               val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
 
-              val filteredSubjects = if (filterVisibles) {
+              val visibleSubjects = if (filterVisibles) {
                 subjects.filter(subject => subject.metadata.exists(_.visible))
               } else {
                 subjects
               }
 
-              filteredSubjects.map(subject => {
-                val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
+              visibleSubjects.map(subject => {
+                val contextFilters =
+                  getFilters(resource, subject, bundle, bundle.resourceFilterConnections, filterVisibles)
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
 
                 getSearchableTaxonomyContext(resource.id,
@@ -828,14 +843,14 @@ trait SearchConverterService {
               val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == parentTopic.id)
               val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
 
-              val filteredSubjects = if (filterVisibles) {
+              val visibleSubjects = if (filterVisibles) {
                 subjects.filter(subject => subject.metadata.exists(_.visible))
               } else {
                 subjects
               }
 
-              filteredSubjects.map(subject => {
-                val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
+              visibleSubjects.map(subject => {
+                val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections, filterVisibles)
                 val pathIds = (topicPath :+ subject.id).reverse
 
                 getSearchableTaxonomyContext(topic.id,
@@ -868,13 +883,12 @@ trait SearchConverterService {
                                     filterVisibles: Boolean): Try[List[SearchableTaxonomyContext]] = {
       val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
       val resourceContexts = if (filterVisibles) {
-        filterByVisibility(resources, bundle).map(resource =>
-          getResourceTaxonomyContexts(resource, filterVisibles, bundle))
+        filterByVisibility(resources).map(resource => getResourceTaxonomyContexts(resource, filterVisibles, bundle))
       } else {
         resources.map(resource => getResourceTaxonomyContexts(resource, filterVisibles, bundle))
       }
       val topicContexts = if (filterVisibles) {
-        filterByVisibility(topics, bundle).map(topic => getTopicTaxonomyContexts(topic, filterVisibles, bundle))
+        filterByVisibility(topics).map(topic => getTopicTaxonomyContexts(topic, filterVisibles, bundle))
       } else {
         topics.map(topic => getTopicTaxonomyContexts(topic, filterVisibles, bundle))
       }
@@ -895,7 +909,7 @@ trait SearchConverterService {
       }
     }
 
-    private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T], bundle: TaxonomyBundle): List[T] = {
+    private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T]): List[T] = {
       elementsToFilter.filter((e: TaxonomyElement) => e.metadata.exists(_.visible))
     }
 

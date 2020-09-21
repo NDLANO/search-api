@@ -312,6 +312,16 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     searchable5.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1"), Seq("VG2")))
   }
 
+  test("That invisible taxonomy filters are added correctly in drafts") {
+    val Success(searchable1) =
+      searchConverterService.asSearchableDraft(TestData.draft1, TestData.taxonomyTestBundle, TestData.emptyGrepBundle)
+
+    searchable1.contexts.size should be(3)
+    searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(
+      Seq(Seq("VG1"), Seq("VG2"), Seq("VG3"), Seq("Tysk 2"), Seq("Tysk 1")))
+    searchable1.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
+  }
+
   test("That asSearchableArticle converts grepContexts correctly based on article grepCodes if grepBundle is empty") {
     val article = TestData.emptyDomainArticle.copy(id = Some(99), grepCodes = Seq("KE12", "KM123", "TT2"))
     val grepContexts = List(SearchableGrepContext("KE12", None),
