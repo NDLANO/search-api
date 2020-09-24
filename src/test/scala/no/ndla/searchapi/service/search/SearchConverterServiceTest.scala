@@ -232,15 +232,20 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.emptyGrepBundle)
 
     searchable1.contexts.size should be(5)
-    searchable1.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
-    searchable1.contexts(4).subject.languageValues.map(_.value) should be(Seq("Historie"))
+    searchable1.contexts.map(_.subject.languageValues.map(_.value)) should be(
+      Seq(Seq("Matte"), Seq("Matte"), Seq("Matte"), Seq("Matte"), Seq("Historie")))
+    searchable1.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
+      Seq(Seq(Seq("VG1")), Seq(Seq("VG2")), Seq(Seq("VG3")), Seq(Seq("Tysk 2")), Seq.empty))
 
     searchable4.contexts.size should be(1)
     searchable4.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
+    searchable4.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(Seq(Seq(Seq("VG3"))))
 
     searchable5.contexts.size should be(3)
-    searchable5.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
-    searchable5.contexts(1).subject.languageValues.map(_.value) should be(Seq("Historie"))
+    searchable5.contexts.map(_.subject.languageValues.map(_.value)) should be(
+      Seq(Seq("Matte"), Seq("Historie"), Seq("Historie")))
+    searchable5.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
+      Seq(Seq(Seq("VG2")), Seq(Seq("VG1")), Seq(Seq("VG2"))))
   }
 
   test("That invisible contexts are not indexed") {
