@@ -184,7 +184,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.taxonomyTestBundle,
                                                  TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(2)
+    searchable1.contexts.size should be(5)
     searchable1.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
       Seq(
         Seq(
@@ -192,7 +192,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
           "Baldur har mareritt"
         )))
 
-    searchable1.contexts(1).breadcrumbs.languageValues.map(_.value) should be(
+    searchable1.contexts(4).breadcrumbs.languageValues.map(_.value) should be(
       Seq(
         Seq(
           "Historie",
@@ -208,7 +208,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
           "En Baldur har mareritt om Ragnarok"
         )))
 
-    searchable6.contexts.size should be(1)
+    searchable6.contexts.size should be(2)
     searchable6.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
       Seq(
         Seq(
@@ -231,16 +231,21 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.taxonomyTestBundle,
                                                  TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(2)
-    searchable1.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
-    searchable1.contexts(1).subject.languageValues.map(_.value) should be(Seq("Historie"))
+    searchable1.contexts.size should be(5)
+    searchable1.contexts.map(_.subject.languageValues.map(_.value)) should be(
+      Seq(Seq("Matte"), Seq("Matte"), Seq("Matte"), Seq("Matte"), Seq("Historie")))
+    searchable1.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
+      Seq(Seq(Seq("VG1")), Seq(Seq("VG2")), Seq(Seq("VG3")), Seq(Seq("Tysk 2")), Seq.empty))
 
     searchable4.contexts.size should be(1)
     searchable4.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
+    searchable4.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(Seq(Seq(Seq("VG3"))))
 
-    searchable5.contexts.size should be(2)
-    searchable5.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
-    searchable5.contexts(1).subject.languageValues.map(_.value) should be(Seq("Historie"))
+    searchable5.contexts.size should be(3)
+    searchable5.contexts.map(_.subject.languageValues.map(_.value)) should be(
+      Seq(Seq("Matte"), Seq("Historie"), Seq("Historie")))
+    searchable5.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
+      Seq(Seq(Seq("VG2")), Seq(Seq("VG1")), Seq(Seq("VG2"))))
   }
 
   test("That invisible contexts are not indexed") {
@@ -299,17 +304,18 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.taxonomyTestBundle,
                                                  TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(2)
-    searchable1.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(
-      Seq(Seq("VG1"), Seq("VG2"), Seq("VG3"), Seq("Tysk 2")))
-    searchable1.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
+    searchable1.contexts.size should be(5)
+    searchable1.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
+      Seq(Seq(Seq("VG1")), Seq(Seq("VG2")), Seq(Seq("VG3")), Seq(Seq("Tysk 2")), Seq.empty))
+    searchable1.contexts(4).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
 
     searchable4.contexts.size should be(1)
     searchable4.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG3")))
 
-    searchable5.contexts.size should be(2)
+    searchable5.contexts.size should be(3)
     searchable5.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG2")))
-    searchable5.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1"), Seq("VG2")))
+    searchable5.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1")))
+    searchable5.contexts.last.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG2")))
   }
 
   test("That asSearchableArticle converts grepContexts correctly based on article grepCodes if grepBundle is empty") {

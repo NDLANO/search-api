@@ -727,17 +727,31 @@ trait SearchConverterService {
                 subjects
               }
 
-              filteredSubjects.map(subject => {
+              filteredSubjects.flatMap(subject => {
                 val contextFilters = getFilters(resource, subject, bundle, bundle.resourceFilterConnections)
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(resource.id,
-                                             pathIds,
-                                             subject,
-                                             contextType,
-                                             contextFilters,
-                                             resourceTypesWithParents,
-                                             bundle)
+                // One context per filter, but one for subject if no filters.
+                if (contextFilters.isEmpty) {
+                  List(
+                    getSearchableTaxonomyContext(resource.id,
+                                                 pathIds,
+                                                 subject,
+                                                 contextType,
+                                                 List.empty,
+                                                 resourceTypesWithParents,
+                                                 bundle))
+                } else {
+                  contextFilters.map(
+                    cf =>
+                      getSearchableTaxonomyContext(resource.id,
+                                                   pathIds,
+                                                   subject,
+                                                   contextType,
+                                                   List(cf),
+                                                   resourceTypesWithParents,
+                                                   bundle))
+                }
               })
           })
           Success(contexts.flatten)
@@ -834,17 +848,31 @@ trait SearchConverterService {
                 subjects
               }
 
-              filteredSubjects.map(subject => {
+              filteredSubjects.flatMap(subject => {
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections)
                 val pathIds = (topicPath :+ subject.id).reverse
 
-                getSearchableTaxonomyContext(topic.id,
-                                             pathIds,
-                                             subject,
-                                             contextType,
-                                             contextFilters,
-                                             resourceTypesWithParents,
-                                             bundle)
+                // One context per filter, but one for subject if no filters.
+                if (contextFilters.isEmpty) {
+                  List(
+                    getSearchableTaxonomyContext(topic.id,
+                                                 pathIds,
+                                                 subject,
+                                                 contextType,
+                                                 List.empty,
+                                                 resourceTypesWithParents,
+                                                 bundle))
+                } else {
+                  contextFilters.map(
+                    cf =>
+                      getSearchableTaxonomyContext(topic.id,
+                                                   pathIds,
+                                                   subject,
+                                                   contextType,
+                                                   List(cf),
+                                                   resourceTypesWithParents,
+                                                   bundle))
+                }
               })
           })
           Success(contexts.flatten)
