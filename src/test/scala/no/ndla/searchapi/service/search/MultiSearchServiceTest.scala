@@ -378,9 +378,13 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:2"), language = "all"))
     search.totalCount should be(7)
-    search.results.head.contexts.length should be(2)
+    search.results.head.contexts.length should be(5)
     search.results.head.contexts
-      .map(_.subjectId) should be(List("urn:subject:1", "urn:subject:2")) // urn:subject:3 is not visible
+      .map(_.subjectId) should be(List("urn:subject:1",
+                                       "urn:subject:1",
+                                       "urn:subject:1",
+                                       "urn:subject:1",
+                                       "urn:subject:2")) // urn:subject:3 is not visible
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11, 12))
   }
 
