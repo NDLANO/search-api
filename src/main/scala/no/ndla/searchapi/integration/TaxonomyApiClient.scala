@@ -30,16 +30,15 @@ trait TaxonomyApiClient {
   class TaxonomyApiClient extends LazyLogging {
     implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
     private val TaxonomyApiEndpoint = s"$ApiGatewayUrl/taxonomy/v1"
-    private val Metadata = "?includeMetadata=true"
 
     def getAllResources: Try[List[Resource]] =
-      get[List[Resource]](s"$TaxonomyApiEndpoint/resources/$Metadata").map(_.distinct)
+      get[List[Resource]](s"$TaxonomyApiEndpoint/resources/").map(_.distinct)
 
     def getAllSubjects: Try[List[TaxSubject]] =
-      get[List[TaxSubject]](s"$TaxonomyApiEndpoint/subjects/$Metadata").map(_.distinct)
+      get[List[TaxSubject]](s"$TaxonomyApiEndpoint/subjects/").map(_.distinct)
 
     def getAllTopics: Try[List[Topic]] =
-      get[List[Topic]](s"$TaxonomyApiEndpoint/topics/$Metadata").map(_.distinct)
+      get[List[Topic]](s"$TaxonomyApiEndpoint/topics/").map(_.distinct)
 
     def getAllResourceTypes: Try[List[ResourceType]] =
       get[List[ResourceType]](s"$TaxonomyApiEndpoint/resource-types/").map(_.distinct)
@@ -63,7 +62,7 @@ trait TaxonomyApiClient {
       get[List[Relevance]](s"$TaxonomyApiEndpoint/relevances/").map(_.distinct)
 
     def getAllFilters: Try[List[Filter]] =
-      get[List[Filter]](s"$TaxonomyApiEndpoint/filters/$Metadata").map(_.distinct)
+      get[List[Filter]](s"$TaxonomyApiEndpoint/filters/").map(_.distinct)
 
     def getAllResourceFilterConnections: Try[List[ResourceFilterConnection]] =
       get[List[ResourceFilterConnection]](s"$TaxonomyApiEndpoint/resource-filters/").map(_.distinct)
