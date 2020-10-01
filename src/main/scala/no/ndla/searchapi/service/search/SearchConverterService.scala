@@ -641,10 +641,7 @@ trait SearchConverterService {
                            filterVisibles: Boolean): List[SearchableTaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
       val visibleFilters = if (filterVisibles) {
-        subjectFilters.filter(f => {
-          if (f.metadata.isDefined) f.metadata.exists(_.visible)
-          else true
-        })
+        subjectFilters.filter(_.metadata.map(_.visible).getOrElse(true))
       } else {
         subjectFilters
       }
