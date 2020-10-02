@@ -641,7 +641,7 @@ trait SearchConverterService {
                            filterVisibles: Boolean): List[SearchableTaxonomyFilter] = {
       val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
       val visibleFilters = if (filterVisibles) {
-        subjectFilters.filter(_.metadata.map(_.visible).getOrElse(true))
+        subjectFilters.filter(_.metadata.forall(_.visible))
       } else {
         subjectFilters
       }
@@ -649,10 +649,6 @@ trait SearchConverterService {
       val filterConnections = objectFilterConnections
         .filter(_.objectId == taxonomyElement.id)
         .filter(fc => visibleFilters.map(_.id).contains(fc.filterId))
-
-      // Denne metoden gir for mange treff. En ressurs som er knytta til forskjellige emner i samme fag og med
-      // forskjellig filter, vil alltid returnere samme liste med filter fra faget uavhengig av kva filter som er
-      // satt på ressursen på den aktuelle plassen.
 
       val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
 
@@ -733,7 +729,7 @@ trait SearchConverterService {
               val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
 
               val visibleSubjects = if (filterVisibles) {
-                subjects.filter(subject => subject.metadata.exists(_.visible))
+                subjects.filter(_.metadata.forall(_.visible))
               } else {
                 subjects
               }
