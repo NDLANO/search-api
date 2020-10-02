@@ -380,6 +380,11 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
         multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
     search2.totalCount should be(3)
     search2.results.map(_.id) should be(Seq(1, 3, 5))
+
+    val Success(search3) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:8")))
+    search3.totalCount should be(1)
   }
 
   test("That filtering for mulitple levels/filters returns resources from all") {

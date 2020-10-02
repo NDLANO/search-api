@@ -7,4 +7,4 @@
 
 package no.ndla.searchapi.model.taxonomy
 
-case class Filter(id: String, name: String, subjectId: String)
+case class Filter(id: String, name: String, subjectId: String, metadata: Option[Metadata])
