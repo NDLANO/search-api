@@ -124,7 +124,7 @@ trait SearchConverterService {
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
-      val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, true)
+      val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, filterVisibles = true)
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
 
@@ -171,7 +171,8 @@ trait SearchConverterService {
     }
 
     def asSearchableLearningPath(lp: LearningPath, taxonomyBundle: TaxonomyBundle): Try[SearchableLearningPath] = {
-      val taxonomyForLearningPath = getTaxonomyContexts(lp.id.get, "learningpath", taxonomyBundle, true)
+      val taxonomyForLearningPath =
+        getTaxonomyContexts(lp.id.get, "learningpath", taxonomyBundle, filterVisibles = true)
 
       val supportedLanguages = Language.getSupportedLanguages(lp.title, lp.description).toList
       val defaultTitle = lp.title.sortBy(title => ISO639.languagePriority.reverse.indexOf(title.language)).lastOption
@@ -203,7 +204,7 @@ trait SearchConverterService {
     def asSearchableDraft(draft: Draft,
                           taxonomyBundle: TaxonomyBundle,
                           grepBundle: GrepBundle): Try[SearchableDraft] = {
-      val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, false)
+      val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, filterVisibles = false)
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
 
@@ -635,16 +636,20 @@ trait SearchConverterService {
                            bundle: TaxonomyBundle,
                            objectFilterConnections: List[FilterConnection],
                            filterVisibles: Boolean): List[SearchableTaxonomyFilter] = {
-      val subjectFilters = bundle.filters.filter(_.subjectId == subject.id)
-      val visibleFilters = if (filterVisibles) {
-        subjectFilters.filter(_.metadata.forall(_.visible))
-      } else {
-        subjectFilters
+
+      val shouldIncludeFilter: Filter => Boolean = if (filterVisibles) { f =>
+        f.subjectId == subject.id && f.metadata.forall(_.visible)
+      } else { f =>
+        f.subjectId == subject.id
       }
 
-      val filterConnections = objectFilterConnections
-        .filter(_.objectId == taxonomyElement.id)
-        .filter(fc => visibleFilters.map(_.id).contains(fc.filterId))
+      val subjectFilters = bundle.filters.filter(shouldIncludeFilter)
+      val subjectFilterIds = subjectFilters.map(_.id)
+
+      val filterConnections = objectFilterConnections.filter(fc => {
+        fc.objectId == taxonomyElement.id &&
+        subjectFilterIds.contains(fc.filterId)
+      })
 
       val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
 
@@ -899,16 +904,8 @@ trait SearchConverterService {
                                     bundle: TaxonomyBundle,
                                     filterVisibles: Boolean): Try[List[SearchableTaxonomyContext]] = {
       val (resources, topics) = getTaxonomyResourceAndTopicsForId(id, bundle, taxonomyType)
-      val resourceContexts = if (filterVisibles) {
-        filterByVisibility(resources).map(resource => getResourceTaxonomyContexts(resource, filterVisibles, bundle))
-      } else {
-        resources.map(resource => getResourceTaxonomyContexts(resource, filterVisibles, bundle))
-      }
-      val topicContexts = if (filterVisibles) {
-        filterByVisibility(topics).map(topic => getTopicTaxonomyContexts(topic, filterVisibles, bundle))
-      } else {
-        topics.map(topic => getTopicTaxonomyContexts(topic, filterVisibles, bundle))
-      }
+      val resourceContexts = getResourceContexts(bundle, filterVisibles, resources)
+      val topicContexts = getTopicContexts(bundle, filterVisibles, topics)
 
       val all = resourceContexts ++ topicContexts
       val failed = all.collect {
@@ -926,9 +923,23 @@ trait SearchConverterService {
       }
     }
 
-    private def filterByVisibility[T <: TaxonomyElement](elementsToFilter: List[T]): List[T] = {
-      elementsToFilter.filter((e: TaxonomyElement) => e.metadata.exists(_.visible))
-    }
+    private def getTopicContexts(bundle: TaxonomyBundle, filterVisibles: Boolean, topics: List[Topic]) =
+      filterByVisibility(topics, filterVisibles)
+        .map(topic => getTopicTaxonomyContexts(topic, filterVisibles, bundle))
+
+    private def getResourceContexts(bundle: TaxonomyBundle, filterVisibles: Boolean, resources: List[Resource]) =
+      filterByVisibility(resources, filterVisibles)
+        .map(resource => getResourceTaxonomyContexts(resource, filterVisibles, bundle))
+
+    private def filterByVisibility[T <: TaxonomyElement](
+        elementsToFilter: List[T],
+        filterVisibles: Boolean = true
+    ): List[T] =
+      if (filterVisibles) {
+        elementsToFilter.filter((e: TaxonomyElement) => e.metadata.exists(_.visible))
+      } else {
+        elementsToFilter
+      }
 
     private[service] def getGrepContexts(grepCodes: Seq[String], bundle: GrepBundle): List[SearchableGrepContext] = {
       val grepContext = bundle.kjerneelementer ++ bundle.kompetansemaal ++ bundle.tverrfagligeTemaer
