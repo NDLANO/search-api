@@ -596,11 +596,7 @@ trait SearchConverterService {
     }
 
     private def compareId(contentUri: String, id: Long, `type`: String): Boolean = {
-      val split = contentUri.split(':')
-      split match {
-        case Array(_, cType: String, cId: String) => id.toString == cId && cType == `type`
-        case _                                    => false
-      }
+      contentUri == s"urn:${`type`}:$id"
     }
 
     private def getContextType(resourceId: String, contentUri: Option[String]): Try[LearningResourceType.Value] = {
@@ -950,20 +946,14 @@ trait SearchConverterService {
     }
 
     private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: TaxonomyBundle, taxonomyType: String) = {
+      val idMatchingTaxonomy = (elem: TaxonomyElement) => elem.contentUri.exists(compareId(_, id, taxonomyType))
+
       val resources = bundle.resources
-        .filter(resource =>
-          resource.contentUri match {
-            case Some(contentUri) => compareId(contentUri, id, taxonomyType)
-            case None             => false
-        })
+        .filter(idMatchingTaxonomy)
         .distinct
 
       val topics = bundle.topics
-        .filter(topic =>
-          topic.contentUri match {
-            case Some(contentUri) => compareId(contentUri, id, taxonomyType)
-            case None             => false
-        })
+        .filter(idMatchingTaxonomy)
         .distinct
 
       (resources, topics)
