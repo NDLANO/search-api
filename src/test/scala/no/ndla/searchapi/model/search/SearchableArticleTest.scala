@@ -82,4 +82,84 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
     deserialized should be(original)
   }
 
+  test(
+    "That serializing a SearchableArticle with null values to json and deserializing back does not throw an exception") {
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
+
+    val titles =
+      SearchableLanguageValues(Seq(LanguageValue("nb", "Christian Tut"), LanguageValue("en", "Christian Honk")))
+
+    val contents = SearchableLanguageValues(
+      Seq(
+        LanguageValue("nn", "Eg kjøyrar rundt i min fine bil"),
+        LanguageValue("nb", "Jeg kjører rundt i tutut"),
+        LanguageValue("en", "I'm in my mums car wroomwroom")
+      ))
+
+    val visualElements = SearchableLanguageValues(Seq(LanguageValue("nn", "image"), LanguageValue("nb", "image")))
+
+    val introductions = SearchableLanguageValues(
+      Seq(
+        LanguageValue("en", "Wroom wroom")
+      ))
+
+    val metaDescriptions = SearchableLanguageValues(
+      Seq(
+        LanguageValue("nb", "Mammas bil")
+      ))
+
+    val tags = SearchableLanguageList(
+      Seq(
+        LanguageValue("en", Seq("Mum", "Car", "Wroom"))
+      ))
+
+    val embedAttrs = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", Seq("En norsk", "To norsk")),
+        LanguageValue("en", Seq("One english"))
+      ))
+
+    val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
+    val filterWithNullName =
+      SearchableTaxonomyFilter(
+        filterId = "urn:filter:1",
+        name = SearchableLanguageValues(Seq(LanguageValue("nb", null))),
+        relevanceId = "urn:relevance:core",
+        relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
+      )
+
+    val original = SearchableArticle(
+      id = 100,
+      title = titles,
+      content = contents,
+      visualElement = visualElements,
+      introduction = introductions,
+      metaDescription = metaDescriptions,
+      tags = tags,
+      lastUpdated = TestData.today,
+      license = "by-sa",
+      authors = List("Jonas", "Papi"),
+      articleType = LearningResourceType.Article.toString,
+      metaImage = metaImages,
+      defaultTitle = Some("Christian Tut"),
+      supportedLanguages = List("en", "nb", "nn"),
+      contexts = List(singleSearchableTaxonomyContext.copy(filters = List(filterWithNullName))),
+      grepContexts =
+        List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
+      traits = List.empty,
+      embedAttributes = embedAttrs
+    )
+
+    val json = write(original)
+    val deserialized = read[SearchableArticle](json)
+
+    val expected = original.copy(
+      contexts = List(
+        singleSearchableTaxonomyContext.copy(
+          filters = List(filterWithNullName.copy(name = SearchableLanguageValues(Seq.empty)))))
+    )
+
+    deserialized should be(expected)
+  }
+
 }

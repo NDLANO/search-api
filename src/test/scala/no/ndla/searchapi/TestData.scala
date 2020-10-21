@@ -1154,7 +1154,7 @@ object TestData {
                                    SearchableLanguageValues(Seq(LanguageValue("nb", "Fagartikkel"))))
   )
 
-  val searchableTaxonomyContexts = List(
+  val singleSearchableTaxonomyContext =
     SearchableTaxonomyContext(
       id = "urn:resource:101",
       subjectId = "urn:subject:1",
@@ -1175,5 +1175,8 @@ object TestData {
       resourceTypes = searchableResourceTypes,
       parentTopicIds = List("urn:topic:1")
     )
+
+  val searchableTaxonomyContexts = List(
+    singleSearchableTaxonomyContext
   )
 }

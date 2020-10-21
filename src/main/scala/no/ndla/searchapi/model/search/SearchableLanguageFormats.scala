@@ -28,8 +28,9 @@ class SearchableLanguageValuesSerializer
           SearchableLanguageValues(langs)
       }, {
         case searchableLanguageValues: SearchableLanguageValues =>
-          val langValues = searchableLanguageValues.languageValues.map(lv => {
-            JField(lv.language, JString(lv.value))
+          val langValues = searchableLanguageValues.languageValues.flatMap(lv => {
+            Option(lv.value)
+              .map(str => JField(lv.language, JString(str)))
           })
           JObject(langValues: _*)
       }))
@@ -50,9 +51,11 @@ class SearchableLanguageListSerializer
       }, {
         case searchableLanguageList: SearchableLanguageList =>
           implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-          val langValues = searchableLanguageList.languageValues.map(lv => {
-            val tags = Extraction.decompose(lv.value)
-            JField(lv.language, tags)
+          val langValues = searchableLanguageList.languageValues.flatMap(lv => {
+            Option(lv.value).map(v => {
+              val tags = Extraction.decompose(v)
+              JField(lv.language, tags)
+            })
           })
           JObject(langValues: _*)
 
