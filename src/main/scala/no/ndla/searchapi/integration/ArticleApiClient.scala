@@ -11,7 +11,7 @@ import no.ndla.network.NdlaClient
 import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.domain.{ArticleApiSearchResults, SearchParams}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait ArticleApiClient {
@@ -23,7 +23,8 @@ trait ArticleApiClient {
     override val name = "articles"
     override val dumpDomainPath = "intern/dump/article"
 
-    def search(searchParams: SearchParams): Future[Try[ArticleApiSearchResults]] =
+    def search(searchParams: SearchParams)(
+        implicit executionContext: ExecutionContext): Future[Try[ArticleApiSearchResults]] =
       search[ArticleApiSearchResults](searchParams)
   }
 }

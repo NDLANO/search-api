@@ -125,24 +125,22 @@ trait IndexService {
         taxonomyBundle: TaxonomyBundle,
         grepBundle: GrepBundle
     )(implicit mf: Manifest[D]): Try[Int] = {
-      val numThreads = 10
       implicit val executionContext: ExecutionContextExecutorService =
-        ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(numThreads))
+        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(10))
 
       val stream = apiClient.getChunks[D]
       val futures = stream
-        .map(x =>
-          Future {
-            x match {
-              case Failure(ex) => Failure(ex)
-              case Success(c) =>
-                val numIndexed = indexDocuments(c, indexName, taxonomyBundle, grepBundle)
-                Success(numIndexed.getOrElse(0), c.size)
-            }
+        .map(_.flatMap {
+          case Failure(ex) => Future.successful(Failure(ex))
+          case Success(c) =>
+            indexDocuments(c, indexName, taxonomyBundle, grepBundle).map(numIndexed =>
+              Success(numIndexed.getOrElse(0), c.size))
+
         })
         .toList
 
       val chunks = Await.result(Future.sequence(futures), Duration.Inf)
+      executionContext.shutdown()
 
       chunks.collect { case Failure(ex) => Failure(ex) } match {
         case Nil =>
@@ -163,34 +161,34 @@ trait IndexService {
       }
     }
 
-    def indexDocuments(contents: Seq[D],
-                       indexName: String,
-                       taxonomyBundle: TaxonomyBundle,
-                       grepBundle: GrepBundle): Try[Int] = {
+    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: TaxonomyBundle, grepBundle: GrepBundle)(
+        implicit ec: ExecutionContext): Future[Try[Int]] = {
       if (contents.isEmpty) {
-        Success(0)
+        Future.successful { Success(0) }
       } else {
         val req = contents.map(content => createIndexRequest(content, indexName, taxonomyBundle, grepBundle))
         val indexRequests = req.collect { case Success(indexRequest) => indexRequest }
         val failedToCreateRequests = req.collect { case Failure(ex)  => Failure(ex) }
 
-        if (indexRequests.nonEmpty) {
-          val response = e4sClient.execute {
-            bulk(indexRequests)
-          }
+        Future {
+          if (indexRequests.nonEmpty) {
+            val response = e4sClient.execute {
+              bulk(indexRequests)
+            }
 
-          response match {
-            case Success(r) =>
-              val numFailed = r.result.failures.size + failedToCreateRequests.size
-              logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
-              Success(contents.size - numFailed)
-            case Failure(ex) =>
-              logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
-              Failure(ex)
+            response match {
+              case Success(r) =>
+                val numFailed = r.result.failures.size + failedToCreateRequests.size
+                logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
+                Success(contents.size - numFailed)
+              case Failure(ex) =>
+                logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
+                Failure(ex)
+            }
+          } else {
+            logger.error(s"All ${contents.size} requests failed to be created.")
+            Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
           }
-        } else {
-          logger.error(s"All ${contents.size} requests failed to be created.")
-          Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
         }
       }
     }
