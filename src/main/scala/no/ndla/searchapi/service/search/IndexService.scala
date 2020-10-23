@@ -156,7 +156,7 @@ trait IndexService {
               (totalIndexed + chunkIndexed, totalSize + chunkSize)
           }
 
-          logger.info(s"$count/$totalCount documents were indexed successfully.")
+          logger.info(s"$count/$totalCount documents ($documentType) were indexed successfully.")
           Success(totalCount)
 
         case notEmpty => notEmpty.head
@@ -184,7 +184,9 @@ trait IndexService {
               val numFailed = r.result.failures.size + failedToCreateRequests.size
               logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
               Success(contents.size - numFailed)
-            case Failure(ex) => Failure(ex)
+            case Failure(ex) =>
+              logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
+              Failure(ex)
           }
         } else {
           logger.error(s"All ${contents.size} requests failed to be created.")
