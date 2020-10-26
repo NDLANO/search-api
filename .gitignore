@@ -2,6 +2,7 @@
 *.log
 /.idea
 /.history
+/.vscode
 /target
 **/target
 **/.DS_Store

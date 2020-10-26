@@ -239,9 +239,7 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
   test("Searching with NOT returns expected results") {
     val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(Some("bil + bilde + -flaggermusmann"), sort = Sort.ByTitleAsc))
-    // 1 is matched even if flaggermusmann exists in the document because the decompounded field does not contain flaggermusmann and causes a match
-    // This is unwanted, but as of now i can not see a workaround
-    search1.results.map(_.id) should equal(Seq(1, 3, 5))
+    search1.results.map(_.id) should equal(Seq(3, 5))
 
     val Success(search2) =
       multiSearchService.matchingQuery(searchSettings.copy(Some("bil + -hulken"), sort = Sort.ByTitleAsc))

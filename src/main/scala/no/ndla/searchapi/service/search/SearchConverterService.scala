@@ -437,9 +437,19 @@ trait SearchConverterService {
       }
     }
 
-    def articleHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
+    private def getHighlights(highlights: Map[String, Seq[String]]): List[HighlightedField] = {
+      highlights.map {
+        case (field, matches) =>
+          HighlightedField(
+            field = field,
+            matches = matches
+          )
+      }.toList
+    }
+
+    def articleHitAsMultiSummary(hit: SearchHit, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-      val searchableArticle = read[SearchableArticle](hitString)
+      val searchableArticle = read[SearchableArticle](hit.sourceAsString)
 
       val contexts = searchableArticle.contexts.map(c => searchableContextToApiContext(c, language))
 
@@ -474,13 +484,15 @@ trait SearchConverterService {
         supportedLanguages = supportedLanguages,
         learningResourceType = searchableArticle.articleType,
         status = None,
-        traits = searchableArticle.traits
+        traits = searchableArticle.traits,
+        score = hit.score,
+        highlights = getHighlights(hit.highlight)
       )
     }
 
-    def draftHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
+    def draftHitAsMultiSummary(hit: SearchHit, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-      val searchableDraft = read[SearchableDraft](hitString)
+      val searchableDraft = read[SearchableDraft](hit.sourceAsString)
 
       val contexts = searchableDraft.contexts.map(c => searchableContextToApiContext(c, language))
 
@@ -515,13 +527,15 @@ trait SearchConverterService {
         supportedLanguages = supportedLanguages,
         learningResourceType = searchableDraft.articleType,
         status = Some(api.Status(searchableDraft.draftStatus.current, searchableDraft.draftStatus.other)),
-        traits = searchableDraft.traits
+        traits = searchableDraft.traits,
+        score = hit.score,
+        highlights = getHighlights(hit.highlight)
       )
     }
 
-    def learningpathHitAsMultiSummary(hitString: String, language: String): MultiSearchSummary = {
+    def learningpathHitAsMultiSummary(hit: SearchHit, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
-      val searchableLearningPath = read[SearchableLearningPath](hitString)
+      val searchableLearningPath = read[SearchableLearningPath](hit.sourceAsString)
 
       val contexts = searchableLearningPath.contexts.map(c => searchableContextToApiContext(c, language))
 
@@ -556,7 +570,9 @@ trait SearchConverterService {
         supportedLanguages = supportedLanguages,
         learningResourceType = LearningResourceType.LearningPath.toString,
         status = Some(api.Status(searchableLearningPath.status, Seq.empty)),
-        traits = List.empty
+        traits = List.empty,
+        score = hit.score,
+        highlights = getHighlights(hit.highlight)
       )
     }
 

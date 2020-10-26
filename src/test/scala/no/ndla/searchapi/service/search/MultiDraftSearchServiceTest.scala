@@ -172,7 +172,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc))
     results.totalCount should be(3)
-    results.results.map(_.id) should be(Seq(1, 5, 3))
+    results.results.map(_.id) should be(Seq(5, 1, 3))
   }
 
   test("That search combined with filter by id only returns documents matching the query with one of the given ids") {
@@ -261,9 +261,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
   test("That searching with NOT returns expected results") {
     val Success(search1) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(query = Some("-flaggermusmann + (bil + bilde)"), sort = Sort.ByTitleAsc))
-    // 1 is matched even if flaggermusmann exists in the document because the decompounded field does not contain flaggermusmann and causes a match
-    // This is unwanted, but as of now i can not see a workaround
-    search1.results.map(_.id) should equal(Seq(1, 3, 5))
+    search1.results.map(_.id) should equal(Seq(3, 5))
 
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
