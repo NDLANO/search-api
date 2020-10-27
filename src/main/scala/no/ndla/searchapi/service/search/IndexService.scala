@@ -16,7 +16,6 @@ import com.sksamuel.elastic4s.alias.AliasAction
 import com.sksamuel.elastic4s.analyzers.{
   CompoundWordTokenFilter,
   CustomAnalyzerDefinition,
-  DictionaryDecompounder,
   HyphenationDecompounder,
   LowercaseTokenFilter,
   ShingleTokenFilter,
@@ -209,7 +208,7 @@ trait IndexService {
 
     def createIndexWithGeneratedName: Try[String] = createIndexWithName(searchIndex + "_" + getTimestamp)
 
-    private def customCompoundAnalyzer() = {
+    private val customCompoundAnalyzer =
       CustomAnalyzerDefinition(
         "compound_analyzer",
         StandardTokenizer,
@@ -217,10 +216,11 @@ trait IndexService {
           name = "hyphenation_decompounder",
           `type` = HyphenationDecompounder,
           wordListPath = Some("compound-words-norwegian-wordlist.txt"),
-          hyphenationPatternsPath = Some("hyph/no.xml")
+          hyphenationPatternsPath = Some("hyph/no.xml"),
+          minSubwordSize = Some(4),
+          onlyLongestMatch = Some(true)
         )
       )
-    }
 
     def createIndexWithName(indexName: String): Try[String] = {
       if (indexWithNameExists(indexName).getOrElse(false)) {
@@ -232,7 +232,7 @@ trait IndexService {
             .analysis(
               trigram,
               Language.nynorskLanguageAnalyzer,
-              customCompoundAnalyzer(),
+              customCompoundAnalyzer,
             )
             .indexSetting("max_result_window", SearchApiProperties.ElasticSearchIndexMaxResultWindow)
         }

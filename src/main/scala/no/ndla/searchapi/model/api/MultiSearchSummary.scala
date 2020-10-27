@@ -11,6 +11,13 @@ import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 
 import scala.annotation.meta.field
 
+@ApiModel(description = "Object describing matched field with matching words emphasized")
+case class HighlightedField(
+    @(ApiModelProperty @field)(description = "Field that matched") field: String,
+    @(ApiModelProperty @field)(description = "List of segments that matched in `field`") matches: Seq[String]
+)
+
+// format: off
 @ApiModel(description = "Short summary of information about the resource")
 case class MultiSearchSummary(
     @(ApiModelProperty @field)(description = "The unique id of the resource") id: Long,
@@ -20,8 +27,10 @@ case class MultiSearchSummary(
     @(ApiModelProperty @field)(description = "Url pointing to the resource") url: String,
     @(ApiModelProperty @field)(description = "Contexts of the resource") contexts: List[ApiTaxonomyContext],
     @(ApiModelProperty @field)(description = "Languages the resource exists in") supportedLanguages: Seq[String],
-    @(ApiModelProperty @field)(description =
-      "Learning resource type, either 'standard', 'topic-article' or 'learningpath'") learningResourceType: String,
+    @(ApiModelProperty @field)(description = "Learning resource type, either 'standard', 'topic-article' or 'learningpath'") learningResourceType: String,
     @(ApiModelProperty @field)(description = "Status information of the resource") status: Option[Status],
-    @(ApiModelProperty @field)(description = "Traits for the resource") traits: List[String]
+    @(ApiModelProperty @field)(description = "Traits for the resource") traits: List[String],
+    @(ApiModelProperty @field)(description = "Relevance score. The higher the score, the better the document matches your search criteria.") score: Float,
+    @(ApiModelProperty @field)(description = "List of objects describing matched field with matching words emphasized") highlights: List[HighlightedField]
 )
+// format: on

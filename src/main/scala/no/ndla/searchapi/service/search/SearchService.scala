@@ -44,14 +44,14 @@ trait SearchService {
       val articleType = SearchApiProperties.SearchDocuments(SearchType.Articles)
       val draftType = SearchApiProperties.SearchDocuments(SearchType.Drafts)
       val learningPathType = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
-      hit.`type` match {
-        case `articleType` =>
-          searchConverterService.articleHitAsMultiSummary(hit.sourceAsString, language)
-        case `draftType` =>
-          searchConverterService.draftHitAsMultiSummary(hit.sourceAsString, language)
-        case `learningPathType` =>
-          searchConverterService.learningpathHitAsMultiSummary(hit.sourceAsString, language)
+
+      val convertFunc = hit.`type` match {
+        case `articleType`      => searchConverterService.articleHitAsMultiSummary _
+        case `draftType`        => searchConverterService.draftHitAsMultiSummary _
+        case `learningPathType` => searchConverterService.learningpathHitAsMultiSummary _
       }
+
+      convertFunc(hit, language)
     }
 
     def buildSimpleStringQueryForField(
@@ -66,12 +66,12 @@ trait SearchService {
           (acc, cur) =>
             acc
               .field(s"$field.${cur.lang}", boost)
-              .field(s"$field.${cur.lang}.decompounded")
+              .field(s"$field.${cur.lang}.decompounded", 0.1)
         )
       } else {
         simpleStringQuery(query)
           .field(s"$field.$language", boost)
-          .field(s"$field.$language.decompounded")
+          .field(s"$field.$language.decompounded", 0.1)
       }
     }
 
