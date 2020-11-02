@@ -31,6 +31,7 @@ case class MultiSearchSummary(
     @(ApiModelProperty @field)(description = "Status information of the resource") status: Option[Status],
     @(ApiModelProperty @field)(description = "Traits for the resource") traits: List[String],
     @(ApiModelProperty @field)(description = "Relevance score. The higher the score, the better the document matches your search criteria.") score: Float,
-    @(ApiModelProperty @field)(description = "List of objects describing matched field with matching words emphasized") highlights: List[HighlightedField]
+    @(ApiModelProperty @field)(description = "List of objects describing matched field with matching words emphasized") highlights: List[HighlightedField],
+    @(ApiModelProperty @field)(description = "The taxonomy paths for the resource") paths: List[String]
 )
 // format: on

@@ -447,6 +447,10 @@ trait SearchConverterService {
       }.toList
     }
 
+    private def getPathsFromContext(contexts: List[SearchableTaxonomyContext]) = {
+      contexts.map(_.path)
+    }
+
     def articleHitAsMultiSummary(hit: SearchHit, language: String): MultiSearchSummary = {
       implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
       val searchableArticle = read[SearchableArticle](hit.sourceAsString)
@@ -486,7 +490,8 @@ trait SearchConverterService {
         status = None,
         traits = searchableArticle.traits,
         score = hit.score,
-        highlights = getHighlights(hit.highlight)
+        highlights = getHighlights(hit.highlight),
+        paths = getPathsFromContext(searchableArticle.contexts)
       )
     }
 
@@ -529,7 +534,8 @@ trait SearchConverterService {
         status = Some(api.Status(searchableDraft.draftStatus.current, searchableDraft.draftStatus.other)),
         traits = searchableDraft.traits,
         score = hit.score,
-        highlights = getHighlights(hit.highlight)
+        highlights = getHighlights(hit.highlight),
+        paths = getPathsFromContext(searchableDraft.contexts)
       )
     }
 
@@ -572,7 +578,8 @@ trait SearchConverterService {
         status = Some(api.Status(searchableLearningPath.status, Seq.empty)),
         traits = List.empty,
         score = hit.score,
-        highlights = getHighlights(hit.highlight)
+        highlights = getHighlights(hit.highlight),
+        paths = getPathsFromContext(searchableLearningPath.contexts)
       )
     }
 
@@ -994,6 +1001,17 @@ trait SearchConverterService {
         searchResult.language,
         searchResult.results,
         searchResult.suggestions
+      )
+
+    def toApiGroupMultiSearchResult(group: String, searchResult: domain.SearchResult): GroupSearchResult =
+      api.GroupSearchResult(
+        searchResult.totalCount,
+        searchResult.page,
+        searchResult.pageSize,
+        searchResult.language,
+        searchResult.results,
+        searchResult.suggestions,
+        group
       )
 
   }

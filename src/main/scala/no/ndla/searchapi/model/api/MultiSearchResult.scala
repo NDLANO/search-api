@@ -11,6 +11,7 @@ import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 
 import scala.annotation.meta.field
 
+// format: off
 @ApiModel(description = "Information about search-results")
 case class MultiSearchResult(
     @(ApiModelProperty @field)(description = "The total number of resources matching this query") totalCount: Long,
@@ -18,5 +19,6 @@ case class MultiSearchResult(
     @(ApiModelProperty @field)(description = "The number of results per page") pageSize: Int,
     @(ApiModelProperty @field)(description = "The chosen search language") language: String,
     @(ApiModelProperty @field)(description = "The search results") results: Seq[MultiSearchSummary],
-    @(ApiModelProperty @field)(description = "The suggestions for other searches") suggestions: Seq[
-      MultiSearchSuggestion])
+    @(ApiModelProperty @field)(description = "The suggestions for other searches") suggestions: Seq[MultiSearchSuggestion]
+)
+// format: on

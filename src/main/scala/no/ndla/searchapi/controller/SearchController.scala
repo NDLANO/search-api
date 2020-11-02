@@ -9,7 +9,7 @@
 package no.ndla.searchapi.controller
 
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.TimeUnit.MINUTES
 
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
@@ -25,7 +25,6 @@ import no.ndla.searchapi.model.api.{
   AccessDeniedException,
   Error,
   GroupSearchResult,
-  GroupSummary,
   MultiSearchResult,
   SearchResults,
   ValidationError
@@ -237,28 +236,16 @@ trait SearchController {
         shouldScroll = false
       )
 
-      groupSearch(query, settings.copy(resourceTypes = resourceTypes))
+      groupSearch(settings.copy(resourceTypes = resourceTypes))
     }
 
     private def searchInGroup(group: String, settings: SearchSettings): Try[GroupSearchResult] = {
       multiSearchService
         .matchingQuery(settings)
-        .map(
-          searchResult =>
-            GroupSearchResult(
-              totalCount = searchResult.totalCount,
-              resourceType = group,
-              page = searchResult.page.getOrElse(1),
-              pageSize = searchResult.pageSize,
-              language = searchResult.language,
-              results = searchResult.results.map(r => {
-                val paths = r.contexts.map(_.path)
-                GroupSummary(id = r.id, title = r.title, url = r.url, paths = paths)
-              })
-          ))
+        .map(res => searchConverterService.toApiGroupMultiSearchResult(group, res))
     }
 
-    private def groupSearch(query: Option[String], settings: SearchSettings) = {
+    private def groupSearch(settings: SearchSettings) = {
       if (settings.resourceTypes.nonEmpty) {
         implicit val ec: ExecutionContextExecutorService =
           ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(settings.resourceTypes.size))
@@ -267,7 +254,7 @@ trait SearchController {
           Future { searchInGroup(group, settings.copy(resourceTypes = List(group))) })
 
         val futureSearches = Future.sequence(searches)
-        val completedSearches = Await.result(futureSearches, Duration(10, SECONDS))
+        val completedSearches = Await.result(futureSearches, Duration(1, MINUTES))
 
         val failedSearches = completedSearches.collect { case Failure(ex) => ex }
         if (failedSearches.nonEmpty) {
