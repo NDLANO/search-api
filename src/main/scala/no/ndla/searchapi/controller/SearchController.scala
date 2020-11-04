@@ -481,6 +481,7 @@ trait SearchController {
             asQueryParam(userFilter),
             asQueryParam(grepCodes),
           )
+          .authorizations("oauth2")
           .responseMessages(response500))
     ) {
       if (!user.getUser.roles.contains(Role.DRAFTWRITE)) {
