@@ -1119,9 +1119,9 @@ object TestData {
     learningResourceTypes = List.empty,
     supportedLanguages = List.empty,
     relevanceIds = List.empty,
-    contextIds = List.empty,
     grepCodes = List.empty,
-    shouldScroll = false
+    shouldScroll = false,
+    filterByNoResourceType = false
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(

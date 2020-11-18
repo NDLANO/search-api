@@ -136,6 +136,10 @@ trait SearchController {
       """.stripMargin
     )
 
+    private val includeMissingResourceTypeGroup = Param[Option[Boolean]](
+      "include-without-resource-types",
+      "Whether to include group without resource-types for group-search. Defaults to false.")
+
     private val grepCodes = Param[Option[Seq[String]]](
       "grep-codes",
       "A comma separated list of codes from GREP API the resources should be filtered by.")
@@ -194,7 +198,8 @@ trait SearchController {
             asQueryParam(contextTypes),
             asQueryParam(languageFilter),
             asQueryParam(relevanceFilter),
-            asQueryParam(contextFilters)
+            asQueryParam(contextFilters),
+            asQueryParam(includeMissingResourceTypeGroup),
           )
           .responseMessages(response500))
     ) {
@@ -213,8 +218,10 @@ trait SearchController {
       val contextTypes = paramAsListOfString(this.contextTypes.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
-      val contexts = paramAsListOfString(this.contextFilters.paramName)
+      val anotherResourceTypes = paramAsListOfString(this.contextFilters.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
+      val includeMissingResourceTypeGroup =
+        booleanOrDefault(this.includeMissingResourceTypeGroup.paramName, default = false)
 
       val settings = SearchSettings(
         query = query,
@@ -227,16 +234,16 @@ trait SearchController {
         withIdIn = idList,
         taxonomyFilters = taxonomyFilters,
         subjects = subjects,
-        resourceTypes = List.empty,
+        resourceTypes = resourceTypes ++ anotherResourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
-        contextIds = contexts,
         grepCodes = grepCodes,
-        shouldScroll = false
+        shouldScroll = false,
+        filterByNoResourceType = false
       )
 
-      groupSearch(settings.copy(resourceTypes = resourceTypes))
+      groupSearch(settings, includeMissingResourceTypeGroup)
     }
 
     private def searchInGroup(group: String, settings: SearchSettings): Try[GroupSearchResult] = {
@@ -245,13 +252,40 @@ trait SearchController {
         .map(res => searchConverterService.toApiGroupMultiSearchResult(group, res))
     }
 
-    private def groupSearch(settings: SearchSettings) = {
-      if (settings.resourceTypes.nonEmpty) {
+    /** Will create a separate search for each entry in [[SearchSettings.resourceTypes]] and [[SearchSettings.learningResourceTypes]] */
+    private def groupSearch(settings: SearchSettings, includeMissingResourceTypeGroup: Boolean) = {
+      val numMissingRtThreads = if (includeMissingResourceTypeGroup) 1 else 0
+      val numGroups = settings.resourceTypes.size + settings.learningResourceTypes.size + numMissingRtThreads
+      if (numGroups >= 1) {
         implicit val ec: ExecutionContextExecutorService =
-          ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(settings.resourceTypes.size))
+          ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(Math.max(numGroups, 1)))
 
-        val searches = settings.resourceTypes.map(group =>
-          Future { searchInGroup(group, settings.copy(resourceTypes = List(group))) })
+        val rtSearches = settings.resourceTypes.map(group =>
+          Future {
+            searchInGroup(group, settings.copy(resourceTypes = List(group), learningResourceTypes = List.empty))
+        })
+
+        val lrSearches = settings.learningResourceTypes.map(group =>
+          Future {
+            searchInGroup(group.toString,
+                          settings.copy(resourceTypes = List.empty, learningResourceTypes = List(group)))
+        })
+
+        val withoutRt =
+          if (includeMissingResourceTypeGroup)
+            Seq(
+              Future {
+                searchInGroup("missing",
+                              settings.copy(
+                                resourceTypes = List.empty,
+                                learningResourceTypes = List(LearningResourceType.Article),
+                                filterByNoResourceType = true
+                              ))
+              }
+            )
+          else Seq.empty
+
+        val searches = rtSearches ++ lrSearches ++ withoutRt
 
         val futureSearches = Future.sequence(searches)
         val completedSearches = Await.result(futureSearches, Duration(1, MINUTES))
@@ -316,7 +350,7 @@ trait SearchController {
       val subjects = paramAsListOfString(this.subjects.paramName)
       val supportedLanguagesFilter = paramAsListOfString(this.languageFilter.paramName)
       val relevances = paramAsListOfString(this.relevanceFilter.paramName)
-      val contexts = paramAsListOfString(this.contextFilters.paramName)
+      val anotherResourceTypes = paramAsListOfString(this.contextFilters.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
 
@@ -331,13 +365,13 @@ trait SearchController {
         withIdIn = idList,
         taxonomyFilters = taxonomyFilters,
         subjects = subjects,
-        resourceTypes = resourceTypes,
+        resourceTypes = resourceTypes ++ anotherResourceTypes,
         learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
         supportedLanguages = supportedLanguagesFilter,
         relevanceIds = relevances,
-        contextIds = contexts,
         grepCodes = grepCodes,
-        shouldScroll = shouldScroll
+        shouldScroll = shouldScroll,
+        filterByNoResourceType = false
       )
     }
 

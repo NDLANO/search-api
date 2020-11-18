@@ -567,9 +567,9 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
 
   test("That filtering on context-types works") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(contextIds = List("urn:resourcetype:academicArticle")))
+      multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:academicArticle")))
     val Success(search2) =
-      multiSearchService.matchingQuery(searchSettings.copy(contextIds = List("urn:resourcetype:movieAndClip")))
+      multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:movieAndClip")))
 
     search.totalCount should be(2)
     search.results.map(_.id) should be(Seq(2, 5))
@@ -619,6 +619,16 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
 
     search2.totalCount should be(1)
     search2.results.map(_.id) should be(Seq(12))
+  }
+
+  test("That filterByNoResourceType works by filtering out every document that does not have resourceTypes") {
+    val Success(search1) = multiSearchService.matchingQuery(
+      searchSettings.copy(
+        filterByNoResourceType = true,
+        language = Language.AllLanguages,
+        sort = Sort.ByIdAsc
+      ))
+    search1.results.map(_.id).sorted should be(Seq(6, 9, 10, 11))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

@@ -131,10 +131,9 @@ trait MultiSearchService {
 
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
-      val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes)
+      val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, settings.filterByNoResourceType)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
       val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects, settings.taxonomyFilters)
-      val taxonomyResourceTypesContextFilter = resourceTypeFilter(settings.contextIds)
 
       val supportedLanguageFilter =
         if (settings.supportedLanguages.isEmpty) None
@@ -155,7 +154,6 @@ trait MultiSearchService {
         taxonomyContextTypeFilter,
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
-        taxonomyResourceTypesContextFilter,
         grepCodesFilter
       ).flatten
     }
