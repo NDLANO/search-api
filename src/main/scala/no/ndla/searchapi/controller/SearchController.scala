@@ -137,7 +137,7 @@ trait SearchController {
     )
 
     private val includeMissingResourceTypeGroup = Param[Option[Boolean]](
-      "include-without-resource-types",
+      "missing-group",
       "Whether to include group without resource-types for group-search. Defaults to false.")
 
     private val grepCodes = Param[Option[Seq[String]]](
