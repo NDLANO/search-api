@@ -18,10 +18,11 @@ import org.eclipse.jetty.servlet.{DefaultServlet, FilterHolder, ServletContextHa
 import org.scalatra.servlet.ScalatraListener
 
 import scala.io.Source
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 object JettyLauncher extends LazyLogging {
 
-  def main(args: Array[String]): Unit = {
+  def startServer(port: Int): Server = {
     logger.info(Source.fromInputStream(getClass.getResourceAsStream("/log-license.txt")).mkString)
 
     val startMillis = System.currentTimeMillis()
@@ -44,13 +45,21 @@ object JettyLauncher extends LazyLogging {
     }
     context.addFilter(monitoringFilter, "/*", util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC))
 
-    val server = new Server(SearchApiProperties.ApplicationPort)
+    val server = new Server(port)
     server.setHandler(context)
     server.start()
 
     val startTime = System.currentTimeMillis() - startMillis
-    logger.info(s"Started at port ${SearchApiProperties.ApplicationPort} in $startTime ms.")
+    logger.info(s"Started at port $port in $startTime ms.")
 
+    server
+  }
+
+  def main(args: Array[String]): Unit = {
+    val envMap = System.getenv()
+    envMap.asScala.foreach { case (k, v) => System.setProperty(k, v) }
+
+    val server = startServer(SearchApiProperties.ApplicationPort)
     server.join()
   }
 }

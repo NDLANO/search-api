@@ -9,6 +9,7 @@ package no.ndla.searchapi.service.search
 
 import java.nio.file.{Files, Path}
 
+import no.ndla.scalatestsuite.IntegrationSuite
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
@@ -17,12 +18,12 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
-import no.ndla.searchapi.{IntegrationSuite, SearchApiProperties, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 import org.scalatest.Outcome
 
 import scala.util.Success
 
-class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment {
+class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchContainer = true) with TestEnvironment {
   e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
   // Skip tests if no docker environment available
   override def withFixture(test: NoArgTest): Outcome = {
@@ -37,24 +38,23 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
-  override def beforeAll(): Unit = if (elasticSearchContainer.isSuccess) {
-    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
-    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
-    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    if (elasticSearchContainer.isSuccess) {
+      draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
+      learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
-    val indexedArticles =
-      articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, emptyGrepBundle))
+      val indexedDrafts =
+        draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
 
-    val indexedDrafts =
-      draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
+      val indexedLearningPaths =
+        learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
 
-    val indexedLearningPaths =
-      learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
-
-    blockUntil(() => {
-      articleIndexService.countDocuments == articlesToIndex.size &&
-      learningPathIndexService.countDocuments == learningPathsToIndex.size
-    })
+      blockUntil(() => {
+        draftIndexService.countDocuments == draftsToIndex.size &&
+        learningPathIndexService.countDocuments == learningPathsToIndex.size
+      })
+    }
   }
 
   private def expectedAllPublicDrafts(language: String) = {

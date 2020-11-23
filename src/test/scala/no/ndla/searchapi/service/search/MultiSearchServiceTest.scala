@@ -7,6 +7,7 @@
 
 package no.ndla.searchapi.service.search
 
+import no.ndla.scalatestsuite.IntegrationSuite
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.Elastic4sClientFactory
@@ -15,12 +16,15 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.learningpath.LearningPath
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
-import no.ndla.searchapi.{IntegrationSuite, SearchApiProperties, TestData, TestEnvironment}
+import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import org.scalatest.Outcome
 
 import scala.util.Success
 
-class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
+class MultiSearchServiceTest
+    extends IntegrationSuite(EnableElasticsearchContainer = true)
+    with UnitSuite
+    with TestEnvironment {
   e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
   // Skip tests if no docker environment available
   override def withFixture(test: NoArgTest): Outcome = {
@@ -35,24 +39,24 @@ class MultiSearchServiceTest extends IntegrationSuite with TestEnvironment {
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
-  override def beforeAll(): Unit = if (elasticSearchContainer.isSuccess) {
-    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
-    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
-    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    if (elasticSearchContainer.isSuccess) {
+      articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
+      draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
+      learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
-    val indexedArticles =
-      articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, grepBundle))
+      val indexedArticles =
+        articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, grepBundle))
 
-    val indexedDrafts =
-      draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
+      val indexedLearningPaths =
+        learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
 
-    val indexedLearningPaths =
-      learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
-
-    blockUntil(() => {
-      articleIndexService.countDocuments == articlesToIndex.size &&
-      learningPathIndexService.countDocuments == learningPathsToIndex.size
-    })
+      blockUntil(() => {
+        articleIndexService.countDocuments == articlesToIndex.size &&
+        learningPathIndexService.countDocuments == learningPathsToIndex.size
+      })
+    }
   }
 
   def hasTaxonomy(lp: LearningPath): Boolean =
