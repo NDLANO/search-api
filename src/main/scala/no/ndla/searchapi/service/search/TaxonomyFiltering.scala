@@ -7,7 +7,7 @@
 
 package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery}
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery, Query}
 import no.ndla.searchapi.model.domain.article.LearningResourceType
 
 trait TaxonomyFiltering {
@@ -70,9 +70,16 @@ trait TaxonomyFiltering {
               ))
           ))
 
-  protected def resourceTypeFilter(resourceTypes: List[String]): Option[NestedQuery] =
-    if (resourceTypes.isEmpty) None
-    else
+  protected def resourceTypeFilter(resourceTypes: List[String], filterByNoResourceType: Boolean): Option[Query] = {
+    if (resourceTypes.isEmpty) {
+      if (filterByNoResourceType) {
+        Some(
+          boolQuery().not(
+            nestedQuery("contexts.resourceTypes").query(existsQuery("contexts.resourceTypes"))
+          )
+        )
+      } else { None }
+    } else {
       Some(
         nestedQuery("contexts.resourceTypes")
           .query(
@@ -81,6 +88,8 @@ trait TaxonomyFiltering {
                 resourceTypeId => termQuery("contexts.resourceTypes.id", resourceTypeId)
               ))
           ))
+    }
+  }
 
   protected def contextTypeFilter(contextTypes: List[LearningResourceType.Value]): Option[BoolQuery] =
     if (contextTypes.isEmpty) None
