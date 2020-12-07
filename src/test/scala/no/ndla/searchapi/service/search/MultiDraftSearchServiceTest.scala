@@ -230,9 +230,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("supermann"), sort = Sort.ByTitleAsc))
-    results.totalCount should be(3)
-    results.results.map(_.id) should be(Seq(2, 1, 1))
-    results.results.map(_.learningResourceType) should be(Seq("learningpath", "standard", "learningpath"))
+    results.totalCount should be(0)
   }
 
   test("That search returns superman since license is specified as copyrighted") {
@@ -746,18 +744,41 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     search.suggestions.last.suggestions.head.text should equal("bil")
   }
 
-  test("That compound words are matched when searched wrongly") {
+  test("That compound words are matched when searched wrongly if enabled") {
     val Success(search1) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = Language.AllLanguages))
+      multiDraftSearchSettings
+        .copy(query = Some("Helse søster"), language = Language.AllLanguages, searchDecompounded = true))
 
     search1.totalCount should be(1)
     search1.results.map(_.id) should be(Seq(13))
 
     val Success(search2) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb"))
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb", searchDecompounded = true))
 
     search2.totalCount should be(1)
     search2.results.map(_.id) should be(Seq(13))
+  }
+
+  test("That compound words are matched when searched wrongly if disabled") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings
+        .copy(query = Some("Helse søster"), language = Language.AllLanguages, searchDecompounded = false))
+
+    search1.totalCount should be(0)
+    search1.results.map(_.id) should be(Seq.empty)
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb", searchDecompounded = false))
+
+    search2.totalCount should be(0)
+    search2.results.map(_.id) should be(Seq.empty)
+  }
+
+  test("Search query should not be decompounded (only indexed documents)") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Bilsøster"), language = Language.AllLanguages))
+
+    search1.totalCount should be(0)
   }
 
   test("That searches for embed attributes matches") {

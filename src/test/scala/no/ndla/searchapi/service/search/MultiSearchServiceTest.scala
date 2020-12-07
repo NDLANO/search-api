@@ -213,9 +213,7 @@ class MultiSearchServiceTest
   test("That search does not return superman since it has license copyrighted and license is not specified") {
     val Success(results) =
       multiSearchService.matchingQuery(searchSettings.copy(Some("supermann"), sort = Sort.ByTitleAsc))
-    results.totalCount should be(3)
-    results.results.map(_.id) should be(Seq(2, 1, 1))
-    results.results.map(_.learningResourceType) should be(Seq("learningpath", "standard", "learningpath"))
+    results.totalCount should be(0)
   }
 
   test("That search returns superman since license is specified as copyrighted") {
@@ -633,6 +631,13 @@ class MultiSearchServiceTest
         sort = Sort.ByIdAsc
       ))
     search1.results.map(_.id).sorted should be(Seq(6, 9, 10, 11))
+  }
+
+  test("Search query should not be decompounded (only indexed documents)") {
+    val Success(search1) =
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("Bilsøster"), language = Language.AllLanguages))
+
+    search1.totalCount should be(0)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

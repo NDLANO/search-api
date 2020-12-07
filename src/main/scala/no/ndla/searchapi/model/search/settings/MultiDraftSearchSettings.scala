@@ -31,5 +31,6 @@ case class MultiDraftSearchSettings(
     statusFilter: List[ArticleStatus.Value],
     userFilter: List[String],
     grepCodes: List[String],
-    shouldScroll: Boolean
+    shouldScroll: Boolean,
+    searchDecompounded: Boolean
 )
