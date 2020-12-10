@@ -9,6 +9,7 @@ package no.ndla.searchapi.service.search
 
 import java.nio.file.{Files, Path}
 
+import no.ndla.scalatestsuite.IntegrationSuite
 import no.ndla.searchapi.SearchApiProperties.DefaultPageSize
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.{Elastic4sClientFactory, NdlaE4sClient}
@@ -17,12 +18,12 @@ import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
-import no.ndla.searchapi.{IntegrationSuite, SearchApiProperties, TestEnvironment, UnitSuite}
+import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 import org.scalatest.Outcome
 
 import scala.util.Success
 
-class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment {
+class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchContainer = true) with TestEnvironment {
   e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
   // Skip tests if no docker environment available
   override def withFixture(test: NoArgTest): Outcome = {
@@ -37,24 +38,23 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
   override val converterService = new ConverterService
   override val searchConverterService = new SearchConverterService
 
-  override def beforeAll(): Unit = if (elasticSearchContainer.isSuccess) {
-    articleIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Articles))
-    draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
-    learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    if (elasticSearchContainer.isSuccess) {
+      draftIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.Drafts))
+      learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
-    val indexedArticles =
-      articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, emptyGrepBundle))
+      val indexedDrafts =
+        draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
 
-    val indexedDrafts =
-      draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
+      val indexedLearningPaths =
+        learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
 
-    val indexedLearningPaths =
-      learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
-
-    blockUntil(() => {
-      articleIndexService.countDocuments == articlesToIndex.size &&
-      learningPathIndexService.countDocuments == learningPathsToIndex.size
-    })
+      blockUntil(() => {
+        draftIndexService.countDocuments == draftsToIndex.size &&
+        learningPathIndexService.countDocuments == learningPathsToIndex.size
+      })
+    }
   }
 
   private def expectedAllPublicDrafts(language: String) = {
@@ -230,9 +230,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(query = Some("supermann"), sort = Sort.ByTitleAsc))
-    results.totalCount should be(3)
-    results.results.map(_.id) should be(Seq(2, 1, 1))
-    results.results.map(_.learningResourceType) should be(Seq("learningpath", "standard", "learningpath"))
+    results.totalCount should be(0)
   }
 
   test("That search returns superman since license is specified as copyrighted") {
@@ -746,18 +744,41 @@ class MultiDraftSearchServiceTest extends IntegrationSuite with TestEnvironment 
     search.suggestions.last.suggestions.head.text should equal("bil")
   }
 
-  test("That compound words are matched when searched wrongly") {
+  test("That compound words are matched when searched wrongly if enabled") {
     val Success(search1) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = Language.AllLanguages))
+      multiDraftSearchSettings
+        .copy(query = Some("Helse søster"), language = Language.AllLanguages, searchDecompounded = true))
 
     search1.totalCount should be(1)
     search1.results.map(_.id) should be(Seq(13))
 
     val Success(search2) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb"))
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb", searchDecompounded = true))
 
     search2.totalCount should be(1)
     search2.results.map(_.id) should be(Seq(13))
+  }
+
+  test("That compound words are matched when searched wrongly if disabled") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings
+        .copy(query = Some("Helse søster"), language = Language.AllLanguages, searchDecompounded = false))
+
+    search1.totalCount should be(0)
+    search1.results.map(_.id) should be(Seq.empty)
+
+    val Success(search2) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Helse søster"), language = "nb", searchDecompounded = false))
+
+    search2.totalCount should be(0)
+    search2.results.map(_.id) should be(Seq.empty)
+  }
+
+  test("Search query should not be decompounded (only indexed documents)") {
+    val Success(search1) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Bilsøster"), language = Language.AllLanguages))
+
+    search1.totalCount should be(0)
   }
 
   test("That searches for embed attributes matches") {

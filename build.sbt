@@ -65,6 +65,7 @@ lazy val search_api = (project in file("."))
     libraryDependencies ++= pactTestFramework ++ Seq(
       "ndla" %% "network" % "0.44",
       "ndla" %% "mapping" % "0.15",
+      "ndla" %% "scalatestsuite" % "0.2" % "test",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
       "org.apache.logging.log4j" % "log4j-api" % Log4JVersion,
       "org.apache.logging.log4j" % "log4j-core" % Log4JVersion,

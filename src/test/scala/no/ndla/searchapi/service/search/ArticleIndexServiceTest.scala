@@ -8,16 +8,20 @@
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
+import no.ndla.scalatestsuite.IntegrationSuite
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.integration.Elastic4sClientFactory
 import no.ndla.searchapi.model.search.{SearchableArticle, SearchableLanguageFormats}
-import no.ndla.searchapi.{IntegrationSuite, TestData, TestEnvironment}
+import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import org.json4s.native.Serialization.read
 import org.scalatest.Outcome
 
 import scala.util.Success
 
-class ArticleIndexServiceTest extends IntegrationSuite with TestEnvironment {
+class ArticleIndexServiceTest
+    extends IntegrationSuite(EnableElasticsearchContainer = true)
+    with UnitSuite
+    with TestEnvironment {
 
   e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
   // Skip tests if no docker environment available

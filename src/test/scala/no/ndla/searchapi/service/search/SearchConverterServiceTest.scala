@@ -96,6 +96,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
   )
 
   override def beforeAll(): Unit = {
+    super.beforeAll()
     when(converterService.withAgreementCopyright(any[Article])).thenAnswer((invocation: InvocationOnMock) =>
       invocation.getArgument[Article](0))
 

@@ -218,7 +218,7 @@ trait IndexService {
           wordListPath = Some("compound-words-norwegian-wordlist.txt"),
           hyphenationPatternsPath = Some("hyph/no.xml"),
           minSubwordSize = Some(4),
-          onlyLongestMatch = Some(true)
+          onlyLongestMatch = Some(false)
         )
       )
 
@@ -375,34 +375,20 @@ trait IndexService {
         fieldName: String,
         keepRaw: Boolean = false
     ): List[FieldDefinition] = {
+      languageAnalyzers.map(langAnalyzer => {
+        val sf = List(
+          textField("trigram").analyzer("trigram"),
+          textField("decompounded")
+            .searchAnalyzer("standard")
+            .analyzer("compound_analyzer")
+        )
 
-      val sf = List(
-        textField("trigram").analyzer("trigram"),
-        textField("decompounded").analyzer("compound_analyzer")
-      )
+        val subFields = if (keepRaw) sf :+ keywordField("raw") else sf
 
-      val subFields = if (keepRaw) sf :+ keywordField("raw") else sf
-
-      generateLanguageFieldWithSubFields(fieldName, subFields)
-    }
-
-    private def generateLanguageFieldWithSubFields(
-        fieldName: String,
-        subFields: List[FieldDefinition]
-    ): List[FieldDefinition] = {
-
-      languageAnalyzers.map(
-        langAnalyzer =>
-          textField(s"$fieldName.${langAnalyzer.lang}")
-            .fielddata(false)
-            .analyzer(langAnalyzer.analyzer)
-            .fields(subFields)
-      )
-
-    }
-
-    protected def generateKeywordLanguageFields(fieldName: String): List[FieldDefinition] = {
-      languageAnalyzers.map(langAnalyzer => keywordField(s"$fieldName.${langAnalyzer.lang}"))
+        textField(s"$fieldName.${langAnalyzer.lang}")
+          .analyzer(langAnalyzer.analyzer)
+          .fields(subFields)
+      })
     }
 
     protected def getTaxonomyContextMapping: NestedField = {

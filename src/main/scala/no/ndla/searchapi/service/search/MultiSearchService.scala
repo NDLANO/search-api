@@ -42,9 +42,15 @@ trait MultiSearchService {
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val fullQuery = settings.query match {
         case Some(q) =>
-          val langQueryFunc = (fieldName: String, boost: Int) => {
-            buildSimpleStringQueryForField(q, fieldName, boost, settings.language, settings.fallback)
-          }
+          val langQueryFunc = (fieldName: String, boost: Int) =>
+            buildSimpleStringQueryForField(
+              q,
+              fieldName,
+              boost,
+              settings.language,
+              settings.fallback,
+              searchDecompounded = true
+          )
 
           boolQuery().must(
             boolQuery().should(

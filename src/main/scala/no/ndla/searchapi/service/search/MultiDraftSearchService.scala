@@ -44,9 +44,15 @@ trait MultiDraftSearchService {
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
       val contentSearch = settings.query.map(queryString => {
 
-        val langQueryFunc = (fieldName: String, boost: Int) => {
-          buildSimpleStringQueryForField(queryString, fieldName, boost, settings.language, settings.fallback)
-        }
+        val langQueryFunc = (fieldName: String, boost: Int) =>
+          buildSimpleStringQueryForField(
+            queryString,
+            fieldName,
+            boost,
+            settings.language,
+            settings.fallback,
+            searchDecompounded = settings.searchDecompounded
+        )
 
         boolQuery().should(
           langQueryFunc("title", 3),

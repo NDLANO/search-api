@@ -364,7 +364,7 @@ object TestData {
     id = Option(12),
     title = List(Title("Ekstrastoff", "nb")),
     content = List(
-      ArticleContent("Helse søster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\">",
+      ArticleContent("Helsesøster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\">",
                      "nb")),
     tags = List(Tag(List(""), "nb")),
     visualElement = List.empty,
@@ -1144,7 +1144,8 @@ object TestData {
     statusFilter = List.empty,
     userFilter = List.empty,
     grepCodes = List.empty,
-    shouldScroll = false
+    shouldScroll = false,
+    searchDecompounded = false
   )
 
   val searchableResourceTypes = List(

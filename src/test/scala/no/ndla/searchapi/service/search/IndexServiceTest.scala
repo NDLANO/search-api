@@ -8,13 +8,14 @@
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
+import no.ndla.scalatestsuite.IntegrationSuite
 import no.ndla.searchapi.integration.Elastic4sClientFactory
-import no.ndla.searchapi.{IntegrationSuite, TestEnvironment}
+import no.ndla.searchapi.TestEnvironment
 import org.scalatest.Outcome
 
 import scala.util.Success
 
-class IndexServiceTest extends IntegrationSuite with TestEnvironment {
+class IndexServiceTest extends IntegrationSuite(EnableElasticsearchContainer = true) with TestEnvironment {
   e4sClient = Elastic4sClientFactory.getClient(elasticSearchHost.getOrElse(""))
   // Skip tests if no docker environment available
   override def withFixture(test: NoArgTest): Outcome = {

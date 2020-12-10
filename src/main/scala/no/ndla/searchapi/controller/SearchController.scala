@@ -417,7 +417,8 @@ trait SearchController {
         statusFilter = statusFilter.flatMap(ArticleStatus.valueOf),
         userFilter = userFilter,
         grepCodes = grepCodes,
-        shouldScroll = shouldScroll
+        shouldScroll = shouldScroll,
+        searchDecompounded = false
       )
     }
 

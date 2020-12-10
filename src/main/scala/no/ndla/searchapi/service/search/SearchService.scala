@@ -59,19 +59,19 @@ trait SearchService {
         field: String,
         boost: Int,
         language: String,
-        fallback: Boolean
+        fallback: Boolean,
+        searchDecompounded: Boolean
     ): SimpleStringQuery = {
       if (language == Language.AllLanguages || fallback) {
         Language.languageAnalyzers.foldLeft(simpleStringQuery(query))(
-          (acc, cur) =>
-            acc
-              .field(s"$field.${cur.lang}", boost)
-              .field(s"$field.${cur.lang}.decompounded", 0.1)
+          (acc, cur) => {
+            val base = acc.field(s"$field.${cur.lang}", boost)
+            if (searchDecompounded) base.field(s"$field.${cur.lang}.decompounded", 0.1) else base
+          }
         )
       } else {
-        simpleStringQuery(query)
-          .field(s"$field.$language", boost)
-          .field(s"$field.$language.decompounded", 0.1)
+        val base = simpleStringQuery(query).field(s"$field.$language", boost)
+        if (searchDecompounded) base.field(s"$field.$language.decompounded", 0.1) else base
       }
     }
 
