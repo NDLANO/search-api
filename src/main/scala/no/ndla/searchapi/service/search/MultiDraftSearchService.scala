@@ -38,8 +38,8 @@ trait MultiDraftSearchService {
   val multiDraftSearchService: MultiDraftSearchService
 
   class MultiDraftSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
-
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
+    override val indexServices = List(draftIndexService, learningPathIndexService)
 
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
       val contentSearch = settings.query.map(queryString => {
@@ -93,12 +93,16 @@ trait MultiDraftSearchService {
           s"Max supported results are $ElasticSearchIndexMaxResultWindow, user requested $requestedResultWindow")
         Failure(ResultWindowTooLargeException())
       } else {
+
+        val aggregations = buildTermsAggregation(settings.aggregatePaths)
+
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
           .suggestions(suggestions(settings.query, settings.language, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
+          .aggs(aggregations)
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
         // Only add scroll param if it is first page
@@ -117,6 +121,7 @@ trait MultiDraftSearchService {
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
                 suggestions = getSuggestions(response.result),
+                aggregations = getAggregationsFromResult(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)

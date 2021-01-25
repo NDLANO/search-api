@@ -7,10 +7,10 @@
 
 package no.ndla.searchapi.service.search
 
-import java.lang.Math.max
-
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
+import com.sksamuel.elastic4s.mappings.FieldDefinition
+import com.sksamuel.elastic4s.searches.aggs.Aggregation
 import com.sksamuel.elastic4s.searches.queries.SimpleStringQuery
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
@@ -24,6 +24,8 @@ import no.ndla.searchapi.model.search.SearchType
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.index.IndexNotFoundException
 
+import java.lang.Math.max
+import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -32,6 +34,7 @@ trait SearchService {
 
   trait SearchService {
     val searchIndex: List[String]
+    val indexServices: List[IndexService[_]]
 
     /**
       * Returns hit as summary
@@ -75,7 +78,7 @@ trait SearchService {
       }
     }
 
-    def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[MultiSearchSummary] = {
+    protected def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[MultiSearchSummary] = {
       response.totalHits match {
         case count if count > 0 =>
           val resultArray = response.hits.hits.toList
@@ -92,7 +95,7 @@ trait SearchService {
       }
     }
 
-    def suggestions(query: Option[String], language: String, fallback: Boolean): Seq[PhraseSuggestion] = {
+    protected def suggestions(query: Option[String], language: String, fallback: Boolean): Seq[PhraseSuggestion] = {
       query
         .map(q => {
           val searchLanguage =
@@ -105,7 +108,7 @@ trait SearchService {
         .getOrElse(Seq.empty)
     }
 
-    def suggestion(query: String, field: String, language: String): PhraseSuggestion = {
+    private def suggestion(query: String, field: String, language: String): PhraseSuggestion = {
       phraseSuggestion(name = field)
         .on(s"$field.$language.trigram")
         .addDirectGenerator(DirectGenerator(field = s"$field.$language.trigram", suggestMode = Some("always")))
@@ -114,10 +117,133 @@ trait SearchService {
         .text(query)
     }
 
-    def getSuggestions(response: SearchResponse): Seq[MultiSearchSuggestion] = {
+    protected def getSuggestions(response: SearchResponse): Seq[MultiSearchSuggestion] = {
       response.suggestions.map {
         case (key, value) =>
           MultiSearchSuggestion(name = key, suggestions = getSuggestion(value))
+      }.toSeq
+    }
+
+    protected[search] def buildTermsAggregation(paths: Seq[String]): Seq[Aggregation] = {
+      val rootFields = indexServices.flatMap(_.getMapping.fields)
+
+      val aggregationTrees = paths.flatMap(p => buildAggregationTreeFromPath(p, rootFields).toSeq)
+      val initialFakeAggregations = aggregationTrees.flatMap(FakeAgg.seqAggsToSubAggs(_).toSeq)
+
+      /** This fancy block basically merges all the [[FakeAgg]]'s that can be merged together */
+      val mergedFakeAggregations = initialFakeAggregations.foldLeft(Seq.empty[FakeAgg])((acc, fakeAgg) => {
+        val (hasBeenMerged, merged) = acc.foldLeft((false, Seq.empty[FakeAgg]))((acc, toMerge) => {
+          val (curHasBeenMerged, aggs) = acc
+          fakeAgg.merge(toMerge) match {
+            case Some(merged) => true -> (aggs :+ merged)
+            case None         => curHasBeenMerged -> (aggs :+ toMerge)
+          }
+        })
+        if (hasBeenMerged) merged else merged :+ fakeAgg
+      })
+
+      mergedFakeAggregations.map(_.convertToReal())
+    }
+
+    private def buildAggregationTreeFromPath(path: String,
+                                             fieldsInIndex: Seq[FieldDefinition]): Option[Seq[FakeAgg]] = {
+      @tailrec
+      def _buildAggregationRecursive(parts: Seq[String],
+                                     fullPath: String,
+                                     fieldsInIndex: Seq[FieldDefinition],
+                                     remainder: Seq[String],
+                                     parentAgg: Seq[FakeAgg]): Option[(Seq[FakeAgg], Seq[String])] = {
+        if (parts.isEmpty) {
+          None
+        } else {
+          fieldsInIndex.filter(_.name == parts.mkString(".")) match {
+            case Nil =>
+              val (newPath, restOfPath) = parts.splitAt(math.max(parts.size - 1, 1))
+              _buildAggregationRecursive(newPath, fullPath, fieldsInIndex, restOfPath ++ remainder, parentAgg)
+            case fieldsFound =>
+              val fieldTypes = fieldsFound.map(_.`type`).distinct
+              val pathSoFar = parts.mkString(".")
+              val fullPathSoFar = fullPath.split("\\.").reverse.dropWhile(_ != parts.last).reverse.mkString(".")
+
+              val newParent = fieldTypes match {
+                case singleType :: Nil if singleType == "nested" =>
+                  val n = FakeNestedAgg(pathSoFar, fullPathSoFar)
+                  parentAgg :+ n
+                case singleType :: Nil if singleType == "keyword" =>
+                  val n = FakeTermAgg(pathSoFar).field(fullPath)
+                  parentAgg :+ n
+                case _ => parentAgg
+              }
+
+              if (remainder.isEmpty) {
+                Some(newParent -> Seq.empty)
+              } else {
+                _buildAggregationRecursive(
+                  remainder,
+                  fullPath,
+                  fieldsFound.head.fields,
+                  Seq.empty,
+                  newParent
+                )
+              }
+          }
+        }
+      }
+
+      _buildAggregationRecursive(path.split("\\."), path, fieldsInIndex, Seq.empty, Seq.empty).map(_._1)
+    }
+
+    def getAggregationsFromResult(response: SearchResponse): Seq[TermAggregation] = {
+      getTermsAggregationResults(response.aggs.data)
+    }
+
+    private def convertBuckets(buckets: Seq[Map[String, Any]]): Seq[Bucket] = {
+      buckets
+        .flatMap(bucket => {
+          Try {
+            val key = bucket("key").asInstanceOf[String]
+            val docCount = bucket("doc_count").asInstanceOf[Int]
+            Bucket(key, docCount)
+          }.toOption
+        })
+    }
+
+    private def handleBucketResult(resMap: Map[String, Any], field: Seq[String]): Seq[TermAggregation] = {
+      Try {
+        val sumOtherDocCount = resMap("sum_other_doc_count").asInstanceOf[Int]
+        val docCountErrorUpperBound = resMap("doc_count_error_upper_bound").asInstanceOf[Int]
+        val buckets = resMap("buckets").asInstanceOf[Seq[Map[String, Any]]]
+
+        TermAggregation(
+          field,
+          sumOtherDocCount,
+          docCountErrorUpperBound,
+          buckets = convertBuckets(buckets)
+        )
+      }.toOption.toSeq
+    }
+
+    private def getTermsAggregationResults(
+        m: Map[String, Any],
+        fields: Seq[String] = Seq.empty,
+        foundBuckets: Seq[TermAggregation] = Seq.empty
+    ): Seq[TermAggregation] = {
+      m.flatMap {
+        case (key, map) =>
+          val newMap = Try(map.asInstanceOf[Map[String, Any]]).getOrElse {
+            logger.error("Map cast failed")
+            Map.empty[String, Any]
+          }
+
+          if (newMap.contains("buckets") &&
+              newMap.contains("sum_other_doc_count") &&
+              newMap.contains("doc_count_error_upper_bound")) {
+            handleBucketResult(newMap, fields :+ key)
+          } else {
+            getTermsAggregationResults(newMap, fields :+ key, foundBuckets)
+          }
+
+        case _ => Seq.empty[TermAggregation]
       }.toSeq
     }
 
@@ -147,6 +273,7 @@ trait SearchService {
         .map(response => {
           val hits = getHits(response.result, language, fallback)
           val suggestions = getSuggestions(response.result)
+          val aggregations = getAggregationsFromResult(response.result)
           SearchResult(
             totalCount = response.result.totalHits,
             page = None,
@@ -154,6 +281,7 @@ trait SearchService {
             language = if (language == "*") Language.AllLanguages else language,
             results = hits,
             suggestions = suggestions,
+            aggregations = aggregations,
             scrollId = response.result.scrollId
           )
         })

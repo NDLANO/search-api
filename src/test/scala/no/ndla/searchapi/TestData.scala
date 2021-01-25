@@ -1121,7 +1121,8 @@ object TestData {
     relevanceIds = List.empty,
     grepCodes = List.empty,
     shouldScroll = false,
-    filterByNoResourceType = false
+    filterByNoResourceType = false,
+    aggregatePaths = List.empty
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
@@ -1145,7 +1146,8 @@ object TestData {
     userFilter = List.empty,
     grepCodes = List.empty,
     shouldScroll = false,
-    searchDecompounded = false
+    searchDecompounded = false,
+    aggregatePaths = List.empty
   )
 
   val searchableResourceTypes = List(

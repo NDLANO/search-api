@@ -14,4 +14,5 @@ case class SearchResult(totalCount: Long,
                         language: String,
                         results: Seq[MultiSearchSummary],
                         suggestions: Seq[MultiSearchSuggestion],
+                        aggregations: Seq[TermAggregation],
                         scrollId: Option[String] = None)

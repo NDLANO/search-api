@@ -27,5 +27,6 @@ case class SearchSettings(
     relevanceIds: List[String],
     grepCodes: List[String],
     shouldScroll: Boolean,
-    filterByNoResourceType: Boolean // If true, and resourceTypes is empty, results will have no resource-type or taxonomy context
+    filterByNoResourceType: Boolean, // If true, and resourceTypes is empty, results will have no resource-type or taxonomy context
+    aggregatePaths: List[String]
 )

@@ -993,6 +993,19 @@ trait SearchConverterService {
       (resources, topics)
     }
 
+    def toApiMultiTermsAggregation(agg: domain.TermAggregation): api.MultiSearchTermsAggregation =
+      api.MultiSearchTermsAggregation(
+        field = agg.field.mkString("."),
+        sumOtherDocCount = agg.sumOtherDocCount,
+        docCountErrorUpperBound = agg.docCountErrorUpperBound,
+        values = agg.buckets.map(
+          b =>
+            api.TermValue(
+              value = b.value,
+              count = b.count
+          ))
+      )
+
     def toApiMultiSearchResult(searchResult: domain.SearchResult): MultiSearchResult =
       api.MultiSearchResult(
         searchResult.totalCount,
@@ -1000,7 +1013,8 @@ trait SearchConverterService {
         searchResult.pageSize,
         searchResult.language,
         searchResult.results,
-        searchResult.suggestions
+        searchResult.suggestions,
+        searchResult.aggregations.map(toApiMultiTermsAggregation)
       )
 
     def toApiGroupMultiSearchResult(group: String, searchResult: domain.SearchResult): GroupSearchResult =
