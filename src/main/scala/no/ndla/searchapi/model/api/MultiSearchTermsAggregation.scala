@@ -5,13 +5,13 @@ import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 import scala.annotation.meta.field
 
 // format: off
-@ApiModel(description = "Search suggestion options for the terms in the query")
+@ApiModel(description = "Value that appears in the search aggregation")
 case class TermValue(
     @(ApiModelProperty @field)(description = "Value that appeared in result") value: String,
     @(ApiModelProperty @field)(description = "Number of times the value appeared in result") count: Long
 )
 
-@ApiModel(description = "Search suggestion options for the terms in the query")
+@ApiModel(description = "Information about search aggregation on `field`")
 case class MultiSearchTermsAggregation(
     @(ApiModelProperty @field)(description = "The field the specific aggregation is matching") field: String,
     @(ApiModelProperty @field)(description = "Number of documents with values that didn't appear in the aggregation. (Will only happen if there are more than 50 different values)") sumOtherDocCount: Int,
