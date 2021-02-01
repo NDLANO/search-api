@@ -52,7 +52,7 @@ trait SearchConverterService {
       parents.flatMap(parent => getParentTopicsAndPaths(parent, bundle, path :+ parent.id)) :+ (topic, path)
     }
 
-    def parseHtml(html: String) = {
+    private def parseHtml(html: String) = {
       val document = Jsoup.parseBodyFragment(html)
       document.outputSettings().escapeMode(EscapeMode.xhtml).prettyPrint(false)
       document.body()

@@ -190,7 +190,7 @@ trait SearchService {
         }
       }
 
-      _buildAggregationRecursive(path.split("\\."), path, fieldsInIndex, Seq.empty, Seq.empty).map(_._1)
+      _buildAggregationRecursive(path.split("\\.").toSeq, path, fieldsInIndex, Seq.empty, Seq.empty).map(_._1)
     }
 
     def getAggregationsFromResult(response: SearchResponse): Seq[TermAggregation] = {
