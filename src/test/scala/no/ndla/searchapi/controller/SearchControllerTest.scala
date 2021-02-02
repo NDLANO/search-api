@@ -33,7 +33,8 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   }
 
   test("That / returns 200 ok") {
-    val multiResult = domain.SearchResult(0, Some(1), 10, "nb", Seq.empty, suggestions = Seq.empty)
+    val multiResult =
+      domain.SearchResult(0, Some(1), 10, "nb", Seq.empty, suggestions = Seq.empty, aggregations = Seq.empty)
     when(multiSearchService.matchingQuery(any[SearchSettings])).thenReturn(Success(multiResult))
     get("/test/") {
       status should equal(200)
@@ -41,7 +42,8 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   }
 
   test("That /group/ returns 200 ok") {
-    val multiResult = domain.SearchResult(0, Some(1), 10, "nb", Seq.empty, suggestions = Seq.empty)
+    val multiResult =
+      domain.SearchResult(0, Some(1), 10, "nb", Seq.empty, suggestions = Seq.empty, aggregations = Seq.empty)
     when(multiSearchService.matchingQuery(any[SearchSettings])).thenReturn(Success(multiResult))
     get("/test/group/?resource-types=test") {
       status should equal(200)
@@ -53,7 +55,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val validScrollId =
       "DnF1ZXJ5VGhlbkZldGNoCgAAAAAAAAC1Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAthYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALcWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC4Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuRYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALsWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC9Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuhYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAAL4WLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC8Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFE="
 
-    val multiResult = domain.SearchResult(0, None, 10, "nb", Seq.empty, Seq.empty, Some(validScrollId))
+    val multiResult = domain.SearchResult(0, None, 10, "nb", Seq.empty, Seq.empty, Seq.empty, Some(validScrollId))
 
     when(multiSearchService.matchingQuery(any[SearchSettings])).thenReturn(Success(multiResult))
     get(s"/test/") {
@@ -69,7 +71,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val validScrollId =
       "DnF1ZXJ5VGhlbkZldGNoCgAAAAAAAAC1Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAthYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALcWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC4Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuRYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALsWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC9Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuhYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAAL4WLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC8Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFE="
 
-    val multiResult = domain.SearchResult(0, None, 10, "nb", Seq.empty, Seq.empty, Some(validScrollId))
+    val multiResult = domain.SearchResult(0, None, 10, "nb", Seq.empty, Seq.empty, Seq.empty, Some(validScrollId))
 
     when(multiDraftSearchService.matchingQuery(any[MultiDraftSearchSettings])).thenReturn(Success(multiResult))
     when(user.getUser).thenReturn(UserInfo("SomeId", Set(Role.DRAFTWRITE)))
@@ -88,7 +90,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val newValidScrollId =
       "DnF1ZXJ5VGhlbkZldGNoCgAAAAAAAAC1Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAtAAAAAAthYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALcWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC4Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuRYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALsWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC9Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuhYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAAL4WLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC8Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFE="
 
-    val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Some(newValidScrollId))
+    val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Seq.empty, Some(newValidScrollId))
 
     when(multiSearchService.scroll(eqTo(validScrollId), eqTo("nn"), eqTo(true))).thenReturn(Success(multiResult))
     get(s"/test/?search-context=$validScrollId&language=nn&fallback=true") {
@@ -106,7 +108,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val newValidScrollId =
       "DnF1ZXJ5VGhlbkZldGNoCgAAAAAAAAC1Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAtAAAAAAthYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALcWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC4Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuRYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAALsWLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC9Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFEAAAAAAAAAuhYtY2VPYWFvRFQ5aWNSbzRFYVZSTEhRAAAAAAAAAL4WLWNlT2Fhb0RUOWljUm80RWFWUkxIUQAAAAAAAAC8Fi1jZU9hYW9EVDlpY1JvNEVhVlJMSFE="
 
-    val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Some(newValidScrollId))
+    val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Seq.empty, Some(newValidScrollId))
 
     when(multiDraftSearchService.scroll(eqTo(validScrollId), eqTo("nn"), eqTo(true))).thenReturn(Success(multiResult))
     when(user.getUser).thenReturn(UserInfo("SomeId", Set(Role.DRAFTWRITE)))

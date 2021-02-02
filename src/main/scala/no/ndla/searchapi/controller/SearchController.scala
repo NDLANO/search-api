@@ -168,6 +168,11 @@ trait SearchController {
          |UpdatedBy on article and user in editorial-notes are searched.""".stripMargin
     )
 
+    private val aggregatePaths = Param[Option[Seq[String]]](
+      "aggregate-paths",
+      "List of index-paths that should be term-aggregated and returned in result."
+    )
+
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
 
@@ -240,7 +245,8 @@ trait SearchController {
         relevanceIds = relevances,
         grepCodes = grepCodes,
         shouldScroll = false,
-        filterByNoResourceType = false
+        filterByNoResourceType = false,
+        aggregatePaths = List.empty
       )
 
       groupSearch(settings, includeMissingResourceTypeGroup)
@@ -353,6 +359,7 @@ trait SearchController {
       val anotherResourceTypes = paramAsListOfString(this.contextFilters.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
+      val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
 
       SearchSettings(
         query = query,
@@ -371,7 +378,8 @@ trait SearchController {
         relevanceIds = relevances,
         grepCodes = grepCodes,
         shouldScroll = shouldScroll,
-        filterByNoResourceType = false
+        filterByNoResourceType = false,
+        aggregatePaths = aggregatePaths
       )
     }
 
@@ -396,6 +404,7 @@ trait SearchController {
       val userFilter = paramAsListOfString(this.userFilter.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
+      val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
 
       MultiDraftSearchSettings(
         query = query,
@@ -418,7 +427,8 @@ trait SearchController {
         userFilter = userFilter,
         grepCodes = grepCodes,
         shouldScroll = shouldScroll,
-        searchDecompounded = false
+        searchDecompounded = false,
+        aggregatePaths = aggregatePaths
       )
     }
 
@@ -474,7 +484,8 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
             asQueryParam(scrollId),
-            asQueryParam(grepCodes)
+            asQueryParam(grepCodes),
+            asQueryParam(aggregatePaths)
           )
           .responseMessages(response500))
     ) {
@@ -515,6 +526,7 @@ trait SearchController {
             asQueryParam(statusFilter),
             asQueryParam(userFilter),
             asQueryParam(grepCodes),
+            asQueryParam(aggregatePaths)
           )
           .authorizations("oauth2")
           .responseMessages(response500))

@@ -38,6 +38,7 @@ trait MultiSearchService {
 
   class MultiSearchService extends LazyLogging with SearchService with TaxonomyFiltering {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
+    override val indexServices = List(articleIndexService, learningPathIndexService)
 
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val fullQuery = settings.query match {
@@ -80,12 +81,15 @@ trait MultiSearchService {
         Failure(ResultWindowTooLargeException())
       } else {
 
+        val aggregations = buildTermsAggregation(settings.aggregatePaths)
+
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
           .suggestions(suggestions(settings.query, settings.language, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
+          .aggs(aggregations)
           .sortBy(getSortDefinition(settings.sort, settings.language))
 
         // Only add scroll param if it is first page
@@ -102,6 +106,7 @@ trait MultiSearchService {
                 language = if (settings.language == "*") Language.AllLanguages else settings.language,
                 results = getHits(response.result, settings.language, settings.fallback),
                 suggestions = getSuggestions(response.result),
+                aggregations = getAggregationsFromResult(response.result),
                 scrollId = response.result.scrollId
               ))
           case Failure(ex) => Failure(ex)

@@ -19,6 +19,7 @@ case class MultiSearchResult(
     @(ApiModelProperty @field)(description = "The number of results per page") pageSize: Int,
     @(ApiModelProperty @field)(description = "The chosen search language") language: String,
     @(ApiModelProperty @field)(description = "The search results") results: Seq[MultiSearchSummary],
-    @(ApiModelProperty @field)(description = "The suggestions for other searches") suggestions: Seq[MultiSearchSuggestion]
+    @(ApiModelProperty @field)(description = "The suggestions for other searches") suggestions: Seq[MultiSearchSuggestion],
+    @(ApiModelProperty @field)(description = "The aggregated fields if specified in query") aggregations: Seq[MultiSearchTermsAggregation]
 )
 // format: on

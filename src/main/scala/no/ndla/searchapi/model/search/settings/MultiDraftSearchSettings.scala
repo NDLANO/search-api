@@ -32,5 +32,6 @@ case class MultiDraftSearchSettings(
     userFilter: List[String],
     grepCodes: List[String],
     shouldScroll: Boolean,
-    searchDecompounded: Boolean
+    searchDecompounded: Boolean,
+    aggregatePaths: List[String]
 )
