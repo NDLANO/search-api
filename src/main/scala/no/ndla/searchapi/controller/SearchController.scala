@@ -484,7 +484,8 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
             asQueryParam(scrollId),
-            asQueryParam(grepCodes)
+            asQueryParam(grepCodes),
+            asQueryParam(aggregatePaths)
           )
           .responseMessages(response500))
     ) {
@@ -525,6 +526,7 @@ trait SearchController {
             asQueryParam(statusFilter),
             asQueryParam(userFilter),
             asQueryParam(grepCodes),
+            asQueryParam(aggregatePaths)
           )
           .authorizations("oauth2")
           .responseMessages(response500))
