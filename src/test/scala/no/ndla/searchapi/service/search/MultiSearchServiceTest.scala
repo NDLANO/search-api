@@ -640,6 +640,14 @@ class MultiSearchServiceTest
     search1.totalCount should be(0)
   }
 
+  test("That search on embed data attribute only returns articles with exact attribute") {
+    val Success(results) =
+      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("h5p")))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

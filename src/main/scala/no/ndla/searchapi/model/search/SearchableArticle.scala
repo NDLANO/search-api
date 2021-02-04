@@ -28,5 +28,7 @@ case class SearchableArticle(
     contexts: List[SearchableTaxonomyContext],
     grepContexts: List[SearchableGrepContext],
     traits: List[String],
-    embedAttributes: SearchableLanguageList
+    embedAttributes: SearchableLanguageList,
+    embedResources: List[String],
+    embedIds: List[String]
 )

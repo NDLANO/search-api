@@ -787,6 +787,14 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     search.results.map(_.id) should be(Seq(12))
   }
 
+  test("That search on embed data attribute only returns articles with exact attribute") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(embedResource = Some("concept")))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

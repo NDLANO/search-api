@@ -77,7 +77,22 @@ trait MultiDraftSearchService {
           )
       })
 
-      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
+      val embedResourceSearch = settings.embedResource.map(q => {
+        boolQuery()
+          .should(
+            simpleStringQuery(q).field("embedResources", 1),
+          )
+      })
+
+      val embedIdSearch = settings.embedId.map(q => {
+        boolQuery()
+          .should(
+            simpleStringQuery(q).field("embedIds", 1),
+          )
+      })
+
+
+      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch, embedResourceSearch, embedIdSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)

@@ -32,5 +32,7 @@ case class SearchableDraft(
     previousVersionsNotes: List[String],
     grepContexts: List[SearchableGrepContext],
     traits: List[String],
-    embedAttributes: SearchableLanguageList
+    embedAttributes: SearchableLanguageList,
+    embedResources: List[String],
+    embedIds: List[String]
 )

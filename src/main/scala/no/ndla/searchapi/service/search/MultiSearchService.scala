@@ -41,17 +41,17 @@ trait MultiSearchService {
     override val indexServices = List(articleIndexService, learningPathIndexService)
 
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
-      val fullQuery = settings.query match {
-        case Some(q) =>
+      val contentSearch = settings.query.map(queryString => {
+
           val langQueryFunc = (fieldName: String, boost: Int) =>
             buildSimpleStringQueryForField(
-              q,
+              queryString,
               fieldName,
               boost,
               settings.language,
               settings.fallback,
               searchDecompounded = true
-          )
+            )
 
           boolQuery().must(
             boolQuery().should(
@@ -61,13 +61,29 @@ trait MultiSearchService {
               langQueryFunc("content", 1),
               langQueryFunc("tags", 1),
               langQueryFunc("embedAttributes", 1),
-              simpleStringQuery(q).field("authors", 1),
-              simpleStringQuery(q).field("grepContexts.title", 1)
+              simpleStringQuery(queryString).field("authors", 1),
+              simpleStringQuery(queryString).field("grepContexts.title", 1)
             ))
-        case None =>
-          boolQuery()
-      }
-      executeSearch(settings, fullQuery)
+      })
+
+      val embedResourceSearch = settings.embedResource.map(q => {
+        boolQuery()
+          .should(
+            simpleStringQuery(q).field("embedResources", 1),
+          )
+      })
+
+      val embedIdSearch = settings.embedId.map(q => {
+        boolQuery()
+          .should(
+            simpleStringQuery(q).field("embedIds", 1),
+          )
+      })
+
+        val boolQueries: List[BoolQuery] = List(contentSearch, embedResourceSearch, embedIdSearch).flatten
+        val fullQuery = boolQuery().must(boolQueries)
+
+        executeSearch(settings, fullQuery)
     }
 
     def executeSearch(settings: SearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {

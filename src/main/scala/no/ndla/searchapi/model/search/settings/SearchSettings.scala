@@ -28,5 +28,7 @@ case class SearchSettings(
     grepCodes: List[String],
     shouldScroll: Boolean,
     filterByNoResourceType: Boolean, // If true, and resourceTypes is empty, results will have no resource-type or taxonomy context
-    aggregatePaths: List[String]
+    aggregatePaths: List[String],
+    embedResource: Option[String],
+    embedId: Option[String]
 )

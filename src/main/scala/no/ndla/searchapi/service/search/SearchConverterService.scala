@@ -108,6 +108,48 @@ trait SearchConverterService {
       })
     }
 
+    private[service] def getEmbedResources(html: String): List[String] = {
+      parseHtml(html)
+        .select("embed")
+        .asScala
+        .flatMap(getEmbedResources)
+        .toList
+    }
+
+    private def getEmbedResources(embed: Element): List[String] = {
+      val attributesToKeep = List(
+        "data-resource",
+      )
+
+      attributesToKeep.flatMap(attr =>
+        embed.attr(attr) match {
+          case "" => None
+          case a  => Some(a)
+        })
+    }
+
+    private[service] def getEmbedIds(html: String): List[String] = {
+      parseHtml(html)
+        .select("embed")
+        .asScala
+        .flatMap(getEmbedIds)
+        .toList
+    }
+
+    private def getEmbedIds(embed: Element): List[String] = {
+      val attributesToKeep = List(
+        "data-videoid",
+        "data-url",
+        "data-resource_id",
+      )
+
+      attributesToKeep.flatMap(attr =>
+        embed.attr(attr) match {
+          case "" => None
+          case a  => Some(a)
+        })
+    }
+
     private def getAttributesToIndex(content: Seq[ArticleContent],
                                      visualElement: Seq[VisualElement]): SearchableLanguageList = {
       val contentTuples = content.map(c => c.language -> getAttributes(c.content))
@@ -121,12 +163,24 @@ trait SearchConverterService {
       SearchableLanguageList(languageValues.toSeq)
     }
 
+    private def getEmbedResourcesToIndex(content: Seq[ArticleContent]): List[String] = {
+      val contentResources = content.map(c => getEmbedResources(c.content))
+      contentResources.flatten.toList
+    }
+
+    private def getEmbedIdsToIndex(content: Seq[ArticleContent]): List[String] = {
+      val contentIds = content.map(c => getEmbedIds(c.content))
+      contentIds.flatten.toList
+    }
+
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, filterVisibles = true)
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
+      val embedResources = getEmbedResourcesToIndex(ai.content)
+      val embedIds = getEmbedIdsToIndex(ai.content)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -165,7 +219,9 @@ trait SearchConverterService {
           contexts = taxonomyForArticle.getOrElse(List.empty),
           grepContexts = getGrepContexts(ai.grepCodes, grepBundle),
           traits = traits.toList.distinct,
-          embedAttributes = embedAttributes
+          embedAttributes = embedAttributes,
+          embedResources = embedResources,
+          embedIds = embedIds
         ))
 
     }
@@ -207,6 +263,8 @@ trait SearchConverterService {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, filterVisibles = false)
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
+      val embedResources = getEmbedResourcesToIndex(draft.content)
+      val embedIds = getEmbedIdsToIndex(draft.content)
 
       val defaultTitle = draft.title
         .sortBy(title => {
@@ -262,7 +320,9 @@ trait SearchConverterService {
           previousVersionsNotes = draft.previousVersionsNotes.map(_.note),
           grepContexts = getGrepContexts(draft.grepCodes, grepBundle),
           traits = traits.toList.distinct,
-          embedAttributes = embedAttributes
+          embedAttributes = embedAttributes,
+          embedResources = embedResources,
+          embedIds = embedIds
         ))
 
     }
