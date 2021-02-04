@@ -640,9 +640,83 @@ class MultiSearchServiceTest
     search1.totalCount should be(0)
   }
 
-  test("That search on embed data attribute only returns articles with exact attribute") {
+  test("That search on embed data attribute does not return article with partial match") {
     val Success(results) =
-      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("h5p")))
+      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("conc"), embedId = Some("55")))
+    results.totalCount should be(0)
+  }
+
+  test("That search on embed data-resource_id does return article with exact match") {
+    val Success(results) =
+      multiSearchService.matchingQuery(searchSettings.copy(embedId = Some("66")))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search on embed dataId and resource can be combined with other parameters") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          query = Some("Ekstra"),
+          embedResource = Some("video"),
+          embedId = Some("77")
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search will return none on embed data id and resource search if other params doesnt match") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          query = Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+          embedResource = Some("video"),
+          embedId = Some("77")
+        ))
+    results.totalCount should be(0)
+  }
+
+  test("That search on embed data-resource works") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedResource = Some("video"),
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search on embed data-url works") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedId = Some("http://test"),
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search matches embed data ids exact on query parameter") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          query = Some("77"),
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search matches embed data resource exact on query parameter") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          query = Some("video"),
+        ))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)

@@ -8,8 +8,7 @@
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
-
-import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.ElasticDsl.{simpleStringQuery, _}
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
@@ -43,27 +42,29 @@ trait MultiSearchService {
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
       val contentSearch = settings.query.map(queryString => {
 
-          val langQueryFunc = (fieldName: String, boost: Int) =>
-            buildSimpleStringQueryForField(
-              queryString,
-              fieldName,
-              boost,
-              settings.language,
-              settings.fallback,
-              searchDecompounded = true
-            )
+        val langQueryFunc = (fieldName: String, boost: Int) =>
+          buildSimpleStringQueryForField(
+            queryString,
+            fieldName,
+            boost,
+            settings.language,
+            settings.fallback,
+            searchDecompounded = true
+        )
 
-          boolQuery().must(
-            boolQuery().should(
-              langQueryFunc("title", 6),
-              langQueryFunc("introduction", 2),
-              langQueryFunc("metaDescription", 1),
-              langQueryFunc("content", 1),
-              langQueryFunc("tags", 1),
-              langQueryFunc("embedAttributes", 1),
-              simpleStringQuery(queryString).field("authors", 1),
-              simpleStringQuery(queryString).field("grepContexts.title", 1)
-            ))
+        boolQuery().must(
+          boolQuery().should(
+            langQueryFunc("title", 6),
+            langQueryFunc("introduction", 2),
+            langQueryFunc("metaDescription", 1),
+            langQueryFunc("content", 1),
+            langQueryFunc("tags", 1),
+            langQueryFunc("embedAttributes", 1),
+            simpleStringQuery(queryString).field("authors", 1),
+            simpleStringQuery(queryString).field("grepContexts.title", 1),
+            simpleStringQuery(queryString).field("embedResources", 3),
+            simpleStringQuery(queryString).field("embedIds", 3),
+          ))
       })
 
       val embedResourceSearch = settings.embedResource.map(q => {
@@ -80,10 +81,10 @@ trait MultiSearchService {
           )
       })
 
-        val boolQueries: List[BoolQuery] = List(contentSearch, embedResourceSearch, embedIdSearch).flatten
-        val fullQuery = boolQuery().must(boolQueries)
+      val boolQueries: List[BoolQuery] = List(contentSearch, embedResourceSearch, embedIdSearch).flatten
+      val fullQuery = boolQuery().must(boolQueries)
 
-        executeSearch(settings, fullQuery)
+      executeSearch(settings, fullQuery)
     }
 
     def executeSearch(settings: SearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {

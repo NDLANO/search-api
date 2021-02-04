@@ -8,8 +8,7 @@
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
-
-import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.ElasticDsl.{simpleStringQuery, _}
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
@@ -64,7 +63,9 @@ trait MultiDraftSearchService {
           simpleStringQuery(queryString).field("authors", 1),
           simpleStringQuery(queryString).field("notes", 1),
           simpleStringQuery(queryString).field("previousVersionsNotes", 1),
-          simpleStringQuery(queryString).field("grepContexts.title", 1)
+          simpleStringQuery(queryString).field("grepContexts.title", 1),
+          simpleStringQuery(queryString).field("embedResources", 3),
+          simpleStringQuery(queryString).field("embedIds", 3),
         )
 
       })
@@ -90,7 +91,6 @@ trait MultiDraftSearchService {
             simpleStringQuery(q).field("embedIds", 1),
           )
       })
-
 
       val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch, embedResourceSearch, embedIdSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)

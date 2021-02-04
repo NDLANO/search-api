@@ -173,10 +173,11 @@ trait SearchController {
       "List of index-paths that should be term-aggregated and returned in result."
     )
 
-    private val embedResource = Param[Option[String]]("embedResource", "Return only results with embed resource matching the specified resource.")
+    private val embedResource =
+      Param[Option[String]]("embedResource", "Return only results with embed resource matching the specified resource.")
 
-    private val embedId = Param[Option[String]]("embedId", "Return only results with embed attribute matching the specified id.")
-
+    private val embedId =
+      Param[Option[String]]("embedId", "Return only results with embed attribute matching the specified id.")
 
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
@@ -231,7 +232,7 @@ trait SearchController {
       val anotherResourceTypes = paramAsListOfString(this.contextFilters.paramName)
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val includeMissingResourceTypeGroup =
-      booleanOrDefault(this.includeMissingResourceTypeGroup.paramName, default = false)
+        booleanOrDefault(this.includeMissingResourceTypeGroup.paramName, default = false)
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
 

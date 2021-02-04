@@ -125,7 +125,7 @@ trait SearchConverterService {
         embed.attr(attr) match {
           case "" => None
           case a  => Some(a)
-        })
+      })
     }
 
     private[service] def getEmbedIds(html: String): List[String] = {
@@ -147,7 +147,7 @@ trait SearchConverterService {
         embed.attr(attr) match {
           case "" => None
           case a  => Some(a)
-        })
+      })
     }
 
     private def getAttributesToIndex(content: Seq[ArticleContent],
