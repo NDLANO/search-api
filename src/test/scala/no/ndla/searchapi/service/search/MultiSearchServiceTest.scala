@@ -640,13 +640,13 @@ class MultiSearchServiceTest
     search1.totalCount should be(0)
   }
 
-  test("That search on embed data attribute does not return article with partial match") {
+  test("That searches for embedResource does not partial match") {
     val Success(results) =
-      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("conc"), embedId = Some("55")))
+      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("vid"), embedId = Some("55")))
     results.totalCount should be(0)
   }
 
-  test("That search on embed data-resource_id does return article with exact match") {
+  test("That searches for data-resource_id matches") {
     val Success(results) =
       multiSearchService.matchingQuery(searchSettings.copy(embedId = Some("66")))
     val hits = results.results
@@ -654,7 +654,7 @@ class MultiSearchServiceTest
     hits.head.id should be(12)
   }
 
-  test("That search on embed dataId and resource can be combined with other parameters") {
+  test("That searches on embedId and embedResource matches when using other parameters") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -667,7 +667,7 @@ class MultiSearchServiceTest
     hits.head.id should be(12)
   }
 
-  test("That search will return none on embed data id and resource search if other params doesnt match") {
+  test("That searches on embedResource and embedId doesn't match when other parameters have no hits") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -678,7 +678,7 @@ class MultiSearchServiceTest
     results.totalCount should be(0)
   }
 
-  test("That search on embed data-resource works") {
+  test("That search on embed data-resource matches") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -689,7 +689,7 @@ class MultiSearchServiceTest
     hits.head.id should be(12)
   }
 
-  test("That search on embed data-url works") {
+  test("That search on embed data-url matches") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -700,7 +700,7 @@ class MultiSearchServiceTest
     hits.head.id should be(12)
   }
 
-  test("That search matches embed data ids exact on query parameter") {
+  test("That search on query as embed data-resource_id matches") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -711,7 +711,7 @@ class MultiSearchServiceTest
     hits.head.id should be(12)
   }
 
-  test("That search matches embed data resource exact on query parameter") {
+  test("That search on query as embed data-resouce matches") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -720,6 +720,17 @@ class MultiSearchServiceTest
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
+  }
+
+  test("That search on query as article id matches") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          query = Some("11"),
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(11)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

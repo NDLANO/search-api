@@ -66,6 +66,7 @@ trait MultiDraftSearchService {
           simpleStringQuery(queryString).field("grepContexts.title", 1),
           simpleStringQuery(queryString).field("embedResources", 3),
           simpleStringQuery(queryString).field("embedIds", 3),
+          idsQuery(queryString)
         )
 
       })
