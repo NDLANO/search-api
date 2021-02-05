@@ -64,8 +64,8 @@ trait MultiDraftSearchService {
           simpleStringQuery(queryString).field("notes", 1),
           simpleStringQuery(queryString).field("previousVersionsNotes", 1),
           simpleStringQuery(queryString).field("grepContexts.title", 1),
-          simpleStringQuery(queryString).field("embedResources", 3),
-          simpleStringQuery(queryString).field("embedIds", 3),
+          simpleStringQuery(queryString).field("embedResources", 1),
+          simpleStringQuery(queryString).field("embedIds", 1),
           idsQuery(queryString)
         )
 
@@ -82,14 +82,14 @@ trait MultiDraftSearchService {
       val embedResourceSearch = settings.embedResource.map(q => {
         boolQuery()
           .should(
-            simpleStringQuery(q).field("embedResources", 3),
+            simpleStringQuery(q).field("embedResources", 1),
           )
       })
 
       val embedIdSearch = settings.embedId.map(q => {
         boolQuery()
           .should(
-            simpleStringQuery(q).field("embedIds", 3),
+            simpleStringQuery(q).field("embedIds", 1),
           )
       })
 

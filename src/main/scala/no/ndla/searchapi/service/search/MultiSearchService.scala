@@ -62,8 +62,8 @@ trait MultiSearchService {
             langQueryFunc("embedAttributes", 1),
             simpleStringQuery(queryString).field("authors", 1),
             simpleStringQuery(queryString).field("grepContexts.title", 1),
-            simpleStringQuery(queryString).field("embedResources", 3),
-            simpleStringQuery(queryString).field("embedIds", 3),
+            simpleStringQuery(queryString).field("embedResources", 1),
+            simpleStringQuery(queryString).field("embedIds", 1),
             idsQuery(queryString)
           ))
       })
@@ -71,14 +71,14 @@ trait MultiSearchService {
       val embedResourceSearch = settings.embedResource.map(q => {
         boolQuery()
           .should(
-            simpleStringQuery(q).field("embedResources", 3),
+            simpleStringQuery(q).field("embedResources", 1),
           )
       })
 
       val embedIdSearch = settings.embedId.map(q => {
         boolQuery()
           .should(
-            simpleStringQuery(q).field("embedIds", 3),
+            simpleStringQuery(q).field("embedIds", 1),
           )
       })
 
