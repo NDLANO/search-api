@@ -174,11 +174,11 @@ trait SearchController {
     )
 
     private val embedResource =
-      Param[Option[String]]("embedResource", "Return only results with embed data-resource the specified resource.")
+      Param[Option[String]]("embed-resource", "Return only results with embed data-resource the specified resource.")
 
     private val embedId =
       Param[Option[String]](
-        "embedId",
+        "embed-id",
         "Return only results with embed data-resource_id, data-videoid or data-url with the specified id.")
 
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =

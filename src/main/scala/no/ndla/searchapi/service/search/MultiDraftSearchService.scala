@@ -64,8 +64,8 @@ trait MultiDraftSearchService {
           simpleStringQuery(queryString).field("notes", 1),
           simpleStringQuery(queryString).field("previousVersionsNotes", 1),
           simpleStringQuery(queryString).field("grepContexts.title", 1),
-          simpleStringQuery(queryString).field("embedResources", 1),
-          simpleStringQuery(queryString).field("embedIds", 1),
+          termQuery("embedResources", queryString),
+          termQuery("embedIds", queryString),
           idsQuery(queryString)
         )
 
@@ -79,21 +79,7 @@ trait MultiDraftSearchService {
           )
       })
 
-      val embedResourceSearch = settings.embedResource.map(q => {
-        boolQuery()
-          .should(
-            simpleStringQuery(q).field("embedResources", 1),
-          )
-      })
-
-      val embedIdSearch = settings.embedId.map(q => {
-        boolQuery()
-          .should(
-            simpleStringQuery(q).field("embedIds", 1),
-          )
-      })
-
-      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch, embedResourceSearch, embedIdSearch).flatten
+      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)
@@ -172,6 +158,18 @@ trait MultiDraftSearchService {
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
+      val embedResourceFilter =
+        settings.embedResource match {
+          case Some("") | None => None
+          case Some(id)        => Some(termQuery("embedResources", id))
+        }
+
+      val embedIdFilter =
+        settings.embedId match {
+          case Some("") | None => None
+          case Some(id)        => Some(termQuery("embedIds", id))
+        }
+
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, filterByNoResourceType = false)
@@ -201,7 +199,9 @@ trait MultiDraftSearchService {
         taxonomyRelevanceFilter,
         statusFilter,
         usersFilter,
-        grepCodesFilter
+        grepCodesFilter,
+        embedResourceFilter,
+        embedIdFilter
       ).flatten
     }
 

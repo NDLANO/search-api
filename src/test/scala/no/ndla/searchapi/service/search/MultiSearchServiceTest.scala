@@ -680,7 +680,7 @@ class MultiSearchServiceTest
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
-          query = Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+          query = Some("query-string-without-match"),
           embedResource = Some("video"),
           embedId = Some("77")
         ))
