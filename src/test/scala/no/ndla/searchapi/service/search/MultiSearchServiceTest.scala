@@ -552,7 +552,8 @@ class MultiSearchServiceTest
     val ids = idsForLang("all").sorted.sliding(pageSize, pageSize).toList
 
     val Success(initialSearch) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = Language.AllLanguages, pageSize = pageSize))
+      multiSearchService.matchingQuery(
+        searchSettings.copy(language = Language.AllLanguages, pageSize = pageSize, shouldScroll = true))
 
     val Success(scroll1) = multiSearchService.scroll(initialSearch.scrollId.get, "all", fallback = true)
     val Success(scroll2) = multiSearchService.scroll(scroll1.scrollId.get, "all", fallback = true)

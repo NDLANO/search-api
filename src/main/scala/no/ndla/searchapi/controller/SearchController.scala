@@ -447,14 +447,14 @@ trait SearchController {
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
 
       paramOrNone(this.scrollId.paramName) match {
-        case Some(scroll) =>
+        case Some(scroll) if !InitialScrollContextKeywords.contains(scroll) =>
           scroller.scroll(scroll, language, fallback) match {
             case Success(scrollResult) =>
               Ok(searchConverterService.toApiMultiSearchResult(scrollResult),
                  headers = scrollIdToHeader(scrollResult.scrollId))
             case Failure(ex) => errorHandler(ex)
           }
-        case None => orFunction
+        case _ => orFunction
       }
     }
 
