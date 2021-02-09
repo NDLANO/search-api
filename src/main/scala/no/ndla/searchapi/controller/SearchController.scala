@@ -173,6 +173,14 @@ trait SearchController {
       "List of index-paths that should be term-aggregated and returned in result."
     )
 
+    private val embedResource =
+      Param[Option[String]]("embed-resource", "Return only results with embed data-resource the specified resource.")
+
+    private val embedId =
+      Param[Option[String]](
+        "embed-id",
+        "Return only results with embed data-resource_id, data-videoid or data-url with the specified id.")
+
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
 
@@ -227,6 +235,8 @@ trait SearchController {
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val includeMissingResourceTypeGroup =
         booleanOrDefault(this.includeMissingResourceTypeGroup.paramName, default = false)
+      val embedResource = paramOrNone(this.embedResource.paramName)
+      val embedId = paramOrNone(this.embedId.paramName)
 
       val settings = SearchSettings(
         query = query,
@@ -246,7 +256,9 @@ trait SearchController {
         grepCodes = grepCodes,
         shouldScroll = false,
         filterByNoResourceType = false,
-        aggregatePaths = List.empty
+        aggregatePaths = List.empty,
+        embedResource = embedResource,
+        embedId = embedId
       )
 
       groupSearch(settings, includeMissingResourceTypeGroup)
@@ -320,7 +332,9 @@ trait SearchController {
             asQueryParam(pageNo),
             asQueryParam(pageSize),
             asQueryParam(apiTypes),
-            asQueryParam(sort)
+            asQueryParam(sort),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .responseMessages(response500))
     ) {
@@ -360,6 +374,8 @@ trait SearchController {
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
+      val embedResource = paramOrNone(this.embedResource.paramName)
+      val embedId = paramOrNone(this.embedId.paramName)
 
       SearchSettings(
         query = query,
@@ -379,7 +395,9 @@ trait SearchController {
         grepCodes = grepCodes,
         shouldScroll = shouldScroll,
         filterByNoResourceType = false,
-        aggregatePaths = aggregatePaths
+        aggregatePaths = aggregatePaths,
+        embedResource = embedResource,
+        embedId = embedId
       )
     }
 
@@ -405,6 +423,8 @@ trait SearchController {
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
+      val embedResource = paramOrNone(this.embedResource.paramName)
+      val embedId = paramOrNone(this.embedId.paramName)
 
       MultiDraftSearchSettings(
         query = query,
@@ -428,7 +448,9 @@ trait SearchController {
         grepCodes = grepCodes,
         shouldScroll = shouldScroll,
         searchDecompounded = false,
-        aggregatePaths = aggregatePaths
+        aggregatePaths = aggregatePaths,
+        embedResource = embedResource,
+        embedId = embedId
       )
     }
 

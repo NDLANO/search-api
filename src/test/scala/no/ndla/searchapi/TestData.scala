@@ -364,8 +364,10 @@ object TestData {
     id = Option(12),
     title = List(Title("Ekstrastoff", "nb")),
     content = List(
-      ArticleContent("Helsesøster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\">",
-                     "nb")),
+      ArticleContent(
+        "Helsesøster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
+        "nb"
+      )),
     tags = List(Tag(List(""), "nb")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
@@ -655,8 +657,11 @@ object TestData {
     title = List(Title("Ekstrastoff", "nb")),
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
-    content =
-      List(ArticleContent("<embed data-resource=\"concept\" data-resource_id=\"55\" data-title=\"Flubber\" />", "nb")),
+    content = List(
+      ArticleContent(
+        "<section><embed data-resource=\"concept\" data-resource_id=\"55\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
+        "nb"
+      )),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),
@@ -1122,7 +1127,9 @@ object TestData {
     grepCodes = List.empty,
     shouldScroll = false,
     filterByNoResourceType = false,
-    aggregatePaths = List.empty
+    aggregatePaths = List.empty,
+    embedResource = None,
+    embedId = None
   )
 
   val multiDraftSearchSettings = MultiDraftSearchSettings(
@@ -1147,7 +1154,9 @@ object TestData {
     grepCodes = List.empty,
     shouldScroll = false,
     searchDecompounded = false,
-    aggregatePaths = List.empty
+    aggregatePaths = List.empty,
+    embedResource = None,
+    embedId = None
   )
 
   val searchableResourceTypes = List(

@@ -53,6 +53,10 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
+    val embedResources = List("test resource 1", "test resource 2")
+
+    val embedIds = List("test id 1", "test id 2")
+
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
     val original = SearchableArticle(
@@ -74,7 +78,9 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       grepContexts =
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
-      embedAttributes = embedAttrs
+      embedAttributes = embedAttrs,
+      embedResources = embedResources,
+      embedIds = embedIds
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)
@@ -119,6 +125,10 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
+    val embedResources = List("test resource 1", "test resource 2")
+
+    val embedIds = List("test id 1", "test id 2")
+
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
     val filterWithNullName =
       SearchableTaxonomyFilter(
@@ -147,7 +157,9 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       grepContexts =
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
-      embedAttributes = embedAttrs
+      embedAttributes = embedAttrs,
+      embedResources = embedResources,
+      embedIds = embedIds
     )
 
     val json = write(original)

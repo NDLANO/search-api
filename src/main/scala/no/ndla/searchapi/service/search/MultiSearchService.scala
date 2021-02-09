@@ -8,8 +8,7 @@
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
-
-import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.ElasticDsl.{simpleStringQuery, _}
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
@@ -62,11 +61,15 @@ trait MultiSearchService {
               langQueryFunc("tags", 1),
               langQueryFunc("embedAttributes", 1),
               simpleStringQuery(q).field("authors", 1),
-              simpleStringQuery(q).field("grepContexts.title", 1)
+              simpleStringQuery(q).field("grepContexts.title", 1),
+              termQuery("embedResources", q),
+              termQuery("embedIds", q),
+              idsQuery(q)
             ))
         case None =>
           boolQuery()
       }
+
       executeSearch(settings, fullQuery)
     }
 
@@ -142,6 +145,18 @@ trait MultiSearchService {
           Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
+      val embedResourceFilter =
+        settings.embedResource match {
+          case Some("") | None => None
+          case Some(id)        => Some(termQuery("embedResources", id))
+        }
+
+      val embedIdFilter =
+        settings.embedId match {
+          case Some("") | None => None
+          case Some(id)        => Some(termQuery("embedIds", id))
+        }
+
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, settings.filterByNoResourceType)
@@ -167,7 +182,9 @@ trait MultiSearchService {
         taxonomyContextTypeFilter,
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
-        grepCodesFilter
+        grepCodesFilter,
+        embedResourceFilter,
+        embedIdFilter
       ).flatten
     }
 

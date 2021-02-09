@@ -8,8 +8,7 @@
 package no.ndla.searchapi.service.search
 
 import java.util.concurrent.Executors
-
-import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.http.ElasticDsl.{simpleStringQuery, _}
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
@@ -64,7 +63,10 @@ trait MultiDraftSearchService {
           simpleStringQuery(queryString).field("authors", 1),
           simpleStringQuery(queryString).field("notes", 1),
           simpleStringQuery(queryString).field("previousVersionsNotes", 1),
-          simpleStringQuery(queryString).field("grepContexts.title", 1)
+          simpleStringQuery(queryString).field("grepContexts.title", 1),
+          termQuery("embedResources", queryString),
+          termQuery("embedIds", queryString),
+          idsQuery(queryString)
         )
 
       })
@@ -156,6 +158,18 @@ trait MultiDraftSearchService {
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
+      val embedResourceFilter =
+        settings.embedResource match {
+          case Some("") | None => None
+          case Some(id)        => Some(termQuery("embedResources", id))
+        }
+
+      val embedIdFilter =
+        settings.embedId match {
+          case Some("") | None => None
+          case Some(id)        => Some(termQuery("embedIds", id))
+        }
+
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, filterByNoResourceType = false)
@@ -185,7 +199,9 @@ trait MultiDraftSearchService {
         taxonomyRelevanceFilter,
         statusFilter,
         usersFilter,
-        grepCodesFilter
+        grepCodesFilter,
+        embedResourceFilter,
+        embedIdFilter
       ).flatten
     }
 

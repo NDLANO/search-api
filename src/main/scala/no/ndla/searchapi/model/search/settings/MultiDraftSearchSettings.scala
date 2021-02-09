@@ -33,5 +33,7 @@ case class MultiDraftSearchSettings(
     grepCodes: List[String],
     shouldScroll: Boolean,
     searchDecompounded: Boolean,
-    aggregatePaths: List[String]
+    aggregatePaths: List[String],
+    embedResource: Option[String],
+    embedId: Option[String]
 )
