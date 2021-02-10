@@ -334,9 +334,7 @@ trait SearchController {
             asQueryParam(pageNo),
             asQueryParam(pageSize),
             asQueryParam(apiTypes),
-            asQueryParam(sort),
-            asQueryParam(embedResource),
-            asQueryParam(embedId)
+            asQueryParam(sort)
           )
           .responseMessages(response500))
     ) {
@@ -509,7 +507,9 @@ trait SearchController {
             asQueryParam(contextFilters),
             asQueryParam(scrollId),
             asQueryParam(grepCodes),
-            asQueryParam(aggregatePaths)
+            asQueryParam(aggregatePaths),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .responseMessages(response500))
     ) {
