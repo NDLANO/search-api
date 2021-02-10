@@ -213,6 +213,8 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
             asQueryParam(includeMissingResourceTypeGroup),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .responseMessages(response500))
     ) {
@@ -548,7 +550,9 @@ trait SearchController {
             asQueryParam(statusFilter),
             asQueryParam(userFilter),
             asQueryParam(grepCodes),
-            asQueryParam(aggregatePaths)
+            asQueryParam(aggregatePaths),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .authorizations("oauth2")
           .responseMessages(response500))
