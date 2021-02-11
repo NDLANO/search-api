@@ -1,7 +1,6 @@
 name: CI
 on: [push, pull_request]
 env:
-  CI: true
   AWS_ACCESS_KEY_ID: ${{ secrets.CI_AWS_CLIENT_ID }}
   AWS_DEFAULT_REGION: "eu-west-1"
   AWS_SECRET_ACCESS_KEY: ${{ secrets.CI_AWS_CLIENT_SECRET }}

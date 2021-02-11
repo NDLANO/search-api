@@ -1,5 +1,5 @@
 # search-api
-[![Build Status](https://travis-ci.org/NDLANO/search-api.svg?branch=master)](https://travis-ci.org/NDLANO/search-api)
+![CI](https://github.com/NDLANO/search-api/workflows/CI/badge.svg)
 
 ## Usage
 
