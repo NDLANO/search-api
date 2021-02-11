@@ -14,7 +14,6 @@ val Elastic4sVersion = "6.7.8"
 val JacksonVersion = "2.12.1"
 val ElasticsearchVersion = "6.8.13"
 val Json4SVersion = "3.6.7"
-val TestContainersVersion = "1.12.2"
 
 val appProperties = settingKey[Properties]("The application properties")
 
@@ -68,7 +67,7 @@ lazy val search_api = (project in file("."))
     libraryDependencies ++= pactTestFramework ++ Seq(
       "ndla" %% "network" % "0.44",
       "ndla" %% "mapping" % "0.15",
-      "ndla" %% "scalatestsuite" % "0.2" % "test",
+      "ndla" %% "scalatestsuite" % "0.3" % "test",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
       "org.apache.logging.log4j" % "log4j-api" % Log4JVersion,
       "org.apache.logging.log4j" % "log4j-core" % Log4JVersion,
@@ -93,9 +92,7 @@ lazy val search_api = (project in file("."))
       "io.lemonlabs" %% "scala-uri" % "1.5.1",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
       "org.mockito" %% "mockito-scala" % MockitoVersion % "test",
-      "org.mockito" %% "mockito-scala-scalatest" % MockitoVersion % "test",
-      "org.testcontainers" % "elasticsearch" % TestContainersVersion % "test",
-      "org.testcontainers" % "testcontainers" % TestContainersVersion % "test"
+      "org.mockito" %% "mockito-scala-scalatest" % MockitoVersion % "test"
     ) ++ vulnerabilityOverrides
   )
   .enablePlugins(DockerPlugin)
