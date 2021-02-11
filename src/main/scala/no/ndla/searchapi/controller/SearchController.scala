@@ -213,6 +213,8 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
             asQueryParam(includeMissingResourceTypeGroup),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .responseMessages(response500))
     ) {
@@ -332,9 +334,7 @@ trait SearchController {
             asQueryParam(pageNo),
             asQueryParam(pageSize),
             asQueryParam(apiTypes),
-            asQueryParam(sort),
-            asQueryParam(embedResource),
-            asQueryParam(embedId)
+            asQueryParam(sort)
           )
           .responseMessages(response500))
     ) {
@@ -507,7 +507,9 @@ trait SearchController {
             asQueryParam(contextFilters),
             asQueryParam(scrollId),
             asQueryParam(grepCodes),
-            asQueryParam(aggregatePaths)
+            asQueryParam(aggregatePaths),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .responseMessages(response500))
     ) {
@@ -548,7 +550,9 @@ trait SearchController {
             asQueryParam(statusFilter),
             asQueryParam(userFilter),
             asQueryParam(grepCodes),
-            asQueryParam(aggregatePaths)
+            asQueryParam(aggregatePaths),
+            asQueryParam(embedResource),
+            asQueryParam(embedId)
           )
           .authorizations("oauth2")
           .responseMessages(response500))
