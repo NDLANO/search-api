@@ -40,7 +40,16 @@ trait MultiDraftSearchService {
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
     override val indexServices = List(draftIndexService, learningPathIndexService)
 
+    val langTermQueryFunc = (q: String, fieldName: String, language: String, fallback: Boolean) =>
+      buildTermQueryForField(
+        q,
+        fieldName,
+        language,
+        fallback
+    )
+
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
+
       val contentSearch = settings.query.map(queryString => {
 
         val langQueryFunc = (fieldName: String, boost: Int) =>
@@ -54,19 +63,21 @@ trait MultiDraftSearchService {
         )
 
         boolQuery().should(
-          langQueryFunc("title", 3),
-          langQueryFunc("introduction", 2),
-          langQueryFunc("metaDescription", 1),
-          langQueryFunc("content", 1),
-          langQueryFunc("tags", 1),
-          langQueryFunc("embedAttributes", 1),
-          simpleStringQuery(queryString).field("authors", 1),
-          simpleStringQuery(queryString).field("notes", 1),
-          simpleStringQuery(queryString).field("previousVersionsNotes", 1),
-          simpleStringQuery(queryString).field("grepContexts.title", 1),
-          termQuery("embedResources", queryString),
-          termQuery("embedIds", queryString),
-          idsQuery(queryString)
+          List(
+            langQueryFunc("title", 3),
+            langQueryFunc("introduction", 2),
+            langQueryFunc("metaDescription", 1),
+            langQueryFunc("content", 1),
+            langQueryFunc("tags", 1),
+            langQueryFunc("embedAttributes", 1),
+            simpleStringQuery(queryString).field("authors", 1),
+            simpleStringQuery(queryString).field("notes", 1),
+            simpleStringQuery(queryString).field("previousVersionsNotes", 1),
+            simpleStringQuery(queryString).field("grepContexts.title", 1),
+            idsQuery(queryString)
+          ) ++
+            langTermQueryFunc(queryString, "embedResources", settings.language, settings.fallback) ++
+            langTermQueryFunc(queryString, "embedIds", settings.language, settings.fallback)
         )
 
       })
@@ -79,7 +90,21 @@ trait MultiDraftSearchService {
           )
       })
 
-      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
+      val embedResourceSearch = settings.embedResource.map(q => {
+        boolQuery()
+          .should(
+            langTermQueryFunc(q, "embedResources", settings.language, settings.fallback)
+          )
+      })
+
+      val embedIdSearch = settings.embedId.map(q => {
+        boolQuery()
+          .should(
+            langTermQueryFunc(q, "embedIds", settings.language, settings.fallback)
+          )
+      })
+
+      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch, embedResourceSearch, embedIdSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)
@@ -158,18 +183,6 @@ trait MultiDraftSearchService {
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
-      val embedResourceFilter =
-        settings.embedResource match {
-          case Some("") | None => None
-          case Some(id)        => Some(termQuery("embedResources", id))
-        }
-
-      val embedIdFilter =
-        settings.embedId match {
-          case Some("") | None => None
-          case Some(id)        => Some(termQuery("embedIds", id))
-        }
-
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, filterByNoResourceType = false)
@@ -199,9 +212,7 @@ trait MultiDraftSearchService {
         taxonomyRelevanceFilter,
         statusFilter,
         usersFilter,
-        grepCodesFilter,
-        embedResourceFilter,
-        embedIdFilter
+        grepCodesFilter
       ).flatten
     }
 

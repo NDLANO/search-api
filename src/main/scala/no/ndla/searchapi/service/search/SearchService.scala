@@ -12,6 +12,7 @@ import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, Suggestion
 import com.sksamuel.elastic4s.mappings.FieldDefinition
 import com.sksamuel.elastic4s.searches.aggs.Aggregation
 import com.sksamuel.elastic4s.searches.queries.SimpleStringQuery
+import com.sksamuel.elastic4s.searches.queries.term.TermQuery
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
@@ -75,6 +76,19 @@ trait SearchService {
       } else {
         val base = simpleStringQuery(query).field(s"$field.$language", boost)
         if (searchDecompounded) base.field(s"$field.$language.decompounded", 0.1) else base
+      }
+    }
+
+    def buildTermQueryForField(
+        query: String,
+        field: String,
+        language: String,
+        fallback: Boolean
+    ): List[TermQuery] = {
+      if (language == Language.AllLanguages || fallback) {
+        Language.languageAnalyzers.map(lang => termQuery(s"$field.${lang.lang}.raw", query))
+      } else {
+        List(termQuery(s"$field.$language.raw", query))
       }
     }
 

@@ -68,9 +68,7 @@ trait DraftIndexService {
             keywordField("imageId"),
             keywordField("altText"),
             keywordField("language")
-          ),
-          keywordField("embedResources"),
-          keywordField("embedIds")
+          )
         ) ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("metaDescription") ++
@@ -78,7 +76,9 @@ trait DraftIndexService {
           generateLanguageSupportedFieldList("visualElement") ++
           generateLanguageSupportedFieldList("introduction") ++
           generateLanguageSupportedFieldList("tags") ++
-          generateLanguageSupportedFieldList("embedAttributes")
+          generateLanguageSupportedFieldList("embedAttributes") ++
+          generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
+          generateLanguageSupportedFieldList("embedIds", keepRaw = true)
       )
     }
   }

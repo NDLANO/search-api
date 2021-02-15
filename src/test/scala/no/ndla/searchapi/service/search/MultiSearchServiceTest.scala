@@ -470,8 +470,8 @@ class MultiSearchServiceTest
   test("That filtering on supportedLanguages works") {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en"), language = "all"))
-    search.totalCount should be(7)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11))
+    search.totalCount should be(8)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11, 12))
 
     val Success(search2) =
       multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
@@ -488,9 +488,9 @@ class MultiSearchServiceTest
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en"), language = "nb"))
 
-    search.totalCount should be(4)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 11))
-    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb"))
+    search.totalCount should be(5)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 11, 12))
+    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb", "nb"))
   }
 
   test("That meta image are returned when searching") {
@@ -615,7 +615,7 @@ class MultiSearchServiceTest
 
   test("That searches for embed attributes matches") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(query = Some("Flubber"), language = Language.AllLanguages))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("Flubber"), language = "nb"))
     search.results.map(_.id) should be(Seq(12))
   }
 
@@ -699,6 +699,17 @@ class MultiSearchServiceTest
     hits.head.id should be(12)
   }
 
+  test("That search on embed data-content-id matches") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedId = Some("111"),
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
   test("That search on embed data-url matches") {
     val Success(results) =
       multiSearchService.matchingQuery(
@@ -741,6 +752,41 @@ class MultiSearchServiceTest
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(11)
+  }
+
+  test("That search on embed id with language filter does only return correct language") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedId = Some("222"),
+          language = "en"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search on embed id with language filter=all matches ") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedId = Some("222"),
+          language = Language.AllLanguages
+        ))
+    val hits = results.results
+    results.totalCount should be(2)
+    hits.map(_.id) should be(Seq(11, 12))
+  }
+
+  test("That search on visual element id matches ") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedId = Some("333")
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(12))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {
