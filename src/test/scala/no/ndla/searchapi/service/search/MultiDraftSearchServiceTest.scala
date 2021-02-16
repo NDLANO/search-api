@@ -495,8 +495,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val Success(search) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en"), language = "all"))
-    search.totalCount should be(8)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11, 15))
+    search.totalCount should be(9)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11, 13, 15))
 
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
@@ -516,9 +516,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(supportedLanguages = List("en"), language = "nb"))
 
-    search.totalCount should be(5)
-    search.results.map(_.id) should be(Seq(2, 3, 4, 11, 15))
-    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb", "nb"))
+    search.totalCount should be(6)
+    search.results.map(_.id) should be(Seq(2, 3, 4, 11, 13, 15))
+    search.results.map(_.title.language) should be(Seq("nb", "nb", "nb", "nb", "nb", "nb"))
   }
 
   test("That meta image are returned when searching") {
@@ -803,7 +803,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That searches for data-resource_id matches") {
     val Success(results) =
-      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(embedId = Some("66")))
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(embedId = Some("222")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -848,7 +848,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
-          embedId = Some("http://test"),
+          embedId = Some("http://test.test"),
         ))
     val hits = results.results
     results.totalCount should be(1)
@@ -866,7 +866,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     hits.head.id should be(12)
   }
 
-  test("That search on query as embed data-resouce matches") {
+  test("That search on query as embed data-resource matches") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
@@ -886,6 +886,52 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(11)
+  }
+
+  test("That search on embed data-content-id matches") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          embedId = Some("111"),
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
+  }
+
+  test("That search on embed id with language filter does only return correct language") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          embedId = Some("222"),
+          language = "en"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(13)
+  }
+
+  test("That search on embed id with language filter=all matches") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          embedId = Some("222"),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(2)
+    hits.map(_.id) should be(Seq(12, 13))
+  }
+
+  test("That search on visual element id matches") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          embedId = Some("333")
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(12))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

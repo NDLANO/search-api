@@ -41,6 +41,7 @@ trait MultiDraftSearchService {
     override val indexServices = List(draftIndexService, learningPathIndexService)
 
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
+
       val contentSearch = settings.query.map(queryString => {
 
         val langQueryFunc = (fieldName: String, boost: Int) =>
@@ -54,19 +55,21 @@ trait MultiDraftSearchService {
         )
 
         boolQuery().should(
-          langQueryFunc("title", 3),
-          langQueryFunc("introduction", 2),
-          langQueryFunc("metaDescription", 1),
-          langQueryFunc("content", 1),
-          langQueryFunc("tags", 1),
-          langQueryFunc("embedAttributes", 1),
-          simpleStringQuery(queryString).field("authors", 1),
-          simpleStringQuery(queryString).field("notes", 1),
-          simpleStringQuery(queryString).field("previousVersionsNotes", 1),
-          simpleStringQuery(queryString).field("grepContexts.title", 1),
-          termQuery("embedResources", queryString),
-          termQuery("embedIds", queryString),
-          idsQuery(queryString)
+          List(
+            langQueryFunc("title", 3),
+            langQueryFunc("introduction", 2),
+            langQueryFunc("metaDescription", 1),
+            langQueryFunc("content", 1),
+            langQueryFunc("tags", 1),
+            langQueryFunc("embedAttributes", 1),
+            simpleStringQuery(queryString).field("authors", 1),
+            simpleStringQuery(queryString).field("notes", 1),
+            simpleStringQuery(queryString).field("previousVersionsNotes", 1),
+            simpleStringQuery(queryString).field("grepContexts.title", 1),
+            idsQuery(queryString)
+          ) ++
+            buildTermQueryForField(queryString, "embedResources", settings.language, settings.fallback) ++
+            buildTermQueryForField(queryString, "embedIds", settings.language, settings.fallback)
         )
 
       })
@@ -155,20 +158,28 @@ trait MultiDraftSearchService {
         if (settings.grepCodes.nonEmpty) Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
+      val embedResourceFilter = settings.embedResource match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedResources", settings.language, settings.fallback)
+              ))
+      }
+
+      val embedIdFilter = settings.embedId match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
+              ))
+      }
+
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)
-
-      val embedResourceFilter =
-        settings.embedResource match {
-          case Some("") | None => None
-          case Some(id)        => Some(termQuery("embedResources", id))
-        }
-
-      val embedIdFilter =
-        settings.embedId match {
-          case Some("") | None => None
-          case Some(id)        => Some(termQuery("embedIds", id))
-        }
 
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)

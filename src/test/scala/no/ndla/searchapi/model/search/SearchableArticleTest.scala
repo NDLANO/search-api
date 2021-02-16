@@ -53,9 +53,15 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
-    val embedResources = List("test resource 1", "test resource 2")
+    val embedResources = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test resource 1", "test resource 2")),
+      ))
 
-    val embedIds = List("test id 1", "test id 2")
+    val embedIds = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test id 1", "test id 2")),
+      ))
 
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
@@ -125,9 +131,15 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
-    val embedResources = List("test resource 1", "test resource 2")
+    val embedResources = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test resource 1", "test resource 2")),
+      ))
 
-    val embedIds = List("test id 1", "test id 2")
+    val embedIds = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test id 1", "test id 2")),
+      ))
 
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
     val filterWithNullName =

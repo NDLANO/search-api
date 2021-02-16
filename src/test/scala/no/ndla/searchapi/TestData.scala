@@ -349,7 +349,8 @@ object TestData {
   val article11: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
     title = List(Title("Katter", "nb"), Title("Cats", "en")),
-    content = List(ArticleContent("<p>Noe om en katt</p>", "nb"), ArticleContent("<p>Something about a cat</p>", "en")),
+    content = List(ArticleContent("<embed data-resource_id=\"222\" /><p>Noe om en katt</p>", "nb"),
+                   ArticleContent("<p>Something about a cat</p>", "en")),
     tags = List(Tag(List("ikkehund"), "nb"), Tag(List("notdog"), "en")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
@@ -362,14 +363,16 @@ object TestData {
 
   val article12: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(12),
-    title = List(Title("Ekstrastoff", "nb")),
+    title = List(Title("Ekstrastoff", "nb"), Title("extra", "en")),
     content = List(
       ArticleContent(
-        "Helsesøster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
+        "Helsesøster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
         "nb"
-      )),
+      ),
+      ArticleContent("Header <embed data-resource_id=\"222\" />", "en")
+    ),
     tags = List(Tag(List(""), "nb")),
-    visualElement = List.empty,
+    visualElement = List(VisualElement("<embed data-resource_id=\"333\">", "nb")),
     introduction = List(ArticleIntroduction("Ekstra", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
     created = today.minusDays(10),
@@ -659,10 +662,10 @@ object TestData {
     metaDescription = List(MetaDescription("", "nb")),
     content = List(
       ArticleContent(
-        "<section><embed data-resource=\"concept\" data-resource_id=\"55\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
+        "<section><embed data-resource_id=\"222\" /><embed data-resource=\"image\" data-resource_id=\"55\" data-url=\"test-image.url\"/><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test.test\" />",
         "nb"
       )),
-    visualElement = List.empty,
+    visualElement = List(VisualElement("<embed data-resource_id=\"333\">", "nb")),
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),
     updated = today.minusDays(5),
@@ -671,10 +674,11 @@ object TestData {
 
   val draft13: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(13),
-    title = List(Title("Luringen", "nb")),
+    title = List(Title("Luringen", "nb"), Title("English title", "en")),
     introduction = List(ArticleIntroduction("Luringen", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
-    content = List(ArticleContent("Helsesøster", "nb")),
+    content =
+      List(ArticleContent("Helsesøster", "nb"), ArticleContent("Header <embed data-resource_id=\"222\" />", "en")),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),
