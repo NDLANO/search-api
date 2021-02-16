@@ -40,14 +40,6 @@ trait MultiDraftSearchService {
     override val searchIndex = List(SearchIndexes(SearchType.Drafts), SearchIndexes(SearchType.LearningPaths))
     override val indexServices = List(draftIndexService, learningPathIndexService)
 
-    val langTermQueryFunc = (q: String, fieldName: String, language: String, fallback: Boolean) =>
-      buildTermQueryForField(
-        q,
-        fieldName,
-        language,
-        fallback
-    )
-
     def matchingQuery(settings: MultiDraftSearchSettings): Try[SearchResult] = {
 
       val contentSearch = settings.query.map(queryString => {
@@ -76,8 +68,8 @@ trait MultiDraftSearchService {
             simpleStringQuery(queryString).field("grepContexts.title", 1),
             idsQuery(queryString)
           ) ++
-            langTermQueryFunc(queryString, "embedResources", settings.language, settings.fallback) ++
-            langTermQueryFunc(queryString, "embedIds", settings.language, settings.fallback)
+            buildTermQueryForField(queryString, "embedResources", settings.language, settings.fallback) ++
+            buildTermQueryForField(queryString, "embedIds", settings.language, settings.fallback)
         )
 
       })
@@ -90,21 +82,7 @@ trait MultiDraftSearchService {
           )
       })
 
-      val embedResourceSearch = settings.embedResource.map(q => {
-        boolQuery()
-          .should(
-            langTermQueryFunc(q, "embedResources", settings.language, settings.fallback)
-          )
-      })
-
-      val embedIdSearch = settings.embedId.map(q => {
-        boolQuery()
-          .should(
-            langTermQueryFunc(q, "embedIds", settings.language, settings.fallback)
-          )
-      })
-
-      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch, embedResourceSearch, embedIdSearch).flatten
+      val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)
@@ -180,6 +158,26 @@ trait MultiDraftSearchService {
         if (settings.grepCodes.nonEmpty) Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
+      val embedResourceFilter = settings.embedResource match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedResources", settings.language, settings.fallback)
+              ))
+      }
+
+      val embedIdFilter = settings.embedId match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
+              ))
+      }
+
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
@@ -212,7 +210,9 @@ trait MultiDraftSearchService {
         taxonomyRelevanceFilter,
         statusFilter,
         usersFilter,
-        grepCodesFilter
+        grepCodesFilter,
+        embedResourceFilter,
+        embedIdFilter
       ).flatten
     }
 

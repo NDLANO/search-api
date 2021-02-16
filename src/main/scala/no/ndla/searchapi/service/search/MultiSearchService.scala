@@ -39,14 +39,6 @@ trait MultiSearchService {
     override val searchIndex = List(SearchIndexes(SearchType.Articles), SearchIndexes(SearchType.LearningPaths))
     override val indexServices = List(articleIndexService, learningPathIndexService)
 
-    val langTermQueryFunc = (q: String, fieldName: String, language: String, fallback: Boolean) =>
-      buildTermQueryForField(
-        q,
-        fieldName,
-        language,
-        fallback
-    )
-
     def matchingQuery(settings: SearchSettings): Try[SearchResult] = {
 
       val contentSearch = settings.query.map(q => {
@@ -72,26 +64,12 @@ trait MultiSearchService {
               simpleStringQuery(q).field("grepContexts.title", 1),
               idsQuery(q)
             ) ++
-              langTermQueryFunc(q, "embedResources", settings.language, settings.fallback) ++
-              langTermQueryFunc(q, "embedIds", settings.language, settings.fallback)
+              buildTermQueryForField(q, "embedResources", settings.language, settings.fallback) ++
+              buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
           ))
       })
 
-      val embedResourceSearch = settings.embedResource.map(q => {
-        boolQuery()
-          .should(
-            langTermQueryFunc(q, "embedResources", settings.language, settings.fallback)
-          )
-      })
-
-      val embedIdSearch = settings.embedId.map(q => {
-        boolQuery()
-          .should(
-            langTermQueryFunc(q, "embedIds", settings.language, settings.fallback)
-          )
-      })
-
-      val boolQueries: List[BoolQuery] = List(contentSearch, embedResourceSearch, embedIdSearch).flatten
+      val boolQueries: List[BoolQuery] = List(contentSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)
 
       executeSearch(settings, fullQuery)
@@ -169,6 +147,26 @@ trait MultiSearchService {
           Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
+      val embedResourceFilter = settings.embedResource match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedResources", settings.language, settings.fallback)
+              ))
+      }
+
+      val embedIdFilter = settings.embedId match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
+              ))
+      }
+
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, settings.filterByNoResourceType)
@@ -195,6 +193,8 @@ trait MultiSearchService {
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
         grepCodesFilter,
+        embedResourceFilter,
+        embedIdFilter
       ).flatten
     }
 
