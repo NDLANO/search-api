@@ -934,6 +934,17 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     hits.map(_.id) should be(Seq(12))
   }
 
+  test("That search on meta image url matches ") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(
+          embedId = Some("123")
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(10))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false
