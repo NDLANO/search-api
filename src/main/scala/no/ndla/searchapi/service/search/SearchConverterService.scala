@@ -199,7 +199,7 @@ trait SearchConverterService {
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
       val embedResources = getEmbedResourcesToIndex(ai.content, ai.visualElement)
-      val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement)
+      val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -283,7 +283,7 @@ trait SearchConverterService {
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
       val embedResources = getEmbedResourcesToIndex(draft.content, draft.visualElement)
-      val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement)
+      val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
 
       val defaultTitle = draft.title
         .sortBy(title => {
