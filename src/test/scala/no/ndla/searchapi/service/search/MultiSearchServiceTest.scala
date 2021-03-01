@@ -793,7 +793,8 @@ class MultiSearchServiceTest
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
-          embedId = Some("442")
+          embedId = Some("442"),
+          language = "all"
         ))
     val hits = results.results
     results.totalCount should be(1)

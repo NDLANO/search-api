@@ -284,7 +284,6 @@ trait SearchConverterService {
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
       val embedResources = getEmbedResourcesToIndex(draft.content, draft.visualElement)
       val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
-
       val defaultTitle = draft.title
         .sortBy(title => {
           ISO639.languagePriority.reverse.indexOf(title.language)

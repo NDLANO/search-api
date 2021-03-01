@@ -936,9 +936,10 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That search on meta image url matches ") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("123")
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          embedId = Some("123"),
+          language = "all"
         ))
     val hits = results.results
     results.totalCount should be(1)
