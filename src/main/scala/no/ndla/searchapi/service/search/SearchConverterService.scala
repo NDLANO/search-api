@@ -178,10 +178,12 @@ trait SearchConverterService {
     }
 
     private def getEmbedIdsToIndex(content: Seq[ArticleContent],
-                                   visualElement: Seq[VisualElement]): SearchableLanguageList = {
+                                   visualElement: Seq[VisualElement],
+                                   metaImage: Seq[ArticleMetaImage]): SearchableLanguageList = {
       val contentTuples = content.map(c => c.language -> getEmbedIds(c.content))
       val visualElementTuples = visualElement.map(v => v.language -> getEmbedIds(v.resource))
-      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples).groupBy(_._1)
+      val metaImageTuples = metaImage.map(m => m.language -> List(m.imageId))
+      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples ++ metaImageTuples).groupBy(_._1)
 
       val languageValues = attrsGroupedByLanguage.map {
         case (language, values) => LanguageValue(language, values.flatMap(_._2))
@@ -197,7 +199,7 @@ trait SearchConverterService {
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
       val embedResources = getEmbedResourcesToIndex(ai.content, ai.visualElement)
-      val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement)
+      val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -281,8 +283,7 @@ trait SearchConverterService {
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
       val embedResources = getEmbedResourcesToIndex(draft.content, draft.visualElement)
-      val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement)
-
+      val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
       val defaultTitle = draft.title
         .sortBy(title => {
           ISO639.languagePriority.reverse.indexOf(title.language)
