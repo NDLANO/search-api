@@ -662,7 +662,7 @@ object TestData {
     metaDescription = List(MetaDescription("", "nb")),
     content = List(
       ArticleContent(
-        "<section><embed data-resource_id=\"222\" /><embed data-resource=\"image\" data-resource_id=\"55\" data-url=\"test-image.url\"/><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test.test\" />",
+        "<section><p>artikkeltekst med fire deler</p><embed data-resource_id=\"222\" /><embed data-resource=\"image\" data-resource_id=\"55\" data-url=\"test-image.url\"/><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test.test\" />",
         "nb"
       )),
     visualElement = List(VisualElement("<embed data-resource_id=\"333\">", "nb")),
