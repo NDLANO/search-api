@@ -677,8 +677,10 @@ object TestData {
     title = List(Title("Luringen", "nb"), Title("English title", "en")),
     introduction = List(ArticleIntroduction("Luringen", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
-    content =
-      List(ArticleContent("Helsesøster", "nb"), ArticleContent("Header <embed data-resource_id=\"222\" />", "en")),
+    content = List(
+      ArticleContent("<section><p>Helsesøster</p><p>Søkeord: delt?streng delt!streng delt&streng</p></section>", "nb"),
+      ArticleContent("Header <embed data-resource_id=\"222\" />", "en")
+    ),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),
     created = today.minusDays(10),
@@ -709,8 +711,8 @@ object TestData {
     title = List(Title("Engler og demoner", "nb")),
     introduction = List(ArticleIntroduction("Religion", "nb")),
     metaDescription = List(MetaDescription("metareligion", "nb")),
-    content =
-      List(ArticleContent("<p>Vanlig i gamle testamentet</p>", "nb"), ArticleContent("<p>Christianity!</p>", "en")),
+    content = List(ArticleContent("<section><p>Vanlig i gamle testamentet</p><p>delt-streng</p></section>", "nb"),
+                   ArticleContent("<p>Christianity!</p>", "en")),
     visualElement = List.empty,
     tags = List(Tag(List("engel"), "nb")),
     created = today.minusDays(10),
