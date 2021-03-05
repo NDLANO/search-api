@@ -211,7 +211,7 @@ trait IndexService {
     private val customCompoundAnalyzer =
       CustomAnalyzerDefinition(
         "compound_analyzer",
-        StandardTokenizer,
+        WhitespaceTokenizer,
         CompoundWordTokenFilter(
           name = "hyphenation_decompounder",
           `type` = HyphenationDecompounder,

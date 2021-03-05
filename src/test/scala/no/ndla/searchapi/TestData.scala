@@ -334,7 +334,8 @@ object TestData {
   val article10: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(10),
     title = List(Title("This article is in english", "en")),
-    content = List(ArticleContent("<p>Something something <em>english</em> What", "en")),
+    content =
+      List(ArticleContent("<p>artikkeltekst med fire deler</p><p>Something something <em>english</em> What", "en")),
     tags = List(Tag(List("englando"), "en")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Engulsk", "en")),
@@ -349,8 +350,12 @@ object TestData {
   val article11: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
     title = List(Title("Katter", "nb"), Title("Cats", "en")),
-    content = List(ArticleContent("<embed data-resource_id=\"222\" /><p>Noe om en katt</p>", "nb"),
-                   ArticleContent("<p>Something about a cat</p>", "en")),
+    content = List(
+      ArticleContent(
+        "<p>Søkeord: delt?streng delt!streng delt&streng</p><embed data-resource_id=\"222\" /><p>Noe om en katt</p>",
+        "nb"),
+      ArticleContent("<p>Something about a cat</p>", "en")
+    ),
     tags = List(Tag(List("ikkehund"), "nb"), Tag(List("notdog"), "en")),
     visualElement = List.empty,
     introduction = List(ArticleIntroduction("Katter er store", "nb"), ArticleIntroduction("Cats are big", "en")),
@@ -366,7 +371,7 @@ object TestData {
     title = List(Title("Ekstrastoff", "nb"), Title("extra", "en")),
     content = List(
       ArticleContent(
-        "Helsesøster H5P <embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
+        "Helsesøster H5P <p>delt-streng</p><embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\" data-resource_id=\"66\" data-url=\"http://test\" />",
         "nb"
       ),
       ArticleContent("Header <embed data-resource_id=\"222\" />", "en")
