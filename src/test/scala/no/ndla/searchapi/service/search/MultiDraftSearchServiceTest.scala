@@ -946,6 +946,100 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     hits.map(_.id) should be(Seq(10))
   }
 
+  test("That exact word search works for special characters") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt-streng\""),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(15))
+  }
+
+  test("That exact word search works for special characters with escape") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt\\-streng\""),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(15))
+  }
+
+  test("That multiple exact words can be searched") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt!streng\" \"delt?streng\""),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(13))
+  }
+
+  test("That multiple exact words can be searched with + operator") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt!streng\"+\"delt-streng\""),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(0)
+  }
+
+  test("That multiple exact words can be searched with - operator") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt!streng\"+-\"delt-streng\""),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(13))
+  }
+
+  test("That exact and regular words can be searched with - operator") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt!streng\"+-Helsesøster"),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(0)
+  }
+
+  test("That exact and regular words can be searched with + operator") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"delt!streng\" + Helsesøster"),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(13))
+  }
+
+  test("That exact search on word with spaces matches") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          query = Some("\"artikkeltekst med fire deler\""),
+          language = "all"
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.map(_.id) should be(Seq(12))
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

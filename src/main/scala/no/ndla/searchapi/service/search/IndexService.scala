@@ -11,7 +11,6 @@ package no.ndla.searchapi.service.search
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.Executors
-
 import com.sksamuel.elastic4s.alias.AliasAction
 import com.sksamuel.elastic4s.analyzers.{
   CompoundWordTokenFilter,
@@ -19,7 +18,8 @@ import com.sksamuel.elastic4s.analyzers.{
   HyphenationDecompounder,
   LowercaseTokenFilter,
   ShingleTokenFilter,
-  StandardTokenizer
+  StandardTokenizer,
+  WhitespaceTokenizer
 }
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
@@ -211,7 +211,7 @@ trait IndexService {
     private val customCompoundAnalyzer =
       CustomAnalyzerDefinition(
         "compound_analyzer",
-        StandardTokenizer,
+        WhitespaceTokenizer,
         CompoundWordTokenFilter(
           name = "hyphenation_decompounder",
           `type` = HyphenationDecompounder,
@@ -220,6 +220,12 @@ trait IndexService {
           minSubwordSize = Some(4),
           onlyLongestMatch = Some(false)
         )
+      )
+
+    private val customExactAnalyzer =
+      CustomAnalyzerDefinition(
+        "exact",
+        WhitespaceTokenizer
       )
 
     def createIndexWithName(indexName: String): Try[String] = {
@@ -233,6 +239,7 @@ trait IndexService {
               trigram,
               Language.nynorskLanguageAnalyzer,
               customCompoundAnalyzer,
+              customExactAnalyzer
             )
             .indexSetting("max_result_window", SearchApiProperties.ElasticSearchIndexMaxResultWindow)
         }
@@ -380,7 +387,9 @@ trait IndexService {
           textField("trigram").analyzer("trigram"),
           textField("decompounded")
             .searchAnalyzer("standard")
-            .analyzer("compound_analyzer")
+            .analyzer("compound_analyzer"),
+          textField("exact")
+            .analyzer("exact")
         )
 
         val subFields = if (keepRaw) sf :+ keywordField("raw") else sf

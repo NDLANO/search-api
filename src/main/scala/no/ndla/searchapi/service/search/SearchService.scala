@@ -67,14 +67,14 @@ trait SearchService {
         searchDecompounded: Boolean
     ): SimpleStringQuery = {
       if (language == Language.AllLanguages || fallback) {
-        Language.languageAnalyzers.foldLeft(simpleStringQuery(query))(
+        Language.languageAnalyzers.foldLeft(SimpleStringQuery(query, quote_field_suffix = Some(".exact")))(
           (acc, cur) => {
             val base = acc.field(s"$field.${cur.lang}", boost)
             if (searchDecompounded) base.field(s"$field.${cur.lang}.decompounded", 0.1) else base
           }
         )
       } else {
-        val base = simpleStringQuery(query).field(s"$field.$language", boost)
+        val base = SimpleStringQuery(query, quote_field_suffix = Some(".exact")).field(s"$field.$language", boost)
         if (searchDecompounded) base.field(s"$field.$language.decompounded", 0.1) else base
       }
     }
