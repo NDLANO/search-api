@@ -19,6 +19,7 @@ case class GroupSearchResult(
     @(ApiModelProperty @field)(description = "The chosen search language") language: String,
     @(ApiModelProperty @field)(description = "The search results") results: Seq[MultiSearchSummary],
     @(ApiModelProperty @field)(description = "The suggestions for other searches") suggestions: Seq[MultiSearchSuggestion],
+    @(ApiModelProperty @field)(description = "The aggregated fields if specified in query") aggregations: Seq[MultiSearchTermsAggregation],
     @(ApiModelProperty @field)(description = "Type of resources in this object") resourceType: String
 )
 // format: on

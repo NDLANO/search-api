@@ -1103,6 +1103,7 @@ trait SearchConverterService {
         searchResult.language,
         searchResult.results,
         searchResult.suggestions,
+        searchResult.aggregations.map(toApiMultiTermsAggregation),
         group
       )
 
