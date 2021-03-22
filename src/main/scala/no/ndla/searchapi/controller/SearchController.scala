@@ -213,6 +213,7 @@ trait SearchController {
             asQueryParam(relevanceFilter),
             asQueryParam(contextFilters),
             asQueryParam(includeMissingResourceTypeGroup),
+            asQueryParam(aggregatePaths),
             asQueryParam(embedResource),
             asQueryParam(embedId)
           )
@@ -237,6 +238,7 @@ trait SearchController {
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val includeMissingResourceTypeGroup =
         booleanOrDefault(this.includeMissingResourceTypeGroup.paramName, default = false)
+      val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
 
@@ -258,7 +260,7 @@ trait SearchController {
         grepCodes = grepCodes,
         shouldScroll = false,
         filterByNoResourceType = false,
-        aggregatePaths = List.empty,
+        aggregatePaths = aggregatePaths,
         embedResource = embedResource,
         embedId = embedId
       )
