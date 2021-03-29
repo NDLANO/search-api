@@ -1040,7 +1040,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     hits.map(_.id) should be(Seq(12))
   }
 
-  test("That searches on embedId and embedResource only returns results matching both params.") {
+  test("That searches on embedId and embedResource only returns results with an embed matching both params.") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(

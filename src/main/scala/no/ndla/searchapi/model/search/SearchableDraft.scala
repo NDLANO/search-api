@@ -33,6 +33,5 @@ case class SearchableDraft(
     grepContexts: List[SearchableGrepContext],
     traits: List[String],
     embedAttributes: SearchableLanguageList,
-    embedResources: SearchableLanguageList,
-    embedIds: SearchableLanguageList
+    embedResourcesAndIds: SearchableLanguageEmbedValues,
 )

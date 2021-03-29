@@ -164,32 +164,21 @@ trait SearchConverterService {
       SearchableLanguageList(languageValues.toSeq)
     }
 
-    private def getEmbedResourcesToIndex(content: Seq[ArticleContent],
-                                         visualElement: Seq[VisualElement]): SearchableLanguageList = {
-      val contentTuples = content.map(c => c.language -> getEmbedResources(c.content))
-      val visualElementTuples = visualElement.map(v => v.language -> getEmbedResources(v.resource))
-      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples).groupBy(_._1)
-
-      val languageValues = attrsGroupedByLanguage.map {
-        case (language, values) => LanguageValue(language, values.flatMap(_._2))
-      }
-
-      SearchableLanguageList(languageValues.toSeq)
-    }
-
-    private def getEmbedIdsToIndex(content: Seq[ArticleContent],
-                                   visualElement: Seq[VisualElement],
-                                   metaImage: Seq[ArticleMetaImage]): SearchableLanguageList = {
-      val contentTuples = content.map(c => c.language -> getEmbedIds(c.content))
-      val visualElementTuples = visualElement.map(v => v.language -> getEmbedIds(v.resource))
-      val metaImageTuples = metaImage.map(m => m.language -> List(m.imageId))
+    private def getEmbedResourcesAndIdsToIndex(content: Seq[ArticleContent],
+                                               visualElement: Seq[VisualElement],
+                                               metaImage: Seq[ArticleMetaImage]): SearchableLanguageEmbedValues = {
+      val contentTuples = content.map(c =>
+        c.language -> EmbedValues(ids = getEmbedIds(c.content), resource = getEmbedResources(c.content)))
+      val visualElementTuples = visualElement.map(v =>
+        v.language -> EmbedValues(ids = getEmbedIds(v.resource), resource = getEmbedResources(v.resource)))
+      val metaImageTuples = metaImage.map(m => m.language -> EmbedValues(ids = Seq(m.imageId), resource = Seq("image")))
       val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples ++ metaImageTuples).groupBy(_._1)
 
       val languageValues = attrsGroupedByLanguage.map {
-        case (language, values) => LanguageValue(language, values.flatMap(_._2))
+        case (language, values) => LanguageValue(language, values.map(_._2))
       }
 
-      SearchableLanguageList(languageValues.toSeq)
+      SearchableLanguageEmbedValues(languageValues.toSeq)
     }
 
     def asSearchableArticle(ai: Article,
@@ -198,8 +187,7 @@ trait SearchConverterService {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, filterVisibles = true)
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
-      val embedResources = getEmbedResourcesToIndex(ai.content, ai.visualElement)
-      val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
+      val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -239,8 +227,7 @@ trait SearchConverterService {
           grepContexts = getGrepContexts(ai.grepCodes, grepBundle),
           traits = traits.toList.distinct,
           embedAttributes = embedAttributes,
-          embedResources = embedResources,
-          embedIds = embedIds
+          embedResourcesAndIds = embedResourcesAndIds,
         ))
 
     }
@@ -282,8 +269,7 @@ trait SearchConverterService {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, filterVisibles = false)
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
-      val embedResources = getEmbedResourcesToIndex(draft.content, draft.visualElement)
-      val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
+      val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
       val defaultTitle = draft.title
         .sortBy(title => {
           ISO639.languagePriority.reverse.indexOf(title.language)
@@ -339,8 +325,7 @@ trait SearchConverterService {
           grepContexts = getGrepContexts(draft.grepCodes, grepBundle),
           traits = traits.toList.distinct,
           embedAttributes = embedAttributes,
-          embedResources = embedResources,
-          embedIds = embedIds
+          embedResourcesAndIds = embedResourcesAndIds,
         ))
 
     }

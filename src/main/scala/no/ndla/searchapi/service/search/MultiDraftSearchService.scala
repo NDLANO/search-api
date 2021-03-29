@@ -158,24 +158,27 @@ trait MultiDraftSearchService {
         if (settings.grepCodes.nonEmpty) Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
-      val embedResourceFilter = settings.embedResource match {
-        case Some("") | None => None
-        case Some(q) =>
+      val embedResourceAndIdFilter = (settings.embedResource, settings.embedId) match {
+        case (Some("") | None, Some("") | None) => None
+        case (Some(q), Some("") | None) =>
           Some(
             boolQuery()
               .should(
-                buildTermQueryForField(q, "embedResources", settings.language, settings.fallback)
+                buildTermQueryForField(q, "embedResourcesAndIds.resource", settings.language, settings.fallback)
               ))
-      }
-
-      val embedIdFilter = settings.embedId match {
-        case Some("") | None => None
-        case Some(q) =>
+        case (Some("") | None, Some(q)) =>
           Some(
             boolQuery()
               .should(
-                buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
+                buildTermQueryForField(q, "embedResourcesAndIds.ids", settings.language, settings.fallback)
               ))
+        case (Some(q1), Some(q2)) =>
+          Some(
+            nestedQuery("embedResourcesAndIds").query(
+              boolQuery().must(
+                buildTermQueryForField(q1, "resource", settings.language, settings.fallback) ++
+                  buildTermQueryForField(q2, "ids", settings.language, settings.fallback)
+              )))
       }
 
       val statusFilter = draftStatusFilter(settings.statusFilter)
@@ -211,8 +214,7 @@ trait MultiDraftSearchService {
         statusFilter,
         usersFilter,
         grepCodesFilter,
-        embedResourceFilter,
-        embedIdFilter
+        embedResourceAndIdFilter
       ).flatten
     }
 

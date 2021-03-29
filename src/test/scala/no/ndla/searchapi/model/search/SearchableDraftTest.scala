@@ -54,14 +54,11 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
-    val embedResources = SearchableLanguageList(
+    val embedResourcesAndIds = SearchableLanguageEmbedValues(
       Seq(
-        LanguageValue("nb", List("test resource 1", "test resource 2")),
-      ))
-
-    val embedIds = SearchableLanguageList(
-      Seq(
-        LanguageValue("nb", List("test id 1", "test id 2")),
+        LanguageValue(
+          "nb",
+          Seq(EmbedValues(resource = Seq("test resource 1", "test resource 2"), ids = Seq("test id 1", "test id 2")))),
       ))
 
     val original = SearchableDraft(
@@ -88,8 +85,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
       embedAttributes = embedAttrs,
-      embedResources = embedResources,
-      embedIds = embedIds
+      embedResourcesAndIds = embedResourcesAndIds
     )
     val json = write(original)
     val deserialized = read[SearchableDraft](json)
