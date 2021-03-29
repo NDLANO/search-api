@@ -168,10 +168,10 @@ trait SearchConverterService {
                                                visualElement: Seq[VisualElement],
                                                metaImage: Seq[ArticleMetaImage]): SearchableLanguageEmbedValues = {
       val contentTuples = content.map(c =>
-        c.language -> EmbedValues(ids = getEmbedIds(c.content), resource = getEmbedResources(c.content)))
+        c.language -> EmbedValues(id = getEmbedIds(c.content), resource = getEmbedResources(c.content)))
       val visualElementTuples = visualElement.map(v =>
-        v.language -> EmbedValues(ids = getEmbedIds(v.resource), resource = getEmbedResources(v.resource)))
-      val metaImageTuples = metaImage.map(m => m.language -> EmbedValues(ids = Seq(m.imageId), resource = Seq("image")))
+        v.language -> EmbedValues(id = getEmbedIds(v.resource), resource = getEmbedResources(v.resource)))
+      val metaImageTuples = metaImage.map(m => m.language -> EmbedValues(id = Seq(m.imageId), resource = Seq("image")))
       val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples ++ metaImageTuples).groupBy(_._1)
 
       val languageValues = attrsGroupedByLanguage.map {

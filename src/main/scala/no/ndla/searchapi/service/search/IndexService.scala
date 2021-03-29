@@ -401,10 +401,10 @@ trait IndexService {
     }
 
     protected def generateLanguageSupportedEmbedList(
-                                                      fieldName: String,
-                                                      subFields: Seq[String],
-                                                      keepRaw: Boolean = false
-                                                    ): List[FieldDefinition] = {
+        fieldName: String,
+        subFields: Seq[String],
+        keepRaw: Boolean = false
+    ): List[FieldDefinition] = {
       languageAnalyzers.map(langAnalyzer => {
         val sf = List(
           textField("trigram").analyzer("trigram"),
@@ -416,12 +416,12 @@ trait IndexService {
         )
 
         val extraFields = if (keepRaw) sf :+ keywordField("raw") else sf
-        nestedField(fieldName).fields(
+        nestedField(s"$fieldName.${langAnalyzer.lang}").fields(
           subFields.map(sub => {
-            textField(s"$sub.${langAnalyzer.lang}")
+            textField(s"$sub")
               .analyzer(langAnalyzer.analyzer)
-              .fields(extraFields)}
-            )
+              .fields(extraFields)
+          })
         )
 
       })

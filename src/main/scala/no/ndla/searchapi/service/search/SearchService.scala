@@ -11,7 +11,7 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
 import com.sksamuel.elastic4s.mappings.FieldDefinition
 import com.sksamuel.elastic4s.searches.aggs.Aggregation
-import com.sksamuel.elastic4s.searches.queries.SimpleStringQuery
+import com.sksamuel.elastic4s.searches.queries.{NestedQuery, SimpleStringQuery}
 import com.sksamuel.elastic4s.searches.queries.term.TermQuery
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
@@ -89,6 +89,45 @@ trait SearchService {
         Language.languageAnalyzers.map(lang => termQuery(s"$field.${lang.lang}.raw", query))
       } else {
         List(termQuery(s"$field.$language.raw", query))
+      }
+    }
+
+    def buildTermQuery(
+        id: Option[String],
+        resource: Option[String]
+    ): List[TermQuery] = {
+      (id, resource) match {
+        case (Some("") | None, Some("") | None) => List.empty
+        case (Some(q), Some("") | None)         => List(termQuery("resource.raw", q))
+        case (Some("") | None, Some(q))         => List(termQuery("id.raw", q))
+        case (Some(q1), Some(q2))               => List(termQuery("resource.raw", q1), termQuery("id.raw", q2))
+      }
+    }
+
+    def buildNestedLanguageFieldForEmbeds(
+        id: Option[String],
+        resource: Option[String],
+        language: String,
+        fallback: Boolean
+    ): List[NestedQuery] = {
+      if ((id == Some("") || id == None) && (resource == Some("") || resource == None )) {
+        return List.empty
+      }
+      if (language == Language.AllLanguages || fallback) {
+        Language.languageAnalyzers.map(
+          lang =>
+            nestedQuery(s"embedResourcesAndIds.${lang.lang}").query(
+              boolQuery().must(
+                buildTermQuery(id, resource)
+              )
+          ))
+      } else {
+        List(
+          nestedQuery(s"embedResourcesAndIds.${language}").query(
+            boolQuery().must(
+              buildTermQuery(id, resource)
+            )
+          ))
       }
     }
 
