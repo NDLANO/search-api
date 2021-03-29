@@ -158,8 +158,8 @@ trait MultiDraftSearchService {
         if (settings.grepCodes.nonEmpty) Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
-      val embedResourceAndIdFilter = buildNestedLanguageFieldForEmbeds(settings.embedId,
-                                                                       settings.embedResource,
+      val embedResourceAndIdFilter = buildNestedLanguageFieldForEmbeds(settings.embedResource,
+                                                                       settings.embedId,
                                                                        settings.language,
                                                                        settings.fallback)
 

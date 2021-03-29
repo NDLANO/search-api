@@ -93,11 +93,11 @@ trait SearchService {
     }
 
     def buildTermQuery(
-        id: Option[String],
-        resource: Option[String]
+                        resource: Option[String],
+        id: Option[String]
     ): List[TermQuery] = {
-      (id, resource) match {
-        case (Some("") | None, Some("") | None) => List.empty
+      (resource, id) match {
+        case (Some("") | None, Some("") | None)         => List.empty
         case (Some(q), Some("") | None)         => List(termQuery("resource.raw", q))
         case (Some("") | None, Some(q))         => List(termQuery("id.raw", q))
         case (Some(q1), Some(q2))               => List(termQuery("resource.raw", q1), termQuery("id.raw", q2))
@@ -105,12 +105,12 @@ trait SearchService {
     }
 
     def buildNestedLanguageFieldForEmbeds(
-        id: Option[String],
         resource: Option[String],
+        id: Option[String],
         language: String,
         fallback: Boolean
     ): List[NestedQuery] = {
-      if ((id == Some("") || id == None) && (resource == Some("") || resource == None )) {
+      if ( (resource == Some("") || resource == None ) && (id == Some("") || id == None)) {
         return List.empty
       }
       if (language == Language.AllLanguages || fallback) {
@@ -118,14 +118,14 @@ trait SearchService {
           lang =>
             nestedQuery(s"embedResourcesAndIds.${lang.lang}").query(
               boolQuery().must(
-                buildTermQuery(id, resource)
-              )
-          ))
+                buildTermQuery(resource, id)
+
+          )))
       } else {
         List(
           nestedQuery(s"embedResourcesAndIds.${language}").query(
             boolQuery().must(
-              buildTermQuery(id, resource)
+              buildTermQuery(resource, id)
             )
           ))
       }

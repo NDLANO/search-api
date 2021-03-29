@@ -108,12 +108,13 @@ trait SearchConverterService {
       })
     }
 
-    private[service] def getEmbedResources(html: String): List[String] = {
+    private[service] def getEmbedResources(html: String): String = {
       parseHtml(html)
         .select("embed")
         .asScala
         .flatMap(getEmbedResources)
         .toList
+        .head
     }
 
     private def getEmbedResources(embed: Element): List[String] = {
@@ -128,12 +129,13 @@ trait SearchConverterService {
       })
     }
 
-    private[service] def getEmbedIds(html: String): List[String] = {
+    private[service] def getEmbedIds(html: String): String = {
       parseHtml(html)
         .select("embed")
         .asScala
         .flatMap(getEmbedIds)
         .toList
+        .head
     }
 
     private def getEmbedIds(embed: Element): List[String] = {
@@ -171,7 +173,7 @@ trait SearchConverterService {
         c.language -> EmbedValues(id = getEmbedIds(c.content), resource = getEmbedResources(c.content)))
       val visualElementTuples = visualElement.map(v =>
         v.language -> EmbedValues(id = getEmbedIds(v.resource), resource = getEmbedResources(v.resource)))
-      val metaImageTuples = metaImage.map(m => m.language -> EmbedValues(id = Seq(m.imageId), resource = Seq("image")))
+      val metaImageTuples = metaImage.map(m => m.language -> EmbedValues(id = m.imageId, resource = "image"))
       val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples ++ metaImageTuples).groupBy(_._1)
 
       val languageValues = attrsGroupedByLanguage.map {

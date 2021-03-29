@@ -58,7 +58,7 @@ class SearchableDraftTest extends UnitSuite with TestEnvironment {
       Seq(
         LanguageValue(
           "nb",
-          Seq(EmbedValues(resource = Seq("test resource 1", "test resource 2"), id = Seq("test id 1", "test id 2")))),
+          Seq(EmbedValues(resource = "test resource 1", id = "test id 1"))),
       ))
 
     val original = SearchableDraft(
