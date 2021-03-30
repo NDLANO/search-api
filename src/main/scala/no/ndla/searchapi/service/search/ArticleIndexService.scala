@@ -63,6 +63,7 @@ trait ArticleIndexService {
             keywordField("altText"),
             keywordField("language")
           ),
+          generateLanguageSupportedEmbedList("embedResourcesAndIds", Seq("resource", "id"))
         )
           ++
             generateLanguageSupportedFieldList("title", keepRaw = true) ++
@@ -72,9 +73,7 @@ trait ArticleIndexService {
           generateLanguageSupportedFieldList("introduction") ++
           generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("tags") ++
-          generateLanguageSupportedFieldList("embedAttributes") ++
-          generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
-          generateLanguageSupportedFieldList("embedIds", keepRaw = true)
+          generateLanguageSupportedFieldList("embedAttributes")
       )
     }
   }

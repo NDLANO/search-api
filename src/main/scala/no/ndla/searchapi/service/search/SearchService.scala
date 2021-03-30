@@ -11,7 +11,7 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
 import com.sksamuel.elastic4s.mappings.FieldDefinition
 import com.sksamuel.elastic4s.searches.aggs.Aggregation
-import com.sksamuel.elastic4s.searches.queries.{NestedQuery, SimpleStringQuery}
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery, SimpleStringQuery}
 import com.sksamuel.elastic4s.searches.queries.term.TermQuery
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
@@ -93,14 +93,15 @@ trait SearchService {
     }
 
     def buildTermQuery(
-                        resource: Option[String],
+        path: String,
+        resource: Option[String],
         id: Option[String]
     ): List[TermQuery] = {
       (resource, id) match {
-        case (Some("") | None, Some("") | None)         => List.empty
-        case (Some(q), Some("") | None)         => List(termQuery("resource.raw", q))
-        case (Some("") | None, Some(q))         => List(termQuery("id.raw", q))
-        case (Some(q1), Some(q2))               => List(termQuery("resource.raw", q1), termQuery("id.raw", q2))
+        case (Some("") | None, Some("") | None) => List.empty
+        case (Some(q), Some("") | None)         => List(termQuery(s"$path.resource", q))
+        case (Some("") | None, Some(q))         => List(termQuery(s"$path.id", q))
+        case (Some(q1), Some(q2))               => List(termQuery(s"$path.resource", q1), termQuery(s"$path.id", q2))
       }
     }
 
@@ -109,25 +110,42 @@ trait SearchService {
         id: Option[String],
         language: String,
         fallback: Boolean
-    ): List[NestedQuery] = {
-      if ( (resource == Some("") || resource == None ) && (id == Some("") || id == None)) {
-        return List.empty
+    ): Option[BoolQuery] = {
+      if ((resource == Some("") || resource == None) && (id == Some("") || id == None)) {
+        return None
       }
       if (language == Language.AllLanguages || fallback) {
-        Language.languageAnalyzers.map(
-          lang =>
-            nestedQuery(s"embedResourcesAndIds.${lang.lang}").query(
-              boolQuery().must(
-                buildTermQuery(resource, id)
-
-          )))
-      } else {
-        List(
-          nestedQuery(s"embedResourcesAndIds.${language}").query(
-            boolQuery().must(
-              buildTermQuery(resource, id)
+        Some(
+          boolQuery().should(
+            Language.languageAnalyzers.map(
+              lang =>
+                nestedQuery("embedResourcesAndIds").query(
+                  boolQuery().should(
+                    nestedQuery(s"embedResourcesAndIds.${lang.lang}").query(
+                      boolQuery().must(
+                        buildTermQuery(s"embedResourcesAndIds.${lang.lang}", resource, id)
+                      )
+                    )
+                  )
+              )
             )
-          ))
+          )
+        )
+      } else {
+        Some(
+          boolQuery().must(
+            nestedQuery("embedResourcesAndIds").query(
+              boolQuery().should(
+                nestedQuery(s"embedResourcesAndIds.${language}").query(
+                  boolQuery().must(
+                    buildTermQuery(s"embedResourcesAndIds.${language}", resource, id)
+                  )
+                )
+              )
+            )
+          )
+        )
+
       }
     }
 

@@ -8,8 +8,8 @@
 package no.ndla.searchapi.model.search
 
 case class EmbedValues(
-    id: String,
-    resource: String,
+    id: Option[String],
+    resource: Option[String],
 )
 
 case class SearchableLanguageEmbedValues(languageValues: Seq[LanguageValue[Seq[EmbedValues]]])

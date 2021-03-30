@@ -402,29 +402,17 @@ trait IndexService {
 
     protected def generateLanguageSupportedEmbedList(
         fieldName: String,
-        subFields: Seq[String],
-        keepRaw: Boolean = false
-    ): List[FieldDefinition] = {
-      languageAnalyzers.map(langAnalyzer => {
-        val sf = List(
-          textField("trigram").analyzer("trigram"),
-          textField("decompounded")
-            .searchAnalyzer("standard")
-            .analyzer("compound_analyzer"),
-          textField("exact")
-            .analyzer("exact")
-        )
-
-        val extraFields = if (keepRaw) sf :+ keywordField("raw") else sf
-        nestedField(s"$fieldName.${langAnalyzer.lang}").fields(
-          subFields.map(sub => {
-            textField(s"$sub")
-              .analyzer(langAnalyzer.analyzer)
-              .fields(extraFields)
-          })
-        )
-
-      })
+        subFields: Seq[String]
+    ): NestedField = {
+      nestedField(fieldName).fields(
+        languageAnalyzers.map(langAnalyzer => {
+          nestedField(langAnalyzer.lang).fields(
+            subFields.map(sub => {
+              keywordField(sub)
+            })
+          )
+        })
+      )
     }
 
     protected def getTaxonomyContextMapping: NestedField = {
