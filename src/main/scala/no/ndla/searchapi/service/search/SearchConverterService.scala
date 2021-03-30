@@ -108,38 +108,29 @@ trait SearchConverterService {
       })
     }
 
-    private[service] def getEmbedResources(html: String): Option[String] = {
+    private def getEmbedValuesFromEmbed(embed: Element, language: String): EmbedValues = {
+      EmbedValues(resource = getEmbedResource(embed), id = getEmbedId(embed), language = language)
+    }
+
+    private[service] def getEmbedValues(html: String, language: String): List[EmbedValues] = {
       parseHtml(html)
         .select("embed")
         .asScala
-        .flatMap(getEmbedResources)
+        .flatMap(embed => Some(getEmbedValuesFromEmbed(embed, language)))
         .toList
-        .headOption
     }
 
-    private def getEmbedResources(embed: Element): List[String] = {
-      val attributesToKeep = List(
-        "data-resource",
-      )
+    private def getEmbedResource(embed: Element): Option[String] = {
 
-      attributesToKeep.flatMap(attr =>
-        embed.attr(attr) match {
+
+        embed.attr("data-resource") match {
           case "" => None
           case a  => Some(a)
-      })
+      }
     }
 
-    private[service] def getEmbedIds(html: String): Option[String] = {
-      parseHtml(html)
-        .select("embed")
-        .asScala
-        .flatMap(getEmbedIds)
-        .toList
-        .headOption
 
-    }
-
-    private def getEmbedIds(embed: Element): List[String] = {
+    private def getEmbedId(embed: Element): Option[String] = {
       val attributesToKeep = List(
         "data-videoid",
         "data-url",
@@ -147,11 +138,24 @@ trait SearchConverterService {
         "data-content-id",
       )
 
-      attributesToKeep.flatMap(attr =>
+      val attributes = attributesToKeep.map(attr =>
         embed.attr(attr) match {
           case "" => None
           case a  => Some(a)
       })
+
+      println(attributes)
+      println(attributes.find(attr => attr.nonEmpty) match {
+        case None => None
+        case Some(Some("")) => None
+        case Some(a) => a
+      })
+
+      attributes.find(attr => attr.nonEmpty) match {
+        case None => None
+        case Some(Some("")) => None
+        case Some(a) => a
+      }
     }
 
     private def getAttributesToIndex(content: Seq[ArticleContent],
@@ -170,8 +174,8 @@ trait SearchConverterService {
     private def getEmbedResourcesAndIdsToIndex(content: Seq[ArticleContent],
                                                visualElement: Seq[VisualElement],
                                                metaImage: Seq[ArticleMetaImage]): List[EmbedValues] = {
-      val contentTuples = content.map(c => EmbedValues(id = getEmbedIds(c.content), resource = getEmbedResources(c.content), language=c.language))
-      val visualElementTuples = visualElement.map(v => EmbedValues(id = getEmbedIds(v.resource), resource = getEmbedResources(v.resource), language = v.language))
+      val contentTuples = content.map(c => getEmbedValues(c.content, c.language)).flatten
+      val visualElementTuples = visualElement.map(v => getEmbedValues(v.resource, v.language)).flatten
       val metaImageTuples =
         metaImage.map(m => EmbedValues(id = Some(m.imageId), resource = Some("image"), language = m.language))
       (contentTuples ++ visualElementTuples ++ metaImageTuples).toList

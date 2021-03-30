@@ -814,7 +814,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
           query = Some("Ekstra"),
-          embedResource = Some("concept"),
+          embedResource = Some("image"),
           embedId = Some("55")
         ))
     val hits = results.results

@@ -58,12 +58,16 @@ trait ArticleIndexService {
           textField("grepContexts.title"),
           keywordField("traits"),
           getTaxonomyContextMapping,
+          nestedField("embedResourcesAndIds").fields(
+            keywordField("resource"),
+            keywordField("id"),
+            keywordField("language")
+          ),
           nestedField("metaImage").fields(
             keywordField("imageId"),
             keywordField("altText"),
             keywordField("language")
           ),
-          generateLanguageSupportedEmbedList("embedResourcesAndIds", Seq("resource", "id"))
         )
           ++
             generateLanguageSupportedFieldList("title", keepRaw = true) ++

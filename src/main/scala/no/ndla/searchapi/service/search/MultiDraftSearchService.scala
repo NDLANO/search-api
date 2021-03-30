@@ -67,9 +67,8 @@ trait MultiDraftSearchService {
             simpleStringQuery(queryString).field("previousVersionsNotes", 1),
             simpleStringQuery(queryString).field("grepContexts.title", 1),
             idsQuery(queryString)
-          ) //++
-            //buildTermQueryForField(queryString, "embedResources", settings.language, settings.fallback) ++
-            //buildTermQueryForField(queryString, "embedIds", settings.language, settings.fallback)
+          ) //++ buildNestedLanguageFieldForEmbeds(Some(queryString), None, settings.language, settings.fallback)++
+          //buildNestedLanguageFieldForEmbeds(None, Some(queryString), settings.language, settings.fallback)
         )
 
       })
