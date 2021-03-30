@@ -169,20 +169,16 @@ trait SearchConverterService {
 
     private def getEmbedResourcesAndIdsToIndex(content: Seq[ArticleContent],
                                                visualElement: Seq[VisualElement],
-                                               metaImage: Seq[ArticleMetaImage]): SearchableLanguageEmbedValues = {
-      val contentTuples = content.map(c =>
-        c.language -> EmbedValues(id = getEmbedIds(c.content), resource = getEmbedResources(c.content)))
-      val visualElementTuples = visualElement.map(v =>
-        v.language -> EmbedValues(id = getEmbedIds(v.resource), resource = getEmbedResources(v.resource)))
+                                               metaImage: Seq[ArticleMetaImage]): List[EmbedValues] = {
+      val contentTuples = content.map(c => EmbedValues(id = getEmbedIds(c.content), resource = getEmbedResources(c.content), language=c.language))
+      val visualElementTuples = visualElement.map(v => EmbedValues(id = getEmbedIds(v.resource), resource = getEmbedResources(v.resource), language = v.language))
       val metaImageTuples =
-        metaImage.map(m => m.language -> EmbedValues(id = Some(m.imageId), resource = Some("image")))
-      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples ++ metaImageTuples).groupBy(_._1)
+        metaImage.map(m => EmbedValues(id = Some(m.imageId), resource = Some("image"), language = m.language))
+      (contentTuples ++ visualElementTuples ++ metaImageTuples).toList
 
-      val languageValues = attrsGroupedByLanguage.map {
-        case (language, values) => LanguageValue(language, values.map(_._2))
-      }
 
-      SearchableLanguageEmbedValues(languageValues.toSeq)
+
+
     }
 
     def asSearchableArticle(ai: Article,

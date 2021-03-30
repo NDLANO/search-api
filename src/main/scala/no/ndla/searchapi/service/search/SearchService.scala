@@ -95,14 +95,16 @@ trait SearchService {
     def buildTermQuery(
         path: String,
         resource: Option[String],
-        id: Option[String]
+        id: Option[String],
+        language: Option[String]
     ): List[TermQuery] = {
-      (resource, id) match {
+      val queries = (resource, id) match {
         case (Some("") | None, Some("") | None) => List.empty
         case (Some(q), Some("") | None)         => List(termQuery(s"$path.resource", q))
         case (Some("") | None, Some(q))         => List(termQuery(s"$path.id", q))
         case (Some(q1), Some(q2))               => List(termQuery(s"$path.resource", q1), termQuery(s"$path.id", q2))
       }
+      if (language.nonEmpty) queries :+ termQuery(s"$path.language", language) else queries
     }
 
     def buildNestedLanguageFieldForEmbeds(
@@ -117,35 +119,23 @@ trait SearchService {
       if (language == Language.AllLanguages || fallback) {
         Some(
           boolQuery().should(
-            Language.languageAnalyzers.map(
-              lang =>
-                nestedQuery("embedResourcesAndIds").query(
-                  boolQuery().should(
-                    nestedQuery(s"embedResourcesAndIds.${lang.lang}").query(
-                      boolQuery().must(
-                        buildTermQuery(s"embedResourcesAndIds.${lang.lang}", resource, id)
-                      )
-                    )
-                  )
+            nestedQuery("embedResourcesAndIds").query(
+              boolQuery().must(
+                buildTermQuery(s"embedResourcesAndIds", resource, id, None)
               )
             )
           )
         )
       } else {
         Some(
-          boolQuery().must(
+          boolQuery().should(
             nestedQuery("embedResourcesAndIds").query(
-              boolQuery().should(
-                nestedQuery(s"embedResourcesAndIds.${language}").query(
-                  boolQuery().must(
-                    buildTermQuery(s"embedResourcesAndIds.${language}", resource, id)
-                  )
-                )
+              boolQuery().must(
+                  buildTermQuery(s"embedResourcesAndIds", resource, id, Some(language))
               )
             )
           )
         )
-
       }
     }
 

@@ -402,7 +402,7 @@ trait IndexService {
 
     protected def generateLanguageSupportedEmbedList(
         fieldName: String,
-        subFields: Seq[String]
+        subFields: Seq[String],
     ): NestedField = {
       nestedField(fieldName).fields(
         languageAnalyzers.map(langAnalyzer => {
