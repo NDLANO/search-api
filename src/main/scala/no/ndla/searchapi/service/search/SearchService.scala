@@ -106,7 +106,6 @@ trait SearchService {
         case (Some(q1), Some(q2))               => List(termQuery(s"$path.resource", q1), termQuery(s"$path.id", q2))
       }
       if (queries.isEmpty) return queries
-      println(id, language, fallback)
       if (language == Language.AllLanguages || fallback) queries else queries :+ termQuery(s"$path.language", language)
     }
 

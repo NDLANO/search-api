@@ -1045,7 +1045,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
           embedResource = Some("concept"),
-          embedId = Some("222")
+          embedId = Some("222"),
+          language = Language.AllLanguages
         ))
     val hits = results.results
     results.totalCount should be(1)

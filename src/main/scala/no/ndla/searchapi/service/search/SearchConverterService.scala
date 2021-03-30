@@ -144,13 +144,6 @@ trait SearchConverterService {
           case a  => Some(a)
       })
 
-      println(attributes)
-      println(attributes.find(attr => attr.nonEmpty) match {
-        case None => None
-        case Some(Some("")) => None
-        case Some(a) => a
-      })
-
       attributes.find(attr => attr.nonEmpty) match {
         case None => None
         case Some(Some("")) => None
