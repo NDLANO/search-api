@@ -114,29 +114,25 @@ trait SearchService {
         id: Option[String],
         language: String,
         fallback: Boolean
-    ): Option[BoolQuery] = {
+    ): Option[NestedQuery] = {
       if ((resource == Some("") || resource == None) && (id == Some("") || id == None)) {
         return None
       }
       if (language == Language.AllLanguages || fallback) {
         Some(
-          boolQuery().should(
             nestedQuery("embedResourcesAndIds").query(
               boolQuery().must(
                 buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
               )
-            )
           )
         )
       } else {
         Some(
-          boolQuery().should(
             nestedQuery("embedResourcesAndIds").query(
               boolQuery().must(
                 buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
               )
             )
-          )
         )
       }
     }
