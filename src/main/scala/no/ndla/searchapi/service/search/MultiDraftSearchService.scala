@@ -66,10 +66,10 @@ trait MultiDraftSearchService {
             simpleStringQuery(queryString).field("notes", 1),
             simpleStringQuery(queryString).field("previousVersionsNotes", 1),
             simpleStringQuery(queryString).field("grepContexts.title", 1),
-            idsQuery(queryString))
-           ++buildNestedLanguageFieldForEmbeds(Some(queryString), None, settings.language, settings.fallback) ++
-           buildNestedLanguageFieldForEmbeds(None, Some(queryString), settings.language, settings.fallback)
-
+            idsQuery(queryString)
+          )
+            ++ buildNestedLanguageFieldForEmbeds(Some(queryString), None, settings.language, settings.fallback) ++
+            buildNestedLanguageFieldForEmbeds(None, Some(queryString), settings.language, settings.fallback)
         )
 
       })
@@ -81,8 +81,6 @@ trait MultiDraftSearchService {
             simpleStringQuery(q).field("previousVersionsNotes", 1)
           )
       })
-
-
 
       val boolQueries: List[BoolQuery] = List(contentSearch, noteSearch).flatten
       val fullQuery = boolQuery().must(boolQueries)

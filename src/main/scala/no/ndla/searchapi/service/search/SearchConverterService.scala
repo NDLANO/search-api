@@ -122,13 +122,11 @@ trait SearchConverterService {
 
     private def getEmbedResource(embed: Element): Option[String] = {
 
-
-        embed.attr("data-resource") match {
-          case "" => None
-          case a  => Some(a)
+      embed.attr("data-resource") match {
+        case "" => None
+        case a  => Some(a)
       }
     }
-
 
     private def getEmbedId(embed: Element): Option[String] = {
       val attributesToKeep = List(
@@ -145,9 +143,9 @@ trait SearchConverterService {
       })
 
       attributes.find(attr => attr.nonEmpty) match {
-        case None => None
+        case None           => None
         case Some(Some("")) => None
-        case Some(a) => a
+        case Some(a)        => a
       }
     }
 
@@ -172,9 +170,6 @@ trait SearchConverterService {
       val metaImageTuples =
         metaImage.map(m => EmbedValues(id = Some(m.imageId), resource = Some("image"), language = m.language))
       (contentTuples ++ visualElementTuples ++ metaImageTuples).toList
-
-
-
 
     }
 

@@ -120,19 +120,19 @@ trait SearchService {
       }
       if (language == Language.AllLanguages || fallback) {
         Some(
-            nestedQuery("embedResourcesAndIds").query(
-              boolQuery().must(
-                buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
-              )
+          nestedQuery("embedResourcesAndIds").query(
+            boolQuery().must(
+              buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
+            )
           )
         )
       } else {
         Some(
-            nestedQuery("embedResourcesAndIds").query(
-              boolQuery().must(
-                buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
-              )
+          nestedQuery("embedResourcesAndIds").query(
+            boolQuery().must(
+              buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
             )
+          )
         )
       }
     }

@@ -400,7 +400,6 @@ trait IndexService {
       })
     }
 
-
     protected def getTaxonomyContextMapping: NestedField = {
       nestedField("contexts").fields(
         List(
