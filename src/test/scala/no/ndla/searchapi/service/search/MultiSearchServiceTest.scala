@@ -908,7 +908,6 @@ class MultiSearchServiceTest
     hits.head.id should be(11)
   }
 
-
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false
