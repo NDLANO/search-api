@@ -142,7 +142,7 @@ trait SearchConverterService {
           case a  => Some(a)
       })
 
-      attributes.find(attr => attr.nonEmpty).get
+      attributes.find(attr => attr.nonEmpty).getOrElse(None)
     }
 
     private def getAttributesToIndex(content: Seq[ArticleContent],
