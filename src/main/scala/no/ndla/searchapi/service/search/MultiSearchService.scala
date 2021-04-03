@@ -63,8 +63,8 @@ trait MultiSearchService {
               simpleStringQuery(q).field("authors", 1),
               simpleStringQuery(q).field("grepContexts.title", 1),
               idsQuery(q)
-            )
-              ++ buildNestedEmbedField(Some(q), None, settings.language, settings.fallback) ++
+            ) ++
+              buildNestedEmbedField(Some(q), None, settings.language, settings.fallback) ++
               buildNestedEmbedField(None, Some(q), settings.language, settings.fallback)
           ))
       })
