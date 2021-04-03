@@ -79,20 +79,7 @@ trait SearchService {
       }
     }
 
-    def buildTermQueryForField(
-        query: String,
-        field: String,
-        language: String,
-        fallback: Boolean
-    ): List[TermQuery] = {
-      if (language == Language.AllLanguages || fallback) {
-        Language.languageAnalyzers.map(lang => termQuery(s"$field.${lang.lang}.raw", query))
-      } else {
-        List(termQuery(s"$field.$language.raw", query))
-      }
-    }
-
-    def buildTermQuery(
+    def buildTermQueryForEmbed(
         path: String,
         resource: Option[String],
         id: Option[String],
@@ -109,7 +96,7 @@ trait SearchService {
       if (language == Language.AllLanguages || fallback) queries else queries :+ termQuery(s"$path.language", language)
     }
 
-    def buildNestedLanguageFieldForEmbeds(
+    def buildNestedEmbedField(
         resource: Option[String],
         id: Option[String],
         language: String,
@@ -122,7 +109,7 @@ trait SearchService {
         Some(
           nestedQuery("embedResourcesAndIds").query(
             boolQuery().must(
-              buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
+              buildTermQueryForEmbed("embedResourcesAndIds", resource, id, language, fallback)
             )
           )
         )
@@ -130,7 +117,7 @@ trait SearchService {
         Some(
           nestedQuery("embedResourcesAndIds").query(
             boolQuery().must(
-              buildTermQuery("embedResourcesAndIds", resource, id, language, fallback)
+              buildTermQueryForEmbed("embedResourcesAndIds", resource, id, language, fallback)
             )
           )
         )

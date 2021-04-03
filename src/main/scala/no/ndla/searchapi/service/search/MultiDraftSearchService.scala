@@ -68,8 +68,8 @@ trait MultiDraftSearchService {
             simpleStringQuery(queryString).field("grepContexts.title", 1),
             idsQuery(queryString)
           )
-            ++ buildNestedLanguageFieldForEmbeds(Some(queryString), None, settings.language, settings.fallback) ++
-            buildNestedLanguageFieldForEmbeds(None, Some(queryString), settings.language, settings.fallback)
+            ++ buildNestedEmbedField(Some(queryString), None, settings.language, settings.fallback) ++
+            buildNestedEmbedField(None, Some(queryString), settings.language, settings.fallback)
         )
 
       })
@@ -158,10 +158,8 @@ trait MultiDraftSearchService {
         if (settings.grepCodes.nonEmpty) Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
-      val embedResourceAndIdFilter = buildNestedLanguageFieldForEmbeds(settings.embedResource,
-                                                                       settings.embedId,
-                                                                       settings.language,
-                                                                       settings.fallback)
+      val embedResourceAndIdFilter =
+        buildNestedEmbedField(settings.embedResource, settings.embedId, settings.language, settings.fallback)
 
       val statusFilter = draftStatusFilter(settings.statusFilter)
       val usersFilter = boolUsersFilter(settings.userFilter)

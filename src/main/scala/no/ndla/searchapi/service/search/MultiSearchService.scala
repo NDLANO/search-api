@@ -64,8 +64,8 @@ trait MultiSearchService {
               simpleStringQuery(q).field("grepContexts.title", 1),
               idsQuery(q)
             )
-              ++ buildNestedLanguageFieldForEmbeds(Some(q), None, settings.language, settings.fallback) ++
-              buildNestedLanguageFieldForEmbeds(None, Some(q), settings.language, settings.fallback)
+              ++ buildNestedEmbedField(Some(q), None, settings.language, settings.fallback) ++
+              buildNestedEmbedField(None, Some(q), settings.language, settings.fallback)
           ))
       })
 
@@ -147,10 +147,8 @@ trait MultiSearchService {
           Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
-      val embedResourceAndIdFilter = buildNestedLanguageFieldForEmbeds(settings.embedResource,
-                                                                       settings.embedId,
-                                                                       settings.language,
-                                                                       settings.fallback)
+      val embedResourceAndIdFilter =
+        buildNestedEmbedField(settings.embedResource, settings.embedId, settings.language, settings.fallback)
 
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
