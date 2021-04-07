@@ -655,7 +655,16 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
         statusFilter = List(ArticleStatus.IMPORTED),
         learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle)
       ))
-    search2.results.map(_.id) should be(Seq(12))
+    search2.results.map(_.id) should be(Seq())
+
+    val Success(search3) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(
+        language = Language.AllLanguages,
+        statusFilter = List(ArticleStatus.IMPORTED),
+        filterOtherStatuses = true,
+        learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle)
+      ))
+    search3.results.map(_.id) should be(Seq(12))
   }
 
   test("Filtering for statuses should also filter learningPaths") {

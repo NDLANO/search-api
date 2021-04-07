@@ -1167,7 +1167,8 @@ object TestData {
     searchDecompounded = false,
     aggregatePaths = List.empty,
     embedResource = None,
-    embedId = None
+    embedId = None,
+    filterOtherStatuses = false
   )
 
   val searchableResourceTypes = List(
