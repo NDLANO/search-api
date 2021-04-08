@@ -178,7 +178,7 @@ trait MultiDraftSearchService {
               ))
       }
 
-      val statusFilter = draftStatusFilter(settings.statusFilter, settings.filterOtherStatuses)
+      val statusFilter = draftStatusFilter(settings.statusFilter, settings.includeOtherStatuses)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)

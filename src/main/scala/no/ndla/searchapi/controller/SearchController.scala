@@ -161,9 +161,9 @@ trait SearchController {
          |Supported values are ${ArticleStatus.values.mkString(", ")}.""".stripMargin
     )
 
-    private val filterOtherStatuses =
+    private val includeOtherStatuses =
       Param[Option[Boolean]](
-        "filter-other-statuses",
+        "include-other-statuses",
         s"Whether or not to include the 'other' status field when filtering with '${statusFilter.paramName}' param.")
 
     private val userFilter = Param[Option[Seq[String]]](
@@ -432,7 +432,7 @@ trait SearchController {
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
-      val filterOtherStatuses = booleanOrDefault(this.filterOtherStatuses.paramName, default = false)
+      val filterOtherStatuses = booleanOrDefault(this.includeOtherStatuses.paramName, default = false)
 
       MultiDraftSearchSettings(
         query = query,
@@ -459,7 +459,7 @@ trait SearchController {
         aggregatePaths = aggregatePaths,
         embedResource = embedResource,
         embedId = embedId,
-        filterOtherStatuses = filterOtherStatuses
+        includeOtherStatuses = filterOtherStatuses
       )
     }
 
@@ -562,7 +562,7 @@ trait SearchController {
             asQueryParam(aggregatePaths),
             asQueryParam(embedResource),
             asQueryParam(embedId),
-            asQueryParam(filterOtherStatuses)
+            asQueryParam(includeOtherStatuses)
           )
           .authorizations("oauth2")
           .responseMessages(response500))

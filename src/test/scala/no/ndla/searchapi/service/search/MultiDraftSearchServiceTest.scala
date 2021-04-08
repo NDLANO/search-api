@@ -661,7 +661,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       multiDraftSearchSettings.copy(
         language = Language.AllLanguages,
         statusFilter = List(ArticleStatus.IMPORTED),
-        filterOtherStatuses = true,
+        includeOtherStatuses = true,
         learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle)
       ))
     search3.results.map(_.id) should be(Seq(12))

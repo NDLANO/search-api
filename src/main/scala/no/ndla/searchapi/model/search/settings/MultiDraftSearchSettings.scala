@@ -36,5 +36,5 @@ case class MultiDraftSearchSettings(
     aggregatePaths: List[String],
     embedResource: Option[String],
     embedId: Option[String],
-    filterOtherStatuses: Boolean
+    includeOtherStatuses: Boolean
 )
