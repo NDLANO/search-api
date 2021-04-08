@@ -216,14 +216,14 @@ trait MultiDraftSearchService {
       ).flatten
     }
 
-    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value], filterOthers: Boolean): Some[BoolQuery] = {
+    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value], includeOthers: Boolean): Some[BoolQuery] = {
       if (statuses.isEmpty) {
         Some(
           boolQuery().not(termQuery("draftStatus.current", ArticleStatus.ARCHIVED.toString))
         )
       } else {
         val draftStatuses =
-          if (filterOthers) Seq("draftStatus.current", "draftStatus.other")
+          if (includeOthers) Seq("draftStatus.current", "draftStatus.other")
           else Seq("draftStatus.current")
 
         Some(

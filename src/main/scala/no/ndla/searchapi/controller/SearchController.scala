@@ -432,7 +432,7 @@ trait SearchController {
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
-      val filterOtherStatuses = booleanOrDefault(this.includeOtherStatuses.paramName, default = false)
+      val includeOtherStatuses = booleanOrDefault(this.includeOtherStatuses.paramName, default = false)
 
       MultiDraftSearchSettings(
         query = query,
@@ -459,7 +459,7 @@ trait SearchController {
         aggregatePaths = aggregatePaths,
         embedResource = embedResource,
         embedId = embedId,
-        includeOtherStatuses = filterOtherStatuses
+        includeOtherStatuses = includeOtherStatuses
       )
     }
 
