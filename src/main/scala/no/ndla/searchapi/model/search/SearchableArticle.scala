@@ -29,5 +29,9 @@ case class SearchableArticle(
     grepContexts: List[SearchableGrepContext],
     traits: List[String],
     embedAttributes: SearchableLanguageList,
+    // To be removed
+    embedResources: SearchableLanguageList,
+    // To be removed
+    embedIds: SearchableLanguageList,
     embedResourcesAndIds: List[EmbedValues],
 )

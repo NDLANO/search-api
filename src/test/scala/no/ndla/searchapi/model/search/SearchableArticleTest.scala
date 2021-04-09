@@ -55,6 +55,17 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
     val embedResourcesAndIds =
       List(EmbedValues(resource = Some("test resource 1"), id = Some("test id 1"), language = "nb"))
 
+    // To be removed
+    val embedResources = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test resource 1", "test resource 2")),
+      ))
+    // To be removed
+    val embedIds = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test id 1", "test id 2")),
+      ))
+
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
 
     val original = SearchableArticle(
@@ -77,7 +88,11 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
       embedAttributes = embedAttrs,
-      embedResourcesAndIds = embedResourcesAndIds
+      embedResourcesAndIds = embedResourcesAndIds,
+      // To be removed
+      embedResources = embedResources,
+      // To be removed
+      embedIds = embedIds
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)
@@ -125,6 +140,16 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
     val embedResourcesAndIds =
       List(EmbedValues(resource = Some("test resource 1"), id = Some("test id 1"), language = "nb"))
 
+    val embedResources = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test resource 1", "test resource 2")),
+      ))
+
+    val embedIds = SearchableLanguageList(
+      Seq(
+        LanguageValue("nb", List("test id 1", "test id 2")),
+      ))
+
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
     val filterWithNullName =
       SearchableTaxonomyFilter(
@@ -155,6 +180,10 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       traits = List.empty,
       embedAttributes = embedAttrs,
       embedResourcesAndIds = embedResourcesAndIds,
+      // To be removed
+      embedResources = embedResources,
+      // To be removed
+      embedIds = embedIds
     )
 
     val json = write(original)

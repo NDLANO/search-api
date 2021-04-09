@@ -108,6 +108,50 @@ trait SearchConverterService {
       })
     }
 
+    // To be removed
+    private[service] def getEmbedResources(html: String): List[String] = {
+      parseHtml(html)
+        .select("embed")
+        .asScala
+        .flatMap(getEmbedResources)
+        .toList
+    }
+    // To be removed
+    private def getEmbedResources(embed: Element): List[String] = {
+      val attributesToKeep = List(
+        "data-resource",
+      )
+
+      attributesToKeep.flatMap(attr =>
+        embed.attr(attr) match {
+          case "" => None
+          case a  => Some(a)
+      })
+    }
+    // To be removed
+    private[service] def getEmbedIds(html: String): List[String] = {
+      parseHtml(html)
+        .select("embed")
+        .asScala
+        .flatMap(getEmbedIds)
+        .toList
+    }
+    // To be removed
+    private def getEmbedIds(embed: Element): List[String] = {
+      val attributesToKeep = List(
+        "data-videoid",
+        "data-url",
+        "data-resource_id",
+        "data-content-id",
+      )
+
+      attributesToKeep.flatMap(attr =>
+        embed.attr(attr) match {
+          case "" => None
+          case a  => Some(a)
+      })
+    }
+
     private def getEmbedValuesFromEmbed(embed: Element, language: String): EmbedValues = {
       EmbedValues(resource = getEmbedResource(embed), id = getEmbedId(embed), language = language)
     }
@@ -158,6 +202,36 @@ trait SearchConverterService {
       SearchableLanguageList(languageValues.toSeq)
     }
 
+    // To be removed
+    private def getEmbedResourcesToIndex(content: Seq[ArticleContent],
+                                         visualElement: Seq[VisualElement]): SearchableLanguageList = {
+      val contentTuples = content.map(c => c.language -> getEmbedResources(c.content))
+      val visualElementTuples = visualElement.map(v => v.language -> getEmbedResources(v.resource))
+      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples).groupBy(_._1)
+
+      val languageValues = attrsGroupedByLanguage.map {
+        case (language, values) => LanguageValue(language, values.flatMap(_._2))
+      }
+
+      SearchableLanguageList(languageValues.toSeq)
+    }
+
+    // To be removed
+    private def getEmbedIdsToIndex(content: Seq[ArticleContent],
+                                   visualElement: Seq[VisualElement],
+                                   metaImage: Seq[ArticleMetaImage]): SearchableLanguageList = {
+      val contentTuples = content.map(c => c.language -> getEmbedIds(c.content))
+      val visualElementTuples = visualElement.map(v => v.language -> getEmbedIds(v.resource))
+      val metaImageTuples = metaImage.map(m => m.language -> List(m.imageId))
+      val attrsGroupedByLanguage = (contentTuples ++ visualElementTuples ++ metaImageTuples).groupBy(_._1)
+
+      val languageValues = attrsGroupedByLanguage.map {
+        case (language, values) => LanguageValue(language, values.flatMap(_._2))
+      }
+
+      SearchableLanguageList(languageValues.toSeq)
+    }
+
     private def getEmbedResourcesAndIdsToIndex(content: Seq[ArticleContent],
                                                visualElement: Seq[VisualElement],
                                                metaImage: Seq[ArticleMetaImage]): List[EmbedValues] = {
@@ -176,6 +250,11 @@ trait SearchConverterService {
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
       val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
+
+      // To be removed
+      val embedResources = getEmbedResourcesToIndex(ai.content, ai.visualElement)
+      // To be removed
+      val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
 
@@ -216,6 +295,10 @@ trait SearchConverterService {
           traits = traits.toList.distinct,
           embedAttributes = embedAttributes,
           embedResourcesAndIds = embedResourcesAndIds,
+          // To be removed
+          embedResources = embedResources,
+          // To be removed
+          embedIds = embedIds
         ))
 
     }
@@ -258,6 +341,12 @@ trait SearchConverterService {
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
       val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
+
+      // To be removed
+      val embedResources = getEmbedResourcesToIndex(draft.content, draft.visualElement)
+      // To be removed
+      val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
+
       val defaultTitle = draft.title
         .sortBy(title => {
           ISO639.languagePriority.reverse.indexOf(title.language)
@@ -314,6 +403,10 @@ trait SearchConverterService {
           traits = traits.toList.distinct,
           embedAttributes = embedAttributes,
           embedResourcesAndIds = embedResourcesAndIds,
+          // To be removed
+          embedResources = embedResources,
+          // To be removed
+          embedIds = embedIds
         ))
 
     }

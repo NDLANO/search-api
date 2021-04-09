@@ -64,8 +64,13 @@ trait MultiSearchService {
               simpleStringQuery(q).field("grepContexts.title", 1),
               idsQuery(q)
             ) ++
-              buildNestedEmbedField(Some(q), None, settings.language, settings.fallback) ++
-              buildNestedEmbedField(None, Some(q), settings.language, settings.fallback)
+              // To be removed
+              buildTermQueryForField(q, "embedResources", settings.language, settings.fallback) ++
+              // To be removed
+              buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
+            // To be added
+            /*buildNestedEmbedField(Some(q), None, settings.language, settings.fallback) ++
+              buildNestedEmbedField(None, Some(q), settings.language, settings.fallback)*/
           ))
       })
 
@@ -147,8 +152,29 @@ trait MultiSearchService {
           Some(termsQuery("grepContexts.code", settings.grepCodes))
         else None
 
-      val embedResourceAndIdFilter =
-        buildNestedEmbedField(settings.embedResource, settings.embedId, settings.language, settings.fallback)
+      val embedResourceFilter = settings.embedResource match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedResources", settings.language, settings.fallback)
+              ))
+      }
+
+      val embedIdFilter = settings.embedId match {
+        case Some("") | None => None
+        case Some(q) =>
+          Some(
+            boolQuery()
+              .should(
+                buildTermQueryForField(q, "embedIds", settings.language, settings.fallback)
+              ))
+      }
+
+      // TO be added
+      /* val embedResourceAndIdFilter =
+        buildNestedEmbedField(settings.embedResource, settings.embedId, settings.language, settings.fallback)*/
 
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
       val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
@@ -176,7 +202,12 @@ trait MultiSearchService {
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
         grepCodesFilter,
-        embedResourceAndIdFilter
+        // To be removed
+        embedResourceFilter,
+        // To be removed
+        embedIdFilter
+        // To be added
+        // embedResourceAndIdFilter
       ).flatten
     }
 

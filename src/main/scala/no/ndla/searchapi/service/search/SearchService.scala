@@ -79,6 +79,20 @@ trait SearchService {
       }
     }
 
+    // To be removed
+    def buildTermQueryForField(
+        query: String,
+        field: String,
+        language: String,
+        fallback: Boolean
+    ): List[TermQuery] = {
+      if (language == Language.AllLanguages || fallback) {
+        Language.languageAnalyzers.map(lang => termQuery(s"$field.${lang.lang}.raw", query))
+      } else {
+        List(termQuery(s"$field.$language.raw", query))
+      }
+    }
+
     def buildTermQueryForEmbed(
         path: String,
         resource: Option[String],

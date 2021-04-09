@@ -77,7 +77,11 @@ trait ArticleIndexService {
           generateLanguageSupportedFieldList("introduction") ++
           generateLanguageSupportedFieldList("metaDescription") ++
           generateLanguageSupportedFieldList("tags") ++
-          generateLanguageSupportedFieldList("embedAttributes")
+          generateLanguageSupportedFieldList("embedAttributes") ++
+          // To be removed
+          generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
+          // To be removed
+          generateLanguageSupportedFieldList("embedIds", keepRaw = true)
       )
     }
   }
