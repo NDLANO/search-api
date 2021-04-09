@@ -70,10 +70,10 @@ trait SearchController {
     registerModel[ValidationError]()
     registerModel[Error]()
 
-    val response400 = ResponseMessage(400, "Validation Error", Some("ValidationError"))
-    val response403 = ResponseMessage(403, "Access Denied", Some("Error"))
-    val response404 = ResponseMessage(404, "Not found", Some("Error"))
-    val response500 = ResponseMessage(500, "Unknown error", Some("Error"))
+    val response400: ResponseMessage = ResponseMessage(400, "Validation Error", Some("ValidationError"))
+    val response403: ResponseMessage = ResponseMessage(403, "Access Denied", Some("Error"))
+    val response404: ResponseMessage = ResponseMessage(404, "Not found", Some("Error"))
+    val response500: ResponseMessage = ResponseMessage(500, "Unknown error", Some("Error"))
 
     private val correlationId =
       Param[Option[String]]("X-Correlation-ID", "User supplied correlation-id. May be omitted.")
@@ -160,6 +160,11 @@ trait SearchController {
          |A draft only needs to have one of the available statuses to be included in result (OR).
          |Supported values are ${ArticleStatus.values.mkString(", ")}.""".stripMargin
     )
+
+    private val includeOtherStatuses =
+      Param[Option[Boolean]](
+        "include-other-statuses",
+        s"Whether or not to include the 'other' status field when filtering with '${statusFilter.paramName}' param.")
 
     private val userFilter = Param[Option[Seq[String]]](
       "users",
@@ -427,6 +432,7 @@ trait SearchController {
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
+      val includeOtherStatuses = booleanOrDefault(this.includeOtherStatuses.paramName, default = false)
 
       MultiDraftSearchSettings(
         query = query,
@@ -452,7 +458,8 @@ trait SearchController {
         searchDecompounded = false,
         aggregatePaths = aggregatePaths,
         embedResource = embedResource,
-        embedId = embedId
+        embedId = embedId,
+        includeOtherStatuses = includeOtherStatuses
       )
     }
 
@@ -554,7 +561,8 @@ trait SearchController {
             asQueryParam(grepCodes),
             asQueryParam(aggregatePaths),
             asQueryParam(embedResource),
-            asQueryParam(embedId)
+            asQueryParam(embedId),
+            asQueryParam(includeOtherStatuses)
           )
           .authorizations("oauth2")
           .responseMessages(response500))

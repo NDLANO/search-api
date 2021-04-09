@@ -65,7 +65,7 @@ lazy val search_api = (project in file("."))
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature"),
     libraryDependencies ++= pactTestFramework ++ Seq(
-      "ndla" %% "network" % "0.44",
+      "ndla" %% "network" % "0.45",
       "ndla" %% "mapping" % "0.15",
       "ndla" %% "scalatestsuite" % "0.3" % "test",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
