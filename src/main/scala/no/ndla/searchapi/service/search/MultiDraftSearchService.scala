@@ -178,7 +178,7 @@ trait MultiDraftSearchService {
               ))
       }
 
-      val statusFilter = draftStatusFilter(settings.statusFilter)
+      val statusFilter = draftStatusFilter(settings.statusFilter, settings.includeOtherStatuses)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
       val taxonomyContextFilter = contextTypeFilter(settings.learningResourceTypes)
@@ -216,13 +216,16 @@ trait MultiDraftSearchService {
       ).flatten
     }
 
-    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value]): Some[BoolQuery] = {
-      val draftStatuses = Seq("draftStatus.current", "draftStatus.other")
+    private def draftStatusFilter(statuses: Seq[draft.ArticleStatus.Value], includeOthers: Boolean): Some[BoolQuery] = {
       if (statuses.isEmpty) {
         Some(
           boolQuery().not(termQuery("draftStatus.current", ArticleStatus.ARCHIVED.toString))
         )
       } else {
+        val draftStatuses =
+          if (includeOthers) Seq("draftStatus.current", "draftStatus.other")
+          else Seq("draftStatus.current")
+
         Some(
           boolQuery().should(draftStatuses.flatMap(ds => statuses.map(s => termQuery(ds, s.toString))))
         )
