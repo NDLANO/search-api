@@ -161,7 +161,6 @@ trait MultiDraftSearchService {
       val embedResourceAndIdFilter =
         buildNestedEmbedField(settings.embedResource, settings.embedId, settings.language, settings.fallback)
 
-
       val statusFilter = draftStatusFilter(settings.statusFilter, settings.includeOtherStatuses)
       val usersFilter = boolUsersFilter(settings.userFilter)
 
