@@ -895,8 +895,7 @@ class MultiSearchServiceTest
     hits.map(_.id) should be(Seq(10))
   }
 
-  // To be added
-  /*  test("That searches on embedId and embedResource only returns results with an embed matching both params.") {
+  test("That searches on embedId and embedResource only returns results with an embed matching both params.") {
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings.copy(
@@ -907,7 +906,7 @@ class MultiSearchServiceTest
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(11)
-  }*/
+  }
 
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
