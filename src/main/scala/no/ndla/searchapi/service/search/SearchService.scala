@@ -11,7 +11,7 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
 import com.sksamuel.elastic4s.mappings.FieldDefinition
 import com.sksamuel.elastic4s.searches.aggs.Aggregation
-import com.sksamuel.elastic4s.searches.queries.SimpleStringQuery
+import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery, SimpleStringQuery}
 import com.sksamuel.elastic4s.searches.queries.term.TermQuery
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
@@ -79,16 +79,48 @@ trait SearchService {
       }
     }
 
-    def buildTermQueryForField(
-        query: String,
-        field: String,
+    def buildTermQueryForEmbed(
+        path: String,
+        resource: Option[String],
+        id: Option[String],
         language: String,
         fallback: Boolean
     ): List[TermQuery] = {
+      val queries = (resource, id) match {
+        case (Some("") | None, Some("") | None) => List.empty
+        case (Some(q), Some("") | None)         => List(termQuery(s"$path.resource", q))
+        case (Some("") | None, Some(q))         => List(termQuery(s"$path.id", q))
+        case (Some(q1), Some(q2))               => List(termQuery(s"$path.resource", q1), termQuery(s"$path.id", q2))
+      }
+      if (queries.isEmpty) return queries
+      if (language == Language.AllLanguages || fallback) queries else queries :+ termQuery(s"$path.language", language)
+    }
+
+    def buildNestedEmbedField(
+        resource: Option[String],
+        id: Option[String],
+        language: String,
+        fallback: Boolean
+    ): Option[NestedQuery] = {
+      if ((resource == Some("") || resource == None) && (id == Some("") || id == None)) {
+        return None
+      }
       if (language == Language.AllLanguages || fallback) {
-        Language.languageAnalyzers.map(lang => termQuery(s"$field.${lang.lang}.raw", query))
+        Some(
+          nestedQuery("embedResourcesAndIds").query(
+            boolQuery().must(
+              buildTermQueryForEmbed("embedResourcesAndIds", resource, id, language, fallback)
+            )
+          )
+        )
       } else {
-        List(termQuery(s"$field.$language.raw", query))
+        Some(
+          nestedQuery("embedResourcesAndIds").query(
+            boolQuery().must(
+              buildTermQueryForEmbed("embedResourcesAndIds", resource, id, language, fallback)
+            )
+          )
+        )
       }
     }
 

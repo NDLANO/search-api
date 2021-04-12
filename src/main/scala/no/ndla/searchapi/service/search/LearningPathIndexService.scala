@@ -75,7 +75,12 @@ trait LearningPathIndexService {
           ),
           intField("isBasedOn"),
           keywordField("supportedLanguages"),
-          getTaxonomyContextMapping
+          getTaxonomyContextMapping,
+          nestedField("embedResourcesAndIds").fields(
+            keywordField("resource"),
+            keywordField("id"),
+            keywordField("language")
+          )
         ) ++
           generateLanguageSupportedFieldList("title", keepRaw = true) ++
           generateLanguageSupportedFieldList("content") ++

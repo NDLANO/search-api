@@ -11,7 +11,6 @@ import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
 import no.ndla.searchapi.model.domain.article.ArticleMetaImage
-import no.ndla.searchapi.model.search
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.Formats
 
@@ -53,11 +52,15 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
+    val embedResourcesAndIds =
+      List(EmbedValues(resource = Some("test resource 1"), id = Some("test id 1"), language = "nb"))
+
+    // To be removed
     val embedResources = SearchableLanguageList(
       Seq(
         LanguageValue("nb", List("test resource 1", "test resource 2")),
       ))
-
+    // To be removed
     val embedIds = SearchableLanguageList(
       Seq(
         LanguageValue("nb", List("test id 1", "test id 2")),
@@ -85,7 +88,10 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
       embedAttributes = embedAttrs,
+      embedResourcesAndIds = embedResourcesAndIds,
+      // To be removed
       embedResources = embedResources,
+      // To be removed
       embedIds = embedIds
     )
     val json = write(original)
@@ -131,6 +137,9 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         LanguageValue("en", Seq("One english"))
       ))
 
+    val embedResourcesAndIds =
+      List(EmbedValues(resource = Some("test resource 1"), id = Some("test id 1"), language = "nb"))
+
     val embedResources = SearchableLanguageList(
       Seq(
         LanguageValue("nb", List("test resource 1", "test resource 2")),
@@ -170,7 +179,10 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
       embedAttributes = embedAttrs,
+      embedResourcesAndIds = embedResourcesAndIds,
+      // To be removed
       embedResources = embedResources,
+      // To be removed
       embedIds = embedIds
     )
 

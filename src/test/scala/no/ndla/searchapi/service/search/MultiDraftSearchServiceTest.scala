@@ -823,7 +823,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(
           query = Some("Ekstra"),
-          embedResource = Some("concept"),
+          embedResource = Some("image"),
           embedId = Some("55")
         ))
     val hits = results.results
@@ -1047,6 +1047,19 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(12))
+  }
+
+  test("That searches on embedId and embedResource only returns results with an embed matching both params.") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(
+          embedResource = Some("concept"),
+          embedId = Some("222"),
+          language = Language.AllLanguages
+        ))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.id should be(12)
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

@@ -108,6 +108,7 @@ trait SearchConverterService {
       })
     }
 
+    // To be removed
     private[service] def getEmbedResources(html: String): List[String] = {
       parseHtml(html)
         .select("embed")
@@ -115,7 +116,7 @@ trait SearchConverterService {
         .flatMap(getEmbedResources)
         .toList
     }
-
+    // To be removed
     private def getEmbedResources(embed: Element): List[String] = {
       val attributesToKeep = List(
         "data-resource",
@@ -127,7 +128,7 @@ trait SearchConverterService {
           case a  => Some(a)
       })
     }
-
+    // To be removed
     private[service] def getEmbedIds(html: String): List[String] = {
       parseHtml(html)
         .select("embed")
@@ -135,7 +136,7 @@ trait SearchConverterService {
         .flatMap(getEmbedIds)
         .toList
     }
-
+    // To be removed
     private def getEmbedIds(embed: Element): List[String] = {
       val attributesToKeep = List(
         "data-videoid",
@@ -151,6 +152,43 @@ trait SearchConverterService {
       })
     }
 
+    private def getEmbedValuesFromEmbed(embed: Element, language: String): EmbedValues = {
+      EmbedValues(resource = getEmbedResource(embed), id = getEmbedId(embed), language = language)
+    }
+
+    private[service] def getEmbedValues(html: String, language: String): List[EmbedValues] = {
+      parseHtml(html)
+        .select("embed")
+        .asScala
+        .flatMap(embed => Some(getEmbedValuesFromEmbed(embed, language)))
+        .toList
+    }
+
+    private def getEmbedResource(embed: Element): Option[String] = {
+
+      embed.attr("data-resource") match {
+        case "" => None
+        case a  => Some(a)
+      }
+    }
+
+    private def getEmbedId(embed: Element): Option[String] = {
+      val attributesToKeep = List(
+        "data-videoid",
+        "data-url",
+        "data-resource_id",
+        "data-content-id",
+      )
+
+      val attributes = attributesToKeep.map(attr =>
+        embed.attr(attr) match {
+          case "" => None
+          case a  => Some(a)
+      })
+
+      attributes.find(attr => attr.nonEmpty).getOrElse(None)
+    }
+
     private def getAttributesToIndex(content: Seq[ArticleContent],
                                      visualElement: Seq[VisualElement]): SearchableLanguageList = {
       val contentTuples = content.map(c => c.language -> getAttributes(c.content))
@@ -164,6 +202,7 @@ trait SearchConverterService {
       SearchableLanguageList(languageValues.toSeq)
     }
 
+    // To be removed
     private def getEmbedResourcesToIndex(content: Seq[ArticleContent],
                                          visualElement: Seq[VisualElement]): SearchableLanguageList = {
       val contentTuples = content.map(c => c.language -> getEmbedResources(c.content))
@@ -177,6 +216,7 @@ trait SearchConverterService {
       SearchableLanguageList(languageValues.toSeq)
     }
 
+    // To be removed
     private def getEmbedIdsToIndex(content: Seq[ArticleContent],
                                    visualElement: Seq[VisualElement],
                                    metaImage: Seq[ArticleMetaImage]): SearchableLanguageList = {
@@ -192,13 +232,28 @@ trait SearchConverterService {
       SearchableLanguageList(languageValues.toSeq)
     }
 
+    private def getEmbedResourcesAndIdsToIndex(content: Seq[ArticleContent],
+                                               visualElement: Seq[VisualElement],
+                                               metaImage: Seq[ArticleMetaImage]): List[EmbedValues] = {
+      val contentTuples = content.map(c => getEmbedValues(c.content, c.language)).flatten
+      val visualElementTuples = visualElement.map(v => getEmbedValues(v.resource, v.language)).flatten
+      val metaImageTuples =
+        metaImage.map(m => EmbedValues(id = Some(m.imageId), resource = Some("image"), language = m.language))
+      (contentTuples ++ visualElementTuples ++ metaImageTuples).toList
+
+    }
+
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, filterVisibles = true)
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
+      val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
+
+      // To be removed
       val embedResources = getEmbedResourcesToIndex(ai.content, ai.visualElement)
+      // To be removed
       val embedIds = getEmbedIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
 
       val articleWithAgreement = converterService.withAgreementCopyright(ai)
@@ -239,7 +294,10 @@ trait SearchConverterService {
           grepContexts = getGrepContexts(ai.grepCodes, grepBundle),
           traits = traits.toList.distinct,
           embedAttributes = embedAttributes,
+          embedResourcesAndIds = embedResourcesAndIds,
+          // To be removed
           embedResources = embedResources,
+          // To be removed
           embedIds = embedIds
         ))
 
@@ -282,8 +340,13 @@ trait SearchConverterService {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, filterVisibles = false)
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
+      val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
+
+      // To be removed
       val embedResources = getEmbedResourcesToIndex(draft.content, draft.visualElement)
+      // To be removed
       val embedIds = getEmbedIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
+
       val defaultTitle = draft.title
         .sortBy(title => {
           ISO639.languagePriority.reverse.indexOf(title.language)
@@ -339,7 +402,10 @@ trait SearchConverterService {
           grepContexts = getGrepContexts(draft.grepCodes, grepBundle),
           traits = traits.toList.distinct,
           embedAttributes = embedAttributes,
+          embedResourcesAndIds = embedResourcesAndIds,
+          // To be removed
           embedResources = embedResources,
+          // To be removed
           embedIds = embedIds
         ))
 

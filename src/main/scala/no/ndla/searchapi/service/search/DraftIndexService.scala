@@ -64,6 +64,11 @@ trait DraftIndexService {
           textField("grepContexts.title"),
           keywordField("traits"),
           getTaxonomyContextMapping,
+          nestedField("embedResourcesAndIds").fields(
+            keywordField("resource"),
+            keywordField("id"),
+            keywordField("language")
+          ),
           nestedField("metaImage").fields(
             keywordField("imageId"),
             keywordField("altText"),
@@ -77,7 +82,9 @@ trait DraftIndexService {
           generateLanguageSupportedFieldList("introduction") ++
           generateLanguageSupportedFieldList("tags") ++
           generateLanguageSupportedFieldList("embedAttributes") ++
+          // To be removed
           generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
+          // To be removed
           generateLanguageSupportedFieldList("embedIds", keepRaw = true)
       )
     }
