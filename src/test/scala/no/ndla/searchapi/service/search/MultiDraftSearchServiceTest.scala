@@ -1062,6 +1062,23 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     hits.head.id should be(12)
   }
 
+  test("That search on embed id supports embed with multiple id attributes") {
+    val Success(search1) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(embedId = Some("test-image.id"))
+      )
+    val Success(search2) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(embedId = Some("test-image.url"))
+      )
+
+    search1.totalCount should be(1)
+    search1.results.head.id should be(12)
+    search2.totalCount should be(1)
+    search2.results.head.id should be(12)
+
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false

@@ -371,7 +371,7 @@ object TestData {
     title = List(Title("Ekstrastoff", "nb"), Title("extra", "en")),
     content = List(
       ArticleContent(
-        "Helsesøster H5P <p>delt-streng</p><embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\"  /><embed data-resource=\"video\" data-resource_id=\"66\"  /><embed data-resource=\"video\" data-url=\"http://test\"/>",
+        "Helsesøster H5P <p>delt-streng</p><embed data-title=\"Flubber\" data-resource=\"h5p\" data-path=\"/resource/id\"><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\"  /><embed data-resource=\"video\" data-resource_id=\"66\"  /><embed data-resource=\"video\" data-url=\"http://test\" data-resource_id=\"test-id1\"/>",
         "nb"
       ),
       ArticleContent("Header <embed data-resource_id=\"222\" /><embed data-resource=\"concept\" />", "en")
@@ -667,7 +667,7 @@ object TestData {
     metaDescription = List(MetaDescription("", "nb")),
     content = List(
       ArticleContent(
-        "<section><p>artikkeltekst med fire deler</p><embed data-resource=\"concept\" data-resource_id=\"222\" /><embed data-resource=\"image\"  data-url=\"test-image.url\"/><embed data-resource=\"image\" data-resource_id=\"55\"/><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\"  /><embed data-resource=\"video\" data-resource_id=\"66\"  /><embed data-resource=\"video\"  data-url=\"http://test.test\" />",
+        "<section><p>artikkeltekst med fire deler</p><embed data-resource=\"concept\" data-resource_id=\"222\" /><embed data-resource=\"image\" data-resource_id=\"test-image.id\"  data-url=\"test-image.url\"/><embed data-resource=\"image\" data-resource_id=\"55\"/><embed data-resource=\"concept\" data-content-id=\"111\" data-title=\"Flubber\" /><embed data-videoid=\"77\" data-resource=\"video\"  /><embed data-resource=\"video\" data-resource_id=\"66\"  /><embed data-resource=\"video\"  data-url=\"http://test.test\" />",
         "nb"
       )),
     visualElement = List(VisualElement("<embed data-resource_id=\"333\">", "nb")),

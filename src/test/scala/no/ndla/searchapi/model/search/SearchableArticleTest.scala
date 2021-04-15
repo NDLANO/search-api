@@ -53,7 +53,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       ))
 
     val embedResourcesAndIds =
-      List(EmbedValues(resource = Some("test resource 1"), id = Some("test id 1"), language = "nb"))
+      List(EmbedValues(resource = Some("test resource 1"), id = List("test id 1"), language = "nb"))
 
     // To be removed
     val embedResources = SearchableLanguageList(
@@ -138,7 +138,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       ))
 
     val embedResourcesAndIds =
-      List(EmbedValues(resource = Some("test resource 1"), id = Some("test id 1"), language = "nb"))
+      List(EmbedValues(resource = Some("test resource 1"), id = List("test id 1"), language = "nb"))
 
     val embedResources = SearchableLanguageList(
       Seq(
