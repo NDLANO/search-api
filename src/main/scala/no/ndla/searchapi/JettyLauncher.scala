@@ -8,25 +8,21 @@
 
 package no.ndla.searchapi
 
-import java.util
 import com.typesafe.scalalogging.LazyLogging
-
-import javax.servlet.DispatcherType
 import net.bull.javamelody.{MonitoringFilter, Parameter, ReportServlet, SessionListener}
-import no.ndla.searchapi.model.domain.{Content, ReindexResult, RequestInfo}
-import no.ndla.searchapi.service.search.IndexService
+import no.ndla.searchapi.model.domain.{Content, ReindexResult}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{DefaultServlet, FilterHolder, ServletContextHandler}
 import org.scalatra.servlet.ScalatraListener
 
+import java.util
 import java.util.concurrent.Executors
-import scala.collection.immutable.{AbstractSeq, LinearSeq}
+import javax.servlet.DispatcherType
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.io.Source
 import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.{Failure, Success, Try}
-import scala.xml.NodeSeq
 
 object JettyLauncher extends LazyLogging {
 
@@ -58,7 +54,7 @@ object JettyLauncher extends LazyLogging {
     val monitoringFilter = new FilterHolder(new MonitoringFilter())
     monitoringFilter.setInitParameter(Parameter.APPLICATION_NAME.getCode, SearchApiProperties.ApplicationName)
     SearchApiProperties.Environment match {
-      case "local" => None
+      case "local" =>
       case _ =>
         monitoringFilter.setInitParameter(Parameter.CLOUDWATCH_NAMESPACE.getCode,
                                           "NDLA/APP".replace("APP", SearchApiProperties.ApplicationName))
