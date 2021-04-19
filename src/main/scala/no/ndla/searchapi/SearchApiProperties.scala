@@ -15,7 +15,7 @@ import no.ndla.searchapi.model.search.SearchType
 import scala.util.Properties._
 
 object SearchApiProperties extends LazyLogging {
-  val Environment = propOrElse("NDLA_ENVIRONMENT", "local")
+  val Environment: String = propOrElse("NDLA_ENVIRONMENT", "local")
   val ApplicationName = "search-api"
   val Auth0LoginEndpoint = s"https://${AuthUser.getAuth0HostForEnv(Environment)}/authorize"
 
@@ -27,7 +27,7 @@ object SearchApiProperties extends LazyLogging {
   val CorrelationIdKey = "correlationID"
   val CorrelationIdHeader = "X-Correlation-ID"
 
-  lazy val Domain = Domains.get(Environment)
+  lazy val Domain: String = Domains.get(Environment)
 
   val DraftApiUrl: String = s"http://${propOrElse("DRAFT_API_HOST", "draft-api.ndla-local")}"
   val ArticleApiUrl: String = s"http://${propOrElse("ARTICLE_API_HOST", "article-api.ndla-local")}"
@@ -67,11 +67,13 @@ object SearchApiProperties extends LazyLogging {
     "raw-image" -> s"$Domain/image-api/raw/id"
   )
 
-  def booleanProp(key: String) = prop(key).toBoolean
+  def booleanProp(key: String): Boolean = prop(key).toBoolean
 
   def prop(key: String): String = {
     propOrElse(key, throw new RuntimeException(s"Unable to load property $key"))
   }
 
   def propOrElse(key: String, default: => String): String = envOrElse(key, default)
+
+  def booleanOrFalse(key: String): Boolean = propOrElse(key, "false").toBoolean
 }
