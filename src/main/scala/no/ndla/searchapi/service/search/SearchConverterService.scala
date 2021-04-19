@@ -218,8 +218,8 @@ trait SearchConverterService {
     private def getEmbedResourcesAndIdsToIndex(content: Seq[ArticleContent],
                                                visualElement: Seq[VisualElement],
                                                metaImage: Seq[ArticleMetaImage]): List[EmbedValues] = {
-      val contentTuples = content.map(c => getEmbedValues(c.content, c.language)).flatten
-      val visualElementTuples = visualElement.map(v => getEmbedValues(v.resource, v.language)).flatten
+      val contentTuples = content.flatMap(c => getEmbedValues(c.content, c.language))
+      val visualElementTuples = visualElement.flatMap(v => getEmbedValues(v.resource, v.language))
       val metaImageTuples =
         metaImage.map(m => EmbedValues(id = List(m.imageId), resource = Some("image"), language = m.language))
       (contentTuples ++ visualElementTuples ++ metaImageTuples).toList

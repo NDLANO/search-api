@@ -137,7 +137,7 @@ docker / dockerfile := {
     from("adoptopenjdk/openjdk11:alpine-slim")
     run("apk", "--no-cache", "add", "ttf-dejavu")
     add(artifact, artifactTargetPath)
-    entryPoint("java", "-Dorg.scalatra.environment=production", "-Xmx1024M", "-jar", artifactTargetPath)
+    entryPoint("java", "-Dorg.scalatra.environment=production", "-Xmx2G", "-jar", artifactTargetPath)
   }
 }
 
