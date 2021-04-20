@@ -8,7 +8,7 @@
 package no.ndla.searchapi.model.search
 
 case class EmbedValues(
-    id: Option[String],
+    id: List[String],
     resource: Option[String],
     language: String
 )

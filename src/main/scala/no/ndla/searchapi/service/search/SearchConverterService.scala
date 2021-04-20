@@ -136,24 +136,9 @@ trait SearchConverterService {
         .flatMap(getEmbedIds)
         .toList
     }
-    // To be removed
-    private def getEmbedIds(embed: Element): List[String] = {
-      val attributesToKeep = List(
-        "data-videoid",
-        "data-url",
-        "data-resource_id",
-        "data-content-id",
-      )
-
-      attributesToKeep.flatMap(attr =>
-        embed.attr(attr) match {
-          case "" => None
-          case a  => Some(a)
-      })
-    }
 
     private def getEmbedValuesFromEmbed(embed: Element, language: String): EmbedValues = {
-      EmbedValues(resource = getEmbedResource(embed), id = getEmbedId(embed), language = language)
+      EmbedValues(resource = getEmbedResource(embed), id = getEmbedIds(embed), language = language)
     }
 
     private[service] def getEmbedValues(html: String, language: String): List[EmbedValues] = {
@@ -172,7 +157,7 @@ trait SearchConverterService {
       }
     }
 
-    private def getEmbedId(embed: Element): Option[String] = {
+    private def getEmbedIds(embed: Element): List[String] = {
       val attributesToKeep = List(
         "data-videoid",
         "data-url",
@@ -180,13 +165,11 @@ trait SearchConverterService {
         "data-content-id",
       )
 
-      val attributes = attributesToKeep.map(attr =>
+      attributesToKeep.flatMap(attr =>
         embed.attr(attr) match {
           case "" => None
           case a  => Some(a)
       })
-
-      attributes.find(attr => attr.nonEmpty).getOrElse(None)
     }
 
     private def getAttributesToIndex(content: Seq[ArticleContent],
@@ -238,7 +221,7 @@ trait SearchConverterService {
       val contentTuples = content.map(c => getEmbedValues(c.content, c.language)).flatten
       val visualElementTuples = visualElement.map(v => getEmbedValues(v.resource, v.language)).flatten
       val metaImageTuples =
-        metaImage.map(m => EmbedValues(id = Some(m.imageId), resource = Some("image"), language = m.language))
+        metaImage.map(m => EmbedValues(id = List(m.imageId), resource = Some("image"), language = m.language))
       (contentTuples ++ visualElementTuples ++ metaImageTuples).toList
 
     }

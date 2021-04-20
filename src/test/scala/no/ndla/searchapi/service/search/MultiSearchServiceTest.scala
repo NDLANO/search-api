@@ -908,6 +908,23 @@ class MultiSearchServiceTest
     hits.head.id should be(11)
   }
 
+  test("That search on embed id supports embed with multiple id attributes") {
+    val Success(search1) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(embedId = Some("test-id1"))
+      )
+    val Success(search2) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(embedId = Some("http://test"))
+      )
+
+    search1.totalCount should be(1)
+    search1.results.head.id should be(12)
+    search2.totalCount should be(1)
+    search2.results.head.id should be(12)
+
+  }
+
   def blockUntil(predicate: () => Boolean): Unit = {
     var backoff = 0
     var done = false
