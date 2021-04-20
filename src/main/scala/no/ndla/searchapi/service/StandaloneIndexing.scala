@@ -49,8 +49,7 @@ object StandaloneIndexing extends LazyLogging {
 
     implicit val formats: Formats = DefaultFormats
     val errorTitle = s"search-api ${SearchApiProperties.Environment}"
-    val errorBody =
-      s"(Dette er jonas som tester, ignorer dette) Standalone indexing failed with:\n${errors.mkString("\n")}"
+    val errorBody = s"Standalone indexing failed with:\n${errors.mkString("\n")}"
 
     val errorAttachment = SlackAttachment(
       color = "#ff0000",
@@ -117,10 +116,9 @@ object StandaloneIndexing extends LazyLogging {
     }
 
     val errors = reindexResult.collect {
-      case Failure(ex) => {
+      case Failure(ex) =>
         logger.error("Indexing failed...", ex)
         ex.getMessage
-      }
     }
 
     if (errors.nonEmpty) {
