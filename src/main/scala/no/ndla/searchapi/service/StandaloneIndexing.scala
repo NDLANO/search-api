@@ -1,3 +1,9 @@
+/*
+ * Part of NDLA search-api.
+ * Copyright (C) 2021 NDLA
+ *
+ * See LICENSE
+ */
 package no.ndla.searchapi.service
 
 import com.typesafe.scalalogging.LazyLogging
@@ -14,6 +20,10 @@ import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorServic
 import scala.util.{Failure, Success, Try}
 import java.time.Instant
 
+/**
+  * This part of search-api is used for indexing in a separate instance.
+  * If enabled, this will also send a slack message if the indexing fails for any reason.
+  * */
 object StandaloneIndexing extends LazyLogging {
   case class SlackAttachment(
       title: String,
