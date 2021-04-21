@@ -8,6 +8,8 @@
 
 package no.ndla.searchapi.service.search
 
+import com.sksamuel.elastic4s.Indexes
+
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.Executors
@@ -125,7 +127,7 @@ trait IndexService {
         grepBundle: GrepBundle
     )(implicit mf: Manifest[D]): Try[Int] = {
       implicit val executionContext: ExecutionContextExecutorService =
-        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(10))
+        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(3))
 
       val stream = apiClient.getChunks[D]
       val futures = stream
@@ -242,6 +244,7 @@ trait IndexService {
               customExactAnalyzer
             )
             .indexSetting("max_result_window", SearchApiProperties.ElasticSearchIndexMaxResultWindow)
+            .replicas(0)
         }
 
         response match {
@@ -263,6 +266,12 @@ trait IndexService {
       }
     }
 
+    def updateReplicaNumber(indexName: String): Try[_] = {
+      e4sClient.execute {
+        updateSettings(Indexes(indexName), Map("number_of_replicas" -> "1"))
+      }
+    }
+
     def updateAliasTarget(oldIndexName: Option[String], newIndexName: String): Try[Any] = synchronized {
       if (!indexWithNameExists(newIndexName).getOrElse(false)) {
         Failure(new IllegalArgumentException(s"No such index: $newIndexName"))
@@ -277,7 +286,10 @@ trait IndexService {
         e4sClient.execute(aliases(actions)) match {
           case Success(_) =>
             logger.info("Alias target updated successfully, deleting other indexes.")
-            cleanupIndexes()
+            for {
+              _ <- cleanupIndexes()
+              _ <- updateReplicaNumber(newIndexName)
+            } yield ()
           case Failure(ex) =>
             logger.error("Could not update alias target.")
             Failure(ex)

@@ -8,23 +8,35 @@
 
 package no.ndla.searchapi
 
-import java.util
-
 import com.typesafe.scalalogging.LazyLogging
-import javax.servlet.DispatcherType
 import net.bull.javamelody.{MonitoringFilter, Parameter, ReportServlet, SessionListener}
+import no.ndla.searchapi.service.StandaloneIndexing
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{DefaultServlet, FilterHolder, ServletContextHandler}
 import org.scalatra.servlet.ScalatraListener
 
+import java.util
+import javax.servlet.DispatcherType
 import scala.io.Source
 import scala.jdk.CollectionConverters.MapHasAsScala
 
 object JettyLauncher extends LazyLogging {
 
-  def startServer(port: Int): Server = {
+  def main(args: Array[String]): Unit = {
     logger.info(Source.fromInputStream(getClass.getResourceAsStream("/log-license.txt")).mkString)
 
+    val envMap = System.getenv()
+    envMap.asScala.foreach { case (k, v) => System.setProperty(k, v) }
+
+    if (SearchApiProperties.booleanOrFalse("STANDALONE_INDEXING_ENABLED")) {
+      StandaloneIndexing.doStandaloneIndexing()
+    } else {
+      val server = startServer(SearchApiProperties.ApplicationPort)
+      server.join()
+    }
+  }
+
+  def startServer(port: Int): Server = {
     val startMillis = System.currentTimeMillis()
 
     val context = new ServletContextHandler()
@@ -38,7 +50,7 @@ object JettyLauncher extends LazyLogging {
     val monitoringFilter = new FilterHolder(new MonitoringFilter())
     monitoringFilter.setInitParameter(Parameter.APPLICATION_NAME.getCode, SearchApiProperties.ApplicationName)
     SearchApiProperties.Environment match {
-      case "local" => None
+      case "local" =>
       case _ =>
         monitoringFilter.setInitParameter(Parameter.CLOUDWATCH_NAMESPACE.getCode,
                                           "NDLA/APP".replace("APP", SearchApiProperties.ApplicationName))
@@ -55,11 +67,4 @@ object JettyLauncher extends LazyLogging {
     server
   }
 
-  def main(args: Array[String]): Unit = {
-    val envMap = System.getenv()
-    envMap.asScala.foreach { case (k, v) => System.setProperty(k, v) }
-
-    val server = startServer(SearchApiProperties.ApplicationPort)
-    server.join()
-  }
 }
