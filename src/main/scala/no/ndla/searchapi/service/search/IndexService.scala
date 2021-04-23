@@ -419,8 +419,10 @@ trait IndexService {
           keywordField("path"),
           keywordField("contextType"),
           keywordField("subjectId"),
-          keywordField("parentTopicIds")
+          keywordField("parentTopicIds"),
+          keywordField("relevanceId")
         ) ++
+          generateLanguageSupportedFieldList("relevance") ++
           generateLanguageSupportedFieldList("subject", keepRaw = true) ++
           generateLanguageSupportedFieldList("breadcrumbs") ++
           List(

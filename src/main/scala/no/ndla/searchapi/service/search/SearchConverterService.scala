@@ -60,7 +60,7 @@ trait SearchConverterService {
 
     def getArticleTraits(contents: Seq[ArticleContent]): Seq[String] = {
       contents.flatMap(content => {
-        var traits = ListBuffer[String]()
+        val traits = ListBuffer[String]()
         parseHtml(content.content)
           .select("embed")
           .forEach(embed => {
@@ -724,11 +724,13 @@ trait SearchConverterService {
       })
 
       val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
+      val relevance = findByLanguageOrBestEffort(context.relevance.languageValues, language).map(_.value).getOrElse("")
 
       ApiTaxonomyContext(
         id = context.id,
         subject = subjectName,
         subjectId = context.subjectId,
+        relevance = relevance,
         path = context.path,
         breadcrumbs = breadcrumbs,
         filters = filters,
@@ -889,6 +891,17 @@ trait SearchConverterService {
                 val contextFilters =
                   getFilters(resource, subject, bundle, bundle.resourceFilterConnections, filterVisibles)
                 val pathIds = (resource.id +: topicPath :+ subject.id).reverse
+                val relevanceId =
+                  subjectConnections
+                    .find(sc => sc.subjectid == subject.id)
+                    .get
+                    .relevanceId
+                    .getOrElse("urn:relevance:core")
+                val relevanceName = bundle.relevances
+                  .find(r => r.id == relevanceId)
+                  .map(_.name)
+                  .getOrElse("")
+                val relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName)))
 
                 // One context per filter, but one for subject if no filters.
                 if (contextFilters.isEmpty) {
@@ -896,6 +909,8 @@ trait SearchConverterService {
                     getSearchableTaxonomyContext(resource.id,
                                                  pathIds,
                                                  subject,
+                                                 relevanceId,
+                                                 relevance,
                                                  contextType,
                                                  List.empty,
                                                  resourceTypesWithParents,
@@ -906,6 +921,8 @@ trait SearchConverterService {
                       getSearchableTaxonomyContext(resource.id,
                                                    pathIds,
                                                    subject,
+                                                   relevanceId,
+                                                   relevance,
                                                    contextType,
                                                    List(cf),
                                                    resourceTypesWithParents,
@@ -921,6 +938,8 @@ trait SearchConverterService {
     private def getSearchableTaxonomyContext(taxonomyId: String,
                                              pathIds: List[String],
                                              subject: TaxSubject,
+                                             relevanceId: String,
+                                             relevance: SearchableLanguageValues,
                                              contextType: LearningResourceType.Value,
                                              contextFilters: List[SearchableTaxonomyFilter],
                                              resourceTypes: List[ResourceType],
@@ -951,6 +970,8 @@ trait SearchConverterService {
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
         filters = contextFilters,
+        relevanceId = relevanceId,
+        relevance = relevance,
         resourceTypes = searchableResourceTypes,
         parentTopicIds = parentTopics
       )
@@ -987,9 +1008,13 @@ trait SearchConverterService {
     private def getTopicTaxonomyContexts(topic: Topic,
                                          filterVisibles: Boolean,
                                          bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
-      val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == topic.id)
-      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id)) :+ topic
-      val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
+      val parentTopicsConnections = bundle.topicSubtopicConnections.filter(_.subtopicid == topic.id)
+      val parentTopicsAndPaths = getParentTopicsAndPaths(topic, bundle, List(topic.id))
+
+      val relevanceIds = parentTopicsConnections.length match {
+        case 0 => bundle.subjectTopicConnections.filter(_.topicid == topic.id).map(tc => tc.relevanceId.getOrElse("urn:relevance:core"))
+        case _ => parentTopicsConnections.map(tc => tc.relevanceId.getOrElse("urn:relevance:core"))
+      }
 
       val resourceTypeConnections = bundle.topicResourceTypeConnections.filter(_.topicId == topic.id)
       val resourceTypesWithParents = getConnectedResourceTypesWithParents(resourceTypeConnections, bundle)
@@ -1010,6 +1035,12 @@ trait SearchConverterService {
               visibleSubjects.flatMap(subject => {
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections, filterVisibles)
                 val pathIds = (topicPath :+ subject.id).reverse
+                val relevanceId = relevanceIds.head
+                val relevanceName = bundle.relevances
+                  .find(r => r.id == relevanceId)
+                  .map(_.name)
+                  .getOrElse("")
+                val relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName)))
 
                 // One context per filter, but one for subject if no filters.
                 if (contextFilters.isEmpty) {
@@ -1017,6 +1048,8 @@ trait SearchConverterService {
                     getSearchableTaxonomyContext(topic.id,
                                                  pathIds,
                                                  subject,
+                                                 relevanceId,
+                                                 relevance,
                                                  contextType,
                                                  List.empty,
                                                  resourceTypesWithParents,
@@ -1027,6 +1060,8 @@ trait SearchConverterService {
                       getSearchableTaxonomyContext(topic.id,
                                                    pathIds,
                                                    subject,
+                                                   relevanceId,
+                                                   relevance,
                                                    contextType,
                                                    List(cf),
                                                    resourceTypesWithParents,
