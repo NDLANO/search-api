@@ -1012,7 +1012,10 @@ trait SearchConverterService {
       val parentTopicsAndPaths = getParentTopicsAndPaths(topic, bundle, List(topic.id))
 
       val relevanceIds = parentTopicsConnections.length match {
-        case 0 => bundle.subjectTopicConnections.filter(_.topicid == topic.id).map(tc => tc.relevanceId.getOrElse("urn:relevance:core"))
+        case 0 =>
+          bundle.subjectTopicConnections
+            .filter(_.topicid == topic.id)
+            .map(tc => tc.relevanceId.getOrElse("urn:relevance:core"))
         case _ => parentTopicsConnections.map(tc => tc.relevanceId.getOrElse("urn:relevance:core"))
       }
 
