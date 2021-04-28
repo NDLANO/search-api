@@ -10,6 +10,7 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.MappingDefinition
+import com.sksamuel.elastic4s.mappings.dynamictemplate.DynamicMapping
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyApiClient}
@@ -46,47 +47,49 @@ trait DraftIndexService {
     }
 
     def getMapping: MappingDefinition = {
-      mapping(documentType).fields(
-        List(
-          intField("id"),
-          keywordField("draftStatus.current"),
-          keywordField("draftStatus.other"),
-          dateField("lastUpdated"),
-          keywordField("license"),
-          keywordField("defaultTitle"),
-          textField("authors"),
-          keywordField("articleType"),
-          keywordField("supportedLanguages"),
-          textField("notes"),
-          textField("previousVersionsNotes"),
-          keywordField("users"),
-          keywordField("grepContexts.code"),
-          textField("grepContexts.title"),
-          keywordField("traits"),
-          getTaxonomyContextMapping,
-          nestedField("embedResourcesAndIds").fields(
-            keywordField("resource"),
-            keywordField("id"),
-            keywordField("language")
-          ),
-          nestedField("metaImage").fields(
-            keywordField("imageId"),
-            keywordField("altText"),
-            keywordField("language")
-          )
-        ) ++
-          generateLanguageSupportedFieldList("title", keepRaw = true) ++
-          generateLanguageSupportedFieldList("metaDescription") ++
-          generateLanguageSupportedFieldList("content") ++
-          generateLanguageSupportedFieldList("visualElement") ++
-          generateLanguageSupportedFieldList("introduction") ++
-          generateLanguageSupportedFieldList("tags") ++
-          generateLanguageSupportedFieldList("embedAttributes") ++
-          // To be removed
-          generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
-          // To be removed
-          generateLanguageSupportedFieldList("embedIds", keepRaw = true)
-      )
+      mapping(documentType)
+        .dynamic(DynamicMapping.Strict)
+        .fields(
+          List(
+            intField("id"),
+            keywordField("draftStatus.current"),
+            keywordField("draftStatus.other"),
+            dateField("lastUpdated"),
+            keywordField("license"),
+            keywordField("defaultTitle"),
+            textField("authors"),
+            keywordField("articleType"),
+            keywordField("supportedLanguages"),
+            textField("notes"),
+            textField("previousVersionsNotes"),
+            keywordField("users"),
+            keywordField("grepContexts.code"),
+            textField("grepContexts.title"),
+            keywordField("traits"),
+            getTaxonomyContextMapping,
+            nestedField("embedResourcesAndIds").fields(
+              keywordField("resource"),
+              keywordField("id"),
+              keywordField("language")
+            ),
+            nestedField("metaImage").fields(
+              keywordField("imageId"),
+              keywordField("altText"),
+              keywordField("language")
+            )
+          ) ++
+            generateLanguageSupportedFieldList("title", keepRaw = true) ++
+            generateLanguageSupportedFieldList("metaDescription") ++
+            generateLanguageSupportedFieldList("content") ++
+            generateLanguageSupportedFieldList("visualElement") ++
+            generateLanguageSupportedFieldList("introduction") ++
+            generateLanguageSupportedFieldList("tags") ++
+            generateLanguageSupportedFieldList("embedAttributes") ++
+            // To be removed
+            generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
+            // To be removed
+            generateLanguageSupportedFieldList("embedIds", keepRaw = true)
+        )
     }
   }
 

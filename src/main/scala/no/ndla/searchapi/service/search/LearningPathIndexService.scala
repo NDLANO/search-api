@@ -10,6 +10,7 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings._
+import com.sksamuel.elastic4s.mappings.dynamictemplate.DynamicMapping
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.LearningPathApiClient
@@ -45,48 +46,50 @@ trait LearningPathIndexService {
     }
 
     def getMapping: MappingDefinition = {
-      mapping(documentType).fields(
-        List(
-          intField("id"),
-          textField("coverPhotoUrl"),
-          intField("duration"),
-          textField("status"),
-          textField("verificationStatus"),
-          dateField("lastUpdated"),
-          keywordField("defaultTitle"),
-          textField("authors"),
-          nestedField("learningsteps").fields(
-            List(
-              textField("stepType")
-            ) ++
-              generateLanguageSupportedFieldList("title") ++
-              generateLanguageSupportedFieldList("description")
-          ),
-          objectField("copyright").fields(
-            objectField("license").fields(
-              textField("license"),
-              textField("description"),
-              textField("url")
+      mapping(documentType)
+        .dynamic(DynamicMapping.Strict)
+        .fields(
+          List(
+            intField("id"),
+            textField("coverPhotoUrl"),
+            intField("duration"),
+            textField("status"),
+            textField("verificationStatus"),
+            dateField("lastUpdated"),
+            keywordField("defaultTitle"),
+            textField("authors"),
+            nestedField("learningsteps").fields(
+              List(
+                textField("stepType")
+              ) ++
+                generateLanguageSupportedFieldList("title") ++
+                generateLanguageSupportedFieldList("description")
             ),
-            nestedField("contributors").fields(
-              textField("type"),
-              textField("name")
+            objectField("copyright").fields(
+              objectField("license").fields(
+                textField("license"),
+                textField("description"),
+                textField("url")
+              ),
+              nestedField("contributors").fields(
+                textField("type"),
+                textField("name")
+              )
+            ),
+            intField("isBasedOn"),
+            keywordField("supportedLanguages"),
+            getTaxonomyContextMapping,
+            nestedField("embedResourcesAndIds").fields(
+              keywordField("resource"),
+              keywordField("id"),
+              keywordField("language")
             )
-          ),
-          intField("isBasedOn"),
-          keywordField("supportedLanguages"),
-          getTaxonomyContextMapping,
-          nestedField("embedResourcesAndIds").fields(
-            keywordField("resource"),
-            keywordField("id"),
-            keywordField("language")
-          )
-        ) ++
-          generateLanguageSupportedFieldList("title", keepRaw = true) ++
-          generateLanguageSupportedFieldList("content") ++
-          generateLanguageSupportedFieldList("description") ++
-          generateLanguageSupportedFieldList("tags", keepRaw = true)
-      )
+          ) ++
+            generateLanguageSupportedFieldList("title", keepRaw = true) ++
+            generateLanguageSupportedFieldList("content") ++
+            generateLanguageSupportedFieldList("description") ++
+            generateLanguageSupportedFieldList("tags", keepRaw = true)
+        )
     }
   }
 
