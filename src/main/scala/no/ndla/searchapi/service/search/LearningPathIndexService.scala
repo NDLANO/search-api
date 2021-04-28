@@ -51,7 +51,7 @@ trait LearningPathIndexService {
         .fields(
           List(
             intField("id"),
-            textField("coverPhotoUrl"),
+            textField("coverPhotoId"),
             intField("duration"),
             textField("status"),
             textField("verificationStatus"),
