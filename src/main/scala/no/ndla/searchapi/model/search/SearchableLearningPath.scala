@@ -22,9 +22,11 @@ case class SearchableLearningPath(
     defaultTitle: Option[String],
     tags: SearchableLanguageList,
     learningsteps: List[SearchableLearningStep],
-    license: Copyright,
+    license: String,
+    copyright: Copyright,
     isBasedOn: Option[Long],
     supportedLanguages: List[String],
     authors: List[String],
-    contexts: List[SearchableTaxonomyContext]
+    contexts: List[SearchableTaxonomyContext],
+    embedResourcesAndIds: List[EmbedValues],
 )

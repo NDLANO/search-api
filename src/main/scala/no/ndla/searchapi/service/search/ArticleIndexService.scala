@@ -10,6 +10,7 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings._
+import com.sksamuel.elastic4s.mappings.dynamictemplate.DynamicMapping
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.ArticleApiClient
@@ -45,44 +46,46 @@ trait ArticleIndexService {
     }
 
     def getMapping: MappingDefinition = {
-      mapping(documentType).fields(
-        List(
-          longField("id"),
-          keywordField("defaultTitle"),
-          dateField("lastUpdated"),
-          keywordField("license"),
-          textField("authors"),
-          keywordField("articleType"),
-          keywordField("supportedLanguages"),
-          keywordField("grepContexts.code"),
-          textField("grepContexts.title"),
-          keywordField("traits"),
-          getTaxonomyContextMapping,
-          nestedField("embedResourcesAndIds").fields(
-            keywordField("resource"),
-            keywordField("id"),
-            keywordField("language")
-          ),
-          nestedField("metaImage").fields(
-            keywordField("imageId"),
-            keywordField("altText"),
-            keywordField("language")
-          ),
+      mapping(documentType)
+        .dynamic(DynamicMapping.Strict)
+        .fields(
+          List(
+            longField("id"),
+            keywordField("defaultTitle"),
+            dateField("lastUpdated"),
+            keywordField("license"),
+            textField("authors"),
+            keywordField("articleType"),
+            keywordField("supportedLanguages"),
+            keywordField("grepContexts.code"),
+            textField("grepContexts.title"),
+            keywordField("traits"),
+            getTaxonomyContextMapping,
+            nestedField("embedResourcesAndIds").fields(
+              keywordField("resource"),
+              keywordField("id"),
+              keywordField("language")
+            ),
+            nestedField("metaImage").fields(
+              keywordField("imageId"),
+              keywordField("altText"),
+              keywordField("language")
+            ),
+          )
+            ++
+              generateLanguageSupportedFieldList("title", keepRaw = true) ++
+            generateLanguageSupportedFieldList("metaDescription") ++
+            generateLanguageSupportedFieldList("content") ++
+            generateLanguageSupportedFieldList("visualElement") ++
+            generateLanguageSupportedFieldList("introduction") ++
+            generateLanguageSupportedFieldList("metaDescription") ++
+            generateLanguageSupportedFieldList("tags") ++
+            generateLanguageSupportedFieldList("embedAttributes") ++
+            // To be removed
+            generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
+            // To be removed
+            generateLanguageSupportedFieldList("embedIds", keepRaw = true)
         )
-          ++
-            generateLanguageSupportedFieldList("title", keepRaw = true) ++
-          generateLanguageSupportedFieldList("metaDescription") ++
-          generateLanguageSupportedFieldList("content") ++
-          generateLanguageSupportedFieldList("visualElement") ++
-          generateLanguageSupportedFieldList("introduction") ++
-          generateLanguageSupportedFieldList("metaDescription") ++
-          generateLanguageSupportedFieldList("tags") ++
-          generateLanguageSupportedFieldList("embedAttributes") ++
-          // To be removed
-          generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
-          // To be removed
-          generateLanguageSupportedFieldList("embedIds", keepRaw = true)
-      )
     }
   }
 
