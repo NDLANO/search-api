@@ -313,7 +313,8 @@ trait SearchConverterService {
           isBasedOn = lp.isBasedOn,
           supportedLanguages = supportedLanguages,
           authors = lp.copyright.contributors.map(_.name).toList,
-          contexts = taxonomyForLearningPath.getOrElse(List.empty)
+          contexts = taxonomyForLearningPath.getOrElse(List.empty),
+          embedResourcesAndIds = List.empty
         ))
     }
 

@@ -8,7 +8,6 @@
 package no.ndla.searchapi.model.search
 
 import no.ndla.searchapi.model.api.learningpath.{Author, Copyright, License}
-import no.ndla.searchapi.model.domain.article.LearningResourceType
 import no.ndla.searchapi.model.domain.learningpath.{LearningPathStatus, LearningPathVerificationStatus, StepType}
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.searchapi.TestData._
@@ -71,7 +70,8 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
       isBasedOn = Some(1001),
       supportedLanguages = List("nb", "en", "nn"),
       authors = List("Yap"),
-      contexts = searchableTaxonomyContexts
+      contexts = searchableTaxonomyContexts,
+      embedResourcesAndIds = List.empty
     )
 
     val json = write(original)
