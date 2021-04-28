@@ -309,7 +309,8 @@ trait SearchConverterService {
           defaultTitle = defaultTitle.map(_.title),
           tags = SearchableLanguageList(lp.tags.map(tag => LanguageValue(tag.language, tag.tags))),
           learningsteps = lp.learningsteps.map(asSearchableLearningStep),
-          license = license,
+          copyright = license,
+          license = lp.copyright.license,
           isBasedOn = lp.isBasedOn,
           supportedLanguages = supportedLanguages,
           authors = lp.copyright.contributors.map(_.name).toList,
@@ -550,7 +551,7 @@ trait SearchConverterService {
         searchableLearningPath.status,
         searchableLearningPath.lastUpdated,
         tag,
-        searchableLearningPath.license,
+        searchableLearningPath.copyright,
         searchableLearningPath.supportedLanguages,
         searchableLearningPath.isBasedOn
       )

@@ -65,13 +65,14 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
       defaultTitle = Some("Christian Tut"),
       tags = tags,
       learningsteps = learningsteps,
-      license = Copyright(License("by-sa", Some("bysasaa"), None),
-                          Seq(Author("Supplier", "Jonas"), Author("Originator", "Kakemonsteret"))),
+      copyright = Copyright(License("by-sa", Some("bysasaa"), None),
+                            Seq(Author("Supplier", "Jonas"), Author("Originator", "Kakemonsteret"))),
       isBasedOn = Some(1001),
       supportedLanguages = List("nb", "en", "nn"),
       authors = List("Yap"),
       contexts = searchableTaxonomyContexts,
-      embedResourcesAndIds = List.empty
+      embedResourcesAndIds = List.empty,
+      license = "by-sa"
     )
 
     val json = write(original)

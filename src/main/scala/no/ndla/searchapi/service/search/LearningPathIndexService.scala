@@ -58,6 +58,7 @@ trait LearningPathIndexService {
             dateField("lastUpdated"),
             keywordField("defaultTitle"),
             textField("authors"),
+            keywordField("license"),
             nestedField("learningsteps").fields(
               List(
                 textField("stepType")
