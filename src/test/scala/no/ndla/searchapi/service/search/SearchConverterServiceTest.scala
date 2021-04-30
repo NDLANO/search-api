@@ -12,6 +12,7 @@ import no.ndla.searchapi.model.domain.article.{Article, ArticleContent}
 import no.ndla.searchapi.model.domain.{Tag, Title}
 import no.ndla.searchapi.model.grep.{GrepElement, GrepTitle}
 import no.ndla.searchapi.model.search.{
+  ArticleTrait,
   SearchableArticle,
   SearchableGrepContext,
   SearchableLanguageList,
@@ -413,7 +414,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
     val Success(searchableArticle) =
       searchConverterService.asSearchableArticle(article, emptyBundle, TestData.emptyGrepBundle)
-    searchableArticle.traits should equal(List("H5P"))
+    searchableArticle.traits should equal(List(ArticleTrait.H5P.toString))
 
     val article2 =
       TestData.emptyDomainArticle.copy(
@@ -429,7 +430,19 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
     val Success(searchableArticle2) =
       searchConverterService.asSearchableArticle(article2, emptyBundle, TestData.emptyGrepBundle)
-    searchableArticle2.traits should equal(List("H5P", "VIDEO"))
+    searchableArticle2.traits should equal(List(ArticleTrait.H5P.toString, ArticleTrait.VIDEO.toString))
+
+    val article3 =
+      TestData.emptyDomainArticle.copy(
+        id = Some(99),
+        content = Seq(
+          ArticleContent("Høre på podkast i dag? <embed data-resource=\"audio\" data-type=\"podcast\" data-id=\"22\">",
+                         "nb"))
+      )
+
+    val Success(searchableArticle3) =
+      searchConverterService.asSearchableArticle(article3, emptyBundle, TestData.emptyGrepBundle)
+    searchableArticle3.traits should equal(List(ArticleTrait.PODCAST.toString))
   }
 
   test("That extracting attributes extracts data-title but not all attributes") {

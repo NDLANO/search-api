@@ -58,23 +58,26 @@ trait SearchConverterService {
       document.body()
     }
 
-    def getArticleTraits(contents: Seq[ArticleContent]): Seq[String] = {
+    def getArticleTraits(contents: Seq[ArticleContent]): Seq[ArticleTrait.Value] = {
       contents.flatMap(content => {
-        var traits = ListBuffer[String]()
+        val traits = ListBuffer[ArticleTrait.Value]()
         parseHtml(content.content)
           .select("embed")
           .forEach(embed => {
             val dataResource = embed.attr("data-resource")
             dataResource match {
-              case "h5p"                => traits += "H5P"
-              case "brightcove" | "nrk" => traits += "VIDEO"
+              case "h5p"                => traits += ArticleTrait.H5P
+              case "brightcove" | "nrk" => traits += ArticleTrait.VIDEO
               case "external" | "iframe" =>
                 val dataUrl = embed.attr("data-url")
                 if (dataUrl.contains("youtu") || dataUrl.contains("vimeo") || dataUrl
                       .contains("filmiundervisning") || dataUrl.contains("imdb") || dataUrl
                       .contains("nrk") || dataUrl.contains("khanacademy")) {
-                  traits += "VIDEO"
+                  traits += ArticleTrait.VIDEO
                 }
+              case "audio" =>
+                val dataType = embed.attr("data-type")
+                if (dataType == "podcast") traits += ArticleTrait.PODCAST
               case _ => // Do nothing
             }
           })
@@ -230,7 +233,7 @@ trait SearchConverterService {
                             taxonomyBundle: TaxonomyBundle,
                             grepBundle: GrepBundle): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, filterVisibles = true)
-      val traits = getArticleTraits(ai.content)
+      val traits = getArticleTraits(ai.content).map(_.toString)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
       val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(ai.content, ai.visualElement, ai.metaImage)
 
@@ -323,7 +326,7 @@ trait SearchConverterService {
                           taxonomyBundle: TaxonomyBundle,
                           grepBundle: GrepBundle): Try[SearchableDraft] = {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, filterVisibles = false)
-      val traits = getArticleTraits(draft.content)
+      val traits = getArticleTraits(draft.content).map(_.toString)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
       val embedResourcesAndIds = getEmbedResourcesAndIdsToIndex(draft.content, draft.visualElement, draft.metaImage)
 

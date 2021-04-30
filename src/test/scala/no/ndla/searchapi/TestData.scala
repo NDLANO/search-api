@@ -822,6 +822,7 @@ object TestData {
   val learningPath6: LearningPath = DefaultLearningPath.copy(
     id = Some(KekId),
     title = List(Title("Kek", "en")),
+    coverPhotoId = Some("1"),
     description = List(Description("This is kek", "en")),
     duration = Some(5),
     lastUpdated = today.minusDays(7),
