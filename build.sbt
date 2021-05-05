@@ -14,6 +14,8 @@ val Elastic4sVersion = "6.7.8"
 val JacksonVersion = "2.12.1"
 val ElasticsearchVersion = "6.8.13"
 val Json4SVersion = "3.6.7"
+val PostgresVersion = "42.2.20"
+val HikariConnectionPoolVersion = "4.0.3"
 
 val appProperties = settingKey[Properties]("The application properties")
 
@@ -92,7 +94,10 @@ lazy val search_api = (project in file("."))
       "io.lemonlabs" %% "scala-uri" % "1.5.1",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
       "org.mockito" %% "mockito-scala" % MockitoVersion % "test",
-      "org.mockito" %% "mockito-scala-scalatest" % MockitoVersion % "test"
+      "org.mockito" %% "mockito-scala-scalatest" % MockitoVersion % "test",
+      "org.scalikejdbc" %% "scalikejdbc" % "3.5.0",
+      "org.postgresql" % "postgresql" % PostgresVersion,
+      "com.zaxxer" % "HikariCP" % HikariConnectionPoolVersion,
     ) ++ vulnerabilityOverrides
   )
   .enablePlugins(DockerPlugin)

@@ -31,6 +31,7 @@ trait Elastic4sClient {
 
 case class NdlaE4sClient(client: ElasticClient) {
 
+  // TODO: Consider not creating execution context here, it might be expensive?
   def execute[T, U](request: T)(implicit handler: Handler[T, U], mf: Manifest[U]): Try[RequestSuccess[U]] = {
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor)
     val response = Await

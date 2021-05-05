@@ -9,13 +9,16 @@
 package no.ndla.searchapi
 
 import com.typesafe.scalalogging.LazyLogging
+import com.zaxxer.hikari.HikariDataSource
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.SearchApiProperties._
 import no.ndla.searchapi.auth.User
+import no.ndla.searchapi.repository.{ArticleRepository, DraftRepository, LearningpathRepository}
 import no.ndla.searchapi.service.search._
 import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients, search}
+import scalikejdbc.{ConnectionPool, DataSourceConnectionPool}
 
 object ComponentRegistry
     extends ArticleApiClient
@@ -43,7 +46,11 @@ object ComponentRegistry
     with InternController
     with User
     with SearchApiClient
-    with GrepApiClient {
+    with GrepApiClient
+    with DataSources
+    with ArticleRepository
+    with DraftRepository
+    with LearningpathRepository {
   implicit val swagger = new SearchSwagger
 
   lazy val searchController = new SearchController
@@ -79,4 +86,21 @@ object ComponentRegistry
   lazy val multiDraftSearchService = new MultiDraftSearchService
 
   lazy val user = new User
+
+  lazy val articleRepository = new ArticleRepository
+  lazy val draftRepository = new DraftRepository
+  lazy val learningpathRepository = new LearningpathRepository
+
+  override val articleApiDataSource: HikariDataSource = DataSource.ArticleApiDataSource
+  override val draftApiDataSource: HikariDataSource = DataSource.DraftApiDataSource
+  override val learningpathApiDataSource: HikariDataSource = DataSource.LearningpathApiDataSource
+
+  def connectToDatabases(): Unit = {
+    ConnectionPool.singleton(new DataSourceConnectionPool(articleApiDataSource))
+//    ConnectionPool.add(Symbol("article-api"), new DataSourceConnectionPool(articleApiDataSource))
+//    ConnectionPool.add(Symbol("draft-api"), new DataSourceConnectionPool(draftApiDataSource))
+//    ConnectionPool.add(Symbol("learningpath-api"), new DataSourceConnectionPool(learningpathApiDataSource))
+  }
+
+  connectToDatabases()
 }

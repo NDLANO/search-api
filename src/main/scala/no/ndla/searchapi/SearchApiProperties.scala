@@ -76,4 +76,42 @@ object SearchApiProperties extends LazyLogging {
   def propOrElse(key: String, default: => String): String = envOrElse(key, default)
 
   def booleanOrFalse(key: String): Boolean = propOrElse(key, "false").toBoolean
+
+  object DatabaseDetails {
+    sealed trait DatabaseDetails {
+      val username: String
+      val password: String
+      val server: String
+      val port: String
+      val database: String
+      val schema: String
+    }
+
+    object ArticleApi extends DatabaseDetails {
+      val username: String = prop("ARTICLE_API_META_USER_NAME")
+      val password: String = prop("ARTICLE_API_META_PASSWORD")
+      val server: String = prop("ARTICLE_API_META_SERVER")
+      val port: String = prop("ARTICLE_API_META_PORT")
+      val database: String = prop("ARTICLE_API_META_RESOURCE")
+      val schema: String = prop("ARTICLE_API_META_SCHEMA")
+    }
+
+    object DraftApi extends DatabaseDetails {
+      val username: String = prop("DRAFT_API_META_USER_NAME")
+      val password: String = prop("DRAFT_API_META_PASSWORD")
+      val server: String = prop("DRAFT_API_META_SERVER")
+      val port: String = prop("DRAFT_API_META_PORT")
+      val database: String = prop("DRAFT_API_META_RESOURCE")
+      val schema: String = prop("DRAFT_API_META_SCHEMA")
+    }
+
+    object LearningpathApi extends DatabaseDetails {
+      val username: String = prop("LEARNINGPATH_API_META_USER_NAME")
+      val password: String = prop("LEARNINGPATH_API_META_PASSWORD")
+      val server: String = prop("LEARNINGPATH_API_META_SERVER")
+      val port: String = prop("LEARNINGPATH_API_META_PORT")
+      val database: String = prop("LEARNINGPATH_API_META_RESOURCE")
+      val schema: String = prop("LEARNINGPATH_API_META_SCHEMA")
+    }
+  }
 }

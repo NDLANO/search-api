@@ -28,16 +28,19 @@ import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.IndexBulkSize
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api.ElasticIndexingException
 import no.ndla.searchapi.model.domain.Language.languageAnalyzers
 import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
+import no.ndla.searchapi.repository.Repository
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
+import math.max
 
 trait IndexService {
   this: Elastic4sClient with SearchApiClient with TaxonomyApiClient with GrepApiClient =>
@@ -46,6 +49,7 @@ trait IndexService {
     val apiClient: SearchApiClient
     val documentType: String
     val searchIndex: String
+    val repository: Repository[D]
 
     val shingle: ShingleTokenFilter =
       ShingleTokenFilter(name = "shingle", minShingleSize = Some(2), maxShingleSize = Some(3))
@@ -126,27 +130,72 @@ trait IndexService {
         taxonomyBundle: TaxonomyBundle,
         grepBundle: GrepBundle
     )(implicit mf: Manifest[D]): Try[Int] = {
+//      implicit val executionContext: ExecutionContextExecutorService =
+//        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(3))
+//
+//      val stream = apiClient.getChunks[D]
+//      val futures = stream
+//        .map(_.flatMap {
+//          case Failure(ex) => Future.successful(Failure(ex))
+//          case Success(c) =>
+//            indexDocuments(c, indexName, taxonomyBundle, grepBundle).map(numIndexed =>
+//              Success(numIndexed.getOrElse(0), c.size))
+//
+//        })
+//        .toList
+//
+//      val chunks = Await.result(Future.sequence(futures), Duration.Inf)
+//      executionContext.shutdown()
+//
+//      chunks.collect { case Failure(ex) => Failure(ex) } match {
+//        case Nil =>
+//          val successfulChunks = chunks.collect {
+//            case Success((chunkIndexed, chunkSize)) =>
+//              (chunkIndexed, chunkSize)
+//          }
+//
+//          val (count, totalCount) = successfulChunks.foldLeft((0, 0)) {
+//            case ((totalIndexed, totalSize), (chunkIndexed, chunkSize)) =>
+//              (totalIndexed + chunkIndexed, totalSize + chunkSize)
+//          }
+//
+//          logger.info(s"$count/$totalCount documents ($documentType) were indexed successfully.")
+//          Success(totalCount)
+//
+//        case notEmpty => notEmpty.head
+//      }
+
       implicit val executionContext: ExecutionContextExecutorService =
         ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(3))
 
-      val stream = apiClient.getChunks[D]
-      val futures = stream
-        .map(_.flatMap {
-          case Failure(ex) => Future.successful(Failure(ex))
-          case Success(c) =>
-            indexDocuments(c, indexName, taxonomyBundle, grepBundle).map(numIndexed =>
-              Success(numIndexed.getOrElse(0), c.size))
+      val pageSize = IndexBulkSize
+      val numPages = repository.pageCount(pageSize)
+      val pages = Seq.range(1, numPages + 1)
 
+      val iterator: Iterator[Seq[D]] = pages.iterator.map(p => {
+        val (safePageNo, safePageSize) = (max(p, 1), max(pageSize, 0))
+        val results = repository.getByPage(safePageSize, (safePageNo - 1) * safePageSize)
+        results
+      })
+
+      val indexed = iterator
+        .map(chunk => {
+          indexDocuments(
+            chunk,
+            indexName,
+            taxonomyBundle,
+            grepBundle
+          ).map(numIndexed => numIndexed -> chunk.size)
         })
         .toList
 
-      val chunks = Await.result(Future.sequence(futures), Duration.Inf)
+      val chunks = Await.result(Future.sequence(indexed), Duration.Inf)
       executionContext.shutdown()
 
-      chunks.collect { case Failure(ex) => Failure(ex) } match {
+      chunks.collect { case (Failure(ex), chunkSize) => Failure(ex) } match {
         case Nil =>
           val successfulChunks = chunks.collect {
-            case Success((chunkIndexed, chunkSize)) =>
+            case (Success(chunkIndexed), chunkSize) =>
               (chunkIndexed, chunkSize)
           }
 
@@ -157,7 +206,6 @@ trait IndexService {
 
           logger.info(s"$count/$totalCount documents ($documentType) were indexed successfully.")
           Success(totalCount)
-
         case notEmpty => notEmpty.head
       }
     }

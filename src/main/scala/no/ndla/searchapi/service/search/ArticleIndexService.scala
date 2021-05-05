@@ -18,12 +18,13 @@ import no.ndla.searchapi.model.domain.article.Article
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
+import no.ndla.searchapi.repository.{ArticleRepository, Repository}
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
 
 trait ArticleIndexService {
-  this: SearchConverterService with IndexService with ArticleApiClient =>
+  this: SearchConverterService with IndexService with ArticleApiClient with ArticleRepository =>
   val articleIndexService: ArticleIndexService
 
   class ArticleIndexService extends LazyLogging with IndexService[Article] {
@@ -31,6 +32,7 @@ trait ArticleIndexService {
     override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.Articles)
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.Articles)
     override val apiClient: ArticleApiClient = articleApiClient
+    override val repository: Repository[Article] = articleRepository
 
     override def createIndexRequest(domainModel: Article,
                                     indexName: String,
