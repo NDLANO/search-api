@@ -8,8 +8,9 @@
 package no.ndla.searchapi.model.domain.article
 
 import no.ndla.searchapi.SearchApiProperties.DatabaseDetails
+import no.ndla.searchapi.SearchApiProperties.DatabaseDetails.{ArticleApi, DatabaseDetails}
 import no.ndla.searchapi.model.domain.draft.Availability
-import no.ndla.searchapi.model.domain.{Content, Tag, Title}
+import no.ndla.searchapi.model.domain.{Content, NDLASQLSupport, Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer.ignore
 import org.json4s.ext.EnumNameSerializer
@@ -46,33 +47,28 @@ object LearningResourceType extends Enumeration {
   def valueOf(s: String): Option[LearningResourceType.Value] = LearningResourceType.values.find(_.toString == s)
 }
 
-object Article extends SQLSyntaxSupport[Article] {
-
-  val jsonEncoder: Formats = DefaultFormats.withLong +
-    new EnumNameSerializer(LearningResourceType) +
-    new EnumNameSerializer(Availability)
-
+object Article extends NDLASQLSupport[Article] {
+  override val dbInfo: DatabaseDetails = ArticleApi
   override val tableName = "contentdata"
-  override lazy val schemaName: Option[String] = Some(DatabaseDetails.ArticleApi.schema)
 
-  def fromResultSet(lp: SyntaxProvider[Article])(rs: WrappedResultSet): Option[Article] =
-    fromResultSet(lp.resultName)(rs)
+  val jsonEncoder: Formats =
+    DefaultFormats.withLong +
+      new EnumNameSerializer(LearningResourceType) +
+      new EnumNameSerializer(Availability)
 
-  def fromResultSet(lp: ResultName[Article])(rs: WrappedResultSet): Option[Article] = {
+  val repositorySerializer: Formats = jsonEncoder + FieldSerializer[Article](ignore("id"))
+
+  def fromResultSet(rn: ResultName[Article])(rs: WrappedResultSet): Option[Article] = {
     implicit val formats: Formats = repositorySerializer
 
-    rs.stringOpt(lp.c("document"))
+    rs.stringOpt(rn.c("document"))
       .map(jsonStr => {
         val meta = Serialization.read[Article](jsonStr)
         meta.copy(
-          id = Some(rs.long(lp.c("article_id"))),
-          revision = Some(rs.int(lp.c("revision")))
+          id = Some(rs.long(rn.c("article_id"))),
+          revision = Some(rs.int(rn.c("revision")))
         )
       })
   }
 
-  val repositorySerializer: Formats = jsonEncoder +
-    FieldSerializer[Article](
-      ignore("id")
-    )
 }

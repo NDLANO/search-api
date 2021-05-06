@@ -11,6 +11,7 @@ package no.ndla.searchapi
 import com.typesafe.scalalogging.LazyLogging
 import com.zaxxer.hikari.HikariDataSource
 import no.ndla.network.NdlaClient
+import no.ndla.searchapi.SearchApiProperties.DatabaseDetails.{ArticleApi, DraftApi, LearningpathApi}
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.SearchApiProperties._
@@ -69,7 +70,7 @@ object ComponentRegistry
   lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
   lazy val audioApiClient = new AudioApiClient(AudioApiUrl)
   lazy val articleApiClient = new ArticleApiClient(ArticleApiUrl)
-  lazy val SearchClients = Map[String, SearchApiClient](
+  lazy val SearchClients: Map[String, SearchApiClient] = Map(
     draftApiClient.name -> draftApiClient,
     learningPathApiClient.name -> learningPathApiClient,
     imageApiClient.name -> imageApiClient,
@@ -96,10 +97,9 @@ object ComponentRegistry
   override val learningpathApiDataSource: HikariDataSource = DataSource.LearningpathApiDataSource
 
   def connectToDatabases(): Unit = {
-    ConnectionPool.singleton(new DataSourceConnectionPool(articleApiDataSource))
-//    ConnectionPool.add(Symbol("article-api"), new DataSourceConnectionPool(articleApiDataSource))
-//    ConnectionPool.add(Symbol("draft-api"), new DataSourceConnectionPool(draftApiDataSource))
-//    ConnectionPool.add(Symbol("learningpath-api"), new DataSourceConnectionPool(learningpathApiDataSource))
+    ConnectionPool.add(ArticleApi.connectionPoolName, new DataSourceConnectionPool(articleApiDataSource))
+    ConnectionPool.add(DraftApi.connectionPoolName, new DataSourceConnectionPool(draftApiDataSource))
+    ConnectionPool.add(LearningpathApi.connectionPoolName, new DataSourceConnectionPool(learningpathApiDataSource))
   }
 
   connectToDatabases()

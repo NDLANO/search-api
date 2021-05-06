@@ -9,10 +9,12 @@
 package no.ndla.searchapi
 
 import com.typesafe.scalalogging.LazyLogging
+import com.zaxxer.hikari.HikariDataSource
 import no.ndla.network.NdlaClient
 import no.ndla.searchapi.auth.User
 import no.ndla.searchapi.controller.{HealthController, InternController, SearchController}
 import no.ndla.searchapi.integration._
+import no.ndla.searchapi.repository.{ArticleRepository, DraftRepository, LearningpathRepository}
 import no.ndla.searchapi.service.search._
 import no.ndla.searchapi.service.{ApiSearchService, ConverterService, SearchClients}
 import org.mockito.scalatest.MockitoSugar
@@ -42,6 +44,10 @@ trait TestEnvironment
     with SearchController
     with User
     with LearningPathIndexService
+    with DataSources
+    with ArticleRepository
+    with DraftRepository
+    with LearningpathRepository
     with InternController
     with SearchApiClient
     with GrepApiClient {
@@ -79,4 +85,12 @@ trait TestEnvironment
   val multiDraftSearchService = mock[MultiDraftSearchService]
 
   val user = mock[User]
+
+  val articleRepository = mock[ArticleRepository]
+  val draftRepository = mock[DraftRepository]
+  val learningpathRepository = mock[LearningpathRepository]
+
+  val articleApiDataSource: HikariDataSource = DataSource.ArticleApiDataSource // TODO: Mock dissa sikkert
+  val draftApiDataSource: HikariDataSource = DataSource.DraftApiDataSource
+  val learningpathApiDataSource: HikariDataSource = DataSource.LearningpathApiDataSource
 }

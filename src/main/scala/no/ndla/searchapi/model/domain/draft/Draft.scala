@@ -9,11 +9,10 @@ package no.ndla.searchapi.model.domain.draft
 
 import no.ndla.network.secrets.Database
 import no.ndla.searchapi.SearchApiProperties.DatabaseDetails
+import no.ndla.searchapi.SearchApiProperties.DatabaseDetails.{DatabaseDetails, DraftApi}
 import no.ndla.searchapi.model.api.{ValidationException, ValidationMessage}
-import no.ndla.searchapi.model.domain.article
+import no.ndla.searchapi.model.domain.{Content, NDLASQLSupport, Tag, Title, article, draft}
 import no.ndla.searchapi.model.domain.article.Article
-import no.ndla.searchapi.model.domain.draft
-import no.ndla.searchapi.model.domain.{Content, Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.FieldSerializer.ignore
 import org.json4s.{DefaultFormats, FieldSerializer, Formats}
@@ -47,30 +46,30 @@ case class Draft(
     grepCodes: Seq[String]
 ) extends Content
 
-object Draft extends SQLSyntaxSupport[Draft] {
+object Draft extends NDLASQLSupport[Draft] {
+  override val dbInfo: DatabaseDetails = DraftApi
+  override val tableName = "articledata"
 
-  val jsonEncoder: Formats = DefaultFormats.withLong +
+  override val jsonEncoder: Formats = DefaultFormats.withLong +
     new EnumNameSerializer(ArticleStatus) +
     new EnumNameSerializer(article.LearningResourceType) +
     new EnumNameSerializer(Availability)
 
-  val repositorySerializer: Formats = jsonEncoder +
+  override val repositorySerializer: Formats = jsonEncoder +
     FieldSerializer[Draft](
       ignore("id") orElse
         ignore("revision")
     )
 
-  override val tableName = "articledata"
-  override lazy val schemaName = Some(DatabaseDetails.DraftApi.schema)
-
-  def fromResultSet(lp: SyntaxProvider[Article])(rs: WrappedResultSet): Article = fromResultSet(lp.resultName)(rs)
-
-  def fromResultSet(lp: ResultName[Article])(rs: WrappedResultSet): Article = {
-    implicit val formats = jsonEncoder
-    val meta = Serialization.read[Article](rs.string(lp.c("document")))
-    meta.copy(
-      id = Some(rs.long(lp.c("article_id"))),
-      revision = Some(rs.int(lp.c("revision")))
-    )
+  override def fromResultSet(rn: ResultName[Draft])(rs: WrappedResultSet): Option[Draft] = {
+    implicit val formats: Formats = jsonEncoder
+    rs.stringOpt(rn.c("document"))
+      .map(jsonString => {
+        val meta = Serialization.read[Draft](jsonString)
+        meta.copy(
+          id = Some(rs.long(rn.c("article_id"))),
+          revision = Some(rs.int(rn.c("revision")))
+        )
+      })
   }
 }

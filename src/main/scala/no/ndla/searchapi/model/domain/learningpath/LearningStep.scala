@@ -8,8 +8,9 @@
 package no.ndla.searchapi.model.domain.learningpath
 
 import no.ndla.searchapi.SearchApiProperties.DatabaseDetails
+import no.ndla.searchapi.SearchApiProperties.DatabaseDetails.{DatabaseDetails, LearningpathApi}
 import no.ndla.searchapi.model.api.{ValidationException, ValidationMessage}
-import no.ndla.searchapi.model.domain.Title
+import no.ndla.searchapi.model.domain.{NDLASQLSupport, Title}
 import org.json4s.FieldSerializer.ignore
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.native.Serialization
@@ -70,15 +71,16 @@ object StepType extends Enumeration {
   }
 }
 
-object LearningStep extends SQLSyntaxSupport[LearningStep] {
+object LearningStep extends NDLASQLSupport[LearningStep] {
+  override val dbInfo: DatabaseDetails = LearningpathApi
+  override val tableName = "learningsteps"
 
-  val jsonSerializer = List(
-    new EnumNameSerializer(StepType),
-    new EnumNameSerializer(StepStatus),
+  override val jsonEncoder = DefaultFormats.withLong +
+    new EnumNameSerializer(StepType) +
+    new EnumNameSerializer(StepStatus) +
     new EnumNameSerializer(EmbedType)
-  )
 
-  val repositorySerializer = jsonSerializer :+ FieldSerializer[LearningStep](
+  override val repositorySerializer = jsonEncoder + FieldSerializer[LearningStep](
     serializer =
       ignore("id") orElse
         ignore("learningPathId") orElse
@@ -86,33 +88,26 @@ object LearningStep extends SQLSyntaxSupport[LearningStep] {
         ignore("revision")
   )
 
-  val jsonEncoder = DefaultFormats ++ jsonSerializer
-
-  override val tableName = "learningsteps"
-  override val schemaName: Option[String] = Some(DatabaseDetails.LearningpathApi.schema)
-
-  def apply(ls: SyntaxProvider[LearningStep])(rs: WrappedResultSet): LearningStep = apply(ls.resultName)(rs)
-
-  def apply(ls: ResultName[LearningStep])(rs: WrappedResultSet): LearningStep = {
+  override def fromResultSet(rn: ResultName[LearningStep])(rs: WrappedResultSet): Option[LearningStep] = {
     implicit val formats: Formats = jsonEncoder
 
-    val meta = Serialization.read[LearningStep](rs.string(ls.c("document")))
-    LearningStep(
-      Some(rs.long(ls.c("id"))),
-      Some(rs.int(ls.c("revision"))),
-      rs.stringOpt(ls.c("external_id")),
-      Some(rs.long(ls.c("learning_path_id"))),
-      meta.seqNo,
-      meta.title,
-      meta.description,
-      meta.embedUrl,
-      meta.`type`,
-      meta.license,
-      meta.showTitle,
-      meta.status
-    )
+    rs.stringOpt(rn.c("document"))
+      .map(jsonString => {
+        val meta = Serialization.read[LearningStep](jsonString)
+        LearningStep(
+          Some(rs.long(rn.c("id"))),
+          Some(rs.int(rn.c("revision"))),
+          rs.stringOpt(rn.c("external_id")),
+          Some(rs.long(rn.c("learning_path_id"))),
+          meta.seqNo,
+          meta.title,
+          meta.description,
+          meta.embedUrl,
+          meta.`type`,
+          meta.license,
+          meta.showTitle,
+          meta.status
+        )
+      })
   }
-
-  def opt(ls: ResultName[LearningStep])(rs: WrappedResultSet): Option[LearningStep] =
-    rs.longOpt(ls.c("id")).map(_ => LearningStep(ls)(rs))
 }

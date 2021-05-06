@@ -9,7 +9,6 @@ package no.ndla.searchapi.integration
 
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.concurrent.Executors
-
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.{Region, Regions}
 import com.sksamuel.elastic4s.http._
@@ -22,7 +21,7 @@ import no.ndla.searchapi.SearchApiProperties.{RunWithSignedSearchRequests, Searc
 import vc.inreach.aws.request.{AWSSigner, AWSSigningRequestInterceptor}
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
 trait Elastic4sClient {
@@ -31,7 +30,15 @@ trait Elastic4sClient {
 
 case class NdlaE4sClient(client: ElasticClient) {
 
-  // TODO: Consider not creating execution context here, it might be expensive?
+  def executeAsync[T, U, F[_]](request: T)(implicit handler: Handler[T, U],
+                                           mf: Manifest[U],
+                                           ec: ExecutionContext): Future[Try[RequestSuccess[U]]] = {
+    client.execute(request).map {
+      case failure: RequestFailure   => Failure(NdlaSearchException(failure))
+      case result: RequestSuccess[U] => Success(result)
+    }
+  }
+
   def execute[T, U](request: T)(implicit handler: Handler[T, U], mf: Manifest[U]): Try[RequestSuccess[U]] = {
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor)
     val response = Await

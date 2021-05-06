@@ -1,6 +1,7 @@
 package no.ndla.searchapi.repository
 
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.searchapi.SearchApiProperties.DatabaseDetails
 import no.ndla.searchapi.integration.DataSources
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningPathStatus, LearningStep, StepStatus}
@@ -11,10 +12,12 @@ trait DraftRepository {
   val draftRepository: DraftRepository
 
   class DraftRepository extends LazyLogging with Repository[Draft] {
+    override val connectionPoolName: Symbol = DatabaseDetails.DraftApi.connectionPoolName
     override def getByPage(pageSize: Int, offset: Int)(implicit session: DBSession): Seq[Draft] = ???
 
     override protected def documentCount(implicit session: DBSession): Long = ???
 
-    override def pageCount(pageSize: Int): Int = ???
+    override def pageCount(pageSize: Int)(implicit session: DBSession): Int = ???
+
   }
 }

@@ -1,9 +1,10 @@
 package no.ndla.searchapi.repository
 
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.searchapi.SearchApiProperties.IndexBulkSize
+import no.ndla.searchapi.SearchApiProperties.{DatabaseDetails, IndexBulkSize}
 import no.ndla.searchapi.integration.DataSources
 import no.ndla.searchapi.model.domain.article.Article
+
 import math.ceil
 import scalikejdbc._
 
@@ -12,10 +13,8 @@ trait ArticleRepository {
   val articleRepository: ArticleRepository
 
   class ArticleRepository extends LazyLogging with Repository[Article] {
-    private val DBName = Symbol("article-api")
-
-    override def getByPage(pageSize: Int, offset: Int)(
-        implicit session: DBSession = ReadOnlyAutoSession): Seq[Article] = {
+    override val connectionPoolName: Symbol = DatabaseDetails.ArticleApi.connectionPoolName
+    override def getByPage(pageSize: Int, offset: Int)(implicit session: DBSession): Seq[Article] = {
       val ar = Article.syntax("ar")
       sql"""
            select *
@@ -35,7 +34,7 @@ trait ArticleRepository {
         .flatten
     }
 
-    override protected def documentCount(implicit session: DBSession = ReadOnlyAutoSession): Long = {
+    override protected def documentCount(implicit session: DBSession): Long = {
       sql"""
            select count(distinct article_id)
            from (select
@@ -51,7 +50,7 @@ trait ArticleRepository {
         .getOrElse(0)
     }
 
-    override def pageCount(pageSize: Int): Int = {
+    override def pageCount(pageSize: Int)(implicit session: DBSession): Int = {
       val dbCount = documentCount
       val pageSize = IndexBulkSize
       ceil(dbCount.toDouble / pageSize.toDouble).toInt

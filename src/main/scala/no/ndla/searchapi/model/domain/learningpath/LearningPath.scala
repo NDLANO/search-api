@@ -8,7 +8,8 @@
 package no.ndla.searchapi.model.domain.learningpath
 
 import no.ndla.searchapi.SearchApiProperties.DatabaseDetails
-import no.ndla.searchapi.model.domain.{Content, Tag, Title}
+import no.ndla.searchapi.SearchApiProperties.DatabaseDetails.{DatabaseDetails, LearningpathApi}
+import no.ndla.searchapi.model.domain.{Content, NDLASQLSupport, Tag, Title}
 import org.joda.time.DateTime
 import org.json4s.{DefaultFormats, FieldSerializer, Formats}
 import org.json4s.FieldSerializer.ignore
@@ -41,35 +42,32 @@ object LearningPathVerificationStatus extends Enumeration {
   val EXTERNAL, CREATED_BY_NDLA, VERIFIED_BY_NDLA = Value
 }
 
-object LearningPath extends SQLSyntaxSupport[LearningPath] {
+object LearningPath extends NDLASQLSupport[LearningPath] {
+  override val dbInfo: DatabaseDetails = LearningpathApi
+  override val tableName = "learningpaths"
 
-  val jsonSerializer = List(
-    new EnumNameSerializer(LearningPathStatus),
+  override val jsonEncoder: Formats = DefaultFormats.withLong +
+    new EnumNameSerializer(LearningPathStatus) +
     new EnumNameSerializer(LearningPathVerificationStatus)
-  )
 
-  val repositorySerializer = jsonSerializer :+ FieldSerializer[LearningPath](
+  override val repositorySerializer: Formats = jsonEncoder + FieldSerializer[LearningPath](
     ignore("id") orElse
       ignore("learningsteps") orElse
       ignore("externalId") orElse
       ignore("revision")
   )
 
-  val jsonEncoder: Formats = DefaultFormats ++ jsonSerializer
-
-  override val tableName = "learningpaths"
-  override val schemaName: Option[String] = Some(DatabaseDetails.LearningpathApi.schema)
-
-  def apply(lp: SyntaxProvider[LearningPath])(rs: WrappedResultSet): LearningPath = apply(lp.resultName)(rs)
-
-  def apply(lp: ResultName[LearningPath])(rs: WrappedResultSet): LearningPath = {
-    implicit val formats = jsonEncoder
-    val meta = Serialization.read[LearningPath](rs.string(lp.c("document")))
-    meta.copy(
-      id = Some(rs.long(lp.c("id"))),
-      revision = Some(rs.int(lp.c("revision"))),
-      externalId = rs.stringOpt(lp.c("external_id"))
-    )
+  override def fromResultSet(rn: ResultName[LearningPath])(rs: WrappedResultSet): Option[LearningPath] = {
+    implicit val formats: Formats = jsonEncoder
+    rs.stringOpt(rn.c("document"))
+      .map(jsonString => {
+        val meta = Serialization.read[LearningPath](jsonString)
+        meta.copy(
+          id = Some(rs.long(rn.c("id"))),
+          revision = Some(rs.int(rn.c("revision"))),
+          externalId = rs.stringOpt(rn.c("external_id"))
+        )
+      })
   }
 
 }

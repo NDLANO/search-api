@@ -36,6 +36,7 @@ import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 import no.ndla.searchapi.repository.Repository
+import scalikejdbc.{delete => scadelete, _}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
@@ -166,16 +167,14 @@ trait IndexService {
 //      }
 
       implicit val executionContext: ExecutionContextExecutorService =
-        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(3))
-
+        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(10))
       val pageSize = IndexBulkSize
       val numPages = repository.pageCount(pageSize)
       val pages = Seq.range(1, numPages + 1)
 
       val iterator: Iterator[Seq[D]] = pages.iterator.map(p => {
         val (safePageNo, safePageSize) = (max(p, 1), max(pageSize, 0))
-        val results = repository.getByPage(safePageSize, (safePageNo - 1) * safePageSize)
-        results
+        repository.getByPage(safePageSize, (safePageNo - 1) * safePageSize)
       })
 
       val indexed = iterator
@@ -207,6 +206,7 @@ trait IndexService {
           logger.info(s"$count/$totalCount documents ($documentType) were indexed successfully.")
           Success(totalCount)
         case notEmpty => notEmpty.head
+
       }
     }
 
@@ -219,25 +219,27 @@ trait IndexService {
         val indexRequests = req.collect { case Success(indexRequest) => indexRequest }
         val failedToCreateRequests = req.collect { case Failure(ex)  => Failure(ex) }
 
-        Future {
-          if (indexRequests.nonEmpty) {
-            val response = e4sClient.execute {
-              bulk(indexRequests)
-            }
-
-            response match {
-              case Success(r) =>
-                val numFailed = r.result.failures.size + failedToCreateRequests.size
-                logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
-                Success(contents.size - numFailed)
-              case Failure(ex) =>
-                logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
-                Failure(ex)
-            }
-          } else {
-            logger.error(s"All ${contents.size} requests failed to be created.")
-            Failure(ElasticIndexingException("No indexReqeusts were created successfully."))
+        if (indexRequests.isEmpty && failedToCreateRequests.isEmpty) {
+          logger.info(s"(Correctly) Created no index-requests for ${contents.size}.")
+          Future.successful(Success(0))
+        } else if (indexRequests.nonEmpty) {
+          val responseFuture = e4sClient.executeAsync {
+            bulk(indexRequests)
           }
+
+          responseFuture.map {
+            case Success(r) =>
+              val numFailed = r.result.failures.size + failedToCreateRequests.size
+              logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
+              Success(contents.size - numFailed)
+            case Failure(ex) =>
+              logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
+              Failure(ex)
+          }
+
+        } else {
+          logger.error(s"All ${contents.size} requests failed to be created.")
+          Future.successful(Failure(ElasticIndexingException("No indexRequests were created successfully.")))
         }
       }
     }

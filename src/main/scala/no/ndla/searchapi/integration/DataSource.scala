@@ -2,7 +2,7 @@ package no.ndla.searchapi.integration
 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import no.ndla.searchapi.SearchApiProperties.DatabaseDetails.DatabaseDetails
-import no.ndla.searchapi.SearchApiProperties.{ApplicationName, DatabaseDetails, Environment, prop}
+import no.ndla.searchapi.SearchApiProperties.{ApplicationName, DatabaseDetails, Environment}
 
 trait DataSources {
   val articleApiDataSource: HikariDataSource

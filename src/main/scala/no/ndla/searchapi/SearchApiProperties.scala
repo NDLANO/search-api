@@ -55,7 +55,7 @@ object SearchApiProperties extends LazyLogging {
 
   val DefaultPageSize = 10
   val MaxPageSize = 10000
-  val IndexBulkSize = 100
+  val IndexBulkSize = 70
   val ElasticSearchIndexMaxResultWindow = 10000
   val ElasticSearchScrollKeepAlive = "1m"
   val InitialScrollContextKeywords = List("0", "initial", "start", "first")
@@ -85,6 +85,7 @@ object SearchApiProperties extends LazyLogging {
       val port: String
       val database: String
       val schema: String
+      val connectionPoolName: Symbol
     }
 
     object ArticleApi extends DatabaseDetails {
@@ -94,6 +95,7 @@ object SearchApiProperties extends LazyLogging {
       val port: String = prop("ARTICLE_API_META_PORT")
       val database: String = prop("ARTICLE_API_META_RESOURCE")
       val schema: String = prop("ARTICLE_API_META_SCHEMA")
+      val connectionPoolName: Symbol = Symbol("article-api")
     }
 
     object DraftApi extends DatabaseDetails {
@@ -103,6 +105,7 @@ object SearchApiProperties extends LazyLogging {
       val port: String = prop("DRAFT_API_META_PORT")
       val database: String = prop("DRAFT_API_META_RESOURCE")
       val schema: String = prop("DRAFT_API_META_SCHEMA")
+      val connectionPoolName: Symbol = Symbol("draft-api")
     }
 
     object LearningpathApi extends DatabaseDetails {
@@ -112,6 +115,7 @@ object SearchApiProperties extends LazyLogging {
       val port: String = prop("LEARNINGPATH_API_META_PORT")
       val database: String = prop("LEARNINGPATH_API_META_RESOURCE")
       val schema: String = prop("LEARNINGPATH_API_META_SCHEMA")
+      val connectionPoolName: Symbol = Symbol("learningpath-api")
     }
   }
 }
