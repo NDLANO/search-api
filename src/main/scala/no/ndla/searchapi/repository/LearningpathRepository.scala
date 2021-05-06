@@ -34,8 +34,13 @@ trait LearningpathRepository {
         .flatten
     }
 
-    override protected def documentCount(implicit session: DBSession): Long = ???
-
-    override def pageCount(pageSize: Int)(implicit session: DBSession): Int = ???
+    override protected def documentCount(implicit session: DBSession): Long = {
+      val (lp, ls) = (LearningPath.syntax("lp"), LearningStep.syntax("ls"))
+      sql"select count(*) from ${LearningPath.as(lp)}"
+        .map(rs => rs.long("count"))
+        .single()
+        .apply()
+        .getOrElse(0)
+    }
   }
 }

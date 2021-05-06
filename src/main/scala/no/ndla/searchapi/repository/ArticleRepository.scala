@@ -49,11 +49,5 @@ trait ArticleRepository {
         .apply()
         .getOrElse(0)
     }
-
-    override def pageCount(pageSize: Int)(implicit session: DBSession): Int = {
-      val dbCount = documentCount
-      val pageSize = IndexBulkSize
-      ceil(dbCount.toDouble / pageSize.toDouble).toInt
-    }
   }
 }

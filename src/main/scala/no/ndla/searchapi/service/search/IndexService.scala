@@ -324,7 +324,7 @@ trait IndexService {
       * @return Name of aliasTarget.
       */
     def cleanupIndexes(indexName: String = searchIndex): Try[String] = {
-      e4sClient.execute(getAliases()) match {
+      e4sClient.executeBlocking(getAliases()) match {
         case Success(s) =>
           val indexes = s.result.mappings.filter(_._1.name.startsWith(indexName))
           val unreferencedIndexes = indexes.filter(_._2.isEmpty).map(_._1.name).toList
