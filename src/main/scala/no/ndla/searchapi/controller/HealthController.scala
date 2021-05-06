@@ -22,7 +22,7 @@ trait HealthController {
 
   class HealthController extends ScalatraServlet with LazyLogging {
     get("/") {
-      e4sClient.execute(clusterHealth()) match {
+      e4sClient.executeBlocking(clusterHealth()) match {
         case Failure(exception) =>
           logger.error("Something went wrong when contacting elasticsearch instance when performing health check",
                        exception)

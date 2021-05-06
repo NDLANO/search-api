@@ -103,7 +103,7 @@ trait MultiSearchService {
             searchToExecute.scroll(ElasticSearchScrollKeepAlive)
           } else { searchToExecute }
 
-        e4sClient.execute(searchWithScroll) match {
+        e4sClient.executeBlocking(searchWithScroll) match {
           case Success(response) =>
             Success(
               SearchResult(

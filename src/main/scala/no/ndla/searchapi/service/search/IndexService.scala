@@ -42,6 +42,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
 import math.max
+import scala.language.postfixOps
 
 trait IndexService {
   this: Elastic4sClient with SearchApiClient with TaxonomyApiClient with GrepApiClient =>
@@ -87,7 +88,7 @@ trait IndexService {
           case None        => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
         }
         request <- createIndexRequest(imported, searchIndex, taxonomyBundle, grepBundle)
-        _ <- e4sClient.execute {
+        _ <- e4sClient.executeBlocking {
           request
         }
       } yield imported
@@ -131,48 +132,13 @@ trait IndexService {
         taxonomyBundle: TaxonomyBundle,
         grepBundle: GrepBundle
     )(implicit mf: Manifest[D]): Try[Int] = {
-//      implicit val executionContext: ExecutionContextExecutorService =
-//        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(3))
-//
-//      val stream = apiClient.getChunks[D]
-//      val futures = stream
-//        .map(_.flatMap {
-//          case Failure(ex) => Future.successful(Failure(ex))
-//          case Success(c) =>
-//            indexDocuments(c, indexName, taxonomyBundle, grepBundle).map(numIndexed =>
-//              Success(numIndexed.getOrElse(0), c.size))
-//
-//        })
-//        .toList
-//
-//      val chunks = Await.result(Future.sequence(futures), Duration.Inf)
-//      executionContext.shutdown()
-//
-//      chunks.collect { case Failure(ex) => Failure(ex) } match {
-//        case Nil =>
-//          val successfulChunks = chunks.collect {
-//            case Success((chunkIndexed, chunkSize)) =>
-//              (chunkIndexed, chunkSize)
-//          }
-//
-//          val (count, totalCount) = successfulChunks.foldLeft((0, 0)) {
-//            case ((totalIndexed, totalSize), (chunkIndexed, chunkSize)) =>
-//              (totalIndexed + chunkIndexed, totalSize + chunkSize)
-//          }
-//
-//          logger.info(s"$count/$totalCount documents ($documentType) were indexed successfully.")
-//          Success(totalCount)
-//
-//        case notEmpty => notEmpty.head
-//      }
-
       implicit val executionContext: ExecutionContextExecutorService =
         ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(10))
       val pageSize = IndexBulkSize
       val numPages = repository.pageCount(pageSize)
       val pages = Seq.range(1, numPages + 1)
 
-      val iterator: Iterator[Seq[D]] = pages.iterator.map(p => {
+      val iterator = pages.iterator.map(p => {
         val (safePageNo, safePageSize) = (max(p, 1), max(pageSize, 0))
         repository.getByPage(safePageSize, (safePageNo - 1) * safePageSize)
       })
@@ -210,8 +176,12 @@ trait IndexService {
       }
     }
 
-    def indexDocuments(contents: Seq[D], indexName: String, taxonomyBundle: TaxonomyBundle, grepBundle: GrepBundle)(
-        implicit ec: ExecutionContext): Future[Try[Int]] = {
+    def indexDocuments(
+        contents: Seq[D],
+        indexName: String,
+        taxonomyBundle: TaxonomyBundle,
+        grepBundle: GrepBundle
+    )(implicit ec: ExecutionContext): Future[Try[Int]] = {
       if (contents.isEmpty) {
         Future.successful { Success(0) }
       } else {
@@ -222,25 +192,23 @@ trait IndexService {
         if (indexRequests.isEmpty && failedToCreateRequests.isEmpty) {
           logger.info(s"(Correctly) Created no index-requests for ${contents.size}.")
           Future.successful(Success(0))
-        } else if (indexRequests.nonEmpty) {
-          val responseFuture = e4sClient.executeAsync {
-            bulk(indexRequests)
-          }
-
-          responseFuture.map {
-            case Success(r) =>
-              val numFailed = r.result.failures.size + failedToCreateRequests.size
-              logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
-              Success(contents.size - numFailed)
-            case Failure(ex) =>
-              logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
-              Failure(ex)
-          }
-
-        } else {
+        } else if (indexRequests.isEmpty) {
           logger.error(s"All ${contents.size} requests failed to be created.")
           Future.successful(Failure(ElasticIndexingException("No indexRequests were created successfully.")))
+        } else {
+          e4sClient
+            .executeAsync(bulk(indexRequests))
+            .map {
+              case Failure(ex) =>
+                logger.error(s"Failed to index ${contents.size} documents ($documentType): ${ex.getMessage}", ex)
+                Failure(ex)
+              case Success(r) =>
+                val numFailed = r.result.failures.size + failedToCreateRequests.size
+                logger.info(s"Indexed ${contents.size} documents ($documentType). No of failed items: $numFailed")
+                Success(contents.size - numFailed)
+            }
         }
+
       }
     }
 
@@ -251,7 +219,7 @@ trait IndexService {
           case None        => createIndexWithGeneratedName.map(newIndex => updateAliasTarget(None, newIndex))
         }
         deleted <- {
-          e4sClient.execute {
+          e4sClient.executeBlocking {
             delete(s"$contentId").from(searchIndex / documentType)
           }
         }
@@ -284,7 +252,7 @@ trait IndexService {
       if (indexWithNameExists(indexName).getOrElse(false)) {
         Success(indexName)
       } else {
-        val response = e4sClient.execute {
+        val response = e4sClient.executeBlocking {
           createIndex(indexName)
             .mappings(getMapping)
             .analysis(
@@ -305,7 +273,7 @@ trait IndexService {
     }
 
     def getAliasTarget: Try[Option[String]] = {
-      val response = e4sClient.execute {
+      val response = e4sClient.executeBlocking {
         getAliases(Nil, List(searchIndex))
       }
 
@@ -317,7 +285,7 @@ trait IndexService {
     }
 
     def updateReplicaNumber(indexName: String): Try[_] = {
-      e4sClient.execute {
+      e4sClient.executeBlocking {
         updateSettings(Indexes(indexName), Map("number_of_replicas" -> "1"))
       }
     }
@@ -333,7 +301,7 @@ trait IndexService {
             List[AliasAction](removeAlias(searchIndex).on(oldIndex), addAlias(searchIndex).on(newIndexName))
         }
 
-        e4sClient.execute(aliases(actions)) match {
+        e4sClient.executeBlocking(aliases(actions)) match {
           case Success(_) =>
             logger.info("Alias target updated successfully, deleting other indexes.")
             for {
@@ -374,7 +342,7 @@ trait IndexService {
             logger.info("No indexes to be deleted.")
             Success(aliasTarget)
           } else {
-            e4sClient.execute {
+            e4sClient.executeBlocking {
               deleteIndex(toDelete)
             } match {
               case Success(_) =>
@@ -399,7 +367,7 @@ trait IndexService {
           if (!indexWithNameExists(indexName).getOrElse(false)) {
             Failure(new IllegalArgumentException(s"No such index: $indexName"))
           } else {
-            e4sClient.execute {
+            e4sClient.executeBlocking {
               deleteIndex(indexName)
             }
           }
@@ -408,7 +376,7 @@ trait IndexService {
     }
 
     def countDocuments: Long = {
-      val response = e4sClient.execute {
+      val response = e4sClient.executeBlocking {
         catCount(searchIndex)
       }
 
@@ -419,7 +387,7 @@ trait IndexService {
     }
 
     def indexWithNameExists(indexName: String): Try[Boolean] = {
-      val response = e4sClient.execute {
+      val response = e4sClient.executeBlocking {
         indexExists(indexName)
       }
 

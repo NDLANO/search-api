@@ -25,7 +25,8 @@ class HealthControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   test("That /health returns 200 ok") {
     val x = Try(RequestSuccess(200, None, Map.empty, ""))
     when(
-      e4sClient.execute(any[ClusterHealthRequest])(any[Handler[ClusterHealthRequest, String]], any[Manifest[String]]))
+      e4sClient.executeBlocking(any[ClusterHealthRequest])(any[Handler[ClusterHealthRequest, String]],
+                                                           any[Manifest[String]]))
       .thenReturn(x)
     get("/") {
       status should equal(200)
@@ -33,7 +34,7 @@ class HealthControllerTest extends UnitSuite with TestEnvironment with ScalatraF
   }
 
   test("That /health returns 500 when elasticsearch not reachable") {
-    when(e4sClient.execute(any[Any])(any[Handler[Any, Any]], any[Manifest[Any]]))
+    when(e4sClient.executeBlocking(any[Any])(any[Handler[Any, Any]], any[Manifest[Any]]))
       .thenReturn(Failure(new java.net.ConnectException("Is no work")))
     get("/") {
       status should equal(500)

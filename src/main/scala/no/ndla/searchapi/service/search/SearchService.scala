@@ -313,9 +313,7 @@ trait SearchService {
 
     def scroll(scrollId: String, language: String, fallback: Boolean): Try[SearchResult] = {
       e4sClient
-        .execute {
-          searchScroll(scrollId, ElasticSearchScrollKeepAlive)
-        }
+        .executeBlocking(searchScroll(scrollId, ElasticSearchScrollKeepAlive))
         .map(response => {
           val hits = getHits(response.result, language, fallback)
           val suggestions = getSuggestions(response.result)

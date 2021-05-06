@@ -51,7 +51,7 @@ class IndexServiceTest extends IntegrationSuite(EnableElasticsearchContainer = t
 
     searchIndexService.cleanupIndexes(s"${testIndexPrefix}_article")
 
-    val Success(response) = e4sClient.execute(getAliases())
+    val Success(response) = e4sClient.executeBlocking(getAliases())
     val result = response.result.mappings
     val indexNames = result.map(_._1.name)
 

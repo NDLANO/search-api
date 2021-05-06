@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.{Region, Regions}
 import com.sksamuel.elastic4s.http._
+import com.typesafe.scalalogging.LazyLogging
 import io.lemonlabs.uri.dsl._
 import no.ndla.searchapi.model.domain.NdlaSearchException
 import org.apache.http.client.config.RequestConfig
@@ -28,18 +29,21 @@ trait Elastic4sClient {
   var e4sClient: NdlaE4sClient
 }
 
-case class NdlaE4sClient(client: ElasticClient) {
+case class NdlaE4sClient(client: ElasticClient) extends LazyLogging {
 
   def executeAsync[T, U, F[_]](request: T)(implicit handler: Handler[T, U],
                                            mf: Manifest[U],
                                            ec: ExecutionContext): Future[Try[RequestSuccess[U]]] = {
-    client.execute(request).map {
-      case failure: RequestFailure   => Failure(NdlaSearchException(failure))
-      case result: RequestSuccess[U] => Success(result)
-    }
+    client
+      .execute(request)
+      .recover { case ex: Throwable => Failure(ex) }
+      .map {
+        case failure: RequestFailure   => Failure(NdlaSearchException(failure))
+        case result: RequestSuccess[U] => Success(result)
+      }
   }
 
-  def execute[T, U](request: T)(implicit handler: Handler[T, U], mf: Manifest[U]): Try[RequestSuccess[U]] = {
+  def executeBlocking[T, U](request: T)(implicit handler: Handler[T, U], mf: Manifest[U]): Try[RequestSuccess[U]] = {
     implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor)
     val response = Await
       .ready(
@@ -94,7 +98,7 @@ object Elastic4sClientFactory {
   /** Callback added to all requests that will increase timeout */
   private object RequestConfigCallbackWithTimeout extends RequestConfigCallback {
     override def customizeRequestConfig(requestConfigBuilder: RequestConfig.Builder): RequestConfig.Builder = {
-      val elasticSearchRequestTimeoutMs = 10000
+      val elasticSearchRequestTimeoutMs = 600000
       requestConfigBuilder.setConnectionRequestTimeout(elasticSearchRequestTimeoutMs)
     }
   }

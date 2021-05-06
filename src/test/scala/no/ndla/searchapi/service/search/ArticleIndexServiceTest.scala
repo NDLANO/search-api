@@ -53,7 +53,7 @@ class ArticleIndexServiceTest
 
     blockUntil(() => { articleIndexService.countDocuments == 3 })
 
-    val Success(response) = e4sClient.execute {
+    val Success(response) = e4sClient.executeBlocking {
       search(articleIndexService.searchIndex)
     }
 
