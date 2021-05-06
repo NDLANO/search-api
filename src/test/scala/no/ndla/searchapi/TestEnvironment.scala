@@ -90,7 +90,7 @@ trait TestEnvironment
   val draftRepository = mock[DraftRepository]
   val learningpathRepository = mock[LearningpathRepository]
 
-  val articleApiDataSource: HikariDataSource = DataSource.ArticleApiDataSource // TODO: Mock dissa sikkert
-  val draftApiDataSource: HikariDataSource = DataSource.DraftApiDataSource
-  val learningpathApiDataSource: HikariDataSource = DataSource.LearningpathApiDataSource
+  val articleApiDataSource: HikariDataSource = mock[HikariDataSource]
+  val draftApiDataSource: HikariDataSource = mock[HikariDataSource]
+  val learningpathApiDataSource: HikariDataSource = mock[HikariDataSource]
 }

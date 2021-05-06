@@ -89,33 +89,33 @@ object SearchApiProperties extends LazyLogging {
     }
 
     object ArticleApi extends DatabaseDetails {
-      val username: String = prop("ARTICLE_API_META_USER_NAME")
-      val password: String = prop("ARTICLE_API_META_PASSWORD")
-      val server: String = prop("ARTICLE_API_META_SERVER")
-      val port: String = prop("ARTICLE_API_META_PORT")
-      val database: String = prop("ARTICLE_API_META_RESOURCE")
-      val schema: String = prop("ARTICLE_API_META_SCHEMA")
-      val connectionPoolName: Symbol = Symbol("article-api")
+      lazy val username: String = prop("ARTICLE_API_META_USER_NAME")
+      lazy val password: String = prop("ARTICLE_API_META_PASSWORD")
+      lazy val server: String = prop("ARTICLE_API_META_SERVER")
+      lazy val port: String = prop("ARTICLE_API_META_PORT")
+      lazy val database: String = prop("ARTICLE_API_META_RESOURCE")
+      lazy val schema: String = prop("ARTICLE_API_META_SCHEMA")
+      lazy val connectionPoolName: Symbol = Symbol("article-api")
     }
 
     object DraftApi extends DatabaseDetails {
-      val username: String = prop("DRAFT_API_META_USER_NAME")
-      val password: String = prop("DRAFT_API_META_PASSWORD")
-      val server: String = prop("DRAFT_API_META_SERVER")
-      val port: String = prop("DRAFT_API_META_PORT")
-      val database: String = prop("DRAFT_API_META_RESOURCE")
-      val schema: String = prop("DRAFT_API_META_SCHEMA")
-      val connectionPoolName: Symbol = Symbol("draft-api")
+      lazy val username: String = prop("DRAFT_API_META_USER_NAME")
+      lazy val password: String = prop("DRAFT_API_META_PASSWORD")
+      lazy val server: String = prop("DRAFT_API_META_SERVER")
+      lazy val port: String = prop("DRAFT_API_META_PORT")
+      lazy val database: String = prop("DRAFT_API_META_RESOURCE")
+      lazy val schema: String = prop("DRAFT_API_META_SCHEMA")
+      lazy val connectionPoolName: Symbol = Symbol("draft-api")
     }
 
     object LearningpathApi extends DatabaseDetails {
-      val username: String = prop("LEARNINGPATH_API_META_USER_NAME")
-      val password: String = prop("LEARNINGPATH_API_META_PASSWORD")
-      val server: String = prop("LEARNINGPATH_API_META_SERVER")
-      val port: String = prop("LEARNINGPATH_API_META_PORT")
-      val database: String = prop("LEARNINGPATH_API_META_RESOURCE")
-      val schema: String = prop("LEARNINGPATH_API_META_SCHEMA")
-      val connectionPoolName: Symbol = Symbol("learningpath-api")
+      lazy val username: String = prop("LEARNINGPATH_API_META_USER_NAME")
+      lazy val password: String = prop("LEARNINGPATH_API_META_PASSWORD")
+      lazy val server: String = prop("LEARNINGPATH_API_META_SERVER")
+      lazy val port: String = prop("LEARNINGPATH_API_META_PORT")
+      lazy val database: String = prop("LEARNINGPATH_API_META_RESOURCE")
+      lazy val schema: String = prop("LEARNINGPATH_API_META_SCHEMA")
+      lazy val connectionPoolName: Symbol = Symbol("learningpath-api")
     }
   }
 }
