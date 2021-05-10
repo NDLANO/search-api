@@ -94,7 +94,7 @@ trait IndexService {
       } yield imported
     }
 
-    def indexDocuments()(implicit mf: Manifest[D]): Try[ReindexResult] = {
+    def indexDocuments(bulkSize: Int)(implicit mf: Manifest[D]): Try[ReindexResult] = {
       val bundles = for {
         taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle()
         grepBundle <- grepApiClient.getGrepBundle()
@@ -103,16 +103,16 @@ trait IndexService {
         case Failure(ex) =>
           logger.error(s"Grep and/or Taxonomy could not be fetched when reindexing all $documentType")
           Failure(ex)
-        case Success((taxonomyBundle, grepBundle)) => indexDocuments(taxonomyBundle, grepBundle)
+        case Success((taxonomyBundle, grepBundle)) => indexDocuments(taxonomyBundle, grepBundle, bulkSize)
       }
     }
 
-    def indexDocuments(taxonomyBundle: TaxonomyBundle, grepBundle: GrepBundle)(
+    def indexDocuments(taxonomyBundle: TaxonomyBundle, grepBundle: GrepBundle, bulkSize: Int)(
         implicit mf: Manifest[D]): Try[ReindexResult] = {
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
         val operations = for {
-          numIndexed <- sendToElastic(indexName, taxonomyBundle, grepBundle)
+          numIndexed <- sendToElastic(indexName, taxonomyBundle, grepBundle, bulkSize)
           aliasTarget <- getAliasTarget
           _ <- updateAliasTarget(aliasTarget, indexName)
         } yield numIndexed
@@ -127,14 +127,15 @@ trait IndexService {
       })
     }
 
-    def sendToElastic(
+    private def sendToElastic(
         indexName: String,
         taxonomyBundle: TaxonomyBundle,
-        grepBundle: GrepBundle
+        grepBundle: GrepBundle,
+        bulkSize: Int
     )(implicit mf: Manifest[D]): Try[Int] = {
       implicit val executionContext: ExecutionContextExecutorService =
-        ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(10))
-      val pageSize = IndexBulkSize
+        ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(10))
+      val pageSize = bulkSize
       val numPages = repository.pageCount(pageSize)
       val pages = Seq.range(1, numPages + 1)
 

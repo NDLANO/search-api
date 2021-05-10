@@ -7,7 +7,7 @@
 package no.ndla.searchapi.service
 
 import com.typesafe.scalalogging.LazyLogging
-import no.ndla.searchapi.SearchApiProperties.{booleanOrFalse, prop, propOrElse}
+import no.ndla.searchapi.SearchApiProperties.{IndexBulkSize, booleanOrFalse, prop, propOrElse}
 import no.ndla.searchapi.model.domain.{Content, ReindexResult}
 import no.ndla.searchapi.{ComponentRegistry, SearchApiProperties}
 import org.json4s.{DefaultFormats, Formats}
@@ -91,7 +91,7 @@ object StandaloneIndexing extends LazyLogging {
         def reindexWithIndexService[C <: Content](indexService: ComponentRegistry.IndexService[C])(
             implicit mf: Manifest[C]): Future[Try[ReindexResult]] = {
           val reindexFuture = Future {
-            indexService.indexDocuments(taxonomyBundle, grepBundle)
+            indexService.indexDocuments(taxonomyBundle, grepBundle, IndexBulkSize)
           }
           reindexFuture.onComplete {
             case Success(Success(reindexResult: ReindexResult)) =>

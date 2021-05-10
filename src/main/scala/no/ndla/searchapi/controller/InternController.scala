@@ -8,8 +8,8 @@
 package no.ndla.searchapi.controller
 
 import java.util.concurrent.{Executors, TimeUnit}
-
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.IndexBulkSize
 import no.ndla.searchapi.integration.{GrepApiClient, TaxonomyApiClient}
 import no.ndla.searchapi.model.api.InvalidIndexBodyException
 import no.ndla.searchapi.model.domain.article.Article
@@ -19,6 +19,7 @@ import no.ndla.searchapi.model.domain.{ReindexResult, RequestInfo}
 import no.ndla.searchapi.service.search.{ArticleIndexService, DraftIndexService, IndexService, LearningPathIndexService}
 import org.scalatra._
 
+import javax.servlet.http.HttpServletRequest
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
@@ -106,9 +107,11 @@ trait InternController {
 
     post("/index/draft") {
       val requestInfo = RequestInfo()
+      val bulkSize = intOrDefault("bulk-size", IndexBulkSize)
+
       val draftIndex = Future {
         requestInfo.setRequestInfo()
-        ("drafts", draftIndexService.indexDocuments())
+        ("drafts", draftIndexService.indexDocuments(bulkSize))
       }
 
       resolveResultFutures(List(draftIndex))
@@ -116,9 +119,11 @@ trait InternController {
 
     post("/index/article") {
       val requestInfo = RequestInfo()
+      val bulkSize = intOrDefault("bulk-size", IndexBulkSize)
+
       val articleIndex = Future {
         requestInfo.setRequestInfo()
-        ("articles", articleIndexService.indexDocuments())
+        ("articles", articleIndexService.indexDocuments(bulkSize))
       }
 
       resolveResultFutures(List(articleIndex))
@@ -126,9 +131,11 @@ trait InternController {
 
     post("/index/learningpath") {
       val requestInfo = RequestInfo()
+      val bulkSize = intOrDefault("bulk-size", IndexBulkSize)
+
       val learningPathIndex = Future {
         requestInfo.setRequestInfo()
-        ("learningpaths", learningPathIndexService.indexDocuments())
+        ("learningpaths", learningPathIndexService.indexDocuments(bulkSize))
       }
 
       resolveResultFutures(List(learningPathIndex))
@@ -136,6 +143,7 @@ trait InternController {
 
     post("/index") {
       val runInBackground = booleanOrDefault("run-in-background", default = false)
+      val bulkSize = intOrDefault("bulk-size", IndexBulkSize)
       val bundles = for {
         taxonomyBundle <- taxonomyApiClient.getTaxonomyBundle()
         grepBundle <- grepApiClient.getGrepBundle()
@@ -150,15 +158,15 @@ trait InternController {
           val indexes = List(
             Future {
               requestInfo.setRequestInfo()
-              ("learningpaths", learningPathIndexService.indexDocuments(taxonomyBundle, grepBundle))
+              ("learningpaths", learningPathIndexService.indexDocuments(taxonomyBundle, grepBundle, bulkSize))
             },
             Future {
               requestInfo.setRequestInfo()
-              ("articles", articleIndexService.indexDocuments(taxonomyBundle, grepBundle))
+              ("articles", articleIndexService.indexDocuments(taxonomyBundle, grepBundle, bulkSize))
             },
             Future {
               requestInfo.setRequestInfo()
-              ("drafts", draftIndexService.indexDocuments(taxonomyBundle, grepBundle))
+              ("drafts", draftIndexService.indexDocuments(taxonomyBundle, grepBundle, bulkSize))
             }
           )
           if (runInBackground) {

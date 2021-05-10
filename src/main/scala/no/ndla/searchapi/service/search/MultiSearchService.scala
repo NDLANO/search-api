@@ -16,6 +16,7 @@ import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
   ElasticSearchIndexMaxResultWindow,
   ElasticSearchScrollKeepAlive,
+  IndexBulkSize,
   SearchIndexes
 }
 import no.ndla.searchapi.integration.Elastic4sClient
@@ -188,11 +189,11 @@ trait MultiSearchService {
 
       val articleFuture = Future {
         requestInfo.setRequestInfo()
-        articleIndexService.indexDocuments()
+        articleIndexService.indexDocuments(IndexBulkSize)
       }
       val learningPathFuture = Future {
         requestInfo.setRequestInfo()
-        learningPathIndexService.indexDocuments()
+        learningPathIndexService.indexDocuments(IndexBulkSize)
       }
 
       handleScheduledIndexResults(SearchApiProperties.SearchIndexes(SearchType.Articles), articleFuture)
