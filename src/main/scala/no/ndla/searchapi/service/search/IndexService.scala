@@ -263,6 +263,8 @@ trait IndexService {
             )
             .indexSetting("max_result_window", SearchApiProperties.ElasticSearchIndexMaxResultWindow)
             .replicas(0)
+            .shards(1)
+            .includeTypeName(true)
         }
 
         response match {

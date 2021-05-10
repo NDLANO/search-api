@@ -40,8 +40,9 @@ object StandaloneIndexing extends LazyLogging {
 
   def sendSlackError(errors: Seq[String]): Unit = {
     val enableSlackMessageFlag = "SLACK_ERROR_ENABLED"
-    if (!booleanOrFalse(enableSlackMessageFlag)) {
-      logger.info(s"Skipping sending message to slack because $enableSlackMessageFlag...")
+    val slackEnabled = booleanOrFalse(enableSlackMessageFlag)
+    if (!slackEnabled) {
+      logger.info(s"Skipping sending message to slack because $enableSlackMessageFlag=$slackEnabled...")
       return
     } else {
       logger.info("Sending message to slack...")
