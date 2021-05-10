@@ -894,8 +894,7 @@ trait SearchConverterService {
                 val relevanceId =
                   subjectConnections
                     .find(sc => sc.subjectid == subject.id)
-                    .get
-                    .relevanceId
+                    .flatMap(_.relevanceId)
                     .getOrElse("urn:relevance:core")
                 val relevanceName = bundle.relevances
                   .find(r => r.id == relevanceId)
@@ -1038,7 +1037,7 @@ trait SearchConverterService {
               visibleSubjects.flatMap(subject => {
                 val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections, filterVisibles)
                 val pathIds = (topicPath :+ subject.id).reverse
-                val relevanceId = relevanceIds.head
+                val relevanceId = relevanceIds.headOption.getOrElse("urn.relevance.core")
                 val relevanceName = bundle.relevances
                   .find(r => r.id == relevanceId)
                   .map(_.name)
