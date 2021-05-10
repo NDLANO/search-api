@@ -36,11 +36,11 @@ case class NdlaE4sClient(client: ElasticClient) extends LazyLogging {
                                            ec: ExecutionContext): Future[Try[RequestSuccess[U]]] = {
     client
       .execute(request)
-      .recover { case ex: Throwable => Failure(ex) }
       .map {
         case failure: RequestFailure   => Failure(NdlaSearchException(failure))
         case result: RequestSuccess[U] => Success(result)
       }
+      .recover(ex => Failure(ex))
   }
 
   def executeBlocking[T, U](request: T)(implicit handler: Handler[T, U], mf: Manifest[U]): Try[RequestSuccess[U]] = {
@@ -54,12 +54,9 @@ case class NdlaE4sClient(client: ElasticClient) extends LazyLogging {
       .get
 
     response match {
-      case Success(result) =>
-        result match {
-          case failure: RequestFailure   => Failure(NdlaSearchException(failure))
-          case result: RequestSuccess[U] => Success(result)
-        }
-      case Failure(ex) => Failure(ex)
+      case Success(failure: RequestFailure)   => Failure(NdlaSearchException(failure))
+      case Success(result: RequestSuccess[U]) => Success(result)
+      case Failure(ex)                        => Failure(ex)
     }
   }
 }
