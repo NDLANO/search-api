@@ -1033,34 +1033,74 @@ object TestData {
   )
 
   val subjectTopicConnections = List(
-    SubjectTopicConnection("urn:subject:1", "urn:topic:1", "urn:subject-topic:1", primary = true, 1),
-    SubjectTopicConnection("urn:subject:1", "urn:topic:3", "urn:subject-topic:2", primary = true, 1),
-    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1),
-    SubjectTopicConnection("urn:subject:3", "urn:topic:5", "urn:subject-topic:4", primary = true, 1),
+    SubjectTopicConnection("urn:subject:1",
+                           "urn:topic:1",
+                           "urn:subject-topic:1",
+                           primary = true,
+                           1,
+                           Some("urn:relevance:core")),
+    SubjectTopicConnection("urn:subject:1",
+                           "urn:topic:3",
+                           "urn:subject-topic:2",
+                           primary = true,
+                           1,
+                           Some("urn:relevance:core")),
+    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1, None),
+    SubjectTopicConnection("urn:subject:3", "urn:topic:5", "urn:subject-topic:4", primary = true, 1, None),
   )
 
   val topicResourceConnections = List(
-    TopicResourceConnection("urn:topic:1", "urn:resource:1", "urn:topic-resource:1", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:1", "urn:topic-resource:2", primary = true, 1),
-    TopicResourceConnection("urn:topic:1", "urn:resource:2", "urn:topic-resource:3", primary = true, 1),
-    TopicResourceConnection("urn:topic:3", "urn:resource:3", "urn:topic-resource:4", primary = true, 1),
-    TopicResourceConnection("urn:topic:2", "urn:resource:4", "urn:topic-resource:5", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:6", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:7", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:8", primary = true, 1),
-    TopicResourceConnection("urn:topic:3", "urn:resource:5", "urn:topic-resource:9", primary = true, 1),
-    TopicResourceConnection("urn:topic:1", "urn:resource:8", "urn:topic-resource:10", primary = true, 1),
-    TopicResourceConnection("urn:topic:1", "urn:resource:9", "urn:topic-resource:11", primary = true, 1),
-    TopicResourceConnection("urn:topic:3", "urn:resource:10", "urn:topic-resource:12", primary = true, 1),
-    TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1),
-    TopicResourceConnection("urn:topic:1", "urn:resource:13", "urn:topic-resource:15", primary = true, 1),
-    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1),
-    TopicResourceConnection("urn:topic:5", "urn:resource:1", "urn:topic-resource:17", primary = true, 1)
+    TopicResourceConnection("urn:topic:1",
+                            "urn:resource:1",
+                            "urn:topic-resource:1",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:4",
+                            "urn:resource:1",
+                            "urn:topic-resource:2",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:1",
+                            "urn:resource:2",
+                            "urn:topic-resource:3",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:3",
+                            "urn:resource:3",
+                            "urn:topic-resource:4",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:2",
+                            "urn:resource:4",
+                            "urn:topic-resource:5",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:6", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:7", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:8", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:3", "urn:resource:5", "urn:topic-resource:9", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:1", "urn:resource:8", "urn:topic-resource:10", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:1", "urn:resource:9", "urn:topic-resource:11", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:3", "urn:resource:10", "urn:topic-resource:12", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:1", "urn:resource:13", "urn:topic-resource:15", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1, None),
+    TopicResourceConnection("urn:topic:5", "urn:resource:1", "urn:topic-resource:17", primary = true, 1, None)
   )
 
   val topicSubtopicConnections = List(
-    TopicSubtopicConnection("urn:topic:1", "urn:topic:2", "urn:topic-subtopic:1", primary = true, 1)
+    TopicSubtopicConnection("urn:topic:1",
+                            "urn:topic:2",
+                            "urn:topic-subtopic:1",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core"))
   )
 
   val topicResourceTypeConnections = List(
@@ -1196,6 +1236,8 @@ object TestData {
           relevanceId = "urn:relevance:core",
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
         )),
+      relevanceId = "urn:relevance:core",
+      relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff"))),
       resourceTypes = searchableResourceTypes,
       parentTopicIds = List("urn:topic:1")
     )

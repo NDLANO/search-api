@@ -58,8 +58,8 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     Tag(Seq("the", "words"), "unknown")
   )
 
-  val visibleMetadata = Some(Metadata(Seq.empty, visible = true))
-  val invisibleMetadata = Some(Metadata(Seq.empty, visible = false))
+  val visibleMetadata: Option[Metadata] = Some(Metadata(Seq.empty, visible = true))
+  val invisibleMetadata: Option[Metadata] = Some(Metadata(Seq.empty, visible = false))
 
   val resources = List(
     Resource("urn:resource:1",
@@ -72,14 +72,24 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     Topic("urn:topic:10", "Topic1", Some("urn:article:10"), Some("/subject:1/topic:10"), visibleMetadata))
 
   val topicResourceConnections = List(
-    TopicResourceConnection("urn:topic:10", "urn:resource:1", "urn:topic-resource:abc123", true, 1))
-  val subject1 = TaxSubject("urn:subject:1", "Subject1", None, Some("/subject:1"), visibleMetadata)
+    TopicResourceConnection("urn:topic:10",
+                            "urn:resource:1",
+                            "urn:topic-resource:abc123",
+                            true,
+                            1,
+                            Some("urn:relevance:core")))
+  val subject1: TaxSubject = TaxSubject("urn:subject:1", "Subject1", None, Some("/subject:1"), visibleMetadata)
   val subjects = List(subject1)
 
   val subjectTopicConnections = List(
-    SubjectTopicConnection("urn:subject:1", "urn:topic:10", "urn:subject-topic:8180abc", true, 1))
+    SubjectTopicConnection("urn:subject:1",
+                           "urn:topic:10",
+                           "urn:subject-topic:8180abc",
+                           true,
+                           1,
+                           Some("urn:relevance:core")))
 
-  val emptyBundle = TaxonomyBundle(
+  val emptyBundle: TaxonomyBundle = TaxonomyBundle(
     filters = List.empty,
     relevances = List.empty,
     resourceFilterConnections = List.empty,
