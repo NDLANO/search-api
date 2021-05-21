@@ -971,7 +971,7 @@ trait SearchConverterService {
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
         filters = contextFilters,
-        relevanceId = relevanceId,
+        relevanceId = Some(relevanceId),
         relevance = relevance,
         resourceTypes = searchableResourceTypes,
         parentTopicIds = parentTopics
