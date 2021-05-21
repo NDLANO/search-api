@@ -1236,7 +1236,7 @@ object TestData {
           relevanceId = "urn:relevance:core",
           relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
         )),
-      relevanceId = "urn:relevance:core",
+      relevanceId = Some("urn:relevance:core"),
       relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff"))),
       resourceTypes = searchableResourceTypes,
       parentTopicIds = List("urn:topic:1")
