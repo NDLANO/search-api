@@ -10,26 +10,26 @@ package no.ndla.searchapi.controller
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.MINUTES
-
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
   DefaultPageSize,
   ElasticSearchIndexMaxResultWindow,
   ElasticSearchScrollKeepAlive,
-  MaxPageSize,
-  InitialScrollContextKeywords
+  InitialScrollContextKeywords,
+  MaxPageSize
 }
 import no.ndla.searchapi.auth.{Role, User, UserInfo}
-import no.ndla.searchapi.integration.SearchApiClient
+import no.ndla.searchapi.integration.{FeideApiClient, SearchApiClient}
 import no.ndla.searchapi.model.api.{
   AccessDeniedException,
   Error,
+  FeideApiException,
   GroupSearchResult,
   MultiSearchResult,
   SearchResults,
   ValidationError
 }
-import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.article.{Availability, LearningResourceType}
 import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, SearchParams, Sort}
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
@@ -45,6 +45,7 @@ import org.scalatra.Ok
 import org.scalatra.swagger.{ResponseMessage, Swagger, SwaggerSupport}
 import org.scalatra.util.NotNothing
 
+import javax.servlet.http.HttpServletRequest
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.language.reflectiveCalls
@@ -58,7 +59,8 @@ trait SearchController {
     with SearchConverterService
     with SearchService
     with MultiDraftSearchService
-    with User =>
+    with User
+    with FeideApiClient =>
   val searchController: SearchController
 
   class SearchController(implicit val swagger: Swagger) extends NdlaController with SwaggerSupport {
@@ -186,6 +188,8 @@ trait SearchController {
         "embed-id",
         "Return only results with embed data-resource_id, data-videoid or data-url with the specified id.")
 
+    private val feideToken = Param[Option[String]]("FeideAuthorization", "Header containing FEIDE access token.")
+
     private def asQueryParam[T: Manifest: NotNothing](param: Param[T]) =
       queryParam[T](param.paramName).description(param.description)
 
@@ -203,6 +207,7 @@ trait SearchController {
           .description("Search across multiple groups of learning resources")
           .parameters(
             asHeaderParam(correlationId),
+            asHeaderParam(feideToken),
             asQueryParam(query),
             asQueryParam(groupTypes),
             asQueryParam(pageNo),
@@ -247,30 +252,35 @@ trait SearchController {
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
 
-      val settings = SearchSettings(
-        query = query,
-        fallback = fallback,
-        language = language,
-        license = None,
-        page = page,
-        pageSize = pageSize,
-        sort = sort,
-        withIdIn = idList,
-        taxonomyFilters = taxonomyFilters,
-        subjects = subjects,
-        resourceTypes = resourceTypes ++ anotherResourceTypes,
-        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances,
-        grepCodes = grepCodes,
-        shouldScroll = false,
-        filterByNoResourceType = false,
-        aggregatePaths = aggregatePaths,
-        embedResource = embedResource,
-        embedId = embedId
-      )
+      getAvailability() match {
+        case Failure(ex) => errorHandler(ex)
+        case Success(availability) =>
+          val settings = SearchSettings(
+            query = query,
+            fallback = fallback,
+            language = language,
+            license = None,
+            page = page,
+            pageSize = pageSize,
+            sort = sort,
+            withIdIn = idList,
+            taxonomyFilters = taxonomyFilters,
+            subjects = subjects,
+            resourceTypes = resourceTypes ++ anotherResourceTypes,
+            learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+            supportedLanguages = supportedLanguagesFilter,
+            relevanceIds = relevances,
+            grepCodes = grepCodes,
+            shouldScroll = false,
+            filterByNoResourceType = false,
+            aggregatePaths = aggregatePaths,
+            embedResource = embedResource,
+            embedId = embedId,
+            availability = availability
+          )
 
-      groupSearch(settings, includeMissingResourceTypeGroup)
+          groupSearch(settings, includeMissingResourceTypeGroup)
+      }
     }
 
     private def searchInGroup(group: String, settings: SearchSettings): Try[GroupSearchResult] = {
@@ -362,7 +372,7 @@ trait SearchController {
       searchService.search(SearchParams(language, sort, page, pageSize, remainingParams), apisToSearch)
     }
 
-    private def getSearchSettingsFromRequest = {
+    private def getSearchSettingsFromRequest: Try[SearchSettings] = {
       val query = paramOrNone(this.query.paramName)
       val language = paramOrDefault(this.language.paramName, Language.AllLanguages)
       val fallback = booleanOrDefault(this.fallback.paramName, default = false)
@@ -384,28 +394,31 @@ trait SearchController {
       val embedResource = paramOrNone(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
 
-      SearchSettings(
-        query = query,
-        fallback = fallback,
-        language = language,
-        license = license,
-        page = page,
-        pageSize = pageSize,
-        sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
-        withIdIn = idList,
-        taxonomyFilters = taxonomyFilters,
-        subjects = subjects,
-        resourceTypes = resourceTypes ++ anotherResourceTypes,
-        learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
-        supportedLanguages = supportedLanguagesFilter,
-        relevanceIds = relevances,
-        grepCodes = grepCodes,
-        shouldScroll = shouldScroll,
-        filterByNoResourceType = false,
-        aggregatePaths = aggregatePaths,
-        embedResource = embedResource,
-        embedId = embedId
-      )
+      getAvailability().map(
+        availability =>
+          SearchSettings(
+            query = query,
+            fallback = fallback,
+            language = language,
+            license = license,
+            page = page,
+            pageSize = pageSize,
+            sort = sort.getOrElse(if (query.isDefined) Sort.ByRelevanceDesc else Sort.ByIdAsc),
+            withIdIn = idList,
+            taxonomyFilters = taxonomyFilters,
+            subjects = subjects,
+            resourceTypes = resourceTypes ++ anotherResourceTypes,
+            learningResourceTypes = contextTypes.flatMap(LearningResourceType.valueOf),
+            supportedLanguages = supportedLanguagesFilter,
+            relevanceIds = relevances,
+            grepCodes = grepCodes,
+            shouldScroll = shouldScroll,
+            filterByNoResourceType = false,
+            aggregatePaths = aggregatePaths,
+            embedResource = embedResource,
+            embedId = embedId,
+            availability = availability
+        ))
     }
 
     private def getDraftSearchSettingsFromRequest = {
@@ -499,6 +512,7 @@ trait SearchController {
           .description("Shows all learning resources. You can search too.")
           .parameters(
             asHeaderParam(correlationId),
+            asHeaderParam(feideToken),
             asQueryParam(pageNo),
             asQueryParam(pageSize),
             asQueryParam(contextTypes),
@@ -523,11 +537,15 @@ trait SearchController {
           .responseMessages(response500))
     ) {
       scrollWithOr(multiSearchService) {
-        multiSearchService.matchingQuery(getSearchSettingsFromRequest) match {
-          case Success(searchResult) =>
-            Ok(searchConverterService.toApiMultiSearchResult(searchResult), scrollIdToHeader(searchResult.scrollId))
-          case Failure(ex) =>
-            errorHandler(ex)
+        getSearchSettingsFromRequest match {
+          case Failure(ex) => errorHandler(ex)
+          case Success(settings) =>
+            multiSearchService.matchingQuery(settings) match {
+              case Success(searchResult) =>
+                Ok(searchConverterService.toApiMultiSearchResult(searchResult), scrollIdToHeader(searchResult.scrollId))
+              case Failure(ex) =>
+                errorHandler(ex)
+            }
         }
       }
     }
@@ -578,6 +596,23 @@ trait SearchController {
               errorHandler(ex)
           }
         }
+      }
+    }
+
+    /**
+      * This method fetches availability based on FEIDE access token in the request
+      * This does an actual api-call to the feide api and should be used sparingly.
+      */
+    private def getAvailability()(implicit req: HttpServletRequest): Try[List[Availability.Value]] = {
+      req.header(feideToken.paramName) match {
+        case None => Success(List.empty)
+        case Some(token) =>
+          feideApiClient.getUser(token) match {
+            case Success(user) => Success(user.availabilities)
+            case Failure(ex) =>
+              logger.error(s"Error when fetching user from feide with accessToken '$token'")
+              Failure(ex)
+          }
       }
     }
   }

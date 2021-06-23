@@ -18,8 +18,9 @@ import no.ndla.searchapi.SearchApiProperties.{
   ElasticSearchScrollKeepAlive,
   SearchIndexes
 }
-import no.ndla.searchapi.integration.Elastic4sClient
+import no.ndla.searchapi.integration.{Elastic4sClient, FeideApiClient}
 import no.ndla.searchapi.model.api.ResultWindowTooLargeException
+import no.ndla.searchapi.model.domain.article.Availability
 import no.ndla.searchapi.model.domain.{Language, RequestInfo, SearchResult}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.model.search.settings.SearchSettings
@@ -165,6 +166,11 @@ trait MultiSearchService {
             )
           )
 
+      val availsToFilterOut = Availability.values -- (settings.availability.toSet + Availability.everyone)
+      val availabilityFilter = Some(
+        not(availsToFilterOut.toSeq.map(a => termQuery("availability", a.toString)))
+      )
+
       List(
         licenseFilter,
         idFilter,
@@ -176,7 +182,8 @@ trait MultiSearchService {
         supportedLanguageFilter,
         taxonomyRelevanceFilter,
         grepCodesFilter,
-        embedResourceAndIdFilter
+        embedResourceAndIdFilter,
+        availabilityFilter
       ).flatten
     }
 

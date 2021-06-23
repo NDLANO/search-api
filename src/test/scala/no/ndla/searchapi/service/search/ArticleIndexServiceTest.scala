@@ -47,9 +47,9 @@ class ArticleIndexServiceTest
     articleIndexService.cleanupIndexes()
     articleIndexService.createIndexWithGeneratedName
 
-    articleIndexService.indexDocument(article5, TestData.taxonomyTestBundle, TestData.emptyGrepBundle)
-    articleIndexService.indexDocument(article6, TestData.taxonomyTestBundle, TestData.emptyGrepBundle)
-    articleIndexService.indexDocument(article7, TestData.taxonomyTestBundle, TestData.emptyGrepBundle)
+    articleIndexService.indexDocument(article5, TestData.taxonomyTestBundle, TestData.emptyGrepBundle).get
+    articleIndexService.indexDocument(article6, TestData.taxonomyTestBundle, TestData.emptyGrepBundle).get
+    articleIndexService.indexDocument(article7, TestData.taxonomyTestBundle, TestData.emptyGrepBundle).get
 
     blockUntil(() => { articleIndexService.countDocuments == 3 })
 

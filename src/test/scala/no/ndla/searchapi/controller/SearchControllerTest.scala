@@ -183,4 +183,8 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
 
   }
 
+  test("That fetching feide user only happens if token is available") {
+    ???
+  }
+
 }
