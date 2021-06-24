@@ -9,8 +9,10 @@
 package no.ndla.searchapi.controller
 
 import no.ndla.searchapi.auth.{Role, UserInfo}
+import no.ndla.searchapi.integration.FeideExtendedUserInfo
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.SearchParams
+import no.ndla.searchapi.model.domain.article.Availability
 import no.ndla.searchapi.model.search.settings.{MultiDraftSearchSettings, SearchSettings}
 import no.ndla.searchapi.{SearchSwagger, TestData, TestEnvironment, UnitSuite}
 import org.mockito.ArgumentMatchers.{eq => eqTo, _}
@@ -183,8 +185,46 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
 
   }
 
-  test("That fetching feide user only happens if token is available") {
-    ???
+  test("That fetching feide user doesnt happen if no token is supplied") {
+    reset(multiSearchService)
+    val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Seq.empty, None)
+    when(multiSearchService.matchingQuery(any)).thenReturn(Success(multiResult))
+
+    val baseSettings = TestData.searchSettings.copy(pageSize = 10, language = "all")
+
+    get("/test/", params = Seq.empty, headers = Seq()) {
+      val expectedSettings = baseSettings.copy(availability = List())
+      status should be(200)
+      verify(multiSearchService, times(1)).matchingQuery(eqTo(expectedSettings))
+    }
+
+    verify(feideApiClient, never).getUser(any)
+  }
+
+  test("That fetching feide user does happen token is supplied") {
+    reset(multiSearchService)
+    val teacheruser = FeideExtendedUserInfo(displayName = "Johnny Bravo",
+                                            eduPersonAffiliation = Seq("employee", "staff"),
+                                            eduPersonPrimaryAffiliation = "employee")
+    val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Seq.empty, None)
+    when(feideApiClient.getUser(any)).thenReturn(Success(teacheruser))
+    when(multiSearchService.matchingQuery(any)).thenReturn(Success(multiResult))
+
+    val baseSettings = TestData.searchSettings.copy(pageSize = 10, language = "all")
+    val teacherToken = "abcd"
+
+    get("/test/", params = Seq.empty, headers = Seq("FeideAuthorization" -> teacherToken)) {
+      val expectedSettings = baseSettings.copy(
+        availability = List(
+          Availability.everyone,
+          Availability.teacher,
+          Availability.student
+        ))
+      status should be(200)
+      verify(multiSearchService, times(1)).matchingQuery(eqTo(expectedSettings))
+    }
+
+    verify(feideApiClient, times(1)).getUser(eqTo(teacherToken))
   }
 
 }
