@@ -27,6 +27,7 @@ trait TestEnvironment
     with AudioApiClient
     with ConverterService
     with DraftApiClient
+    with FeideApiClient
     with Elastic4sClient
     with HealthController
     with ImageApiClient
@@ -61,6 +62,7 @@ trait TestEnvironment
   val imageApiClient = mock[ImageApiClient]
   val audioApiClient = mock[AudioApiClient]
   val articleApiClient = mock[ArticleApiClient]
+  val feideApiClient = mock[FeideApiClient]
 
   val SearchClients = Map[String, SearchApiClient](
     "articles" -> draftApiClient,

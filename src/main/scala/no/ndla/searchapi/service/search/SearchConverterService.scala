@@ -281,7 +281,8 @@ trait SearchConverterService {
           // To be removed
           embedResources = embedResources,
           // To be removed
-          embedIds = embedIds
+          embedIds = embedIds,
+          availability = articleWithAgreement.availability.toString
         ))
 
     }

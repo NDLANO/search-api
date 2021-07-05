@@ -34,4 +34,5 @@ case class SearchableArticle(
     // To be removed
     embedIds: SearchableLanguageList,
     embedResourcesAndIds: List[EmbedValues],
+    availability: String,
 )

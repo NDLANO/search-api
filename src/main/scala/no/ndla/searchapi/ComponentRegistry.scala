@@ -40,6 +40,7 @@ object ComponentRegistry
     with SearchService
     with ApiSearchService
     with SearchController
+    with FeideApiClient
     with InternController
     with User
     with SearchApiClient
@@ -62,6 +63,7 @@ object ComponentRegistry
   lazy val imageApiClient = new ImageApiClient(ImageApiUrl)
   lazy val audioApiClient = new AudioApiClient(AudioApiUrl)
   lazy val articleApiClient = new ArticleApiClient(ArticleApiUrl)
+  lazy val feideApiClient = new FeideApiClient
   lazy val SearchClients = Map[String, SearchApiClient](
     draftApiClient.name -> draftApiClient,
     learningPathApiClient.name -> learningPathApiClient,

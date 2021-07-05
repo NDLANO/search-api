@@ -77,8 +77,9 @@ class MultiSearchServiceTest
       .contains(s"urn:article:${ar.id.get}")
 
   private def expectedAllPublicArticles(language: String) = {
-    val x = if (language == "all") { TestData.articlesToIndex } else {
-      TestData.articlesToIndex.filter(_.title.map(_.language).contains(language))
+    val x = if (language == "all") { TestData.articlesToIndex.filter(_.availability == Availability.everyone) } else {
+      TestData.articlesToIndex.filter(a =>
+        a.title.map(_.language).contains(language) && a.availability == Availability.everyone)
     }
     x.filter(_.copyright.license != "copyrighted")
   }
@@ -923,6 +924,30 @@ class MultiSearchServiceTest
     search2.totalCount should be(1)
     search2.results.head.id should be(12)
 
+  }
+
+  test("Empty availability filtering returns 'everyone', others works as expected") {
+    val Success(search1) =
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("utilgjengelig"), availability = List.empty))
+    search1.totalCount should be(0)
+    search1.results.map(_.id) should be(Seq.empty)
+
+    val Success(search2) = multiSearchService.matchingQuery(
+      searchSettings.copy(query = Some("utilgjengelig"), availability = List(Availability.everyone)))
+    search2.totalCount should be(0)
+    search2.results.map(_.id) should be(Seq.empty)
+
+    val Success(search3) = multiSearchService.matchingQuery(
+      searchSettings.copy(query = Some("utilgjengelig"),
+                          availability = List(Availability.everyone, Availability.student)))
+    search3.totalCount should be(0)
+    search3.results.map(_.id) should be(Seq.empty)
+
+    val Success(search4) = multiSearchService.matchingQuery(
+      searchSettings.copy(query = Some("utilgjengelig"),
+                          availability = List(Availability.everyone, Availability.student, Availability.teacher)))
+    search4.totalCount should be(1)
+    search4.results.map(_.id) should be(Seq(13))
   }
 
   def blockUntil(predicate: () => Boolean): Unit = {

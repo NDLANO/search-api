@@ -47,6 +47,11 @@ trait IndexService {
     val documentType: String
     val searchIndex: String
 
+    // Setting this to suppress the warning, since it will default to '1' in the new version.
+    // The value '5' was chosen since that is what was the default earlier (which worked fine).
+    // However there are probably more optimal values.
+    val indexShards: Int = 5
+
     val shingle: ShingleTokenFilter =
       ShingleTokenFilter(name = "shingle", minShingleSize = Some(2), maxShingleSize = Some(3))
 
@@ -236,6 +241,8 @@ trait IndexService {
       } else {
         val response = e4sClient.execute {
           createIndex(indexName)
+            .shards(indexShards)
+            .includeTypeName(true) // Explicitly set to suppress warnings about upgrade, should probably be removed after upgrade.
             .mappings(getMapping)
             .analysis(
               trigram,

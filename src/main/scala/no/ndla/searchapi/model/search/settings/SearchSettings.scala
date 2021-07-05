@@ -8,7 +8,7 @@
 package no.ndla.searchapi.model.search.settings
 
 import no.ndla.searchapi.model.domain.Sort
-import no.ndla.searchapi.model.domain.article.LearningResourceType
+import no.ndla.searchapi.model.domain.article.{Availability, LearningResourceType}
 
 case class SearchSettings(
     query: Option[String],
@@ -30,5 +30,6 @@ case class SearchSettings(
     filterByNoResourceType: Boolean, // If true, and resourceTypes is empty, results will have no resource-type or taxonomy context
     aggregatePaths: List[String],
     embedResource: Option[String],
-    embedId: Option[String]
+    embedId: Option[String],
+    availability: List[Availability.Value]
 )

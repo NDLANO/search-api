@@ -92,7 +92,8 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       // To be removed
       embedResources = embedResources,
       // To be removed
-      embedIds = embedIds
+      embedIds = embedIds,
+      availability = "everyone"
     )
     val json = write(original)
     val deserialized = read[SearchableArticle](json)
@@ -183,7 +184,8 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       // To be removed
       embedResources = embedResources,
       // To be removed
-      embedIds = embedIds
+      embedIds = embedIds,
+      availability = "everyone"
     )
 
     val json = write(original)

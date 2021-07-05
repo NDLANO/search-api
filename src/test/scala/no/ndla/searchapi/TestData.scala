@@ -152,6 +152,9 @@ object TestData {
     "ndalId54321",
     today.minusDays(2),
     LearningResourceType.Article,
+    Seq.empty,
+    Seq.empty,
+    Availability.everyone,
     Seq.empty
   )
 
@@ -172,6 +175,9 @@ object TestData {
     "ndalId54321",
     today,
     LearningResourceType.Article,
+    Seq.empty,
+    Seq.empty,
+    Availability.everyone,
     Seq.empty
   )
 
@@ -192,6 +198,9 @@ object TestData {
     "ndalId54321",
     today,
     LearningResourceType.Article,
+    Seq.empty,
+    Seq.empty,
+    Availability.everyone,
     Seq.empty
   )
 
@@ -386,6 +395,26 @@ object TestData {
     articleType = LearningResourceType.Article
   )
 
+  val article13: Article = TestData.sampleArticleWithPublicDomain.copy(
+    id = Option(13),
+    title = List(Title("Hemmelig og utilgjengelig", "nb")),
+    content = List(
+      ArticleContent(
+        "Hemmelig",
+        "nb"
+      )
+    ),
+    tags = List(Tag(List(""), "nb")),
+    visualElement = List(),
+    introduction = List(ArticleIntroduction("Intro", "nb")),
+    metaDescription = List(MetaDescription("", "nb")),
+    created = today.minusDays(10),
+    updated = today.minusDays(5),
+    published = today.minusDays(5),
+    articleType = LearningResourceType.Article,
+    availability = Availability.teacher
+  )
+
   val articlesToIndex: Seq[Article] = List(
     article1,
     article2,
@@ -398,10 +427,11 @@ object TestData {
     article9,
     article10,
     article11,
-    article12
+    article12,
+    article13
   )
 
-  val emptyDomainArticle = Article(
+  val emptyDomainArticle: Article = Article(
     id = None,
     revision = None,
     title = Seq.empty,
@@ -418,10 +448,13 @@ object TestData {
     updatedBy = "",
     published = today,
     articleType = LearningResourceType.Article,
-    grepCodes = Seq.empty
+    grepCodes = Seq.empty,
+    conceptIds = Seq.empty,
+    availability = Availability.everyone,
+    relatedContent = Seq.empty
   )
 
-  val emptyDomainDraft = Draft(
+  val emptyDomainDraft: Draft = Draft(
     id = None,
     revision = None,
     status = draft.Status(draft.ArticleStatus.DRAFT, Set.empty),
@@ -1160,7 +1193,7 @@ object TestData {
     tverrfagligeTemaer = List(GrepElement("TT2", Seq(GrepTitle("default", "Demokrati og medborgerskap"))))
   )
 
-  val searchSettings = SearchSettings(
+  val searchSettings: SearchSettings = SearchSettings(
     query = None,
     fallback = false,
     language = Language.DefaultLanguage,
@@ -1180,10 +1213,11 @@ object TestData {
     filterByNoResourceType = false,
     aggregatePaths = List.empty,
     embedResource = None,
-    embedId = None
+    embedId = None,
+    availability = List.empty
   )
 
-  val multiDraftSearchSettings = MultiDraftSearchSettings(
+  val multiDraftSearchSettings: MultiDraftSearchSettings = MultiDraftSearchSettings(
     query = None,
     noteQuery = None,
     fallback = false,

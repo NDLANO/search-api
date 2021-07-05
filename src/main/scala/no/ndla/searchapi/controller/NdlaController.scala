@@ -9,12 +9,15 @@
 package no.ndla.searchapi.controller
 
 import com.typesafe.scalalogging.LazyLogging
+
 import javax.servlet.http.HttpServletRequest
 import no.ndla.network.{ApplicationUrl, AuthUser, CorrelationID}
 import no.ndla.searchapi.SearchApiProperties.{CorrelationIdHeader, CorrelationIdKey}
+import no.ndla.searchapi.integration.FeideApiClient
 import no.ndla.searchapi.model.api.{
   AccessDeniedException,
   Error,
+  FeideApiException,
   InvalidIndexBodyException,
   ResultWindowTooLargeException,
   TaxonomyException,

@@ -13,6 +13,7 @@ import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article.{
   ArticleContent,
   ArticleMetaImage,
+  Availability,
   Copyright,
   LearningResourceType,
   MetaDescription
@@ -39,7 +40,8 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
       new EnumNameSerializer(StepType) +
       new EnumNameSerializer(StepStatus) +
       new EnumNameSerializer(EmbedType) +
-      new EnumNameSerializer(LearningResourceType) ++
+      new EnumNameSerializer(LearningResourceType) +
+      new EnumNameSerializer(Availability) ++
       org.json4s.ext.JodaTimeSerializers.all
 
   override val ndlaClient = new NdlaClient
@@ -77,7 +79,10 @@ class ArticleApiClientTest extends UnitSuite with TestEnvironment {
         "ndalId54321",
         today,
         LearningResourceType.Article,
-        grepCodes = Seq()
+        grepCodes = Seq(),
+        conceptIds = Seq(),
+        availability = Availability.everyone,
+        relatedContent = Seq.empty
       )
 
       val expectedResult = DomainDumpResults[domain.article.Article](

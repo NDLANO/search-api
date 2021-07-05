@@ -60,6 +60,7 @@ trait ArticleIndexService {
             keywordField("grepContexts.code"),
             textField("grepContexts.title"),
             keywordField("traits"),
+            keywordField("availability"),
             getTaxonomyContextMapping,
             nestedField("embedResourcesAndIds").fields(
               keywordField("resource"),
