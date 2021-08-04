@@ -12,6 +12,7 @@ import com.typesafe.scalalogging.LazyLogging
 import no.ndla.mapping.ISO639
 import no.ndla.mapping.License.getLicense
 import no.ndla.searchapi.SearchApiProperties
+import no.ndla.searchapi.SearchApiProperties.DefaultLanguage
 import no.ndla.searchapi.integration._
 import no.ndla.searchapi.model.api._
 import no.ndla.searchapi.model.api.article.ArticleSummary
@@ -818,9 +819,9 @@ trait SearchConverterService {
           Some(
             search.SearchableTaxonomyFilter(
               filterId = filter.id,
-              name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, filter.name))), // TODO: Get translations
+              name = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, filter.name))), // TODO: Get translations
               relevanceId = filterConnection.relevanceId,
-              relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName))) // TODO: Get translations
+              relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName))) // TODO: Get translations
             ))
         case _ => None
       })
@@ -903,7 +904,7 @@ trait SearchConverterService {
                   .find(r => r.id == relevanceId)
                   .map(_.name)
                   .getOrElse("")
-                val relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName)))
+                val relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName)))
 
                 // One context per filter, but one for subject if no filters.
                 if (contextFilters.isEmpty) {
@@ -953,13 +954,11 @@ trait SearchConverterService {
         rt =>
           SearchableTaxonomyResourceType(
             id = rt.id,
-            name = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, rt.name))) // TODO: Get translations
+            name = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, rt.name))) // TODO: Get translations
         ))
 
-      val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, subject.name))) // TODO: Get translations
-      val breadcrumbList = Seq(LanguageValue(
-        Language.DefaultLanguage,
-        getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
+      val subjectLanguageValues = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, subject.name))) // TODO: Get translations
+      val breadcrumbList = Seq(LanguageValue(DefaultLanguage, getBreadcrumbFromIds(pathIds.dropRight(1), bundle))) // TODO: Get translations
       val breadcrumbs = SearchableLanguageList(breadcrumbList)
 
       val parentTopics = getAllParentTopicIds(taxonomyId, bundle)
@@ -1045,7 +1044,7 @@ trait SearchConverterService {
                   .find(r => r.id == relevanceId)
                   .map(_.name)
                   .getOrElse("")
-                val relevance = SearchableLanguageValues(Seq(LanguageValue(Language.DefaultLanguage, relevanceName)))
+                val relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName)))
 
                 // One context per filter, but one for subject if no filters.
                 if (contextFilters.isEmpty) {

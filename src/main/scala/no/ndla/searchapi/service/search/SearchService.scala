@@ -17,7 +17,7 @@ import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.SearchApiProperties.{ElasticSearchScrollKeepAlive, MaxPageSize}
+import no.ndla.searchapi.SearchApiProperties.{DefaultLanguage, ElasticSearchScrollKeepAlive, MaxPageSize}
 import no.ndla.searchapi.integration.Elastic4sClient
 import no.ndla.searchapi.model.api.{MultiSearchSuggestion, MultiSearchSummary, SearchSuggestion, SuggestOption}
 import no.ndla.searchapi.model.domain._
@@ -335,7 +335,7 @@ trait SearchService {
 
     def getSortDefinition(sort: Sort.Value, language: String): FieldSort = {
       val sortLanguage = language match {
-        case Language.NoLanguage => Language.DefaultLanguage
+        case Language.NoLanguage => DefaultLanguage
         case _                   => language
       }
 

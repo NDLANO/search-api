@@ -20,14 +20,16 @@ object SearchApiProperties extends LazyLogging {
   val Auth0LoginEndpoint = s"https://${AuthUser.getAuth0HostForEnv(Environment)}/authorize"
 
   val ApplicationPort: Int = propOrElse("APPLICATION_PORT", "80").toInt
-  val ContactEmail = "support+api@ndla.no"
-
-  val DefaultLanguage = "nb"
+  val DefaultLanguage: String = propOrElse("DEFAULT_LANGUAGE", "nb")
+  val ContactName: String = propOrElse("CONTACT_NAME", "NDLA")
+  val ContactUrl: String = propOrElse("CONTACT_URL", "ndla.no")
+  val ContactEmail: String = propOrElse("CONTACT_EMAIL", "support+api@ndla.no")
+  val TermsUrl: String = propOrElse("TERMS_URL", "https://om.ndla.no/tos")
 
   val CorrelationIdKey = "correlationID"
   val CorrelationIdHeader = "X-Correlation-ID"
 
-  lazy val Domain: String = Domains.get(Environment)
+  lazy val Domain: String = propOrElse("BACKEND_API_DOMAIN", Domains.get(Environment))
 
   val DraftApiUrl: String = s"http://${propOrElse("DRAFT_API_HOST", "draft-api.ndla-local")}"
   val ArticleApiUrl: String = s"http://${propOrElse("ARTICLE_API_HOST", "article-api.ndla-local")}"
@@ -38,7 +40,6 @@ object SearchApiProperties extends LazyLogging {
   val GrepApiUrl: String = s"https://${propOrElse("GREP_API_HOST", "data.udir.no")}"
 
   val SearchServer: String = propOrElse("SEARCH_SERVER", "http://search-search-api.ndla-local")
-  val SearchRegion: String = propOrElse("SEARCH_REGION", "eu-central-1")
   val RunWithSignedSearchRequests: Boolean = propOrElse("RUN_WITH_SIGNED_SEARCH_REQUESTS", "true").toBoolean
 
   val SearchIndexes: Map[SearchType.Value, String] = Map(

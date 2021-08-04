@@ -16,6 +16,7 @@ import no.ndla.searchapi.model.domain.{DomainDumpResults, Language, Tag, Title}
 import no.ndla.searchapi.model.search.LanguageValue
 import no.ndla.searchapi.{TestData, TestEnvironment, UnitSuite}
 import no.ndla.mapping.License.CC_BY
+import no.ndla.searchapi.SearchApiProperties.DefaultLanguage
 import org.joda.time.DateTime
 import org.json4s.Formats
 import org.json4s.ext.EnumNameSerializer
@@ -85,14 +86,14 @@ class LearningpathApiClientTest extends UnitSuite with TestEnvironment {
         Some(1),
         None,
         None,
-        List(domain.Title("tittel", Language.DefaultLanguage)),
-        List(domain.learningpath.Description("deskripsjon", Language.DefaultLanguage)),
+        List(domain.Title("tittel", DefaultLanguage)),
+        List(domain.learningpath.Description("deskripsjon", DefaultLanguage)),
         None,
         Some(60),
         domain.learningpath.LearningPathStatus.PUBLISHED,
         domain.learningpath.LearningPathVerificationStatus.CREATED_BY_NDLA,
         today,
-        List(domain.Tag(List("tag"), Language.DefaultLanguage)),
+        List(domain.Tag(List("tag"), DefaultLanguage)),
         "me",
         domain.learningpath.Copyright(CC_BY.toString, List.empty),
         List(domainLearningStep1, domainLearningStep2)
