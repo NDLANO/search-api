@@ -7,6 +7,7 @@
 
 package no.ndla.searchapi
 
+import no.ndla.searchapi.SearchApiProperties.DefaultLanguage
 import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.domain
 import no.ndla.searchapi.model.domain.article._
@@ -1196,7 +1197,7 @@ object TestData {
   val searchSettings: SearchSettings = SearchSettings(
     query = None,
     fallback = false,
-    language = Language.DefaultLanguage,
+    language = DefaultLanguage,
     license = None,
     page = 1,
     pageSize = 20,
@@ -1221,7 +1222,7 @@ object TestData {
     query = None,
     noteQuery = None,
     fallback = false,
-    language = Language.DefaultLanguage,
+    language = DefaultLanguage,
     license = None,
     page = 1,
     pageSize = 20,
