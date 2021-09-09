@@ -224,6 +224,7 @@ trait SearchController {
             asQueryParam(contextFilters),
             asQueryParam(includeMissingResourceTypeGroup),
             asQueryParam(aggregatePaths),
+            asQueryParam(grepCodes),
             asQueryParam(embedResource),
             asQueryParam(embedId)
           )
