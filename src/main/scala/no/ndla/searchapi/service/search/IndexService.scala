@@ -111,17 +111,17 @@ trait IndexService {
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
         val operations = for {
-          numIndexed <- sendToElastic(indexName, taxonomyBundle, grepBundle)
+          result <- sendToElastic(indexName, taxonomyBundle, grepBundle)
           aliasTarget <- getAliasTarget
           _ <- updateAliasTarget(aliasTarget, indexName)
-        } yield numIndexed
+        } yield result
 
         operations match {
           case Failure(f) =>
             deleteIndexWithName(Some(indexName))
             Failure(f)
-          case Success(totalIndexed) =>
-            Success(ReindexResult(totalIndexed, System.currentTimeMillis() - start))
+          case Success((count, totalCount)) =>
+            Success(ReindexResult(documentType, totalCount - count, count, System.currentTimeMillis() - start))
         }
       })
     }
@@ -130,7 +130,7 @@ trait IndexService {
         indexName: String,
         taxonomyBundle: TaxonomyBundle,
         grepBundle: GrepBundle
-    )(implicit mf: Manifest[D]): Try[Int] = {
+    )(implicit mf: Manifest[D]): Try[(Int, Int)] = {
       implicit val executionContext: ExecutionContextExecutorService =
         ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(3))
 
@@ -161,7 +161,7 @@ trait IndexService {
           }
 
           logger.info(s"$count/$totalCount documents ($documentType) were indexed successfully.")
-          Success(totalCount)
+          Success((count, totalCount))
 
         case notEmpty => notEmpty.head
       }
