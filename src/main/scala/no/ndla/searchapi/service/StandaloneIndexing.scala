@@ -116,6 +116,9 @@ object StandaloneIndexing extends LazyLogging {
     }
 
     val errors = reindexResult.collect {
+      case Success(ReindexResult(name, numErrors, totalIndexed, _)) if numErrors > 0 =>
+        val totalDocuments = numErrors + totalIndexed
+        s"Indexing of '$name' finished indexing with $numErrors errors ($totalIndexed/$totalDocuments)"
       case Failure(ex) =>
         logger.error("Indexing failed...", ex)
         ex.getMessage

@@ -7,4 +7,4 @@
 
 package no.ndla.searchapi.model.domain
 
-case class ReindexResult(totalIndexed: Int, millisUsed: Long)
+case class ReindexResult(name: String, failedIndexed: Int, totalIndexed: Int, millisUsed: Long)
