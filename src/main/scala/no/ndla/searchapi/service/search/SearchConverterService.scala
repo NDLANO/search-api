@@ -727,7 +727,6 @@ trait SearchConverterService {
         TaxonomyResourceType(id = rt.id, name = name.value, language = name.language)
       })
 
-      val filters = context.filters.map(filter => taxonomyFilterToApiFilter(filter, language))
       val relevance = findByLanguageOrBestEffort(context.relevance.languageValues, language).map(_.value).getOrElse("")
 
       ApiTaxonomyContext(
@@ -737,7 +736,7 @@ trait SearchConverterService {
         relevance = relevance,
         path = context.path,
         breadcrumbs = breadcrumbs,
-        filters = filters,
+        filters = List.empty,
         learningResourceType = context.contextType,
         resourceTypes = resourceTypes,
         language = language
@@ -775,55 +774,6 @@ trait SearchConverterService {
     private def getBreadcrumbFromIds(ids: List[String], bundle: TaxonomyBundle): Seq[String] = {
       ids.map(id => {
         bundle.getObject(id).map(_.name).getOrElse("")
-      })
-    }
-
-    /**
-      * Returns filters connected to an object and a subject.
-      *
-      * @param taxonomyElement Taxonomy Object (Can be resource or topic)
-      * @param subject Filters must be connected to subject
-      * @param bundle Bundle for resolving taxonomy
-      * @param objectFilterConnections [[ResourceFilterConnection]]'s or [[TopicFilterConnection]]'s
-      * @return
-      */
-    private def getFilters(taxonomyElement: TaxonomyElement,
-                           subject: TaxSubject,
-                           bundle: TaxonomyBundle,
-                           objectFilterConnections: List[FilterConnection],
-                           filterVisibles: Boolean): List[SearchableTaxonomyFilter] = {
-
-      val shouldIncludeFilter: Filter => Boolean = if (filterVisibles) { f =>
-        f.subjectId == subject.id && f.metadata.forall(_.visible)
-      } else { f =>
-        f.subjectId == subject.id
-      }
-
-      val subjectFilters = bundle.filters.filter(shouldIncludeFilter)
-      val subjectFilterIds = subjectFilters.map(_.id)
-
-      val filterConnections = objectFilterConnections.filter(fc => {
-        fc.objectId == taxonomyElement.id &&
-        subjectFilterIds.contains(fc.filterId)
-      })
-
-      val connectedFilters = filterConnections.map(fc => (bundle.filters.find(_.id == fc.filterId), fc))
-
-      connectedFilters.flatMap({
-        case (Some(filter), filterConnection) =>
-          val relevanceName = bundle.relevances
-            .find(r => r.id == filterConnection.relevanceId)
-            .map(_.name)
-            .getOrElse("")
-
-          Some(
-            search.SearchableTaxonomyFilter(
-              filterId = filter.id,
-              name = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, filter.name))), // TODO: Get translations
-              relevanceId = filterConnection.relevanceId,
-              relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName))) // TODO: Get translations
-            ))
-        case _ => None
       })
     }
 
@@ -880,58 +830,48 @@ trait SearchConverterService {
 
       getContextType(resource.id, resource.contentUri) match {
         case Success(contextType) =>
-          val contexts = parentTopicsAndPaths.map({
-            case (topic, topicPath) =>
-              val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
-              val subjects = bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
+          val contexts = topicsConnections.map({ tc =>
+            val relevanceId = tc.relevanceId.getOrElse("urn:relevance:core")
+            val relevanceName = bundle.relevances
+              .find(r => r.id == relevanceId)
+              .map(_.name)
+              .getOrElse("")
+            val relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName)))
 
-              val visibleSubjects = if (filterVisibles) {
-                subjects.filter(_.metadata.forall(_.visible))
-              } else {
-                subjects
-              }
+            val topic = bundle.topics.find(topic => tc.topicid == topic.id)
+            topic
+              .map({
+                t =>
+                  getParentTopicsAndPaths(t, bundle, List(t.id)).flatMap({
+                    case (topic, topicPath) =>
+                      // Subjects needed to check visibility
+                      val subjectConnections = bundle.subjectTopicConnections.filter(_.topicid == topic.id)
+                      val subjects =
+                        bundle.subjects.filter(subject => subjectConnections.map(_.subjectid).contains(subject.id))
 
-              visibleSubjects.flatMap(subject => {
-                val contextFilters =
-                  getFilters(resource, subject, bundle, bundle.resourceFilterConnections, filterVisibles)
-                val pathIds = (resource.id +: topicPath :+ subject.id).reverse
-                val relevanceId =
-                  subjectConnections
-                    .find(sc => sc.subjectid == subject.id)
-                    .flatMap(_.relevanceId)
-                    .getOrElse("urn:relevance:core")
-                val relevanceName = bundle.relevances
-                  .find(r => r.id == relevanceId)
-                  .map(_.name)
-                  .getOrElse("")
-                val relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName)))
+                      val visibleSubjects = if (filterVisibles) {
+                        subjects.filter(_.metadata.forall(_.visible))
+                      } else {
+                        subjects
+                      }
 
-                // One context per filter, but one for subject if no filters.
-                if (contextFilters.isEmpty) {
-                  List(
-                    getSearchableTaxonomyContext(resource.id,
-                                                 pathIds,
-                                                 subject,
-                                                 relevanceId,
-                                                 relevance,
-                                                 contextType,
-                                                 List.empty,
-                                                 resourceTypesWithParents,
-                                                 bundle))
-                } else {
-                  contextFilters.map(
-                    cf =>
-                      getSearchableTaxonomyContext(resource.id,
-                                                   pathIds,
-                                                   subject,
-                                                   relevanceId,
-                                                   relevance,
-                                                   contextType,
-                                                   List(cf),
-                                                   resourceTypesWithParents,
-                                                   bundle))
-                }
+                      visibleSubjects.flatMap(subject => {
+                        val pathIds = (resource.id +: topicPath :+ subject.id).reverse
+                        List(
+                          getSearchableTaxonomyContext(resource.id,
+                                                       pathIds,
+                                                       subject,
+                                                       relevanceId,
+                                                       relevance,
+                                                       contextType,
+                                                       List.empty,
+                                                       resourceTypesWithParents,
+                                                       bundle))
+
+                      })
+                  })
               })
+              .getOrElse(List.empty)
           })
           Success(contexts.flatten)
         case Failure(ex) => Failure(ex)
@@ -970,7 +910,7 @@ trait SearchConverterService {
         path = path,
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
-        filters = contextFilters,
+        filters = List.empty,
         relevanceId = Some(relevanceId),
         relevance = relevance,
         resourceTypes = searchableResourceTypes,
@@ -1020,9 +960,6 @@ trait SearchConverterService {
         case _ => parentTopicsConnections.map(tc => tc.relevanceId.getOrElse("urn:relevance:core"))
       }
 
-      val resourceTypeConnections = bundle.topicResourceTypeConnections.filter(_.topicId == topic.id)
-      val resourceTypesWithParents = getConnectedResourceTypesWithParents(resourceTypeConnections, bundle)
-
       getContextType(topic.id, topic.contentUri) match {
         case Success(contextType) =>
           val contexts = parentTopicsAndPaths.map({
@@ -1037,7 +974,6 @@ trait SearchConverterService {
               }
 
               visibleSubjects.flatMap(subject => {
-                val contextFilters = getFilters(topic, subject, bundle, bundle.topicFilterConnections, filterVisibles)
                 val pathIds = (topicPath :+ subject.id).reverse
                 val relevanceId = relevanceIds.headOption.getOrElse("urn.relevance.core")
                 val relevanceName = bundle.relevances
@@ -1046,31 +982,16 @@ trait SearchConverterService {
                   .getOrElse("")
                 val relevance = SearchableLanguageValues(Seq(LanguageValue(DefaultLanguage, relevanceName)))
 
-                // One context per filter, but one for subject if no filters.
-                if (contextFilters.isEmpty) {
-                  List(
-                    getSearchableTaxonomyContext(topic.id,
-                                                 pathIds,
-                                                 subject,
-                                                 relevanceId,
-                                                 relevance,
-                                                 contextType,
-                                                 List.empty,
-                                                 resourceTypesWithParents,
-                                                 bundle))
-                } else {
-                  contextFilters.map(
-                    cf =>
-                      getSearchableTaxonomyContext(topic.id,
-                                                   pathIds,
-                                                   subject,
-                                                   relevanceId,
-                                                   relevance,
-                                                   contextType,
-                                                   List(cf),
-                                                   resourceTypesWithParents,
-                                                   bundle))
-                }
+                List(
+                  getSearchableTaxonomyContext(topic.id,
+                                               pathIds,
+                                               subject,
+                                               relevanceId,
+                                               relevance,
+                                               contextType,
+                                               List.empty,
+                                               List.empty,
+                                               bundle))
               })
           })
           Success(contexts.flatten)

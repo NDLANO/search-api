@@ -371,41 +371,6 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     search.results(2).title.language should equal("en")
   }
 
-  test("That filtering for levels/filters on resources works as expected") {
-    val Success(search) =
-      multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:6")))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(6, 7))
-
-    val Success(search2) =
-      multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
-    search2.totalCount should be(3)
-    search2.results.map(_.id) should be(Seq(1, 3, 5))
-
-    val Success(search3) =
-      multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:8")))
-    search3.totalCount should be(1)
-  }
-
-  test("That filtering for mulitple levels/filters returns resources from all") {
-    val Success(search) =
-      multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:6", "urn:filter:1")))
-    search.totalCount should be(4)
-    search.results.map(_.id) should be(Seq(1, 6, 7, 12))
-  }
-
-  test("That filtering for levels/filters works with spaces as well") {
-    val Success(search) =
-      multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:7")))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(1, 3))
-  }
-
   test("That filtering for subjects works as expected") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
@@ -439,8 +404,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
         multiDraftSearchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
-    search2.totalCount should be(8)
-    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 12))
+    search2.totalCount should be(7)
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
@@ -576,35 +541,26 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That filtering by relevance id works when no subject is specified") {
     val Success(search1) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:core")))
-    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
+    search1.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
 
     val Success(search2) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages,
                                     relevanceIds = List("urn:relevance:supplementary")))
-    search2.results.map(_.id) should be(Seq(1, 3, 12))
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 12, 15))
 
     val Success(search3) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages,
                                     relevanceIds = List("urn:relevance:supplementary", "urn:relevance:core")))
-    search3.results.map(_.id) should be(Seq(1, 3, 5, 6, 7, 12))
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12, 15))
   }
 
   test("That filtering by relevance and subject only returns for relevances in filtered subjects") {
     val Success(search1) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages,
                                     relevanceIds = List("urn:relevance:core"),
-                                    subjects = List("urn:subject:1")))
+                                    subjects = List("urn:subject:2")))
 
-    search1.results.map(_.id) should be(Seq(1, 5))
-  }
-
-  test("That filtering by relevance and levels only returns for relevances in filtered levels") {
-    val Success(search) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = Language.AllLanguages,
-                                    relevanceIds = List("urn:relevance:supplementary"),
-                                    taxonomyFilters = List("urn:filter:7")))
-
-    search.results.map(_.id) should be(Seq(3))
+    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 11))
   }
 
   test("That scrolling works as expected") {

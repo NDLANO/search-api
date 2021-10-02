@@ -152,7 +152,6 @@ trait MultiSearchService {
         buildNestedEmbedField(settings.embedResource, settings.embedId, settings.language, settings.fallback)
 
       val taxonomyContextTypeFilter = contextTypeFilter(settings.learningResourceTypes)
-      val taxonomyFilterFilter = levelFilter(settings.taxonomyFilters)
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, settings.filterByNoResourceType)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
       val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects, settings.taxonomyFilters)
@@ -175,7 +174,6 @@ trait MultiSearchService {
         licenseFilter,
         idFilter,
         languageFilter,
-        taxonomyFilterFilter,
         taxonomySubjectFilter,
         taxonomyResourceTypesFilter,
         taxonomyContextTypeFilter,

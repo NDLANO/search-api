@@ -23,11 +23,7 @@ trait TaxonomyFiltering {
             relevanceId =>
               nestedQuery("contexts").query(
                 boolQuery().must(
-                  nestedQuery("contexts.filters").query(
-                    boolQuery().must(
-                      termQuery("contexts.filters.relevanceId", relevanceId),
-                      boolQuery().must(levels.map(f => termQuery(s"contexts.filters.filterId", f)))
-                    )),
+                  termQuery("contexts.relevanceId", relevanceId),
                   boolQuery().should(subjectIds.map(sId => termQuery("contexts.subjectId", sId)))
                 )
             )
@@ -55,18 +51,6 @@ trait TaxonomyFiltering {
             boolQuery().should(
               topics.map(
                 topicId => termQuery("contexts.parentTopicIds", topicId)
-              ))
-          ))
-
-  protected def levelFilter(taxonomyFilters: List[String]): Option[NestedQuery] =
-    if (taxonomyFilters.isEmpty) None
-    else
-      Some(
-        nestedQuery("contexts.filters")
-          .query(
-            boolQuery().should(
-              taxonomyFilters.map(
-                filterId => termQuery("contexts.filters.filterId", filterId)
               ))
           ))
 

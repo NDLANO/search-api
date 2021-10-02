@@ -353,48 +353,13 @@ class MultiSearchServiceTest
     search.results(2).title.language should equal("en")
   }
 
-  test("That filtering for levels/filters on resources works as expected") {
-    val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:6")))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(6, 7))
-
-    val Success(search2) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
-    search2.totalCount should be(3)
-    search2.results.map(_.id) should be(Seq(1, 3, 5))
-
-    val Success(search3) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:8")))
-    search3.totalCount should be(0)
-  }
-
-  test("That filtering for multiple levels/filters returns resources from all filters") {
-    val Success(search3) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:6", "urn:filter:1")))
-    search3.totalCount should be(4)
-    search3.results.map(_.id) should be(Seq(1, 6, 7, 12))
-  }
-
-  test("That filtering for levels/filters works with spaces as well") {
-    val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:7")))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(1, 3))
-  }
-
   test("That filtering for subjects works as expected") {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:2"), language = "all"))
     search.totalCount should be(7)
-    search.results.head.contexts.length should be(5)
+    search.results.head.contexts.length should be(2)
     search.results.head.contexts
-      .map(_.subjectId) should be(List("urn:subject:1",
-                                       "urn:subject:1",
-                                       "urn:subject:1",
-                                       "urn:subject:1",
-                                       "urn:subject:2")) // urn:subject:3 is not visible
+      .map(_.subjectId) should be(List("urn:subject:1", "urn:subject:2")) // urn:subject:3 is not visible
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11, 12))
   }
 
@@ -405,7 +370,7 @@ class MultiSearchServiceTest
     search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
-  test("That filtering for invisivle subjects returns nothing") {
+  test("That filtering for invisible subjects returns nothing") {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:3")))
     search.totalCount should be(0)
@@ -419,8 +384,8 @@ class MultiSearchServiceTest
 
     val Success(search2) =
       multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
-    search2.totalCount should be(8)
-    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 12))
+    search2.totalCount should be(7)
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
     val Success(search3) =
       multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:learningpath")))
@@ -431,8 +396,8 @@ class MultiSearchServiceTest
   test("That filtering for multiple resource-types returns resources from both") {
     val Success(search) = multiSearchService.matchingQuery(
       searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
-    search.totalCount should be(8)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 12))
+    search.totalCount should be(7)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
   }
 
   test("That filtering on learning-resource-type works") {
@@ -518,34 +483,25 @@ class MultiSearchServiceTest
   test("That filtering by relevance id makes sense (with and without subject/filter)") {
     val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:core")))
-    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
+    search1.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
 
     val Success(search2) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:supplementary")))
-    search2.results.map(_.id) should be(Seq(1, 3, 12))
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 12))
 
     val Success(search3) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages,
                           relevanceIds = List("urn:relevance:supplementary", "urn:relevance:core")))
-    search3.results.map(_.id) should be(Seq(1, 3, 5, 6, 7, 12))
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12))
   }
 
   test("That filtering by relevance and subject only returns for relevances in filtered subjects") {
     val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages,
                           relevanceIds = List("urn:relevance:core"),
-                          subjects = List("urn:subject:1")))
+                          subjects = List("urn:subject:2")))
 
-    search1.results.map(_.id) should be(Seq(1, 5))
-  }
-
-  test("That filtering by relevance and levels only returns for relevances in filtered levels") {
-    val Success(search) = multiSearchService.matchingQuery(
-      searchSettings.copy(language = Language.AllLanguages,
-                          relevanceIds = List("urn:relevance:supplementary"),
-                          taxonomyFilters = List("urn:filter:7")))
-
-    search.results.map(_.id) should be(Seq(3))
+    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 11))
   }
 
   test("That scrolling works as expected") {
@@ -641,7 +597,7 @@ class MultiSearchServiceTest
         language = Language.AllLanguages,
         sort = Sort.ByIdAsc
       ))
-    search1.results.map(_.id).sorted should be(Seq(6, 9, 10, 11))
+    search1.results.map(_.id).sorted should be(Seq(6, 8, 9, 10, 11))
   }
 
   test("Search query should not be decompounded (only indexed documents)") {
