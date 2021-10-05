@@ -822,9 +822,6 @@ trait SearchConverterService {
                                             filterVisibles: Boolean,
                                             bundle: TaxonomyBundle): Try[List[SearchableTaxonomyContext]] = {
       val topicsConnections = bundle.topicResourceConnections.filter(_.resourceId == resource.id)
-      val topics = bundle.topics.filter(topic => topicsConnections.map(_.topicid).contains(topic.id))
-      val parentTopicsAndPaths = topics.flatMap(t => getParentTopicsAndPaths(t, bundle, List(t.id)))
-
       val resourceTypeConnections = bundle.resourceResourceTypeConnections.filter(_.resourceId == resource.id)
       val resourceTypesWithParents = getConnectedResourceTypesWithParents(resourceTypeConnections, bundle)
 
