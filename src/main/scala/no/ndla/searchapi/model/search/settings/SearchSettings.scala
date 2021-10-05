@@ -19,7 +19,6 @@ case class SearchSettings(
     pageSize: Int,
     sort: Sort.Value,
     withIdIn: List[Long],
-    taxonomyFilters: List[String],
     subjects: List[String],
     resourceTypes: List[String],
     learningResourceTypes: List[LearningResourceType.Value],
@@ -27,7 +26,7 @@ case class SearchSettings(
     relevanceIds: List[String],
     grepCodes: List[String],
     shouldScroll: Boolean,
-    filterByNoResourceType: Boolean, // If true, and resourceTypes is empty, results will have no resource-type or taxonomy context
+    filterByNoResourceType: Boolean,
     aggregatePaths: List[String],
     embedResource: Option[String],
     embedId: Option[String],

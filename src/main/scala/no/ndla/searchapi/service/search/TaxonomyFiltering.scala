@@ -12,9 +12,7 @@ import no.ndla.searchapi.model.domain.article.LearningResourceType
 
 trait TaxonomyFiltering {
 
-  protected def relevanceFilter(relevanceIds: List[String],
-                                subjectIds: List[String],
-                                levels: List[String]): Option[BoolQuery] =
+  protected def relevanceFilter(relevanceIds: List[String], subjectIds: List[String]): Option[BoolQuery] =
     if (relevanceIds.isEmpty) None
     else
       Some(

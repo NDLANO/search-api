@@ -168,7 +168,7 @@ trait MultiDraftSearchService {
       val taxonomyResourceTypesFilter = resourceTypeFilter(settings.resourceTypes, filterByNoResourceType = false)
       val taxonomySubjectFilter = subjectFilter(settings.subjects)
       val taxonomyTopicFilter = topicFilter(settings.topics)
-      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects, settings.taxonomyFilters)
+      val taxonomyRelevanceFilter = relevanceFilter(settings.relevanceIds, settings.subjects)
 
       val supportedLanguageFilter =
         if (settings.supportedLanguages.isEmpty) None
