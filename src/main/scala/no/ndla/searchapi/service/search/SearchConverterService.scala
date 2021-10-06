@@ -20,7 +20,7 @@ import no.ndla.searchapi.model.api.draft.DraftSummary
 import no.ndla.searchapi.model.api.learningpath.LearningPathSummary
 import no.ndla.searchapi.model.domain.Language
 import no.ndla.searchapi.model.domain.Language.{findByLanguageOrBestEffort, getSupportedLanguages}
-import no.ndla.searchapi.model.domain.article._
+import no.ndla.searchapi.model.domain.article.{LearningResourceType, _}
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.domain.learningpath.{LearningPath, LearningStep, StepType}
 import no.ndla.searchapi.model.grep._
@@ -861,7 +861,6 @@ trait SearchConverterService {
                                                        relevanceId,
                                                        relevance,
                                                        contextType,
-                                                       List.empty,
                                                        resourceTypesWithParents,
                                                        bundle))
 
@@ -881,9 +880,8 @@ trait SearchConverterService {
                                              relevanceId: String,
                                              relevance: SearchableLanguageValues,
                                              contextType: LearningResourceType.Value,
-                                             contextFilters: List[SearchableTaxonomyFilter],
                                              resourceTypes: List[ResourceType],
-                                             bundle: TaxonomyBundle): SearchableTaxonomyContext = {
+                                             bundle: TaxonomyBundle) = {
 
       val path = "/" + pathIds.map(_.replace("urn:", "")).mkString("/")
 
@@ -986,7 +984,6 @@ trait SearchConverterService {
                                                relevanceId,
                                                relevance,
                                                contextType,
-                                               List.empty,
                                                List.empty,
                                                bundle))
               })
