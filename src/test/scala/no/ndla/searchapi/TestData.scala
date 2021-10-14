@@ -1290,7 +1290,6 @@ object TestData {
           LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
         )),
       contextType = LearningResourceType.Article.toString,
-      filters = List.empty,
       relevanceId = Some("urn:relevance:core"),
       relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff"))),
       resourceTypes = searchableResourceTypes,
