@@ -433,16 +433,6 @@ trait IndexService {
           generateLanguageSupportedFieldList("subject", keepRaw = true) ++
           generateLanguageSupportedFieldList("breadcrumbs") ++
           List(
-            nestedField("filters").fields(
-              List(
-                keywordField("filterId"),
-                keywordField("relevanceId")
-              ) ++
-                generateLanguageSupportedFieldList("name", keepRaw = true) ++
-                generateLanguageSupportedFieldList("relevance")
-            )
-          ) ++
-          List(
             nestedField("resourceTypes").fields(
               List(keywordField("id")) ++
                 generateLanguageSupportedFieldList("name", keepRaw = true)

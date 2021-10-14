@@ -152,13 +152,6 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       ))
 
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
-    val filterWithNullName =
-      SearchableTaxonomyFilter(
-        filterId = "urn:filter:1",
-        name = SearchableLanguageValues(Seq(LanguageValue("nb", null))),
-        relevanceId = "urn:relevance:core",
-        relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-      )
 
     val original = SearchableArticle(
       id = 100,

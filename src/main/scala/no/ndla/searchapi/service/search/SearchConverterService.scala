@@ -744,13 +744,6 @@ trait SearchConverterService {
 
     }
 
-    def taxonomyFilterToApiFilter(filter: SearchableTaxonomyFilter, language: String): api.TaxonomyContextFilter = {
-      val name = findByLanguageOrBestEffort(filter.name.languageValues, language).map(_.value).getOrElse("")
-      val relevance = findByLanguageOrBestEffort(filter.relevance.languageValues, language).map(_.value).getOrElse("")
-
-      api.TaxonomyContextFilter(filter.filterId, name, relevance)
-    }
-
     private def compareId(contentUri: String, id: Long, `type`: String): Boolean = {
       contentUri == s"urn:${`type`}:$id"
     }
@@ -905,7 +898,6 @@ trait SearchConverterService {
         path = path,
         contextType = contextType.toString,
         breadcrumbs = breadcrumbs,
-        filters = List.empty,
         relevanceId = Some(relevanceId),
         relevance = relevance,
         resourceTypes = searchableResourceTypes,
