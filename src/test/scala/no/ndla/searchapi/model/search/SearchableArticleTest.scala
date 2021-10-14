@@ -152,13 +152,6 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       ))
 
     val metaImages = List(ArticleMetaImage("1", "alt", "nb"))
-    val filterWithNullName =
-      SearchableTaxonomyFilter(
-        filterId = "urn:filter:1",
-        name = SearchableLanguageValues(Seq(LanguageValue("nb", null))),
-        relevanceId = "urn:relevance:core",
-        relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-      )
 
     val original = SearchableArticle(
       id = 100,
@@ -175,7 +168,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
       metaImage = metaImages,
       defaultTitle = Some("Christian Tut"),
       supportedLanguages = List("en", "nb", "nn"),
-      contexts = List(singleSearchableTaxonomyContext.copy(filters = List(filterWithNullName))),
+      contexts = List(singleSearchableTaxonomyContext),
       grepContexts =
         List(SearchableGrepContext("K123", Some("some title")), SearchableGrepContext("K456", Some("some title 2"))),
       traits = List.empty,
@@ -192,9 +185,7 @@ class SearchableArticleTest extends UnitSuite with TestEnvironment {
     val deserialized = read[SearchableArticle](json)
 
     val expected = original.copy(
-      contexts = List(
-        singleSearchableTaxonomyContext.copy(
-          filters = List(filterWithNullName.copy(name = SearchableLanguageValues(Seq.empty)))))
+      contexts = List(singleSearchableTaxonomyContext)
     )
 
     deserialized should be(expected)

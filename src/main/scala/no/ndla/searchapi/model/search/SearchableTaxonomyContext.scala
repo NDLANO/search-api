@@ -14,7 +14,6 @@ case class SearchableTaxonomyContext(
     path: String,
     breadcrumbs: SearchableLanguageList,
     contextType: String,
-    filters: List[SearchableTaxonomyFilter], // TODO: To be removed
     relevanceId: Option[String],
     relevance: SearchableLanguageValues,
     resourceTypes: List[SearchableTaxonomyResourceType],

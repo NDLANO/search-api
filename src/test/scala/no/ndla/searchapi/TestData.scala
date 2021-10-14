@@ -8,8 +8,8 @@
 package no.ndla.searchapi
 
 import no.ndla.searchapi.SearchApiProperties.DefaultLanguage
-import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.domain
+import no.ndla.searchapi.model.domain._
 import no.ndla.searchapi.model.domain.article._
 import no.ndla.searchapi.model.domain.draft.{ArticleStatus, Draft, Status}
 import no.ndla.searchapi.model.domain.learningpath.{
@@ -877,40 +877,6 @@ object TestData {
     TaxSubject("urn:subject:3", "Religion", None, Some("/subject:3"), invisibleMetadata)
   )
 
-  val filters = List(
-    Filter("urn:filter:1", "VG1", "urn:subject:1", None),
-    Filter("urn:filter:2", "VG2", "urn:subject:1", visibleMetadata),
-    Filter("urn:filter:3", "VG3", "urn:subject:1", None),
-    Filter("urn:filter:4", "VG1", "urn:subject:2", visibleMetadata),
-    Filter("urn:filter:5", "VG2", "urn:subject:2", visibleMetadata),
-    Filter("urn:filter:6", "YF-VG1", "urn:subject:2", visibleMetadata),
-    Filter("urn:filter:7", "Tysk 2", "urn:subject:1", visibleMetadata),
-    Filter("urn:filter:8", "Tysk 1", "urn:subject:1", invisibleMetadata)
-  )
-
-  val resourceFilterConnections = List(
-    ResourceFilterConnection("urn:resource:1", "urn:filter:1", "urn:resource-filter:1", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:2", "urn:resource-filter:2", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:3", "urn:resource-filter:3", "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:3", "urn:filter:2", "urn:resource-filter:4", "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:3", "urn:filter:7", "urn:resource-filter:5", "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:4", "urn:filter:3", "urn:resource-filter:6", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:2", "urn:resource-filter:7", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:4", "urn:resource-filter:8", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:5", "urn:filter:5", "urn:resource-filter:9", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:6", "urn:filter:6", "urn:resource-filter:10", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:6", "urn:filter:5", "urn:resource-filter:11", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:7", "urn:filter:4", "urn:resource-filter:12", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:7", "urn:filter:6", "urn:resource-filter:13", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:13", "urn:filter:5", "urn:resource-filter:14", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:13",
-                             "urn:filter:1",
-                             "urn:resource-filter:15",
-                             "urn:relevance:supplementary"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:7", "urn:resource-filter:16", "urn:relevance:core"),
-    ResourceFilterConnection("urn:resource:1", "urn:filter:8", "urn:resource-filter:17", "urn:relevance:core")
-  )
-
   val relevances = List(
     Relevance("urn:relevance:core", "Kjernestoff"),
     Relevance("urn:relevance:supplementary", "Tilleggsstoff")
@@ -998,35 +964,35 @@ object TestData {
       "urn:resource:8",
       learningPath1.title.head.title,
       Some(s"urn:learningpath:${learningPath1.id.get}"),
-      Some("/subject:1/topic:1/resource:1"),
+      Some("/subject:1/topic:1/resource:8"),
       visibleMetadata
     ),
     Resource(
       "urn:resource:9",
       learningPath2.title.head.title,
       Some(s"urn:learningpath:${learningPath2.id.get}"),
-      Some("/subject:1/topic:1/resource:2"),
+      Some("/subject:1/topic:1/resource:9"),
       visibleMetadata
     ),
     Resource(
       "urn:resource:10",
       learningPath3.title.head.title,
       Some(s"urn:learningpath:${learningPath3.id.get}"),
-      Some("/subject:1/topic:3/resource:3"),
+      Some("/subject:1/topic:3/resource:10"),
       visibleMetadata
     ),
     Resource(
       "urn:resource:11",
       learningPath4.title.head.title,
       Some(s"urn:learningpath:${learningPath4.id.get}"),
-      Some("/subject:1/topic:1/topic:2/resource:4"),
+      Some("/subject:1/topic:1/topic:2/resource:11"),
       visibleMetadata
     ),
     Resource(
       "urn:resource:12",
       learningPath5.title.head.title,
       Some(s"urn:learningpath:${learningPath5.id.get}"),
-      Some("/subject:2/topic:4/resource:5"),
+      Some("/subject:2/topic:4/resource:12"),
       visibleMetadata
     ),
     Resource(
@@ -1079,8 +1045,18 @@ object TestData {
                            primary = true,
                            1,
                            Some("urn:relevance:core")),
-    SubjectTopicConnection("urn:subject:2", "urn:topic:4", "urn:subject-topic:3", primary = true, 1, None),
-    SubjectTopicConnection("urn:subject:3", "urn:topic:5", "urn:subject-topic:4", primary = true, 1, None),
+    SubjectTopicConnection("urn:subject:2",
+                           "urn:topic:4",
+                           "urn:subject-topic:3",
+                           primary = true,
+                           1,
+                           Some("urn:relevance:core")),
+    SubjectTopicConnection("urn:subject:3",
+                           "urn:topic:5",
+                           "urn:subject-topic:4",
+                           primary = true,
+                           1,
+                           Some("urn:relevance:supplementary")),
   )
 
   val topicResourceConnections = List(
@@ -1114,18 +1090,78 @@ object TestData {
                             primary = true,
                             1,
                             Some("urn:relevance:supplementary")),
-    TopicResourceConnection("urn:topic:4", "urn:resource:5", "urn:topic-resource:6", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:4", "urn:resource:6", "urn:topic-resource:7", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:4", "urn:resource:7", "urn:topic-resource:8", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:3", "urn:resource:5", "urn:topic-resource:9", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:1", "urn:resource:8", "urn:topic-resource:10", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:1", "urn:resource:9", "urn:topic-resource:11", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:3", "urn:resource:10", "urn:topic-resource:12", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:2", "urn:resource:11", "urn:topic-resource:13", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:4", "urn:resource:12", "urn:topic-resource:14", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:1", "urn:resource:13", "urn:topic-resource:15", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:4", "urn:resource:13", "urn:topic-resource:16", primary = true, 1, None),
-    TopicResourceConnection("urn:topic:5", "urn:resource:1", "urn:topic-resource:17", primary = true, 1, None)
+    TopicResourceConnection("urn:topic:4",
+                            "urn:resource:5",
+                            "urn:topic-resource:6",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:4",
+                            "urn:resource:6",
+                            "urn:topic-resource:7",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:4",
+                            "urn:resource:7",
+                            "urn:topic-resource:8",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:3",
+                            "urn:resource:5",
+                            "urn:topic-resource:9",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:1",
+                            "urn:resource:8",
+                            "urn:topic-resource:10",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:1",
+                            "urn:resource:9",
+                            "urn:topic-resource:11",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:3",
+                            "urn:resource:10",
+                            "urn:topic-resource:12",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:2",
+                            "urn:resource:11",
+                            "urn:topic-resource:13",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:4",
+                            "urn:resource:12",
+                            "urn:topic-resource:14",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:1",
+                            "urn:resource:13",
+                            "urn:topic-resource:15",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core")),
+    TopicResourceConnection("urn:topic:4",
+                            "urn:resource:13",
+                            "urn:topic-resource:16",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:supplementary")),
+    TopicResourceConnection("urn:topic:5",
+                            "urn:resource:1",
+                            "urn:topic-resource:17",
+                            primary = true,
+                            1,
+                            Some("urn:relevance:core"))
   )
 
   val topicSubtopicConnections = List(
@@ -1135,10 +1171,6 @@ object TestData {
                             primary = true,
                             1,
                             Some("urn:relevance:core"))
-  )
-
-  val topicResourceTypeConnections = List(
-    TopicResourceTypeConnection("urn:topic:1", "urn:resourcetype:subjectMaterial", "urn:topic-connectionid:1")
   )
 
   val resourceResourceTypeConnections = List(
@@ -1162,18 +1194,14 @@ object TestData {
   )
 
   val taxonomyTestBundle = TaxonomyBundle(
-    filters = filters,
     relevances = relevances,
-    resourceFilterConnections = resourceFilterConnections,
     resourceResourceTypeConnections = resourceResourceTypeConnections,
     resourceTypes = resourceTypes,
     resources = resources,
     subjectTopicConnections = subjectTopicConnections,
     subjects = subjects,
-    topicFilterConnections = List.empty,
     topicResourceConnections = topicResourceConnections,
     topicSubtopicConnections = topicSubtopicConnections,
-    topicResourceTypeConnections = topicResourceTypeConnections,
     topics = topics
   )
 
@@ -1203,7 +1231,6 @@ object TestData {
     pageSize = 20,
     sort = Sort.ByIdAsc,
     withIdIn = List.empty,
-    taxonomyFilters = List.empty,
     subjects = List.empty,
     resourceTypes = List.empty,
     learningResourceTypes = List.empty,
@@ -1228,7 +1255,6 @@ object TestData {
     pageSize = 20,
     sort = Sort.ByIdAsc,
     withIdIn = List.empty,
-    taxonomyFilters = List.empty,
     subjects = List.empty,
     topics = List.empty,
     resourceTypes = List.empty,
@@ -1264,13 +1290,6 @@ object TestData {
           LanguageValue("nb", Seq("Matte", "Østen for solen", "Vesten for månen"))
         )),
       contextType = LearningResourceType.Article.toString,
-      filters = List(
-        SearchableTaxonomyFilter(
-          filterId = "urn:filter:1",
-          name = SearchableLanguageValues(Seq(LanguageValue("nb", "VG1"))),
-          relevanceId = "urn:relevance:core",
-          relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff")))
-        )),
       relevanceId = Some("urn:relevance:core"),
       relevance = SearchableLanguageValues(Seq(LanguageValue("nb", "Kjernestoff"))),
       resourceTypes = searchableResourceTypes,

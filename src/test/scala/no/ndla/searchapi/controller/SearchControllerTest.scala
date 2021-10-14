@@ -143,12 +143,8 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
       response.headers("search-context").head should be(newValidScrollId)
     }
 
-    val expectedSettings = TestData.multiDraftSearchSettings.copy(
-      fallback = true,
-      language = "nn",
-      shouldScroll = true,
-      pageSize = 10
-    )
+    val expectedSettings =
+      TestData.multiDraftSearchSettings.copy(fallback = true, language = "nn", pageSize = 10, shouldScroll = true)
 
     verify(multiDraftSearchService, times(0)).scroll(any[String], any[String], any[Boolean])
     verify(multiDraftSearchService, times(1)).matchingQuery(eqTo(expectedSettings))
@@ -171,12 +167,8 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
       response.headers("search-context").head should be(newValidScrollId)
     }
 
-    val expectedSettings = TestData.searchSettings.copy(
-      fallback = true,
-      language = "nn",
-      shouldScroll = true,
-      pageSize = 10
-    )
+    val expectedSettings =
+      TestData.searchSettings.copy(fallback = true, language = "nn", pageSize = 10, shouldScroll = true)
 
     verify(multiDraftSearchService, times(0)).scroll(any[String], any[String], any[Boolean])
     verify(multiDraftSearchService, times(0)).matchingQuery(any[MultiDraftSearchSettings])
@@ -190,7 +182,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Seq.empty, None)
     when(multiSearchService.matchingQuery(any)).thenReturn(Success(multiResult))
 
-    val baseSettings = TestData.searchSettings.copy(pageSize = 10, language = "all")
+    val baseSettings = TestData.searchSettings.copy(language = "all", pageSize = 10)
 
     get("/test/", params = Seq.empty, headers = Seq()) {
       val expectedSettings = baseSettings.copy(availability = List())
@@ -210,7 +202,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     when(feideApiClient.getUser(any)).thenReturn(Success(teacheruser))
     when(multiSearchService.matchingQuery(any)).thenReturn(Success(multiResult))
 
-    val baseSettings = TestData.searchSettings.copy(pageSize = 10, language = "all")
+    val baseSettings = TestData.searchSettings.copy(language = "all", pageSize = 10)
     val teacherToken = "abcd"
 
     get("/test/", params = Seq.empty, headers = Seq("FeideAuthorization" -> teacherToken)) {

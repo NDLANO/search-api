@@ -52,23 +52,11 @@ trait TaxonomyApiClient {
     def getAllResourceResourceTypeConnections: Try[List[ResourceResourceTypeConnection]] =
       get[List[ResourceResourceTypeConnection]](s"$TaxonomyApiEndpoint/resource-resourcetypes/").map(_.distinct)
 
-    def getAllTopicResourceTypeConnections: Try[List[TopicResourceTypeConnection]] =
-      get[List[TopicResourceTypeConnection]](s"$TaxonomyApiEndpoint/topic-resourcetypes/").map(_.distinct)
-
     def getAllSubjectTopicConnections: Try[List[SubjectTopicConnection]] =
       get[List[SubjectTopicConnection]](s"$TaxonomyApiEndpoint/subject-topics/").map(_.distinct)
 
     def getAllRelevances: Try[List[Relevance]] =
       get[List[Relevance]](s"$TaxonomyApiEndpoint/relevances/").map(_.distinct)
-
-    def getAllFilters: Try[List[Filter]] =
-      get[List[Filter]](s"$TaxonomyApiEndpoint/filters/").map(_.distinct)
-
-    def getAllResourceFilterConnections: Try[List[ResourceFilterConnection]] =
-      get[List[ResourceFilterConnection]](s"$TaxonomyApiEndpoint/resource-filters/").map(_.distinct)
-
-    def getAllTopicFilterConnections: Try[List[TopicFilterConnection]] =
-      get[List[TopicFilterConnection]](s"$TaxonomyApiEndpoint/topic-filters/").map(_.distinct)
 
     val getTaxonomyBundle: Memoize[Try[TaxonomyBundle]] = Memoize(() => getTaxonomyBundleUncached)
 
@@ -83,35 +71,27 @@ trait TaxonomyApiClient {
       /** Calls function in separate thread and converts Try to Future */
       def tryToFuture[T](x: () => Try[T]) = Future { requestInfo.setRequestInfo(); x() }.flatMap(Future.fromTry)
 
-      val filters = tryToFuture(() => getAllFilters)
       val relevances = tryToFuture(() => getAllRelevances)
-      val resourceFilterConnections = tryToFuture(() => getAllResourceFilterConnections)
       val resourceResourceTypeConnections = tryToFuture(() => getAllResourceResourceTypeConnections)
       val resourceTypes = tryToFuture(() => getAllResourceTypes)
       val resources = tryToFuture(() => getAllResources)
       val subjectTopicConnections = tryToFuture(() => getAllSubjectTopicConnections)
       val subjects = tryToFuture(() => getAllSubjects)
-      val topicFilterConnections = tryToFuture(() => getAllTopicFilterConnections)
       val topicResourceConnections = tryToFuture(() => getAllTopicResourceConnections)
       val topicSubtopicConnections = tryToFuture(() => getAllTopicSubtopicConnections)
-      val topicResourceTypeConnection = tryToFuture(() => getAllTopicResourceTypeConnections)
       val topics = tryToFuture(() => getAllTopics)
 
       val x = for {
-        f1 <- filters
         f2 <- relevances
-        f3 <- resourceFilterConnections
         f4 <- resourceResourceTypeConnections
         f5 <- resourceTypes
         f6 <- resources
         f7 <- subjectTopicConnections
         f8 <- subjects
-        f9 <- topicFilterConnections
         f10 <- topicResourceConnections
         f11 <- topicSubtopicConnections
-        f12 <- topicResourceTypeConnection
         f13 <- topics
-      } yield TaxonomyBundle(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13)
+      } yield TaxonomyBundle(f2, f4, f5, f6, f7, f8, f10, f11, f13)
 
       Try(Await.result(x, Duration(300, "seconds"))) match {
         case Success(bundle) =>

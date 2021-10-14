@@ -21,7 +21,6 @@ case class MultiDraftSearchSettings(
     pageSize: Int,
     sort: Sort.Value,
     withIdIn: List[Long],
-    taxonomyFilters: List[String],
     subjects: List[String],
     topics: List[String],
     resourceTypes: List[String],

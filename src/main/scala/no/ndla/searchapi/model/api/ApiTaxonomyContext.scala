@@ -20,7 +20,7 @@ case class ApiTaxonomyContext(
     @(ApiModelProperty @field)(description = "The relevance for this context") relevance: String,
     @(ApiModelProperty @field)(description = "Path to the resource in this context") path: String,
     @(ApiModelProperty @field)(description = "Breadcrumbs of path to the resource in this context") breadcrumbs: List[String],
-    @(ApiModelProperty @field)(description = "Filters connected to this object and subject") filters: List[TaxonomyContextFilter],
+    @(ApiModelProperty @field)(description = "Filters connected to this object and subject. NOT IN USE.") filters: List[TaxonomyContextFilter], //TODO: To be removed
     @(ApiModelProperty @field)(description = "Type in this context.") learningResourceType: String,
     @(ApiModelProperty @field)(description = "Resource-types of this context.") resourceTypes: List[TaxonomyResourceType],
     @(ApiModelProperty @field)(description = "Language for this context") language: String)

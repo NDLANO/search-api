@@ -90,18 +90,14 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                            Some("urn:relevance:core")))
 
   val emptyBundle: TaxonomyBundle = TaxonomyBundle(
-    filters = List.empty,
     relevances = List.empty,
-    resourceFilterConnections = List.empty,
     resourceResourceTypeConnections = List.empty,
     resourceTypes = List.empty,
     resources = resources,
     subjectTopicConnections = subjectTopicConnections,
     subjects = subjects,
-    topicFilterConnections = List.empty,
     topicResourceConnections = topicResourceConnections,
     topicSubtopicConnections = List.empty,
-    topicResourceTypeConnections = List.empty,
     topics = topics
   )
 
@@ -195,7 +191,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.taxonomyTestBundle,
                                                  TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(5)
+    searchable1.contexts.size should be(2)
     searchable1.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
       Seq(
         Seq(
@@ -203,7 +199,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
           "Baldur har mareritt"
         )))
 
-    searchable1.contexts(4).breadcrumbs.languageValues.map(_.value) should be(
+    searchable1.contexts(1).breadcrumbs.languageValues.map(_.value) should be(
       Seq(
         Seq(
           "Historie",
@@ -219,7 +215,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
           "En Baldur har mareritt om Ragnarok"
         )))
 
-    searchable6.contexts.size should be(2)
+    searchable6.contexts.size should be(1)
     searchable6.contexts.head.breadcrumbs.languageValues.map(_.value) should be(
       Seq(
         Seq(
@@ -242,21 +238,14 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.taxonomyTestBundle,
                                                  TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(5)
-    searchable1.contexts.map(_.subject.languageValues.map(_.value)) should be(
-      Seq(Seq("Matte"), Seq("Matte"), Seq("Matte"), Seq("Matte"), Seq("Historie")))
-    searchable1.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
-      Seq(Seq(Seq("VG1")), Seq(Seq("VG2")), Seq(Seq("VG3")), Seq(Seq("Tysk 2")), Seq.empty))
+    searchable1.contexts.size should be(2)
+    searchable1.contexts.map(_.subject.languageValues.map(_.value)) should be(Seq(Seq("Matte"), Seq("Historie")))
 
     searchable4.contexts.size should be(1)
     searchable4.contexts.head.subject.languageValues.map(_.value) should be(Seq("Matte"))
-    searchable4.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(Seq(Seq(Seq("VG3"))))
 
-    searchable5.contexts.size should be(3)
-    searchable5.contexts.map(_.subject.languageValues.map(_.value)) should be(
-      Seq(Seq("Matte"), Seq("Historie"), Seq("Historie")))
-    searchable5.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
-      Seq(Seq(Seq("VG2")), Seq(Seq("VG1")), Seq(Seq("VG2"))))
+    searchable5.contexts.size should be(2)
+    searchable5.contexts.map(_.subject.languageValues.map(_.value)) should be(Seq(Seq("Historie"), Seq("Matte")))
   }
 
   test("That invisible contexts are not indexed") {
@@ -315,28 +304,16 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
                                                  TestData.taxonomyTestBundle,
                                                  TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(5)
-    searchable1.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
-      Seq(Seq(Seq("VG1")), Seq(Seq("VG2")), Seq(Seq("VG3")), Seq(Seq("Tysk 2")), Seq.empty))
-    searchable1.contexts(4).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
-
+    searchable1.contexts.size should be(2)
     searchable4.contexts.size should be(1)
-    searchable4.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG3")))
-
-    searchable5.contexts.size should be(3)
-    searchable5.contexts.head.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG2")))
-    searchable5.contexts(1).filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG1")))
-    searchable5.contexts.last.filters.map(_.name.languageValues.map(_.value)) should be(Seq(Seq("VG2")))
+    searchable5.contexts.size should be(2)
   }
 
   test("That invisible taxonomy filters are added correctly in drafts") {
     val Success(searchable1) =
       searchConverterService.asSearchableDraft(TestData.draft1, TestData.taxonomyTestBundle, TestData.emptyGrepBundle)
 
-    searchable1.contexts.size should be(7)
-    searchable1.contexts.map(_.filters.map(_.name.languageValues.map(_.value))) should be(
-      Seq(Seq(Seq("VG1")), Seq(Seq("VG2")), Seq(Seq("VG3")), Seq(Seq("Tysk 2")), Seq(Seq("Tysk 1")), Seq(), Seq()))
-    searchable1.contexts(6).filters.map(_.name.languageValues.map(_.value)) should be(Seq.empty)
+    searchable1.contexts.size should be(3)
   }
 
   test("That asSearchableArticle converts grepContexts correctly based on article grepCodes if grepBundle is empty") {

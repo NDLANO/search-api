@@ -8,18 +8,14 @@
 package no.ndla.searchapi.model.taxonomy
 
 case class TaxonomyBundle(
-    filters: List[Filter],
     relevances: List[Relevance],
-    resourceFilterConnections: List[ResourceFilterConnection],
     resourceResourceTypeConnections: List[ResourceResourceTypeConnection],
     resourceTypes: List[ResourceType],
     resources: List[Resource],
     subjectTopicConnections: List[SubjectTopicConnection],
     subjects: List[TaxSubject],
-    topicFilterConnections: List[TopicFilterConnection],
     topicResourceConnections: List[TopicResourceConnection],
     topicSubtopicConnections: List[TopicSubtopicConnection],
-    topicResourceTypeConnections: List[TopicResourceTypeConnection],
     topics: List[Topic]
 ) {
 

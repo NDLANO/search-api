@@ -353,48 +353,13 @@ class MultiSearchServiceTest
     search.results(2).title.language should equal("en")
   }
 
-  test("That filtering for levels/filters on resources works as expected") {
-    val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:6")))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(6, 7))
-
-    val Success(search2) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:2")))
-    search2.totalCount should be(3)
-    search2.results.map(_.id) should be(Seq(1, 3, 5))
-
-    val Success(search3) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "all", taxonomyFilters = List("urn:filter:8")))
-    search3.totalCount should be(0)
-  }
-
-  test("That filtering for multiple levels/filters returns resources from all filters") {
-    val Success(search3) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:6", "urn:filter:1")))
-    search3.totalCount should be(4)
-    search3.results.map(_.id) should be(Seq(1, 6, 7, 12))
-  }
-
-  test("That filtering for levels/filters works with spaces as well") {
-    val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(language = "nb", taxonomyFilters = List("urn:filter:7")))
-    search.totalCount should be(2)
-    search.results.map(_.id) should be(Seq(1, 3))
-  }
-
   test("That filtering for subjects works as expected") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:2"), language = "all"))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", subjects = List("urn:subject:2")))
     search.totalCount should be(7)
-    search.results.head.contexts.length should be(5)
+    search.results.head.contexts.length should be(2)
     search.results.head.contexts
-      .map(_.subjectId) should be(List("urn:subject:1",
-                                       "urn:subject:1",
-                                       "urn:subject:1",
-                                       "urn:subject:1",
-                                       "urn:subject:2")) // urn:subject:3 is not visible
+      .map(_.subjectId) should be(List("urn:subject:1", "urn:subject:2")) // urn:subject:3 is not visible
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11, 12))
   }
 
@@ -405,7 +370,7 @@ class MultiSearchServiceTest
     search.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
-  test("That filtering for invisivle subjects returns nothing") {
+  test("That filtering for invisible subjects returns nothing") {
     val Success(search) =
       multiSearchService.matchingQuery(searchSettings.copy(subjects = List("urn:subject:3")))
     search.totalCount should be(0)
@@ -419,8 +384,8 @@ class MultiSearchServiceTest
 
     val Success(search2) =
       multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial")))
-    search2.totalCount should be(8)
-    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 12))
+    search2.totalCount should be(7)
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
 
     val Success(search3) =
       multiSearchService.matchingQuery(searchSettings.copy(resourceTypes = List("urn:resourcetype:learningpath")))
@@ -431,15 +396,15 @@ class MultiSearchServiceTest
   test("That filtering for multiple resource-types returns resources from both") {
     val Success(search) = multiSearchService.matchingQuery(
       searchSettings.copy(resourceTypes = List("urn:resourcetype:subjectMaterial", "urn:resourcetype:reviewResource")))
-    search.totalCount should be(8)
-    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 12))
+    search.totalCount should be(7)
+    search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
   }
 
   test("That filtering on learning-resource-type works") {
     val Success(search) = multiSearchService.matchingQuery(
-      searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article), language = "all"))
+      searchSettings.copy(language = "all", learningResourceTypes = List(LearningResourceType.Article)))
     val Success(search2) = multiSearchService.matchingQuery(
-      searchSettings.copy(learningResourceTypes = List(LearningResourceType.TopicArticle), language = "all"))
+      searchSettings.copy(language = "all", learningResourceTypes = List(LearningResourceType.TopicArticle)))
 
     search.totalCount should be(7)
     search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
@@ -449,9 +414,11 @@ class MultiSearchServiceTest
   }
 
   test("That filtering on multiple context-types returns every type") {
-    val Success(search) = multiSearchService.matchingQuery(
-      searchSettings.copy(learningResourceTypes = List(LearningResourceType.Article, LearningResourceType.TopicArticle),
-                          language = "all"))
+    val Success(search) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(language = "all",
+                            learningResourceTypes =
+                              List(LearningResourceType.Article, LearningResourceType.TopicArticle)))
 
     search.totalCount should be(11)
     search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
@@ -459,7 +426,7 @@ class MultiSearchServiceTest
 
   test("That filtering on learningpath learningresourcetype returns learningpaths") {
     val Success(search) = multiSearchService.matchingQuery(
-      searchSettings.copy(learningResourceTypes = List(LearningResourceType.LearningPath), language = "all"))
+      searchSettings.copy(language = "all", learningResourceTypes = List(LearningResourceType.LearningPath)))
 
     search.totalCount should be(6)
     search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 6))
@@ -470,24 +437,24 @@ class MultiSearchServiceTest
 
   test("That filtering on supportedLanguages works") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en"), language = "all"))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", supportedLanguages = List("en")))
     search.totalCount should be(8)
     search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11, 12))
 
     val Success(search2) =
-      multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en", "nb"), language = "all"))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", supportedLanguages = List("en", "nb")))
     search2.totalCount should be(17)
     search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12))
 
     val Success(search3) =
-      multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("nb"), language = "all"))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", supportedLanguages = List("nb")))
     search3.totalCount should be(14)
     search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12))
   }
 
   test("That filtering on supportedLanguages should still prioritize the selected language") {
     val Success(search) =
-      multiSearchService.matchingQuery(searchSettings.copy(supportedLanguages = List("en"), language = "nb"))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "nb", supportedLanguages = List("en")))
 
     search.totalCount should be(5)
     search.results.map(_.id) should be(Seq(2, 3, 4, 11, 12))
@@ -518,34 +485,25 @@ class MultiSearchServiceTest
   test("That filtering by relevance id makes sense (with and without subject/filter)") {
     val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:core")))
-    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 12))
+    search1.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12))
 
     val Success(search2) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages, relevanceIds = List("urn:relevance:supplementary")))
-    search2.results.map(_.id) should be(Seq(1, 3, 12))
+    search2.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 12))
 
     val Success(search3) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages,
                           relevanceIds = List("urn:relevance:supplementary", "urn:relevance:core")))
-    search3.results.map(_.id) should be(Seq(1, 3, 5, 6, 7, 12))
+    search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 11, 12))
   }
 
   test("That filtering by relevance and subject only returns for relevances in filtered subjects") {
     val Success(search1) = multiSearchService.matchingQuery(
       searchSettings.copy(language = Language.AllLanguages,
-                          relevanceIds = List("urn:relevance:core"),
-                          subjects = List("urn:subject:1")))
+                          subjects = List("urn:subject:2"),
+                          relevanceIds = List("urn:relevance:core")))
 
-    search1.results.map(_.id) should be(Seq(1, 5))
-  }
-
-  test("That filtering by relevance and levels only returns for relevances in filtered levels") {
-    val Success(search) = multiSearchService.matchingQuery(
-      searchSettings.copy(language = Language.AllLanguages,
-                          relevanceIds = List("urn:relevance:supplementary"),
-                          taxonomyFilters = List("urn:filter:7")))
-
-    search.results.map(_.id) should be(Seq(3))
+    search1.results.map(_.id) should be(Seq(1, 5, 6, 7, 11))
   }
 
   test("That scrolling works as expected") {
@@ -636,12 +594,8 @@ class MultiSearchServiceTest
 
   test("That filterByNoResourceType works by filtering out every document that does not have resourceTypes") {
     val Success(search1) = multiSearchService.matchingQuery(
-      searchSettings.copy(
-        filterByNoResourceType = true,
-        language = Language.AllLanguages,
-        sort = Sort.ByIdAsc
-      ))
-    search1.results.map(_.id).sorted should be(Seq(6, 9, 10, 11))
+      searchSettings.copy(language = Language.AllLanguages, sort = Sort.ByIdAsc, filterByNoResourceType = true))
+    search1.results.map(_.id).sorted should be(Seq(6, 8, 9, 10, 11))
   }
 
   test("Search query should not be decompounded (only indexed documents)") {
@@ -668,11 +622,7 @@ class MultiSearchServiceTest
   test("That searches on embedId and embedResource matches when using other parameters") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("Ekstra"),
-          embedResource = Some("video"),
-          embedId = Some("77")
-        ))
+        searchSettings.copy(query = Some("Ekstra"), embedResource = Some("video"), embedId = Some("77")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -681,20 +631,14 @@ class MultiSearchServiceTest
   test("That searches on embedResource and embedId doesn't match when other parameters have no hits") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("query-string-without-match"),
-          embedResource = Some("video"),
-          embedId = Some("77")
-        ))
+        searchSettings
+          .copy(query = Some("query-string-without-match"), embedResource = Some("video"), embedId = Some("77")))
     results.totalCount should be(0)
   }
 
   test("That search on embed data-resource matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedResource = Some("video"),
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("video")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -702,10 +646,7 @@ class MultiSearchServiceTest
 
   test("That search on embed data-content-id matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("111"),
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(embedId = Some("111")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -713,10 +654,7 @@ class MultiSearchServiceTest
 
   test("That search on embed data-url matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("http://test"),
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(embedId = Some("http://test")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -724,10 +662,7 @@ class MultiSearchServiceTest
 
   test("That search on query as embed data-resource_id matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("77"),
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("77")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -735,10 +670,7 @@ class MultiSearchServiceTest
 
   test("That search on query as embed data-resouce matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("video"),
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("video")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -746,10 +678,7 @@ class MultiSearchServiceTest
 
   test("That search on query as article id matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("11"),
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("11")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(11)
@@ -757,11 +686,7 @@ class MultiSearchServiceTest
 
   test("That search on embed id with language filter does only return correct language") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("222"),
-          language = "en"
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "en", embedId = Some("222")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -769,11 +694,7 @@ class MultiSearchServiceTest
 
   test("That search on embed id with language filter=all matches ") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("222"),
-          language = Language.AllLanguages
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(language = Language.AllLanguages, embedId = Some("222")))
     val hits = results.results
     results.totalCount should be(2)
     hits.map(_.id) should be(Seq(11, 12))
@@ -781,10 +702,7 @@ class MultiSearchServiceTest
 
   test("That search on visual element id matches ") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("333")
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(embedId = Some("333")))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(12))
@@ -792,11 +710,7 @@ class MultiSearchServiceTest
 
   test("That search on meta image url matches ") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedId = Some("442"),
-          language = "all"
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(language = "all", embedId = Some("442")))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(10))
@@ -804,11 +718,7 @@ class MultiSearchServiceTest
 
   test("That exact word search works for special characters") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt-streng\""),
-          language = "all"
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("\"delt-streng\""), language = "all"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(12))
@@ -816,11 +726,7 @@ class MultiSearchServiceTest
 
   test("That exact word search works for special characters with escape") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt\\-streng\""),
-          language = "all"
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("\"delt\\-streng\""), language = "all"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(12))
@@ -829,10 +735,7 @@ class MultiSearchServiceTest
   test("That multiple exact words can be searched") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt!streng\" \"delt?streng\""),
-          language = "all"
-        ))
+        searchSettings.copy(query = Some("\"delt!streng\" \"delt?streng\""), language = "all"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(11))
@@ -841,10 +744,7 @@ class MultiSearchServiceTest
   test("That multiple exact words can be searched with + operator") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt!streng\"+\"delt-streng\""),
-          language = "all"
-        ))
+        searchSettings.copy(query = Some("\"delt!streng\"+\"delt-streng\""), language = "all"))
     val hits = results.results
     results.totalCount should be(0)
   }
@@ -852,10 +752,7 @@ class MultiSearchServiceTest
   test("That multiple exact words can be searched with - operator") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt!streng\"+-\"delt-streng\""),
-          language = "all"
-        ))
+        searchSettings.copy(query = Some("\"delt!streng\"+-\"delt-streng\""), language = "all"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(11))
@@ -863,22 +760,14 @@ class MultiSearchServiceTest
 
   test("That exact and regular words can be searched with - operator") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt!streng\"+-katt"),
-          language = "all"
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("\"delt!streng\"+-katt"), language = "all"))
     val hits = results.results
     results.totalCount should be(0)
   }
 
   test("That exact and regular words can be searched with + operator") {
     val Success(results) =
-      multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"delt!streng\" + katt"),
-          language = "all"
-        ))
+      multiSearchService.matchingQuery(searchSettings.copy(query = Some("\"delt!streng\" + katt"), language = "all"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(11))
@@ -887,10 +776,7 @@ class MultiSearchServiceTest
   test("That exact search on word with spaces matches") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          query = Some("\"artikkeltekst med fire deler\""),
-          language = "all"
-        ))
+        searchSettings.copy(query = Some("\"artikkeltekst med fire deler\""), language = "all"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(10))
@@ -899,11 +785,7 @@ class MultiSearchServiceTest
   test("That searches on embedId and embedResource only returns results with an embed matching both params.") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(
-          embedResource = Some("concept"),
-          embedId = Some("222"),
-          language = Language.AllLanguages
-        ))
+        searchSettings.copy(language = Language.AllLanguages, embedResource = Some("concept"), embedId = Some("222")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(11)
