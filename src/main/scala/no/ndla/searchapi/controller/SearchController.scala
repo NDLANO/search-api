@@ -181,7 +181,10 @@ trait SearchController {
     )
 
     private val embedResource =
-      Param[Option[String]]("embed-resource", "Return only results with embed data-resource the specified resource.")
+      Param[Option[String]](
+        "embed-resource",
+        "Return only results with embed data-resource the specified resource. Can specify multiple with a comma separated list to filter for one of the embed types."
+      )
 
     private val embedId =
       Param[Option[String]](
@@ -250,7 +253,7 @@ trait SearchController {
       val includeMissingResourceTypeGroup =
         booleanOrDefault(this.includeMissingResourceTypeGroup.paramName, default = false)
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
-      val embedResource = paramOrNone(this.embedResource.paramName)
+      val embedResource = paramAsListOfString(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
 
       getAvailability() match {
@@ -391,7 +394,7 @@ trait SearchController {
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
-      val embedResource = paramOrNone(this.embedResource.paramName)
+      val embedResource = paramAsListOfString(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
 
       getAvailability().map(
@@ -442,7 +445,7 @@ trait SearchController {
       val grepCodes = paramAsListOfString(this.grepCodes.paramName)
       val shouldScroll = paramOrNone(this.scrollId.paramName).exists(InitialScrollContextKeywords.contains)
       val aggregatePaths = paramAsListOfString(this.aggregatePaths.paramName)
-      val embedResource = paramOrNone(this.embedResource.paramName)
+      val embedResource = paramAsListOfString(this.embedResource.paramName)
       val embedId = paramOrNone(this.embedId.paramName)
       val includeOtherStatuses = booleanOrDefault(this.includeOtherStatuses.paramName, default = false)
 

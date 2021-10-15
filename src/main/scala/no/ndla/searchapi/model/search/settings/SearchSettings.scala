@@ -28,7 +28,7 @@ case class SearchSettings(
     shouldScroll: Boolean,
     filterByNoResourceType: Boolean,
     aggregatePaths: List[String],
-    embedResource: Option[String],
+    embedResource: List[String],
     embedId: Option[String],
     availability: List[Availability.Value]
 )

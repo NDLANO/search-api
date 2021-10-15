@@ -1240,7 +1240,7 @@ object TestData {
     shouldScroll = false,
     filterByNoResourceType = false,
     aggregatePaths = List.empty,
-    embedResource = None,
+    embedResource = List.empty,
     embedId = None,
     availability = List.empty
   )
@@ -1267,7 +1267,7 @@ object TestData {
     shouldScroll = false,
     searchDecompounded = false,
     aggregatePaths = List.empty,
-    embedResource = None,
+    embedResource = List.empty,
     embedId = None,
     includeOtherStatuses = false
   )
