@@ -84,11 +84,7 @@ trait DraftIndexService {
             generateLanguageSupportedFieldList("visualElement") ++
             generateLanguageSupportedFieldList("introduction") ++
             generateLanguageSupportedFieldList("tags") ++
-            generateLanguageSupportedFieldList("embedAttributes") ++
-            // To be removed
-            generateLanguageSupportedFieldList("embedResources", keepRaw = true) ++
-            // To be removed
-            generateLanguageSupportedFieldList("embedIds", keepRaw = true)
+            generateLanguageSupportedFieldList("embedAttributes")
         )
     }
   }

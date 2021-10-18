@@ -68,8 +68,8 @@ trait MultiDraftSearchService {
             simpleStringQuery(queryString).field("grepContexts.title", 1),
             idsQuery(queryString)
           ) ++
-            buildNestedEmbedField(Some(queryString), None, settings.language, settings.fallback) ++
-            buildNestedEmbedField(None, Some(queryString), settings.language, settings.fallback)
+            buildNestedEmbedField(List(queryString), None, settings.language, settings.fallback) ++
+            buildNestedEmbedField(List.empty, Some(queryString), settings.language, settings.fallback)
         )
 
       })

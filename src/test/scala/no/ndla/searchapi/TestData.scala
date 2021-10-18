@@ -25,6 +25,24 @@ import no.ndla.searchapi.model.taxonomy._
 import org.joda.time.DateTime
 
 object TestData {
+
+  def blockUntil(predicate: () => Boolean): Unit = {
+    var backoff = 0
+    var done = false
+
+    while (backoff <= 16 && !done) {
+      if (backoff > 0) Thread.sleep(200 * backoff)
+      backoff = backoff + 1
+      try {
+        done = predicate()
+      } catch {
+        case e: Throwable => println("problem while testing predicate", e)
+      }
+    }
+
+    require(done, s"Failed waiting for predicate")
+  }
+
   private val publicDomainCopyright = Copyright("publicdomain", "", List(), List(), List(), None, None, None)
   private val byNcSaCopyright =
     Copyright("by-nc-sa", "Gotham City", List(Author("Writer", "DC Comics")), List(), List(), None, None, None)
@@ -1240,7 +1258,7 @@ object TestData {
     shouldScroll = false,
     filterByNoResourceType = false,
     aggregatePaths = List.empty,
-    embedResource = None,
+    embedResource = List.empty,
     embedId = None,
     availability = List.empty
   )
@@ -1267,7 +1285,7 @@ object TestData {
     shouldScroll = false,
     searchDecompounded = false,
     aggregatePaths = List.empty,
-    embedResource = None,
+    embedResource = List.empty,
     embedId = None,
     includeOtherStatuses = false
   )

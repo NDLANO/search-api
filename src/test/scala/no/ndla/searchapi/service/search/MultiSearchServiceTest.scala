@@ -607,7 +607,7 @@ class MultiSearchServiceTest
 
   test("That searches for embedResource does not partial match") {
     val Success(results) =
-      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("vid"), embedId = Some("55")))
+      multiSearchService.matchingQuery(searchSettings.copy(embedResource = List("vid"), embedId = Some("55")))
     results.totalCount should be(0)
   }
 
@@ -622,7 +622,7 @@ class MultiSearchServiceTest
   test("That searches on embedId and embedResource matches when using other parameters") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(query = Some("Ekstra"), embedResource = Some("video"), embedId = Some("77")))
+        searchSettings.copy(query = Some("Ekstra"), embedResource = List("video"), embedId = Some("77")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -632,13 +632,13 @@ class MultiSearchServiceTest
     val Success(results) =
       multiSearchService.matchingQuery(
         searchSettings
-          .copy(query = Some("query-string-without-match"), embedResource = Some("video"), embedId = Some("77")))
+          .copy(query = Some("query-string-without-match"), embedResource = List("video"), embedId = Some("77")))
     results.totalCount should be(0)
   }
 
   test("That search on embed data-resource matches") {
     val Success(results) =
-      multiSearchService.matchingQuery(searchSettings.copy(embedResource = Some("video")))
+      multiSearchService.matchingQuery(searchSettings.copy(embedResource = List("video")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(12)
@@ -785,7 +785,7 @@ class MultiSearchServiceTest
   test("That searches on embedId and embedResource only returns results with an embed matching both params.") {
     val Success(results) =
       multiSearchService.matchingQuery(
-        searchSettings.copy(language = Language.AllLanguages, embedResource = Some("concept"), embedId = Some("222")))
+        searchSettings.copy(language = Language.AllLanguages, embedResource = List("concept"), embedId = Some("222")))
     val hits = results.results
     results.totalCount should be(1)
     hits.head.id should be(11)
@@ -830,22 +830,5 @@ class MultiSearchServiceTest
                           availability = List(Availability.everyone, Availability.student, Availability.teacher)))
     search4.totalCount should be(1)
     search4.results.map(_.id) should be(Seq(13))
-  }
-
-  def blockUntil(predicate: () => Boolean): Unit = {
-    var backoff = 0
-    var done = false
-
-    while (backoff <= 16 && !done) {
-      if (backoff > 0) Thread.sleep(200 * backoff)
-      backoff = backoff + 1
-      try {
-        done = predicate()
-      } catch {
-        case e: Throwable => println("problem while testing predicate", e)
-      }
-    }
-
-    require(done, s"Failed waiting for predicate")
   }
 }
