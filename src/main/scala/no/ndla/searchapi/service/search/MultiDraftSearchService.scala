@@ -89,6 +89,10 @@ trait MultiDraftSearchService {
     }
 
     def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {
+      val searchLanguage = settings.language match {
+        case lang if Language.supportedLanguages.contains(lang) && !settings.fallback => lang
+        case _                                                                        => Language.AllLanguages
+      }
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
       val (startAt, numResults) = getStartAtAndNumResults(settings.page, settings.pageSize)
@@ -103,12 +107,12 @@ trait MultiDraftSearchService {
 
         val searchToExecute = search(searchIndex)
           .query(filteredSearch)
-          .suggestions(suggestions(settings.query, settings.language, settings.fallback))
+          .suggestions(suggestions(settings.query, searchLanguage, settings.fallback))
           .from(startAt)
           .size(numResults)
           .highlighting(highlight("*"))
           .aggs(aggregations)
-          .sortBy(getSortDefinition(settings.sort, settings.language))
+          .sortBy(getSortDefinition(settings.sort, searchLanguage))
 
         // Only add scroll param if it is first page
         val searchWithScroll =
@@ -123,8 +127,8 @@ trait MultiDraftSearchService {
                 totalCount = response.result.totalHits,
                 page = Some(settings.page),
                 pageSize = numResults,
-                language = if (settings.language == "*") Language.AllLanguages else settings.language,
-                results = getHits(response.result, settings.language, settings.fallback),
+                language = searchLanguage,
+                results = getHits(response.result, settings.language),
                 suggestions = getSuggestions(response.result),
                 aggregations = getAggregationsFromResult(response.result),
                 scrollId = response.result.scrollId

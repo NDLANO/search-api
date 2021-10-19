@@ -66,7 +66,12 @@ trait SearchService {
         fallback: Boolean,
         searchDecompounded: Boolean
     ): SimpleStringQuery = {
-      if (language == Language.AllLanguages || fallback) {
+      val searchLanguage = language match {
+        case lang if Language.supportedLanguages.contains(lang) => lang
+        case _                                                  => Language.AllLanguages
+      }
+
+      if (searchLanguage == Language.AllLanguages || fallback) {
         Language.languageAnalyzers.foldLeft(SimpleStringQuery(query, quote_field_suffix = Some(".exact")))(
           (acc, cur) => {
             val base = acc.field(s"$field.${cur.lang}", boost)
@@ -113,7 +118,7 @@ trait SearchService {
       }
     }
 
-    protected def getHits(response: SearchResponse, language: String, fallback: Boolean): Seq[MultiSearchSummary] = {
+    protected def getHits(response: SearchResponse, language: String): Seq[MultiSearchSummary] = {
       response.totalHits match {
         case count if count > 0 =>
           val resultArray = response.hits.hits.toList
@@ -306,7 +311,7 @@ trait SearchService {
           searchScroll(scrollId, ElasticSearchScrollKeepAlive)
         }
         .map(response => {
-          val hits = getHits(response.result, language, fallback)
+          val hits = getHits(response.result, language)
           val suggestions = getSuggestions(response.result)
           val aggregations = getAggregationsFromResult(response.result)
           SearchResult(
@@ -324,18 +329,19 @@ trait SearchService {
 
     def getSortDefinition(sort: Sort.Value, language: String): FieldSort = {
       val sortLanguage = language match {
-        case Language.NoLanguage => DefaultLanguage
-        case _                   => language
+        case Language.NoLanguage                                => DefaultLanguage
+        case lang if Language.supportedLanguages.contains(lang) => lang
+        case _                                                  => "*"
       }
 
       sort match {
         case Sort.ByTitleAsc =>
-          language match {
+          sortLanguage match {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Asc).missing("_last")
             case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Asc).missing("_last")
           }
         case Sort.ByTitleDesc =>
-          language match {
+          sortLanguage match {
             case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Desc).missing("_last")
             case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Desc).missing("_last")
           }
