@@ -3,7 +3,7 @@ import sbt._
 import Keys._
 
 val Scalaversion = "2.13.3"
-val Scalatraversion = "2.7.1"
+val Scalatraversion = "2.8.2"
 val ScalaLoggingVersion = "3.9.2"
 val ScalaTestVersion = "3.2.1"
 val Log4JVersion = "2.13.3"
@@ -13,7 +13,7 @@ val MockitoVersion = "1.14.8"
 val Elastic4sVersion = "6.7.8"
 val JacksonVersion = "2.12.1"
 val ElasticsearchVersion = "6.8.13"
-val Json4SVersion = "3.6.7"
+val Json4SVersion = "4.0.3"
 
 val appProperties = settingKey[Properties]("The application properties")
 
@@ -67,7 +67,7 @@ lazy val search_api = (project in file("."))
     libraryDependencies ++= pactTestFramework ++ Seq(
       "ndla" %% "language" % "1.0.0",
       "ndla" %% "mapping" % "0.15",
-      "ndla" %% "network" % "0.45",
+      "ndla" %% "network" % "0.47",
       "ndla" %% "scalatestsuite" % "0.3" % "test",
       "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion,
       "org.apache.logging.log4j" % "log4j-api" % Log4JVersion,
