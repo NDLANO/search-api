@@ -12,6 +12,7 @@ import com.sksamuel.elastic4s.http.ElasticDsl.{simpleStringQuery, _}
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.language.model.Iso639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
   ElasticSearchIndexMaxResultWindow,
@@ -78,8 +79,8 @@ trait MultiSearchService {
 
     def executeSearch(settings: SearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {
       val searchLanguage = settings.language match {
-        case lang if Language.supportedLanguages.contains(lang) && !settings.fallback => lang
-        case _                                                                        => Language.AllLanguages
+        case lang if Iso639.get(lang).isSuccess && !settings.fallback => lang
+        case _                                                        => Language.AllLanguages
       }
 
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
@@ -135,7 +136,7 @@ trait MultiSearchService {
       */
     private def getSearchFilters(settings: SearchSettings): List[Query] = {
       val languageFilter = settings.language match {
-        case lang if Language.supportedLanguages.contains(lang) && !settings.fallback =>
+        case lang if Iso639.get(lang).isSuccess && !settings.fallback =>
           if (settings.fallback) None else Some(existsQuery(s"title.$lang"))
         case _ => None
       }

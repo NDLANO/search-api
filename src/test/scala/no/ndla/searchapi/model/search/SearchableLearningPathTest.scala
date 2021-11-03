@@ -56,6 +56,7 @@ class SearchableLearningPathTest extends UnitSuite with TestEnvironment {
     val original = SearchableLearningPath(
       id = 101,
       title = titles,
+      content = SearchableLanguageValues(Seq.empty),
       description = descriptions,
       coverPhotoId = Some("10"),
       duration = Some(10),

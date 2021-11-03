@@ -377,12 +377,13 @@ object TestData {
 
   val article11: Article = TestData.sampleArticleWithPublicDomain.copy(
     id = Option(11),
-    title = List(Title("Katter", "nb"), Title("Cats", "en")),
+    title = List(Title("Katter", "nb"), Title("Cats", "en"), Title("Chhattisgarhi", "hne")),
     content = List(
       ArticleContent(
         "<p>Søkeord: delt?streng delt!streng delt&streng</p><embed data-resource=\"concept\" data-resource_id=\"222\" /><p>Noe om en katt</p>",
         "nb"),
-      ArticleContent("<p>Something about a cat</p>", "en")
+      ArticleContent("<p>Something about a cat</p>", "en"),
+      ArticleContent("<p>Something about a Chhattisgarhi cat</p>", "hne")
     ),
     tags = List(Tag(List("ikkehund"), "nb"), Tag(List("notdog"), "en")),
     visualElement = List.empty,
@@ -731,12 +732,14 @@ object TestData {
 
   val draft13: Draft = TestData.sampleDraftWithPublicDomain.copy(
     id = Option(13),
-    title = List(Title("Luringen", "nb"), Title("English title", "en")),
+    title = List(Title("Luringen", "nb"), Title("English title", "en"), Title("Chhattisgarhi title", "hne")),
     introduction = List(ArticleIntroduction("Luringen", "nb")),
     metaDescription = List(MetaDescription("", "nb")),
     content = List(
       ArticleContent("<section><p>Helsesøster</p><p>Søkeord: delt?streng delt!streng delt&streng</p></section>", "nb"),
-      ArticleContent("Header <embed data-resource_id=\"222\" /><embed data-resource=\"concept\" />", "en")
+      ArticleContent("Header <embed data-resource_id=\"222\" /><embed data-resource=\"concept\" />", "en"),
+      ArticleContent("Header in Chhattisgarhi <embed data-resource_id=\"222\" /><embed data-resource=\"concept\" />",
+                     "hne")
     ),
     visualElement = List.empty,
     tags = List(Tag(List(""), "nb")),

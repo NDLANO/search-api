@@ -13,6 +13,7 @@ import org.joda.time.DateTime
 case class SearchableLearningPath(
     id: Long,
     title: SearchableLanguageValues,
+    content: SearchableLanguageValues, // only for suggestions to work.
     description: SearchableLanguageValues,
     coverPhotoId: Option[String],
     duration: Option[Int],

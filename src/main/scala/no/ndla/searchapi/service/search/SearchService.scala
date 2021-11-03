@@ -11,11 +11,11 @@ import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.search.{SearchHit, SearchResponse, SuggestionResult}
 import com.sksamuel.elastic4s.mappings.FieldDefinition
 import com.sksamuel.elastic4s.searches.aggs.Aggregation
-import com.sksamuel.elastic4s.searches.queries.{BoolQuery, NestedQuery, Query, SimpleStringQuery}
-import com.sksamuel.elastic4s.searches.queries.term.TermQuery
+import com.sksamuel.elastic4s.searches.queries.{NestedQuery, Query, SimpleStringQuery}
 import com.sksamuel.elastic4s.searches.sort.{FieldSort, SortOrder}
 import com.sksamuel.elastic4s.searches.suggestion.{DirectGenerator, PhraseSuggestion}
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.language.model.Iso639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{DefaultLanguage, ElasticSearchScrollKeepAlive, MaxPageSize}
 import no.ndla.searchapi.integration.Elastic4sClient
@@ -67,15 +67,15 @@ trait SearchService {
         searchDecompounded: Boolean
     ): SimpleStringQuery = {
       val searchLanguage = language match {
-        case lang if Language.supportedLanguages.contains(lang) => lang
-        case _                                                  => Language.AllLanguages
+        case lang if Iso639.get(lang).isSuccess => lang
+        case _                                  => Language.AllLanguages
       }
 
       if (searchLanguage == Language.AllLanguages || fallback) {
         Language.languageAnalyzers.foldLeft(SimpleStringQuery(query, quote_field_suffix = Some(".exact")))(
           (acc, cur) => {
-            val base = acc.field(s"$field.${cur.lang}", boost)
-            if (searchDecompounded) base.field(s"$field.${cur.lang}.decompounded", 0.1) else base
+            val base = acc.field(s"$field.${cur.languageTag.toString}", boost)
+            if (searchDecompounded) base.field(s"$field.${cur.languageTag.toString}.decompounded", 0.1) else base
           }
         )
       } else {
@@ -139,7 +139,7 @@ trait SearchService {
       query
         .map(q => {
           val searchLanguage =
-            if (language == Language.AllLanguages || fallback) "nb" else language
+            if (language == Language.AllLanguages || fallback) DefaultLanguage else language
           Seq(
             suggestion(q, "title", searchLanguage),
             suggestion(q, "content", searchLanguage)
@@ -318,7 +318,7 @@ trait SearchService {
             totalCount = response.result.totalHits,
             page = None,
             pageSize = response.result.hits.hits.length,
-            language = if (language == "*") Language.AllLanguages else language,
+            language = language,
             results = hits,
             suggestions = suggestions,
             aggregations = aggregations,
@@ -329,21 +329,22 @@ trait SearchService {
 
     def getSortDefinition(sort: Sort.Value, language: String): FieldSort = {
       val sortLanguage = language match {
-        case Language.NoLanguage                                => DefaultLanguage
-        case lang if Language.supportedLanguages.contains(lang) => lang
-        case _                                                  => "*"
+        case Language.NoLanguage => DefaultLanguage
+        case _                   => language
       }
 
       sort match {
         case Sort.ByTitleAsc =>
           sortLanguage match {
-            case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Asc).missing("_last")
-            case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Asc).missing("_last")
+            case Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Asc).missing("_last")
+            case _ =>
+              fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Asc).missing("_last").unmappedType("long")
           }
         case Sort.ByTitleDesc =>
           sortLanguage match {
-            case "*" | Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Desc).missing("_last")
-            case _                           => fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Desc).missing("_last")
+            case Language.AllLanguages => fieldSort("defaultTitle").sortOrder(SortOrder.Desc).missing("_last")
+            case _ =>
+              fieldSort(s"title.$sortLanguage.raw").sortOrder(SortOrder.Desc).missing("_last").unmappedType("long")
           }
         case Sort.ByDurationAsc     => fieldSort("duration").sortOrder(SortOrder.Asc).missing("_last")
         case Sort.ByDurationDesc    => fieldSort("duration").sortOrder(SortOrder.Desc).missing("_last")

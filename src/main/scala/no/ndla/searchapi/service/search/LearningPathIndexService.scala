@@ -10,7 +10,6 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings._
-import com.sksamuel.elastic4s.mappings.dynamictemplate.DynamicMapping
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.integration.LearningPathApiClient
@@ -18,6 +17,7 @@ import no.ndla.searchapi.model.domain.learningpath.LearningPath
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
+import org.json4s.Formats
 import org.json4s.native.Serialization.write
 
 import scala.util.{Failure, Success, Try}
@@ -27,7 +27,7 @@ trait LearningPathIndexService {
   val learningPathIndexService: LearningPathIndexService
 
   class LearningPathIndexService extends LazyLogging with IndexService[LearningPath] {
-    implicit val formats = SearchableLanguageFormats.JSonFormats
+    implicit val formats: Formats = SearchableLanguageFormats.JSonFormats
     override val documentType: String = SearchApiProperties.SearchDocuments(SearchType.LearningPaths)
     override val searchIndex: String = SearchApiProperties.SearchIndexes(SearchType.LearningPaths)
     override val apiClient: LearningPathApiClient = learningPathApiClient
@@ -46,51 +46,51 @@ trait LearningPathIndexService {
     }
 
     def getMapping: MappingDefinition = {
-      mapping(documentType)
-        .dynamic(DynamicMapping.Strict)
-        .fields(
+      val fields = List(
+        intField("id"),
+        textField("coverPhotoId"),
+        intField("duration"),
+        textField("status"),
+        textField("verificationStatus"),
+        dateField("lastUpdated"),
+        keywordField("defaultTitle"),
+        textField("authors"),
+        keywordField("license"),
+        nestedField("learningsteps").fields(
           List(
-            intField("id"),
-            textField("coverPhotoId"),
-            intField("duration"),
-            textField("status"),
-            textField("verificationStatus"),
-            dateField("lastUpdated"),
-            keywordField("defaultTitle"),
-            textField("authors"),
-            keywordField("license"),
-            nestedField("learningsteps").fields(
-              List(
-                textField("stepType")
-              ) ++
-                generateLanguageSupportedFieldList("title") ++
-                generateLanguageSupportedFieldList("description")
-            ),
-            objectField("copyright").fields(
-              objectField("license").fields(
-                textField("license"),
-                textField("description"),
-                textField("url")
-              ),
-              nestedField("contributors").fields(
-                textField("type"),
-                textField("name")
-              )
-            ),
-            intField("isBasedOn"),
-            keywordField("supportedLanguages"),
-            getTaxonomyContextMapping,
-            nestedField("embedResourcesAndIds").fields(
-              keywordField("resource"),
-              keywordField("id"),
-              keywordField("language")
-            )
-          ) ++
-            generateLanguageSupportedFieldList("title", keepRaw = true) ++
-            generateLanguageSupportedFieldList("content") ++
-            generateLanguageSupportedFieldList("description") ++
-            generateLanguageSupportedFieldList("tags", keepRaw = true)
+            textField("stepType")
+          )
+        ),
+        objectField("copyright").fields(
+          objectField("license").fields(
+            textField("license"),
+            textField("description"),
+            textField("url")
+          ),
+          nestedField("contributors").fields(
+            textField("type"),
+            textField("name")
+          )
+        ),
+        intField("isBasedOn"),
+        keywordField("supportedLanguages"),
+        getTaxonomyContextMapping,
+        nestedField("embedResourcesAndIds").fields(
+          keywordField("resource"),
+          keywordField("id"),
+          keywordField("language")
         )
+      )
+      val dynamics = generateLanguageSupportedDynamicTemplates("title", keepRaw = true) ++
+        generateLanguageSupportedDynamicTemplates("content") ++
+        generateLanguageSupportedDynamicTemplates("description") ++
+        generateLanguageSupportedDynamicTemplates("tags", keepRaw = true) ++
+        generateLanguageSupportedDynamicTemplates("relevance") ++
+        generateLanguageSupportedDynamicTemplates("subject", keepRaw = true) ++
+        generateLanguageSupportedDynamicTemplates("breadcrumbs") ++
+        generateLanguageSupportedDynamicTemplates("name", keepRaw = true)
+
+      mapping(documentType).fields(fields).dynamicTemplates(dynamics)
     }
   }
 

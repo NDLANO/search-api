@@ -182,7 +182,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     val multiResult = domain.SearchResult(0, None, 10, "nn", Seq.empty, Seq.empty, Seq.empty, None)
     when(multiSearchService.matchingQuery(any)).thenReturn(Success(multiResult))
 
-    val baseSettings = TestData.searchSettings.copy(language = "all", pageSize = 10)
+    val baseSettings = TestData.searchSettings.copy(language = "*", pageSize = 10)
 
     get("/test/", params = Seq.empty, headers = Seq()) {
       val expectedSettings = baseSettings.copy(availability = List())
@@ -202,7 +202,7 @@ class SearchControllerTest extends UnitSuite with TestEnvironment with ScalatraF
     when(feideApiClient.getUser(any)).thenReturn(Success(teacheruser))
     when(multiSearchService.matchingQuery(any)).thenReturn(Success(multiResult))
 
-    val baseSettings = TestData.searchSettings.copy(language = "all", pageSize = 10)
+    val baseSettings = TestData.searchSettings.copy(language = "*", pageSize = 10)
     val teacherToken = "abcd"
 
     get("/test/", params = Seq.empty, headers = Seq("FeideAuthorization" -> teacherToken)) {

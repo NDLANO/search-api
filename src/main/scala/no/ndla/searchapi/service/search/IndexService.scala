@@ -9,22 +9,11 @@
 package no.ndla.searchapi.service.search
 
 import com.sksamuel.elastic4s.Indexes
-
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.concurrent.Executors
 import com.sksamuel.elastic4s.alias.AliasAction
-import com.sksamuel.elastic4s.analyzers.{
-  CompoundWordTokenFilter,
-  CustomAnalyzerDefinition,
-  HyphenationDecompounder,
-  LowercaseTokenFilter,
-  ShingleTokenFilter,
-  StandardTokenizer,
-  WhitespaceTokenizer
-}
+import com.sksamuel.elastic4s.analyzers._
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
+import com.sksamuel.elastic4s.mappings.dynamictemplate.DynamicTemplateRequest
 import com.sksamuel.elastic4s.mappings.{FieldDefinition, MappingDefinition, NestedField}
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
@@ -35,6 +24,9 @@ import no.ndla.searchapi.model.domain.{Content, Language, ReindexResult}
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.taxonomy.TaxonomyBundle
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.concurrent.Executors
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
@@ -400,7 +392,7 @@ trait IndexService {
     protected def generateLanguageSupportedFieldList(
         fieldName: String,
         keepRaw: Boolean = false
-    ): List[FieldDefinition] = {
+    ): Seq[FieldDefinition] = {
       languageAnalyzers.map(langAnalyzer => {
         val sf = List(
           textField("trigram").analyzer("trigram"),
@@ -413,10 +405,56 @@ trait IndexService {
 
         val subFields = if (keepRaw) sf :+ keywordField("raw") else sf
 
-        textField(s"$fieldName.${langAnalyzer.lang}")
+        textField(s"$fieldName.${langAnalyzer.languageTag.toString}")
           .analyzer(langAnalyzer.analyzer)
           .fields(subFields)
       })
+    }
+
+    /**
+      * Returns Sequence of DynamicTemplateRequest for a given field.
+      *
+      * @param fieldName Name of field in mapping.
+      * @param keepRaw   Whether to add a keywordField named raw.
+      *                  Usually used for sorting, aggregations or scripts.
+      * @return Sequence of DynamicTemplateRequest for a field.
+      */
+    protected def generateLanguageSupportedDynamicTemplates(fieldName: String,
+                                                            keepRaw: Boolean = false): Seq[DynamicTemplateRequest] = {
+      val dynamicFunc = (name: String, analyzer: Analyzer, subFields: List[FieldDefinition]) => {
+        DynamicTemplateRequest(
+          name = name,
+          mapping = textField(name).analyzer(analyzer).fields(subFields),
+          matchMappingType = Some("string"),
+          pathMatch = Some(name)
+        )
+      }
+
+      val sf = List(
+        textField("trigram").analyzer("trigram"),
+        textField("decompounded")
+          .searchAnalyzer("standard")
+          .analyzer("compound_analyzer"),
+        textField("exact")
+          .analyzer("exact")
+      )
+      val subFields = if (keepRaw) sf :+ keywordField("raw") else sf
+
+      val languageTemplates = languageAnalyzers.map(
+        languageAnalyzer => {
+          val name = s"$fieldName.${languageAnalyzer.languageTag.toString()}"
+          dynamicFunc(name, languageAnalyzer.analyzer, subFields)
+        }
+      )
+      val languageSubTemplates = languageAnalyzers.map(
+        languageAnalyzer => {
+          val name = s"*.$fieldName.${languageAnalyzer.languageTag.toString()}"
+          dynamicFunc(name, languageAnalyzer.analyzer, subFields)
+        }
+      )
+      val catchAllTemplate = dynamicFunc(s"$fieldName.*", StandardAnalyzer, subFields)
+      val catchAllSubTemplate = dynamicFunc(s"*.$fieldName.*", StandardAnalyzer, subFields)
+      languageTemplates ++ languageSubTemplates ++ Seq(catchAllTemplate, catchAllSubTemplate)
     }
 
     protected def getTaxonomyContextMapping: NestedField = {
@@ -427,16 +465,11 @@ trait IndexService {
           keywordField("contextType"),
           keywordField("subjectId"),
           keywordField("parentTopicIds"),
-          keywordField("relevanceId")
-        ) ++
-          generateLanguageSupportedFieldList("relevance") ++
-          generateLanguageSupportedFieldList("subject", keepRaw = true) ++
-          generateLanguageSupportedFieldList("breadcrumbs") ++
-          List(
-            nestedField("resourceTypes").fields(
-              List(keywordField("id")) ++
-                generateLanguageSupportedFieldList("name", keepRaw = true)
-            ))
+          keywordField("relevanceId"),
+          nestedField("resourceTypes").fields(
+            List(keywordField("id"))
+          )
+        )
       )
     }
 
