@@ -102,9 +102,10 @@ lazy val search_api = (project in file("."))
 assembly / assemblyJarName := "search-api.jar"
 assembly / mainClass := Some("no.ndla.searchapi.JettyLauncher")
 assemblyMergeStrategy in assembly := {
-  case "module-info.class" => MergeStrategy.discard
+  case "module-info.class"                   => MergeStrategy.discard
+  case x if x.endsWith("/module-info.class") => MergeStrategy.discard
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }
 
