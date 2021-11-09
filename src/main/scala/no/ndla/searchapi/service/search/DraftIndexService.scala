@@ -1,5 +1,5 @@
 /*
- * Part of NDLA search_api.
+ * Part of NDLA search-api.
  * Copyright (C) 2018 NDLA
  *
  * See LICENSE
@@ -10,10 +10,9 @@ package no.ndla.searchapi.service.search
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.indexes.IndexRequest
 import com.sksamuel.elastic4s.mappings.MappingDefinition
-import com.sksamuel.elastic4s.mappings.dynamictemplate.DynamicMapping
 import com.typesafe.scalalogging.LazyLogging
 import no.ndla.searchapi.SearchApiProperties
-import no.ndla.searchapi.integration.{DraftApiClient, TaxonomyApiClient}
+import no.ndla.searchapi.integration.DraftApiClient
 import no.ndla.searchapi.model.domain.draft.Draft
 import no.ndla.searchapi.model.grep.GrepBundle
 import no.ndla.searchapi.model.search.{SearchType, SearchableLanguageFormats}
@@ -47,45 +46,48 @@ trait DraftIndexService {
     }
 
     def getMapping: MappingDefinition = {
-      mapping(documentType)
-        .dynamic(DynamicMapping.Strict)
-        .fields(
-          List(
-            intField("id"),
-            keywordField("draftStatus.current"),
-            keywordField("draftStatus.other"),
-            dateField("lastUpdated"),
-            keywordField("license"),
-            keywordField("defaultTitle"),
-            textField("authors"),
-            keywordField("articleType"),
-            keywordField("supportedLanguages"),
-            textField("notes"),
-            textField("previousVersionsNotes"),
-            keywordField("users"),
-            keywordField("grepContexts.code"),
-            textField("grepContexts.title"),
-            keywordField("traits"),
-            getTaxonomyContextMapping,
-            nestedField("embedResourcesAndIds").fields(
-              keywordField("resource"),
-              keywordField("id"),
-              keywordField("language")
-            ),
-            nestedField("metaImage").fields(
-              keywordField("imageId"),
-              keywordField("altText"),
-              keywordField("language")
-            )
-          ) ++
-            generateLanguageSupportedFieldList("title", keepRaw = true) ++
-            generateLanguageSupportedFieldList("metaDescription") ++
-            generateLanguageSupportedFieldList("content") ++
-            generateLanguageSupportedFieldList("visualElement") ++
-            generateLanguageSupportedFieldList("introduction") ++
-            generateLanguageSupportedFieldList("tags") ++
-            generateLanguageSupportedFieldList("embedAttributes")
+      val fields = List(
+        intField("id"),
+        keywordField("draftStatus.current"),
+        keywordField("draftStatus.other"),
+        dateField("lastUpdated"),
+        keywordField("license"),
+        keywordField("defaultTitle"),
+        textField("authors"),
+        keywordField("articleType"),
+        keywordField("supportedLanguages"),
+        textField("notes"),
+        textField("previousVersionsNotes"),
+        keywordField("users"),
+        keywordField("grepContexts.code"),
+        textField("grepContexts.title"),
+        keywordField("traits"),
+        getTaxonomyContextMapping,
+        nestedField("embedResourcesAndIds").fields(
+          keywordField("resource"),
+          keywordField("id"),
+          keywordField("language")
+        ),
+        nestedField("metaImage").fields(
+          keywordField("imageId"),
+          keywordField("altText"),
+          keywordField("language")
         )
+      )
+      val dynamics = generateLanguageSupportedDynamicTemplates("title", keepRaw = true) ++
+        generateLanguageSupportedDynamicTemplates("metaDescription") ++
+        generateLanguageSupportedDynamicTemplates("content") ++
+        generateLanguageSupportedDynamicTemplates("visualElement") ++
+        generateLanguageSupportedDynamicTemplates("introduction") ++
+        generateLanguageSupportedDynamicTemplates("tags") ++
+        generateLanguageSupportedDynamicTemplates("embedAttributes") ++
+        generateLanguageSupportedDynamicTemplates("relevance") ++
+        generateLanguageSupportedDynamicTemplates("subject", keepRaw = true) ++
+        generateLanguageSupportedDynamicTemplates("breadcrumbs") ++
+        generateLanguageSupportedDynamicTemplates("name", keepRaw = true)
+
+      mapping(documentType).fields(fields).dynamicTemplates(dynamics)
+
     }
   }
 

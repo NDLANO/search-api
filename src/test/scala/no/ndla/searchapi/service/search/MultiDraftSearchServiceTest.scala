@@ -1,5 +1,5 @@
 /*
- * Part of NDLA search_api.
+ * Part of NDLA search-api.
  * Copyright (C) 2018 NDLA
  *
  * See LICENSE
@@ -65,7 +65,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   }
 
   private def expectedAllPublicDrafts(language: String) = {
-    val x = if (language == "all") { draftsToIndex } else {
+    val x = if (language == "*") { draftsToIndex } else {
       draftsToIndex.filter(_.title.map(_.language).contains(language))
     }
     x.filter(!_.copyright.flatMap(_.license).contains("copyrighted"))
@@ -73,7 +73,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   }
 
   private def expectedAllPublicLearningPaths(language: String) = {
-    val x = if (language == "all") { learningPathsToIndex } else {
+    val x = if (language == "*") { learningPathsToIndex } else {
       learningPathsToIndex.filter(_.title.map(_.language).contains(language))
     }
     x.filter(_.copyright.license != "copyrighted")
@@ -84,8 +84,8 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       expectedAllPublicLearningPaths(language).map(_.id.get)
 
   private def titlesForLang(language: String) = {
-    expectedAllPublicDrafts(language).map(_.title.find(_.language == language || language == "all").get.title) ++
-      expectedAllPublicLearningPaths(language).map(_.title.find(_.language == language || language == "all").get.title)
+    expectedAllPublicDrafts(language).map(_.title.find(_.language == language || language == "*").get.title) ++
+      expectedAllPublicLearningPaths(language).map(_.title.find(_.language == language || language == "*").get.title)
   }
 
   test("That getStartAtAndNumResults returns SEARCH_MAX_PAGE_SIZE for value greater than SEARCH_MAX_PAGE_SIZE") {
@@ -286,7 +286,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     val Success(search) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = 100, sort = Sort.ByTitleAsc))
 
-    search.totalCount should equal(titlesForLang("all").size)
+    search.totalCount should equal(titlesForLang("*").size)
   }
 
   test("Search for all languages should return all articles in correct language") {
@@ -295,7 +295,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
         multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = 100))
     val hits = search.results
 
-    search.totalCount should equal(idsForLang("all").size)
+    search.totalCount should equal(idsForLang("*").size)
     hits.head.id should be(1)
     hits(1).id should be(1)
     hits(2).id should be(2)
@@ -346,6 +346,23 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     searchNb.results.head.title.language should equal("nb")
   }
 
+  test("Searching with query for unknown language should return nothing") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(language = "mix", sort = Sort.ByRelevanceDesc))
+
+    search.totalCount should equal(0)
+  }
+
+  test("Searching with query for language not in analyzers should work as expected") {
+    val Success(search) = multiDraftSearchService.matchingQuery(
+      multiDraftSearchSettings.copy(query = Some("Chhattisgarhi"), language = "hne", sort = Sort.ByRelevanceDesc))
+
+    search.totalCount should equal(1)
+    search.results.head.id should equal(13)
+    search.results.head.title.title should equal("Chhattisgarhi title")
+    search.results.head.title.language should equal("hne")
+  }
+
   test("metadescription is searchable") {
     val Success(search) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings
@@ -374,7 +391,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That filtering for subjects works as expected") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", subjects = List("urn:subject:2")))
+        multiDraftSearchSettings.copy(language = "*", subjects = List("urn:subject:2")))
     search.totalCount should be(7)
     search.results.map(_.id) should be(Seq(1, 5, 5, 6, 7, 11, 12))
   }
@@ -416,7 +433,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That filtering on multiple context-types returns every selected type") {
     val Success(search) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = "all",
+      multiDraftSearchSettings.copy(language = "*",
                                     learningResourceTypes =
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle)))
 
@@ -426,9 +443,9 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That filtering on learning-resource-type works") {
     val Success(search) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = "all", learningResourceTypes = List(LearningResourceType.Article)))
+      multiDraftSearchSettings.copy(language = "*", learningResourceTypes = List(LearningResourceType.Article)))
     val Success(search2) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = "all", learningResourceTypes = List(LearningResourceType.TopicArticle)))
+      multiDraftSearchSettings.copy(language = "*", learningResourceTypes = List(LearningResourceType.TopicArticle)))
 
     search.totalCount should be(7)
     search.results.map(_.id) should be(Seq(1, 2, 3, 5, 6, 7, 12))
@@ -439,7 +456,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That filtering on multiple context-types returns every type") {
     val Success(search) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = "all",
+      multiDraftSearchSettings.copy(language = "*",
                                     learningResourceTypes =
                                       List(LearningResourceType.Article, LearningResourceType.TopicArticle)))
 
@@ -449,7 +466,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That filtering on learningpath learningresourcetype returns learningpaths") {
     val Success(search) = multiDraftSearchService.matchingQuery(
-      multiDraftSearchSettings.copy(language = "all", learningResourceTypes = List(LearningResourceType.LearningPath)))
+      multiDraftSearchSettings.copy(language = "*", learningResourceTypes = List(LearningResourceType.LearningPath)))
 
     search.totalCount should be(6)
     search.results.map(_.id) should be(Seq(1, 2, 3, 4, 5, 6))
@@ -459,19 +476,19 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That filtering on supportedLanguages works") {
     val Success(search) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", supportedLanguages = List("en")))
+        multiDraftSearchSettings.copy(language = "*", supportedLanguages = List("en")))
     search.totalCount should be(9)
     search.results.map(_.id) should be(Seq(2, 3, 4, 5, 6, 10, 11, 13, 15))
 
     val Success(search2) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", supportedLanguages = List("en", "nb")))
+        multiDraftSearchSettings.copy(language = "*", supportedLanguages = List("en", "nb")))
     search2.totalCount should be(19)
     search2.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 15))
 
     val Success(search3) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(language = "all", supportedLanguages = List("nb")))
+        multiDraftSearchSettings.copy(language = "*", supportedLanguages = List("nb")))
     search3.totalCount should be(16)
     search3.results.map(_.id) should be(Seq(1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15))
   }
@@ -565,22 +582,22 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That scrolling works as expected") {
     val pageSize = 2
-    val ids = idsForLang("all").sorted.sliding(pageSize, pageSize).toList
+    val ids = idsForLang("*").sorted.sliding(pageSize, pageSize).toList
 
     val Success(initialSearch) = multiDraftSearchService.matchingQuery(
       multiDraftSearchSettings.copy(language = Language.AllLanguages, pageSize = pageSize, shouldScroll = true))
 
-    val Success(scroll1) = multiDraftSearchService.scroll(initialSearch.scrollId.get, "all", fallback = true)
-    val Success(scroll2) = multiDraftSearchService.scroll(scroll1.scrollId.get, "all", fallback = true)
-    val Success(scroll3) = multiDraftSearchService.scroll(scroll2.scrollId.get, "all", fallback = true)
-    val Success(scroll4) = multiDraftSearchService.scroll(scroll3.scrollId.get, "all", fallback = true)
-    val Success(scroll5) = multiDraftSearchService.scroll(scroll4.scrollId.get, "all", fallback = true)
-    val Success(scroll6) = multiDraftSearchService.scroll(scroll5.scrollId.get, "all", fallback = true)
-    val Success(scroll7) = multiDraftSearchService.scroll(scroll6.scrollId.get, "all", fallback = true)
-    val Success(scroll8) = multiDraftSearchService.scroll(scroll7.scrollId.get, "all", fallback = true)
-    val Success(scroll9) = multiDraftSearchService.scroll(scroll8.scrollId.get, "all", fallback = true)
-    val Success(scroll10) = multiDraftSearchService.scroll(scroll9.scrollId.get, "all", fallback = true)
-    val Success(scroll11) = multiDraftSearchService.scroll(scroll10.scrollId.get, "all", fallback = true)
+    val Success(scroll1) = multiDraftSearchService.scroll(initialSearch.scrollId.get, "*", fallback = true)
+    val Success(scroll2) = multiDraftSearchService.scroll(scroll1.scrollId.get, "*", fallback = true)
+    val Success(scroll3) = multiDraftSearchService.scroll(scroll2.scrollId.get, "*", fallback = true)
+    val Success(scroll4) = multiDraftSearchService.scroll(scroll3.scrollId.get, "*", fallback = true)
+    val Success(scroll5) = multiDraftSearchService.scroll(scroll4.scrollId.get, "*", fallback = true)
+    val Success(scroll6) = multiDraftSearchService.scroll(scroll5.scrollId.get, "*", fallback = true)
+    val Success(scroll7) = multiDraftSearchService.scroll(scroll6.scrollId.get, "*", fallback = true)
+    val Success(scroll8) = multiDraftSearchService.scroll(scroll7.scrollId.get, "*", fallback = true)
+    val Success(scroll9) = multiDraftSearchService.scroll(scroll8.scrollId.get, "*", fallback = true)
+    val Success(scroll10) = multiDraftSearchService.scroll(scroll9.scrollId.get, "*", fallback = true)
+    val Success(scroll11) = multiDraftSearchService.scroll(scroll10.scrollId.get, "*", fallback = true)
 
     initialSearch.results.map(_.id) should be(ids.head)
     scroll1.results.map(_.id) should be(ids(1))
@@ -834,7 +851,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That search on embed id with language filter=all matches") {
     val Success(results) =
-      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(language = "all", embedId = Some("222")))
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(language = "*", embedId = Some("222")))
     val hits = results.results
     results.totalCount should be(2)
     hits.map(_.id) should be(Seq(12, 13))
@@ -850,7 +867,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
 
   test("That search on meta image url matches ") {
     val Success(results) =
-      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(language = "all", embedId = Some("123")))
+      multiDraftSearchService.matchingQuery(multiDraftSearchSettings.copy(language = "*", embedId = Some("123")))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(10))
@@ -859,7 +876,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That exact word search works for special characters") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt-streng\""), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt-streng\""), language = "*"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(15))
@@ -868,7 +885,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That exact word search works for special characters with escape") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt\\-streng\""), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt\\-streng\""), language = "*"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(15))
@@ -877,7 +894,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That multiple exact words can be searched") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt!streng\" \"delt?streng\""), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt!streng\" \"delt?streng\""), language = "*"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(13))
@@ -886,7 +903,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That multiple exact words can be searched with + operator") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt!streng\"+\"delt-streng\""), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt!streng\"+\"delt-streng\""), language = "*"))
     val hits = results.results
     results.totalCount should be(0)
   }
@@ -894,7 +911,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That multiple exact words can be searched with - operator") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt!streng\"+-\"delt-streng\""), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt!streng\"+-\"delt-streng\""), language = "*"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(13))
@@ -903,7 +920,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That exact and regular words can be searched with - operator") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt!streng\"+-Helsesøster"), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt!streng\"+-Helsesøster"), language = "*"))
     val hits = results.results
     results.totalCount should be(0)
   }
@@ -911,7 +928,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That exact and regular words can be searched with + operator") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"delt!streng\" + Helsesøster"), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"delt!streng\" + Helsesøster"), language = "*"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(13))
@@ -920,7 +937,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
   test("That exact search on word with spaces matches") {
     val Success(results) =
       multiDraftSearchService.matchingQuery(
-        multiDraftSearchSettings.copy(query = Some("\"artikkeltekst med fire deler\""), language = "all"))
+        multiDraftSearchSettings.copy(query = Some("\"artikkeltekst med fire deler\""), language = "*"))
     val hits = results.results
     results.totalCount should be(1)
     hits.map(_.id) should be(Seq(12))

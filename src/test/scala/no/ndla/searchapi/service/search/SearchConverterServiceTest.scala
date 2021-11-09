@@ -1,5 +1,5 @@
 /*
- * Part of NDLA search_api.
+ * Part of NDLA search-api.
  * Copyright (C) 2018 NDLA
  *
  * See LICENSE
@@ -26,7 +26,7 @@ import scala.util.{Success, Try}
 class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
 
   override val searchConverterService = new SearchConverterService
-  val sampleArticle = TestData.sampleArticleWithPublicDomain.copy()
+  val sampleArticle: Article = TestData.sampleArticleWithPublicDomain.copy()
 
   val titles = List(
     Title("Bokmål tittel", "nb"),
@@ -35,7 +35,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     Title("Titre francais", "fr"),
     Title("Deutsch titel", "de"),
     Title("Titulo espanol", "es"),
-    Title("Nekonata titolo", "unknown")
+    Title("Nekonata titolo", "und")
   )
 
   val articles = Seq(
@@ -45,7 +45,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     ArticleContent("Francais article", "fr"),
     ArticleContent("Deutsch Artikel", "de"),
     ArticleContent("Articulo espanol", "es"),
-    ArticleContent("Nekonata artikolo", "unknown")
+    ArticleContent("Nekonata artikolo", "und")
   )
 
   val articleTags = Seq(
@@ -55,7 +55,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     Tag(Seq("got", "tired"), "fr"),
     Tag(Seq("of", "translating"), "de"),
     Tag(Seq("all", "of"), "es"),
-    Tag(Seq("the", "words"), "unknown")
+    Tag(Seq("the", "words"), "und")
   )
 
   val visibleMetadata: Option[Metadata] = Some(Metadata(Seq.empty, visible = true))
@@ -75,7 +75,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     TopicResourceConnection("urn:topic:10",
                             "urn:resource:1",
                             "urn:topic-resource:abc123",
-                            true,
+                            primary = true,
                             1,
                             Some("urn:relevance:core")))
   val subject1: TaxSubject = TaxSubject("urn:subject:1", "Subject1", None, Some("/subject:1"), visibleMetadata)
@@ -85,7 +85,7 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     SubjectTopicConnection("urn:subject:1",
                            "urn:topic:10",
                            "urn:subject-topic:8180abc",
-                           true,
+                           primary = true,
                            1,
                            Some("urn:relevance:core")))
 
@@ -464,23 +464,23 @@ class SearchConverterServiceTest extends UnitSuite with TestEnvironment {
     languageListWithLang(searchableArticle.tags) should equal(tagsForLang(articleTags))
   }
 
-  private def languageValueWithLang(languageValues: SearchableLanguageValues, lang: String = "unknown"): String = {
+  private def languageValueWithLang(languageValues: SearchableLanguageValues, lang: String = "und"): String = {
     languageValues.languageValues.find(_.language == lang).get.value
   }
 
-  private def languageListWithLang(languageList: SearchableLanguageList, lang: String = "unknown"): Seq[String] = {
+  private def languageListWithLang(languageList: SearchableLanguageList, lang: String = "und"): Seq[String] = {
     languageList.languageValues.find(_.language == lang).get.value
   }
 
-  private def titleForLang(titles: Seq[Title], lang: String = "unknown"): String = {
+  private def titleForLang(titles: Seq[Title], lang: String = "und"): String = {
     titles.find(_.language == lang).get.title
   }
 
-  private def articleForLang(articles: Seq[ArticleContent], lang: String = "unknown"): String = {
+  private def articleForLang(articles: Seq[ArticleContent], lang: String = "und"): String = {
     articles.find(_.language == lang).get.content
   }
 
-  private def tagsForLang(tags: Seq[Tag], lang: String = "unknown") = {
+  private def tagsForLang(tags: Seq[Tag], lang: String = "und") = {
     tags.find(_.language == lang).get.tags
   }
 }

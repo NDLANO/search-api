@@ -1,5 +1,5 @@
 /*
- * Part of NDLA search_api.
+ * Part of NDLA search-api.
  * Copyright (C) 2017 NDLA
  *
  * See LICENSE
@@ -98,7 +98,7 @@ trait SearchApiClient {
 
     protected def search[T <: ApiSearchResults](
         searchParams: SearchParams)(implicit mf: Manifest[T], executionContext: ExecutionContext): Future[Try[T]] = {
-      val queryParams = searchParams.remaindingParams ++ Map("language" -> searchParams.language.getOrElse("all"),
+      val queryParams = searchParams.remaindingParams ++ Map("language" -> searchParams.language.getOrElse("*"),
                                                              "sort" -> searchParams.sort,
                                                              "page" -> searchParams.page,
                                                              "page-size" -> searchParams.pageSize)

@@ -1,5 +1,5 @@
 /*
- * Part of NDLA search_api.
+ * Part of NDLA search-api.
  * Copyright (C) 2018 NDLA
  *
  * See LICENSE
@@ -11,6 +11,7 @@ import java.util.concurrent.Executors
 import com.sksamuel.elastic4s.http.ElasticDsl.{simpleStringQuery, _}
 import com.sksamuel.elastic4s.searches.queries.{BoolQuery, Query}
 import com.typesafe.scalalogging.LazyLogging
+import no.ndla.language.model.Iso639
 import no.ndla.searchapi.SearchApiProperties
 import no.ndla.searchapi.SearchApiProperties.{
   ElasticSearchIndexMaxResultWindow,
@@ -90,8 +91,8 @@ trait MultiDraftSearchService {
 
     def executeSearch(settings: MultiDraftSearchSettings, baseQuery: BoolQuery): Try[SearchResult] = {
       val searchLanguage = settings.language match {
-        case lang if Language.supportedLanguages.contains(lang) && !settings.fallback => lang
-        case _                                                                        => Language.AllLanguages
+        case lang if Iso639.get(lang).isSuccess && !settings.fallback => lang
+        case _                                                        => Language.AllLanguages
       }
       val filteredSearch = baseQuery.filter(getSearchFilters(settings))
 
