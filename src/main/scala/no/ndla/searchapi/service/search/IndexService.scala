@@ -109,18 +109,28 @@ trait IndexService {
         implicit mf: Manifest[D]): Try[ReindexResult] = {
       val start = System.currentTimeMillis()
       createIndexWithGeneratedName.flatMap(indexName => {
-        val operations = for {
-          result <- sendToElastic(indexName, taxonomyBundle, grepBundle)
-          aliasTarget <- getAliasTarget
-          _ <- updateAliasTarget(aliasTarget, indexName)
-        } yield result
-
-        operations match {
-          case Failure(f) =>
+        sendToElastic(indexName, taxonomyBundle, grepBundle) match {
+          case Failure(ex) =>
             deleteIndexWithName(Some(indexName))
-            Failure(f)
+            Failure(ex)
           case Success((count, totalCount)) =>
-            Success(ReindexResult(documentType, totalCount - count, count, System.currentTimeMillis() - start))
+            val numErrors = totalCount - count
+
+            if (numErrors > 0) {
+              logger.error(s"Indexing completed, but with $numErrors errors.")
+              deleteIndexWithName(Some(indexName))
+              Failure(ElasticIndexingException(s"Indexing completed with $numErrors, will not replace index."))
+            } else {
+              val operations = getAliasTarget.flatMap(updateAliasTarget(_, indexName))
+              operations.map(
+                _ =>
+                  ReindexResult(
+                    documentType,
+                    numErrors,
+                    count,
+                    System.currentTimeMillis() - start
+                ))
+            }
         }
       })
     }
