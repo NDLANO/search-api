@@ -14,3 +14,6 @@
 .metals/
 project/metals.sbt
 
+node_modules
+typescript/build
+

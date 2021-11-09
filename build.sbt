@@ -96,6 +96,27 @@ lazy val search_api = (project in file("."))
       "org.mockito" %% "mockito-scala-scalatest" % MockitoVersion % "test"
     ) ++ vulnerabilityOverrides
   )
+  .enablePlugins(ScalaTsiPlugin)
+  .settings(
+    // The classes that you want to generate typescript interfaces for
+    typescriptGenerationImports := Seq("no.ndla.searchapi.model.api._"),
+    typescriptExports := Seq(
+      "ApiTaxonomyContext",
+      "ArticleResult",
+      "AudioResult",
+      "GroupSearchResult",
+      "ImageResult",
+      "LearningpathResult",
+      "MultiSearchResult",
+      "ArticleResults",
+      "AudioResults",
+      "ImageResults",
+      "LearningpathResults",
+      "SearchError",
+      "ValidationError"
+    ),
+    typescriptOutputFile := baseDirectory.value / "typescript" / "index.ts",
+  )
   .enablePlugins(DockerPlugin)
   .enablePlugins(JettyPlugin)
   .enablePlugins(ScalaPactPlugin)
