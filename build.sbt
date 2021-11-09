@@ -98,7 +98,7 @@ lazy val search_api = (project in file("."))
   .enablePlugins(ScalaTsiPlugin)
   .settings(
     // The classes that you want to generate typescript interfaces for
-    typescriptGenerationImports := Seq("no.ndla.searchapi.model.api._", "no.ndla.searchapi.model.api.TSTypes._"),
+    typescriptGenerationImports := Seq("no.ndla.searchapi.model.api._"),
     typescriptExports := Seq(
       "ApiTaxonomyContext",
       "ArticleResult",
