@@ -56,10 +56,11 @@ class MultiSearchServiceTest
       learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
       val indexedArticles =
-        articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, grepBundle))
+        articlesToIndex.map(article => articleIndexService.indexDocument(article, taxonomyTestBundle, Some(grepBundle)))
 
       val indexedLearningPaths =
-        learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
+        learningPathsToIndex.map(lp =>
+          learningPathIndexService.indexDocument(lp, taxonomyTestBundle, Some(emptyGrepBundle)))
 
       blockUntil(() => {
         articleIndexService.countDocuments == articlesToIndex.size &&

@@ -171,7 +171,7 @@ trait SearchConverterService {
 
     def asSearchableArticle(ai: Article,
                             taxonomyBundle: TaxonomyBundle,
-                            grepBundle: GrepBundle): Try[SearchableArticle] = {
+                            grepBundle: Option[GrepBundle]): Try[SearchableArticle] = {
       val taxonomyForArticle = getTaxonomyContexts(ai.id.get, "article", taxonomyBundle, filterVisibles = true)
       val traits = getArticleTraits(ai.content)
       val embedAttributes = getAttributesToIndex(ai.content, ai.visualElement)
@@ -256,7 +256,7 @@ trait SearchConverterService {
 
     def asSearchableDraft(draft: Draft,
                           taxonomyBundle: TaxonomyBundle,
-                          grepBundle: GrepBundle): Try[SearchableDraft] = {
+                          grepBundle: Option[GrepBundle]): Try[SearchableDraft] = {
       val taxonomyForDraft = getTaxonomyContexts(draft.id.get, "article", taxonomyBundle, filterVisibles = false)
       val traits = getArticleTraits(draft.content)
       val embedAttributes = getAttributesToIndex(draft.content, draft.visualElement)
@@ -961,19 +961,24 @@ trait SearchConverterService {
         elementsToFilter
       }
 
-    private[service] def getGrepContexts(grepCodes: Seq[String], bundle: GrepBundle): List[SearchableGrepContext] = {
-      val grepContext = bundle.kjerneelementer ++ bundle.kompetansemaal ++ bundle.tverrfagligeTemaer
-
-      grepCodes
-        .map(
-          grepCode =>
-            SearchableGrepContext(
-              grepCode,
-              grepContext
-                .find(grepElement => grepElement.kode == grepCode)
-                .flatMap(element => element.tittel.find(title => title.spraak == "default").map(title => title.verdi))
-          ))
-        .toList
+    private[service] def getGrepContexts(grepCodes: Seq[String],
+                                         bundle: Option[GrepBundle]): List[SearchableGrepContext] = {
+      bundle match {
+        case None => List.empty
+        case Some(grepBundle) =>
+          val grepContext = grepBundle.kjerneelementer ++ grepBundle.kompetansemaal ++ grepBundle.tverrfagligeTemaer
+          grepCodes
+            .map(
+              grepCode =>
+                SearchableGrepContext(
+                  grepCode,
+                  grepContext
+                    .find(grepElement => grepElement.kode == grepCode)
+                    .flatMap(element =>
+                      element.tittel.find(title => title.spraak == "default").map(title => title.verdi))
+              ))
+            .toList
+      }
     }
 
     private def getTaxonomyResourceAndTopicsForId(id: Long, bundle: TaxonomyBundle, taxonomyType: String) = {
