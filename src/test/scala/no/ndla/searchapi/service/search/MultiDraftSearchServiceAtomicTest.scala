@@ -78,9 +78,9 @@ class MultiDraftSearchServiceAtomicTest
       )
     )
     val draft3 = TestData.draft1.copy(id = Some(3))
-    draftIndexService.indexDocument(draft1, taxonomyTestBundle, grepBundle).get
-    draftIndexService.indexDocument(draft2, taxonomyTestBundle, grepBundle).get
-    draftIndexService.indexDocument(draft3, taxonomyTestBundle, grepBundle).get
+    draftIndexService.indexDocument(draft1, taxonomyTestBundle, Some(grepBundle)).get
+    draftIndexService.indexDocument(draft2, taxonomyTestBundle, Some(grepBundle)).get
+    draftIndexService.indexDocument(draft3, taxonomyTestBundle, Some(grepBundle)).get
 
     blockUntil(() => draftIndexService.countDocuments == 3)
 

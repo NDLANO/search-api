@@ -77,9 +77,9 @@ class MultiSearchServiceAtomicTest extends IntegrationSuite(EnableElasticsearchC
       )
     )
     val article3 = TestData.article1.copy(id = Some(3))
-    articleIndexService.indexDocument(article1, TestData.taxonomyTestBundle, TestData.grepBundle).get
-    articleIndexService.indexDocument(article2, TestData.taxonomyTestBundle, TestData.grepBundle).get
-    articleIndexService.indexDocument(article3, TestData.taxonomyTestBundle, TestData.grepBundle).get
+    articleIndexService.indexDocument(article1, TestData.taxonomyTestBundle, Some(TestData.grepBundle)).get
+    articleIndexService.indexDocument(article2, TestData.taxonomyTestBundle, Some(TestData.grepBundle)).get
+    articleIndexService.indexDocument(article3, TestData.taxonomyTestBundle, Some(TestData.grepBundle)).get
 
     blockUntil(() => {
       articleIndexService.countDocuments == 3

@@ -52,10 +52,11 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
       learningPathIndexService.createIndexWithName(SearchApiProperties.SearchIndexes(SearchType.LearningPaths))
 
       val indexedDrafts =
-        draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, emptyGrepBundle))
+        draftsToIndex.map(draft => draftIndexService.indexDocument(draft, taxonomyTestBundle, Some(emptyGrepBundle)))
 
       val indexedLearningPaths =
-        learningPathsToIndex.map(lp => learningPathIndexService.indexDocument(lp, taxonomyTestBundle, emptyGrepBundle))
+        learningPathsToIndex.map(lp =>
+          learningPathIndexService.indexDocument(lp, taxonomyTestBundle, Some(emptyGrepBundle)))
 
       blockUntil(() => {
         draftIndexService.countDocuments == draftsToIndex.size &&

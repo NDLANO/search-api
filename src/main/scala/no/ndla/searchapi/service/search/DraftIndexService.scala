@@ -35,7 +35,7 @@ trait DraftIndexService {
     override def createIndexRequest(domainModel: Draft,
                                     indexName: String,
                                     taxonomyBundle: TaxonomyBundle,
-                                    grepBundle: GrepBundle): Try[IndexRequest] = {
+                                    grepBundle: Option[GrepBundle]): Try[IndexRequest] = {
       searchConverterService.asSearchableDraft(domainModel, taxonomyBundle, grepBundle) match {
         case Success(searchableDraft) =>
           val source = write(searchableDraft)

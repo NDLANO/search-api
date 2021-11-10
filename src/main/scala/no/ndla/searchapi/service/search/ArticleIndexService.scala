@@ -35,7 +35,7 @@ trait ArticleIndexService {
     override def createIndexRequest(domainModel: Article,
                                     indexName: String,
                                     taxonomyBundle: TaxonomyBundle,
-                                    grepBundle: GrepBundle): Try[IndexRequest] = {
+                                    grepBundle: Option[GrepBundle]): Try[IndexRequest] = {
       searchConverterService.asSearchableArticle(domainModel, taxonomyBundle, grepBundle) match {
         case Success(searchableArticle) =>
           val source = write(searchableArticle)
