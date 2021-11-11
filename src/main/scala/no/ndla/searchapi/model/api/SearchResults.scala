@@ -7,7 +7,8 @@
 
 package no.ndla.searchapi.model.api
 
-import org.scalatra.swagger.annotations.ApiModel
+import org.joda.time.DateTime
+import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 
 import scala.annotation.meta.field

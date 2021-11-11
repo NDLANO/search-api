@@ -18,6 +18,7 @@ import no.ndla.searchapi.model.domain.draft.ArticleStatus
 import no.ndla.searchapi.model.domain.{Language, Sort}
 import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
+import org.joda.time.DateTime
 import org.scalatest.Outcome
 
 import scala.util.{Failure, Success}
@@ -969,5 +970,15 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
     search2.totalCount should be(1)
     search2.results.head.id should be(12)
 
+  }
+
+  test("That search result has license and lastUpdated data") {
+    val Success(results) =
+      multiDraftSearchService.matchingQuery(
+        multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc, withIdIn = List(3)))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.lastUpdated should be(any[DateTime])
+    hits.head.license should be ("publicdomain")
   }
 }

@@ -8,7 +8,8 @@
 package no.ndla.searchapi.model.api
 
 import no.ndla.searchapi.model.api.article.ArticleIntroduction
-import org.scalatra.swagger.annotations.ApiModel
+import org.joda.time.DateTime
+import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 import org.scalatra.swagger.runtime.annotations.ApiModelProperty
 
 import scala.annotation.meta.field
@@ -20,4 +21,6 @@ case class ArticleResult(
     @(ApiModelProperty @field)(description = "The introduction of the article") introduction: Option[
       ArticleIntroduction],
     @(ApiModelProperty @field)(description = "The type of the article") articleType: String,
-    @(ApiModelProperty @field)(description = "List of supported languages") supportedLanguages: Seq[String])
+    @(ApiModelProperty @field)(description = "List of supported languages") supportedLanguages: Seq[String],
+    @(ApiModelProperty @field)(description = "The time and date of last update") lastUpdated: DateTime,
+    @(ApiModelProperty @field)(description = "Describes the license of the article") license: Option[String])
