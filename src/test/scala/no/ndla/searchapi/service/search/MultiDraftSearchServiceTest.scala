@@ -21,6 +21,7 @@ import no.ndla.searchapi.{SearchApiProperties, TestEnvironment, UnitSuite}
 import org.joda.time.DateTime
 import org.scalatest.Outcome
 
+import java.util.Date
 import scala.util.{Failure, Success}
 
 class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchContainer = true) with TestEnvironment {
@@ -978,7 +979,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
         multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc, withIdIn = List(3)))
     val hits = results.results
     results.totalCount should be(1)
-    hits.head.lastUpdated should be(any[Date])
-    hits.head.license should be("publicdomain")
+    hits.head.lastUpdated should be (a[Date])
+    hits.head.license should be(Some("publicdomain"))
   }
 }
