@@ -9,7 +9,9 @@ package no.ndla.searchapi.model.api
 
 import org.joda.time.DateTime
 import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
-
+import com.scalatsi._
+import com.scalatsi.dsl._
+import com.scalatsi.TypescriptType.TSString
 import java.util.Date
 import scala.annotation.meta.field
 
@@ -39,3 +41,7 @@ case class MultiSearchSummary(
     @(ApiModelProperty @field)(description = "Describes the license of the resource") license: Option[String],
 )
 // format: on
+
+object MultiSearchSummary {
+  implicit val datetimeToString: TSType[DateTime] = TSType(TSString)
+}
