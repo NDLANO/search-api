@@ -979,7 +979,7 @@ class MultiDraftSearchServiceTest extends IntegrationSuite(EnableElasticsearchCo
         multiDraftSearchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc, withIdIn = List(3)))
     val hits = results.results
     results.totalCount should be(1)
-    hits.head.lastUpdated should be (a[Date])
+    hits.head.lastUpdated should be(a[Date])
     hits.head.license should be(Some("publicdomain"))
   }
 }
