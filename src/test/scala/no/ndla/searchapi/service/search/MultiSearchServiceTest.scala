@@ -19,6 +19,7 @@ import no.ndla.searchapi.model.search.SearchType
 import no.ndla.searchapi.{SearchApiProperties, TestData, TestEnvironment, UnitSuite}
 import org.scalatest.Outcome
 
+import java.util.Date
 import scala.util.{Failure, Success}
 
 class MultiSearchServiceTest
@@ -848,5 +849,15 @@ class MultiSearchServiceTest
                           availability = List(Availability.everyone, Availability.student, Availability.teacher)))
     search4.totalCount should be(1)
     search4.results.map(_.id) should be(Seq(13))
+  }
+
+  test("That search result has license and lastUpdated data") {
+    val Success(results) =
+      multiSearchService.matchingQuery(
+        searchSettings.copy(query = Some("bil"), sort = Sort.ByRelevanceDesc, withIdIn = List(3)))
+    val hits = results.results
+    results.totalCount should be(1)
+    hits.head.lastUpdated should be(a[Date])
+    hits.head.license should be(Some("publicdomain"))
   }
 }

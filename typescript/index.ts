@@ -151,6 +151,8 @@ export interface IMultiSearchSummary {
   score: number
   highlights: IHighlightedField[]
   paths: string[]
+  lastUpdated: string
+  license?: string
 }
 
 export interface IMultiSearchTermsAggregation {
