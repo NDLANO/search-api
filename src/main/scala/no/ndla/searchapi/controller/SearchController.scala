@@ -604,8 +604,8 @@ trait SearchController {
       * This method fetches availability based on FEIDE access token in the request
       * This does an actual api-call to the feide api and should be used sparingly.
       */
-    private def getAvailability()(implicit req: HttpServletRequest): Try[List[Availability.Value]] = {
-      req.header(feideToken.paramName) match {
+    private def getAvailability()(implicit request: HttpServletRequest): Try[List[Availability.Value]] = {
+      requestFeideToken match {
         case None => Success(List.empty)
         case Some(token) =>
           feideApiClient.getUser(token) match {
@@ -616,5 +616,10 @@ trait SearchController {
           }
       }
     }
+
+    private def requestFeideToken(implicit request: HttpServletRequest): Option[String] = {
+      request.header(this.feideToken.paramName).map(_.replaceFirst("Bearer ", ""))
+    }
+
   }
 }
